@@ -21,7 +21,7 @@ def sampler(N, size):
     return S
 
 
-def Ueval(f, phi, x, xi_stack, alpha, S, sub_dims, subA):
+def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
     
     sample_size = len(S)
     
@@ -30,7 +30,7 @@ def Ueval(f, phi, x, xi_stack, alpha, S, sub_dims, subA):
     
     res = sum([f.fstar(xi_stack[sub_dims == i], i) for i in S]) + (sample_size/alpha) * tmp
     
-    return res
+    return res.squeeze()
 
 def solve_subproblem(f, phi, x, xi, alpha, A, m, sample_size, newton_params = None, verbose = False):
     """

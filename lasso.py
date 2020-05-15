@@ -9,8 +9,9 @@ class lsq:
     n is sample size
     """
     
-    def __init__(self, b):
+    def __init__(self, A, b):
         self.b = b
+        self. A = A
         self.N = len(b)
         
     # f = lambda x, i: (x - b[i])**2
@@ -21,6 +22,14 @@ class lsq:
     
     # Hstar = lambda x, i: .5 
     
+    def eval(self, x):
+        y = 0
+        z = self.A@x
+        for i in np.arange(self.N):
+            y += self.f(z[i], i)
+        
+        return (1/self.N)*y
+
     def f(self, x, i):
         return (x - self.b[i])**2
     

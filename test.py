@@ -27,4 +27,4 @@ phi = Norm1(.1)
 phi.prox(np.ones(3), alpha = 1)
 
 
-f = lsq(b)
+f = lsq(A, b)
