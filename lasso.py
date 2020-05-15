@@ -36,35 +36,6 @@ class lsq:
     def Hstar(self, x, i):
         return .5
     
-    def oracle(self, S):
-        """
-
-        Parameters
-        ----------
-        S : np.array
-            sample of {1,...,n} for which we calculate the gradients/hessians
-
-        Returns
-        -------
-        gstar_S : dict
-            for each i in S, this contains the mapping nabla f^\star_i(xi) at key i 
-        Hstar_S : dict
-            for each i in S, this contains the mapping \partial(nabla f^\star_i(xi)) at key i 
-
-        """
-        assert np.all(np.isin(S, np.arange(self.N)))
-        assert S.dtype == 'int'
-        assert len(np.unique(S)) == len(S), "S contains duplicates"
-        
-        gstar_S = dict()
-        Hstar_S = dict()
-        
-        for i in S:
-            gstar_S[i] = lambda x: self.gstar(x,i)
-            Hstar_S[i] = lambda x: self.Hstar(x,i)
-        
-        return gstar_S, Hstar_S
-    
 
 #%%
 
@@ -90,7 +61,11 @@ class Norm1:
         d = (abs(x) > l).astype(int)
         
         return np.diag(d)
-        
+    
+    def moreau(self, x, alpha):
+        assert alpha > 0
+        z = self.prox(x, alpha)
+        return self.eval(z) + .5 * np.linalg.norm(z-x)**2
     
     
 
