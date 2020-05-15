@@ -2,8 +2,9 @@ import numpy as np
 
 
 N = 8
-n = 10
-m = np.random.randint(low = 3, high = 10, size = N)
+n = 8
+#m = np.random.randint(low = 3, high = 10, size = N)
+m = np.ones(N, dtype = 'int')
 
 A = []
 for i in np.arange(N):
