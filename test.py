@@ -1,23 +1,6 @@
 import numpy as np
 
-m=100
-n=10
 
-A = np.random.randn(m,n)
-b = np.random.randn(m)
-x = np.ones(n)
-
-f, fstar, g, gstar, Hstar = lsq_functions(b)
-
-y = g(gstar(A@x))
-
-
-#abs(y - A@x)
-
-
-
-
-#%%
 N = 8
 n = 10
 m = np.random.randint(low = 3, high = 10, size = N)
@@ -28,7 +11,17 @@ for i in np.arange(N):
 
 
 A = np.vstack(A)
+b = np.random.randn(m.sum())
 
-    
+x = np.random.rand(n)
 
+# for testing only
+sample_size = 5
+alpha = .1
+
+
+
+#%%
+phi = Norm1(.1)    
+phi.prox(np.ones(3), alpha = 1)
 

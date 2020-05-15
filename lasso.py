@@ -1,25 +1,42 @@
 import numpy as np
 
 
-def create_lsq_oracle(b):
+class lsq:
     """ 
     f is the squared loss function (1/N) * ||Ax-b||**2
     each f_i is of the form x --> |x-b_i|**2
     _star denotes the convex conjugate
     n is sample size
     """
-    n = len(b)
     
-    f = lambda x, i: (x - b[i])**2
-    g = lambda x, i: 2 * (x - b[i])
+    def __init__(self, b):
+        self.b = b
+        self.N = len(b)
+        
+    # f = lambda x, i: (x - b[i])**2
+    # g = lambda x, i: 2 * (x - b[i])
     
-    fstar = lambda x, i: .25 * np.linalg.norm(x)**2 + b[i] * x
-    gstar = lambda x, i: .5 * x + b[i]
+    # fstar = lambda x, i: .25 * np.linalg.norm(x)**2 + b[i] * x
+    # gstar = lambda x, i: .5 * x + b[i]
     
-    Hstar = lambda x, i: .5 
+    # Hstar = lambda x, i: .5 
     
- 
-    def lsq_oracle(S):
+    def f(self, x, i):
+        return (x - self.b[i])**2
+    
+    def g(self, x, i):
+        return 2 * (x - self.b[i])
+    
+    def fstar(self, x, i):
+        return .25 * np.linalg.norm(x)**2 + self.b[i] * x
+    
+    def gstar(self, x, i):
+        return .5 * x + self.b[i]
+    
+    def Hstar(self, x, i):
+        return .5
+    
+    def oracle(self, S):
         """
 
         Parameters
@@ -35,39 +52,45 @@ def create_lsq_oracle(b):
             for each i in S, this contains the mapping \partial(nabla f^\star_i(xi)) at key i 
 
         """
-        assert np.all(np.isin(S, np.arange(n)))
+        assert np.all(np.isin(S, np.arange(self.N)))
+        assert S.dtype == 'int'
+        assert len(np.unique(S)) == len(S), "S contains duplicates"
         
         gstar_S = dict()
         Hstar_S = dict()
         
         for i in S:
-            
-            gstar_S[i] = lambda x: gstar(x,i)
-            Hstar_S[i] = lambda x: Hstar(x,i)
+            gstar_S[i] = lambda x: self.gstar(x,i)
+            Hstar_S[i] = lambda x: self.Hstar(x,i)
         
         return gstar_S, Hstar_S
     
-        
-    return lsq_oracle
 
 #%%
 
-def prox_1norm(v, l): 
-    return np.sign(v) * np.maximum(abs(v) - l, 0)
-
-
-def jacobian_1norm(v, l):  
-    d = (abs(v) > l).astype(int)
-    return np.diag(d)
-
-def create_1norm_func(lambda1):
+class Norm1:
+    """
+    class for the regularizer x --> lambda1 \|x\|_1
+    """
+    def __init__(self, lambda1):
+        assert lambda1 > 0 
+        self.lambda1 = lambda1
+        
+    def eval(self, x):
+        return self.lambda1 * np.linalg.norm(x, 1)
     
-    assert lambda1 > 0 
+    def prox(self, x, alpha):
+        assert alpha > 0
+        l = alpha * self.lambda1
+        return np.sign(x) * np.maximum(abs(x) - l, 0)
     
-    prox_phi = lambda v, alpha: prox_1norm(v, alpha* lambda1)
-    jacobian_prox_phi = lambda v, alpha: jacobian_1norm(v, alpha*lambda1)
-    
-    return prox_phi, jacobian_prox_phi
+    def jacobian_prox(self, x, alpha):
+        assert alpha > 0
+        l = alpha * self.lambda1
+        d = (abs(x) > l).astype(int)
+        
+        return np.diag(d)
+        
     
     
 
