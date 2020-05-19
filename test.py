@@ -20,7 +20,7 @@ x = np.random.rand(n)
 sample_size = 5
 alpha = .1
 
-
+xi = dict(zip(np.arange(N), [np.random.rand(m[i]) for i in np.arange(N)]))
 
 #%%
 phi = Norm1(.1)    

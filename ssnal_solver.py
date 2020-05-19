@@ -32,12 +32,20 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
     
     return res.squeeze()
 
+def get_default_newton_params():
+    
+    params = {'rho': .5, 'mu': .25}
+    
+    return params
+
 def solve_subproblem(f, phi, x, xi, alpha, A, m, sample_size, newton_params = None, verbose = False):
     """
     m: vector with all dimensions m_i, i = 1,..,N
     
     """
-    
+    if newton_params is None:
+        newton_params = get_default_newton_params()
+        
     N = len(m)
     # creates a vector with nrows like A in order to index th relevant A_i from A
     dims = np.repeat(np.arange(N),m)
@@ -47,46 +55,66 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, sample_size, newton_params = No
     # dimension of the problem induced by S
     M = m[S].sum()
     
-    # IMPORTANT: subA is ordered, i.e. it is in the order as np.arange(N) and NOT of S 
+    # IMPORTANT: subA is ordered, i.e. it is in the order as np.arange(N) and NOT of S --> breaks if S not sorted
     subA = A[np.isin(dims, S), :]
+    #alternatively (safer but slower): subA = np.vstack([A[dims == i,:] for i in S])
     
     assert subA.shape[0] == M
-   
-    xi = dict(zip(np.arange(N), [np.random.rand(m[i]) for i in np.arange(N)]))
+    assert np.all(list(xi.keys()) == np.arange(N)), "xi has wrong keys"
     # sub_dims is helper array to index xi_stack wrt to the elements of S
     sub_dims = np.repeat(S, m[S])
-    # xi[i] == xi_stack[sub_dims == i]
     xi_stack = np.hstack([xi[i] for i in S])
     
+    assert np.all([np.all(xi[i] == xi_stack[sub_dims == i]) for i in S]), "Something went wrong in the sorting/stacking of xi"
     assert len(xi_stack) == M
     
     condA = False
-    condB = False
+    condB = True
     
     sub_iter = 0
     
-    while not(condA or condB) and sub_iter < 10:
+    while not(condA and condB) and sub_iter < 10:
         
     # step 1: construct Newton matrix and RHS
         z = x - (alpha/sample_size) * (subA.T @ xi_stack)
         U = phi.jacobian_prox(z, alpha = alpha)
-    
         tmp2 = (alpha/sample_size) * subA @ U @ subA.T
         
-        # ATTENTION: this produces wrong order if S is not sorted!!!
         tmp = [f.Hstar(xi[i], i) for i in S]
-        
         W = block_diag(tmp) + tmp2
         rhs = -1 * (np.hstack([f.gstar(xi[i],i) for i in S]) - subA @ phi.prox(z, alpha))
+        
     # step2: solve Newton system
+        if verbose:
+            print("Start CG method")
         d, cg_status = cg(W, rhs, tol = 1e-4, maxiter = 100)
         assert cg_status == 0, "CG method did not converge"
     # step 3: backtracking line search
+        if verbose:
+            print("Start Line search")
+        U_old = Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA)
+        beta = newton_params['rho']
+        U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA)
         
+        while U_new > U_old + newton_params['mu'] * beta * (d @ -rhs):
+            beta *= newton_params['rho']
+            U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA)
+                   
     # step 4: update xi
+        if verbose:
+            print("Update xi variables")
+        xi_stack += beta * d
+        for i in S:
+            xi[i] = xi_stack[sub_dims == i]
         
+        sub_iter += 1
         
-    return 1
+    if verbose and not(condA and condB):
+        print("Subproblem could not be solve with the given accuracy! -- reached maximal iterations")
+        
+    
+        
+    return xi
 
 
 

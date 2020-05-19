@@ -78,14 +78,4 @@ class Norm1:
     
     
 
-#%%
-n=1000
-p=100
 
-b = np.random.randn(n)
-
-lsq_oracle = create_lsq_oracle(b)
-
-S = np.array([1,2,3])
-
-res = lsq_oracle(S)
