@@ -34,11 +34,11 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
 
 def get_default_newton_params():
     
-    params = {'rho': .9, 'mu': .01, 'eps': 1e-4, 'max_iter': 15}
+    params = {'rho': .9, 'mu': .25, 'eps': 1e-4, 'max_iter': 15}
     
     return params
 
-def solve_subproblem(f, phi, x, xi, alpha, A, m, sample_size, newton_params = None, verbose = False):
+def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbose = False):
     """
     m: vector with all dimensions m_i, i = 1,..,N
     
@@ -50,7 +50,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, sample_size, newton_params = No
     # creates a vector with nrows like A in order to index th relevant A_i from A
     dims = np.repeat(np.arange(N),m)
     
-    S = sampler(N, sample_size)
+    sample_size = len(S)
     assert np.all(S == np.sort(S)), "S is not sorted!"
     # dimension of the problem induced by S
     M = m[S].sum()
@@ -71,6 +71,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, sample_size, newton_params = No
     
     sub_iter = 0
     converged = False
+    residual = list()
     
     while sub_iter < newton_params['max_iter']:
         
@@ -78,7 +79,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, sample_size, newton_params = No
         z = x - (alpha/sample_size) * (subA.T @ xi_stack)
         rhs = -1 * (np.hstack([f.gstar(xi[i],i) for i in S]) - subA @ phi.prox(z, alpha))
         
-        print(np.linalg.norm(rhs))
+        residual.append(np.linalg.norm(rhs))
         if np.linalg.norm(rhs) <= newton_params['eps']:
             converged = True
             break
@@ -94,7 +95,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, sample_size, newton_params = No
         if verbose:
             print("Start CG method")
         d, cg_status = cg(W, rhs, tol = 1e-6, maxiter = 100)
-        print(f"Direction: {d}")
+        #print(f"Direction: {d}")
         assert cg_status == 0, "CG method did not converge"
     # step 3: backtracking line search
         if verbose:
@@ -107,42 +108,47 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, sample_size, newton_params = No
             beta *= newton_params['rho']
             U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA)
         
-        print(f"Step size: {beta}")
+        #print(f"Step size: {beta}")
     # step 4: update xi
         if verbose:
             print("Update xi variables")
         xi_stack += beta * d
         for i in S:
             xi[i] = xi_stack[sub_dims == i].copy()
-        print(f"New xi_stack: {xi_stack}")
+        #print(f"New xi_stack: {xi_stack}")
         sub_iter += 1
         
     if not converged:
         print("WARNING: Subproblem could not be solve with the given accuracy! -- reached maximal iterations")
         
+    # update primal iterate
+    z = x - (alpha/sample_size) * (subA.T @ xi_stack)
+    new_x = phi.prox(z, alpha)
     
         
-    return xi
+    return new_x, xi, np.array(residual)
 
 
 
-def stochastic_ssnal(f, phi, x0, eps = 1e-4, params = None, verbose = False, measure = False):
+def stochastic_ssnal(f, phi, x0, A, eps = 1e-4, params = None, verbose = False, measure = False):
     
-    d = len(x0)
+    n = len(x0)
     x_t = x0.copy()
+    alpha_t = 100
+    sample_size = min(10, f.N)
     
-    eta = np.inf
-
-    
+    # get infos related to structure of f
+    m = f.m.copy()
+    xi = dict(zip(np.arange(f.N), [np.random.rand(m[i]) for i in np.arange(f.N)]))
     
     # initialize 
     status = 'not optimal'
-    
-    max_iter = 100
+    max_iter = 20
+    eta = np.inf
     
     # initialize for measurements
-    runtime = np.zeros(max_iter)
-    
+    runtime = list()
+    obj = list()
     
     for iter_t in np.arange(max_iter):
         
@@ -155,7 +161,11 @@ def stochastic_ssnal(f, phi, x0, eps = 1e-4, params = None, verbose = False, mea
         
         if verbose:
             print(f"------------Iteration {iter_t} of the Stochastic SSNAL algorithm----------------")
-    
+        
+        S = sampler(f.N, sample_size)
+        x_t, xi, _ = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, newton_params = None, verbose = False)
+        
+        obj.append(f.eval(x_t))
     
     if eta > eps:
         status = 'max iterations reached'    
@@ -163,6 +173,6 @@ def stochastic_ssnal(f, phi, x0, eps = 1e-4, params = None, verbose = False, mea
     print(f"Stochastic SSNAL terminated after {iter_t} iterations with accuracy {eta}")
     print(f"Stochastic SSNAL status: {status}")
     
+    info = {'objective': np.array(obj)}
     
-    
-    return x_t
+    return x_t, info

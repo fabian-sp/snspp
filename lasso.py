@@ -13,6 +13,7 @@ class lsq:
         self.b = b
         self. A = A
         self.N = len(b)
+        self.m = np.ones(self.N, dtype = 'int')
         
     # f = lambda x, i: (x - b[i])**2
     # g = lambda x, i: 2 * (x - b[i])
