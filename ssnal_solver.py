@@ -34,7 +34,7 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
 
 def get_default_newton_params():
     
-    params = {'rho': .5, 'mu': .25}
+    params = {'rho': .9, 'mu': .01, 'eps': 1e-4, 'max_iter': 15}
     
     return params
 
@@ -64,53 +64,61 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, sample_size, newton_params = No
     # sub_dims is helper array to index xi_stack wrt to the elements of S
     sub_dims = np.repeat(S, m[S])
     xi_stack = np.hstack([xi[i] for i in S])
+    print(f"Initial xi_stack: {xi_stack}")
     
     assert np.all([np.all(xi[i] == xi_stack[sub_dims == i]) for i in S]), "Something went wrong in the sorting/stacking of xi"
     assert len(xi_stack) == M
     
-    condA = False
-    condB = True
-    
     sub_iter = 0
+    converged = False
     
-    while not(condA and condB) and sub_iter < 10:
+    while sub_iter < newton_params['max_iter']:
         
     # step 1: construct Newton matrix and RHS
         z = x - (alpha/sample_size) * (subA.T @ xi_stack)
+        rhs = -1 * (np.hstack([f.gstar(xi[i],i) for i in S]) - subA @ phi.prox(z, alpha))
+        
+        print(np.linalg.norm(rhs))
+        if np.linalg.norm(rhs) <= newton_params['eps']:
+            converged = True
+            break
+        
         U = phi.jacobian_prox(z, alpha = alpha)
         tmp2 = (alpha/sample_size) * subA @ U @ subA.T
         
         tmp = [f.Hstar(xi[i], i) for i in S]
         W = block_diag(tmp) + tmp2
-        rhs = -1 * (np.hstack([f.gstar(xi[i],i) for i in S]) - subA @ phi.prox(z, alpha))
+        
         
     # step2: solve Newton system
         if verbose:
             print("Start CG method")
-        d, cg_status = cg(W, rhs, tol = 1e-4, maxiter = 100)
+        d, cg_status = cg(W, rhs, tol = 1e-6, maxiter = 100)
+        print(f"Direction: {d}")
         assert cg_status == 0, "CG method did not converge"
     # step 3: backtracking line search
         if verbose:
             print("Start Line search")
         U_old = Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA)
-        beta = newton_params['rho']
+        beta = 1.
         U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA)
         
         while U_new > U_old + newton_params['mu'] * beta * (d @ -rhs):
             beta *= newton_params['rho']
             U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA)
-                   
+        
+        print(f"Step size: {beta}")
     # step 4: update xi
         if verbose:
             print("Update xi variables")
         xi_stack += beta * d
         for i in S:
-            xi[i] = xi_stack[sub_dims == i]
-        
+            xi[i] = xi_stack[sub_dims == i].copy()
+        print(f"New xi_stack: {xi_stack}")
         sub_iter += 1
         
-    if verbose and not(condA and condB):
-        print("Subproblem could not be solve with the given accuracy! -- reached maximal iterations")
+    if not converged:
+        print("WARNING: Subproblem could not be solve with the given accuracy! -- reached maximal iterations")
         
     
         
