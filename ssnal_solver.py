@@ -119,7 +119,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
         sub_iter += 1
         
     if not converged:
-        print("WARNING: Subproblem could not be solve with the given accuracy! -- reached maximal iterations")
+        print(f"WARNING: reached maximal iterations in semismooth Newton -- accuracy {residual[-1]}")
         
     # update primal iterate
     z = x - (alpha/sample_size) * (subA.T @ xi_stack)
@@ -135,7 +135,7 @@ def stochastic_ssnal(f, phi, x0, A, eps = 1e-4, params = None, verbose = False, 
     n = len(x0)
     x_t = x0.copy()
     alpha_t = 100
-    sample_size = min(10, f.N)
+    sample_size = min(8, f.N)
     
     # get infos related to structure of f
     m = f.m.copy()
@@ -143,12 +143,13 @@ def stochastic_ssnal(f, phi, x0, A, eps = 1e-4, params = None, verbose = False, 
     
     # initialize 
     status = 'not optimal'
-    max_iter = 20
+    max_iter = 100
     eta = np.inf
     
     # initialize for measurements
     runtime = list()
     obj = list()
+    hist = x_t.copy()
     
     for iter_t in np.arange(max_iter):
         
@@ -165,6 +166,8 @@ def stochastic_ssnal(f, phi, x0, A, eps = 1e-4, params = None, verbose = False, 
         S = sampler(f.N, sample_size)
         x_t, xi, _ = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, newton_params = None, verbose = False)
         
+        hist = np.vstack((hist, x_t))
+        
         obj.append(f.eval(x_t))
     
     if eta > eps:
@@ -173,6 +176,6 @@ def stochastic_ssnal(f, phi, x0, A, eps = 1e-4, params = None, verbose = False, 
     print(f"Stochastic SSNAL terminated after {iter_t} iterations with accuracy {eta}")
     print(f"Stochastic SSNAL status: {status}")
     
-    info = {'objective': np.array(obj)}
+    info = {'objective': np.array(obj), 'iterates': hist}
     
     return x_t, info

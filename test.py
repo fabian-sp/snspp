@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 from lasso import Norm1, lsq
 
 def lasso_test(N = 10, n = 20):
@@ -31,3 +32,6 @@ def lasso_test(N = 10, n = 20):
 #%%
 
 #m = np.random.randint(low = 3, high = 10, size = N)
+
+#res,info = stochastic_ssnal(f, phi, x, A, eps = 1e-4, params = None, verbose = False, measure = False)
+#sns.heatmap(info['iterates'], cmap = 'coolwarm')
