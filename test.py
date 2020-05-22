@@ -1,9 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from lasso import Norm1, lsq
 
-def lasso_test(N = 10, n = 20):
+from lasso import Norm1, lsq
+from opt_problem import problem
+
+def lasso_test(N = 10, n = 20, k = 5):
     
     m = np.ones(N, dtype = 'int')
 
@@ -13,25 +15,37 @@ def lasso_test(N = 10, n = 20):
     
     
     A = np.vstack(A)
-    b = np.random.randn(m.sum())
     
-    x = np.random.rand(n)
+    x = np.random.randn(k) 
+    x = np.concatenate((x, np.zeros(n-k)))
+    np.random.shuffle(x)
+    
+    b = A @ x
     
     phi = Norm1(.1)    
     phi.prox(np.ones(3), alpha = 1)
     
     f = lsq(A, b)
 
-    # for testing only
-    sample_size = 5
-    alpha = .1
-    
-    xi = dict(zip(np.arange(N), [np.random.rand(m[i]) for i in np.arange(N)]))
+    return x, A, b, f, phi
+#%%
+N = 10
+n = 20
+k = 5
+xsol, A, b, f, phi = lasso_test(N, n, k)
 
-    return
+P = problem(f, phi, A, verbose = True)
+
+P.solve()
+
+P.plot_path()
+
+P.plot_samples()
 #%%
 
 #m = np.random.randint(low = 3, high = 10, size = N)
 
-#res,info = stochastic_ssnal(f, phi, x, A, eps = 1e-4, params = None, verbose = False, measure = False)
-#sns.heatmap(info['iterates'], cmap = 'coolwarm')
+
+np.isin(np.arange(N), P.info['samples'])
+
+

@@ -3,9 +3,11 @@
 """
 
 import numpy as np
-from ssnal_solver import stochastic_ssnal
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+from ssnal_solver import stochastic_ssnal
+
 
 class problem:
     
@@ -25,10 +27,30 @@ class problem:
 
         self.x, self.info = stochastic_ssnal(self.f, self.phi, self.x0, self.A, eps = 1e-4, params = None, \
                          verbose = self.verbose, measure = False)
-            
+        
+        self.xavg = self.info['iterates'].mean(axis=0)
+        
         return
     
     def plot_path(self):
         
         fig, ax = plt.subplots()
         sns.heatmap(self.info['iterates'], cmap = 'coolwarm', ax = ax)
+    
+    def plot_samples(self):
+        tmpfun = lambda x: np.isin(np.arange(self.f.N), x)
+        
+        tmp = np.apply_along_axis(tmpfun, axis = 1, arr = self.info['samples'])
+        tmp2 = tmp.sum(axis=0)
+        
+        fig = plt.figure(figsize=(6, 6))
+        grid = plt.GridSpec(1, 10, wspace=0.4, hspace=0.3)
+        ax1 = fig.add_subplot(grid[:, :-1])
+        ax2 = fig.add_subplot(grid[:, -1:])
+        
+        sns.heatmap(tmp.T, square = False, cmap = 'Greys', vmin = 0, vmax = 1, cbar = False, \
+                    xticklabels = [], ax = ax1)
+        sns.heatmap(tmp2[:,np.newaxis], square = True, annot = True, cmap = 'viridis', cbar = False, \
+                    xticklabels = [], yticklabels = [], ax = ax2)
+        
+        return

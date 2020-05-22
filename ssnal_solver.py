@@ -46,7 +46,7 @@ def check_newton_params(newton_params):
     assert newton_params['rho'] > 0 and newton_params['rho'] < 1
     
     assert newton_params['eps'] >= 0
-    assert newton_params['delta'] >= 0 and newton_params['delta'] < 1
+    #assert newton_params['delta'] >= 0 and newton_params['delta'] < 1
     
     return
 
@@ -79,7 +79,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     # sub_dims is helper array to index xi_stack wrt to the elements of S
     sub_dims = np.repeat(S, m[S])
     xi_stack = np.hstack([xi[i] for i in S])
-    print(f"Initial xi_stack: {xi_stack}")
+    #print(f"Initial xi_stack: {xi_stack}")
     
     assert np.all([np.all(xi[i] == xi_stack[sub_dims == i]) for i in S]), "Something went wrong in the sorting/stacking of xi"
     assert len(xi_stack) == M
@@ -149,7 +149,7 @@ def stochastic_ssnal(f, phi, x0, A, eps = 1e-4, params = None, verbose = False, 
     
     n = len(x0)
     x_t = x0.copy()
-    alpha_t = 100
+    alpha_t = 10
     sample_size = min(8, f.N)
     
     # get infos related to structure of f
@@ -158,13 +158,14 @@ def stochastic_ssnal(f, phi, x0, A, eps = 1e-4, params = None, verbose = False, 
     
     # initialize 
     status = 'not optimal'
-    max_iter = 100
+    max_iter = 50
     eta = np.inf
     
     # initialize for measurements
     runtime = list()
     obj = list()
-    hist = x_t.copy()
+    x_hist = x_t.copy()
+    S_hist = list()
     
     for iter_t in np.arange(max_iter):
         
@@ -181,9 +182,10 @@ def stochastic_ssnal(f, phi, x0, A, eps = 1e-4, params = None, verbose = False, 
         S = sampler(f.N, sample_size)
         x_t, xi, _ = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, newton_params = None, verbose = False)
         
-        hist = np.vstack((hist, x_t))
-        
+        x_hist = np.vstack((x_hist, x_t))
         obj.append(f.eval(x_t))
+        S_hist.append(S)
+        
     
     if eta > eps:
         status = 'max iterations reached'    
@@ -191,6 +193,6 @@ def stochastic_ssnal(f, phi, x0, A, eps = 1e-4, params = None, verbose = False, 
     print(f"Stochastic SSNAL terminated after {iter_t} iterations with accuracy {eta}")
     print(f"Stochastic SSNAL status: {status}")
     
-    info = {'objective': np.array(obj), 'iterates': hist}
+    info = {'objective': np.array(obj), 'iterates': x_hist, 'samples' : np.array(S_hist)}
     
     return x_t, info
