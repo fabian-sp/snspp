@@ -34,9 +34,21 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
 
 def get_default_newton_params():
     
-    params = {'rho': .9, 'mu': .25, 'eps': 1e-4, 'max_iter': 15}
+    params = {'tau': .5, 'eta' : .5, 'rho': .9, 'mu': .25, 'eps': 1e-4, 'max_iter': 15}
     
     return params
+
+def check_newton_params(newton_params):
+    
+    assert newton_params['mu'] > 0 and newton_params['mu'] < .5
+    assert newton_params['eta'] > 0 and newton_params['eta'] < 1
+    assert newton_params['tau'] > 0 and newton_params['tau'] <= 1
+    assert newton_params['rho'] > 0 and newton_params['rho'] < 1
+    
+    assert newton_params['eps'] >= 0
+    assert newton_params['delta'] >= 0 and newton_params['delta'] < 1
+    
+    return
 
 def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbose = False):
     """
@@ -45,6 +57,9 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     """
     if newton_params is None:
         newton_params = get_default_newton_params()
+    
+    check_newton_params(newton_params)
+    assert alpha > 0 , "step sizes are not positive"
         
     N = len(m)
     # creates a vector with nrows like A in order to index th relevant A_i from A
