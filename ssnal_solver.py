@@ -109,7 +109,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     # step2: solve Newton system
         if verbose:
             print("Start CG method")
-        d, cg_status = cg(W, rhs, tol = 1e-6, maxiter = 100)
+        d, cg_status = cg(W, rhs, tol = 1e-4, maxiter = 100)
         #print(f"Direction: {d}")
         assert cg_status == 0, "CG method did not converge"
     # step 3: backtracking line search
