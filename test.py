@@ -29,8 +29,8 @@ def lasso_test(N = 10, n = 20, k = 5):
 
     return x, A, b, f, phi
 #%%
-N = 10
-n = 20
+N = 40
+n = 50
 k = 5
 xsol, A, b, f, phi = lasso_test(N, n, k)
 
