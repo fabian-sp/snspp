@@ -143,12 +143,25 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
         
     return new_x, xi, np.array(residual)
 
-
-
-def stochastic_ssnal(f, phi, x0, A, eps = 1e-4, params = None, verbose = False, measure = False):
+def compute_x_mean(x_hist, step_sizes):
+    a = np.array(step_sizes)
     
+    assert np.all(a > 0)
+    
+    x_mean = (1/a.sum()) * x_hist.T @ a 
+
+    return x_mean
+
+def stochastic_ssnal(f, phi, x0, eps = 1e-4, params = None, verbose = False, measure = False):
+    
+    # initialize all variables
+    A = f.A.copy()
     n = len(x0)
+    assert n == A.shape[1], "wrong dimensions"
+    
     x_t = x0.copy()
+    x_mean = x0.copy()
+    
     alpha_t = 10
     sample_size = min(10, f.N)
     
@@ -156,7 +169,7 @@ def stochastic_ssnal(f, phi, x0, A, eps = 1e-4, params = None, verbose = False, 
     m = f.m.copy()
     xi = dict(zip(np.arange(f.N), [np.random.rand(m[i]) for i in np.arange(f.N)]))
     
-    # initialize 
+    # initialize for stopping criterion
     status = 'not optimal'
     max_iter = 50
     eta = np.inf
@@ -181,20 +194,22 @@ def stochastic_ssnal(f, phi, x0, A, eps = 1e-4, params = None, verbose = False, 
             print(f"------------Iteration {iter_t} of the Stochastic SSNAL algorithm----------------")
         
         S = sampler(f.N, sample_size)
-        x_old = x_t.copy()
+        
         x_t, xi, _ = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, newton_params = None, verbose = False)
         
-        eta1 = (1/alpha_t) * np.linalg.norm(x_t - x_old)
-        print("Moreau envelope norm: ", eta1)
         
         x_hist = np.vstack((x_hist, x_t))
         obj.append(f.eval(x_t))
         step_sizes.append(alpha_t)
         S_hist.append(S)
         
-        x_mean = (1/np.array(step_sizes).sum()) * x_hist.T @ np.array(step_sizes)  
+        x_old = x_mean.copy()
+        x_mean = compute_x_mean(x_hist, step_sizes)
         print("Objective of mean iterate: ", f.eval(x_mean))
-    
+
+        eta1 = (1/alpha_t) * np.linalg.norm(x_mean - x_old)
+        print("Moreau envelope norm: ", eta1)  
+        
     if eta > eps:
         status = 'max iterations reached'    
         
@@ -203,4 +218,4 @@ def stochastic_ssnal(f, phi, x0, A, eps = 1e-4, params = None, verbose = False, 
     
     info = {'objective': np.array(obj), 'iterates': x_hist, 'step_sizes': step_sizes, 'samples' : np.array(S_hist)}
     
-    return x_t, info
+    return x_t, x_mean, info

@@ -11,7 +11,7 @@ class lsq:
     
     def __init__(self, A, b):
         self.b = b
-        self. A = A
+        self.A = A
         self.N = len(b)
         self.m = np.ones(self.N, dtype = 'int')
         
