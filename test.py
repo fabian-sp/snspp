@@ -33,7 +33,7 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1):
 N = 100
 n = 500
 k = 5
-l1 = 1
+l1 = .01
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1)
 
@@ -46,11 +46,25 @@ P.plot_path()
 P.plot_samples()
 
 tmp = pd.DataFrame(np.vstack((xsol, P.xavg)).T, columns = ['true', 'estimated'])
+
+
+#%%
+sub_rsd = P.info['ssn_info']
+
+fig, axs = plt.subplots(5,10)
+
+for j in np.arange(50):
+    ax = axs.ravel()[j]
+    ax.plot(sub_rsd[j]['residual'], 'blue')
+    ax2 = ax.twinx()
+    ax2.plot(sub_rsd[j]['step_size'], 'orange')
+    ax2.plot(sub_rsd[j]['direction'], 'green')
+    
+    ax.set_yscale('log')
+    
+#fig.legend(['residual', 'step_size', 'direction'])
 #%%
 
 #m = np.random.randint(low = 3, high = 10, size = N)
-
-
-np.isin(np.arange(N), P.info['samples'])
 
 
