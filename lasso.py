@@ -77,6 +77,42 @@ class Norm1:
         z = self.prox(x, alpha)
         return self.eval(z) + .5 * np.linalg.norm(z-x)**2
     
+#%%
+class block_lsq:
+    """ 
+    f is the squared loss function (1/N) * ||Ax-b||**2
+    _star denotes the convex conjugate
+    n is sample size
+    """
     
+    def __init__(self, A, b, m):
+        self.b = b
+        self.A = A
+        self.N = len(m)
+        self.m = m
+        self.ixx = np.repeat(np.arange(self.N), self.m)
+
+    def eval(self, x):
+        y = 0
+        for i in np.arange(self.N):
+            z_i = self.A[self.ixx == i, :] @ x
+            y += self.f(z_i, i)
+        
+        return (1/self.N)*y
+
+    def f(self, x, i):
+        return np.linalg.norm(x - self.b[self.ixx == i])**2
+    
+    def g(self, x, i):
+        return 2 * (x - self.b[self.ixx == i])
+    
+    def fstar(self, x, i):
+        return .25 * np.linalg.norm(x)**2 + np.sum(self.b[self.ixx == i] * x)
+    
+    def gstar(self, x, i):
+        return .5 * x + self.b[self.ixx == i]
+    
+    def Hstar(self, x, i):
+        return .5 * np.eye(self.m[i])
 
 

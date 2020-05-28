@@ -12,7 +12,7 @@ def sampler(N, size):
     samples a subset of {1,..,N} without replacement
     """
     assert size <= N, "specified a bigger sample size than N"
-    S = np.random.choice(a = np.arange(N), p = (1/N) * np.ones(N), size = size, replace = False)
+    S = np.random.choice(a = np.arange(N), p = (1/N) * np.ones(N), size = size, replace = True)
     
     S = S.astype('int')
     # sort S in order to avoid problems with indexing later on
@@ -28,7 +28,7 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
     z = x - (alpha/sample_size) * (subA.T @ xi_stack)
     tmp = .5 * np.linalg.norm(z)**2 - phi.moreau(z, alpha)
     
-    res = sum([f.fstar(xi_stack[sub_dims == i], i) for i in S]) + (sample_size/alpha) * tmp
+    res = sum([f.fstar(xi_stack[sub_dims == i], S[i]) for i in range(sample_size)]) + (sample_size/alpha) * tmp
     
     return res.squeeze()
 
@@ -71,16 +71,17 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     M = m[S].sum()
     
     # IMPORTANT: subA is ordered, i.e. it is in the order as np.arange(N) and NOT of S --> breaks if S not sorted
-    subA = A[np.isin(dims, S), :]
-    #alternatively (safer but slower): subA = np.vstack([A[dims == i,:] for i in S])
+    #subA = A[np.isin(dims, S), :]
+    #alternatively (safer but slower): 
+    subA = np.vstack([A[dims == i,:] for i in S])
     
     assert subA.shape[0] == M
     assert np.all(list(xi.keys()) == np.arange(N)), "xi has wrong keys"
     # sub_dims is helper array to index xi_stack wrt to the elements of S
-    sub_dims = np.repeat(S, m[S])
+    sub_dims = np.repeat(range(sample_size), m[S])
     xi_stack = np.hstack([xi[i] for i in S])
     
-    assert np.all([np.all(xi[i] == xi_stack[sub_dims == i]) for i in S]), "Something went wrong in the sorting/stacking of xi"
+    assert np.all([np.all(xi[S[i]] == xi_stack[sub_dims == i]) for i in range(sample_size)]), "Something went wrong in the sorting/stacking of xi"
     assert len(xi_stack) == M
     
     sub_iter = 0
@@ -137,9 +138,9 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
         if verbose:
             print("Update xi variables")
         xi_stack += beta * d
-        for i in S:
-            xi[i] = xi_stack[sub_dims == i].copy()
-        #print(f"New xi_stack: {xi_stack}")
+        for i in range(sample_size):
+            xi[S[i]] = xi_stack[sub_dims == i].copy()
+            
         sub_iter += 1
         
     if not converged:

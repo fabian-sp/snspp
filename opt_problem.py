@@ -23,7 +23,7 @@ class problem:
     def solve(self):
         
         if self.x0 is None:
-            self.x0 = np.random.rand(self.n)
+            self.x0 = np.zeros(self.n)
 
         self.x, self.xavg, self.info = stochastic_ssnal(self.f, self.phi, self.x0, eps = 1e-4, params = None, \
                          verbose = self.verbose, measure = False)
@@ -46,7 +46,7 @@ class problem:
         ax1 = fig.add_subplot(grid[:, :-3])
         ax2 = fig.add_subplot(grid[:, -3:])
         
-        sns.heatmap(tmp.T, square = False, cmap = 'Blues', vmin = 0, vmax = 1, cbar = False, \
+        sns.heatmap(tmp.T, square = False, cmap = 'Blues', vmin = 0, cbar = False, \
                     xticklabels = [], ax = ax1)
         sns.heatmap(tmp2[:,np.newaxis], square = False, annot = True, cmap = 'viridis', cbar = False, \
                     xticklabels = [], yticklabels = [], ax = ax2)
