@@ -28,7 +28,7 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
     z = x - (alpha/sample_size) * (subA.T @ xi_stack)
     tmp = .5 * np.linalg.norm(z)**2 - phi.moreau(z, alpha)
     
-    res = sum([f.fstar(xi_stack[sub_dims == i], S[i]) for i in range(sample_size)]) + (sample_size/alpha) * tmp
+    res = sum([f.fstar(xi_stack[sub_dims == l], S[l]) for l in range(sample_size)]) + (sample_size/alpha) * tmp
     
     return res.squeeze()
 
@@ -81,7 +81,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     sub_dims = np.repeat(range(sample_size), m[S])
     xi_stack = np.hstack([xi[i] for i in S])
     
-    assert np.all([np.all(xi[S[i]] == xi_stack[sub_dims == i]) for i in range(sample_size)]), "Something went wrong in the sorting/stacking of xi"
+    assert np.all([np.all(xi[S[l]] == xi_stack[sub_dims == l]) for l in range(sample_size)]), "Something went wrong in the sorting/stacking of xi"
     assert len(xi_stack) == M
     
     sub_iter = 0
@@ -113,6 +113,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
             print("Start CG method")
         d, cg_status = cg(W, rhs, tol = 1e-12, maxiter = 500)
         
+        assert d@rhs > 0 , "No descent direction"
         assert cg_status == 0, "CG method did not converge"
         norm_dir.append(np.linalg.norm(d))
     # step 3: backtracking line search
@@ -138,8 +139,8 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
         if verbose:
             print("Update xi variables")
         xi_stack += beta * d
-        for i in range(sample_size):
-            xi[S[i]] = xi_stack[sub_dims == i].copy()
+        for l in range(sample_size):
+            xi[S[l]] = xi_stack[sub_dims == l].copy()
             
         sub_iter += 1
         
