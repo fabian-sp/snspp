@@ -164,30 +164,32 @@ def compute_x_mean(x_hist, step_sizes):
 
     return x_mean
 
-def stochastic_ssnal(f, phi, x0, eps = 1e-4, params = None, verbose = False, measure = False):
+def stochastic_prox_point(f, phi, x0, eps = 1e-4, params = dict(), verbose = False, measure = False):
     
     # initialize all variables
     A = f.A.copy()
     n = len(x0)
+    m = f.m.copy()
     assert n == A.shape[1], "wrong dimensions"
     
     x_t = x0.copy()
     x_mean = x0.copy()
-    
     alpha_t = 10
-    sample_size = min(15, f.N)
-    
-    # get infos related to structure of f
-    m = f.m.copy()
-    xi = dict(zip(np.arange(f.N), [np.random.rand(m[i]) for i in np.arange(f.N)]))
     
     # initialize for stopping criterion
     status = 'not optimal'
-    max_iter = 50
     eta = np.inf
     
-    # initialize for measurements
+    if 'max_iter' not in params.keys():    
+        params['max_iter'] = 70
+    
+    if 'sample_size' not in params.keys():    
+        params['sample_size'] = min(f.N, max(15, int(f.N)/2))
+    
+    # initialize variables + containers
+    xi = dict(zip(np.arange(f.N), [np.random.rand(m[i]) for i in np.arange(f.N)]))
     x_hist = x_t.copy()
+    
     step_sizes = [alpha_t]
     obj = list()
     S_hist = list()
@@ -197,9 +199,9 @@ def stochastic_ssnal(f, phi, x0, eps = 1e-4, params = None, verbose = False, mea
     hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s"
     out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
     if verbose:
-        print(hdr_fmt % ("iter", "obj", "eta", "alpha_t", "grad_moreau"))
+        print(hdr_fmt % ("iter", "obj (x_t)", "obj(x_mean)", "alpha_t", "grad_moreau"))
     
-    for iter_t in np.arange(max_iter):
+    for iter_t in np.arange(params['max_iter']):
         
         if measure:
             start = time.time()
@@ -208,33 +210,31 @@ def stochastic_ssnal(f, phi, x0, eps = 1e-4, params = None, verbose = False, mea
             status = 'optimal'
             break
             
-        S = sampler(f.N, sample_size)
+        S = sampler(f.N, params['sample_size'])
         
         x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, newton_params = None, verbose = False)
         
         ssn_info.append(this_ssn)
         
         x_hist = np.vstack((x_hist, x_t))
-        obj.append(f.eval(x_t))
+        obj.append(f.eval(x_t) + phi.eval(x_t))
         step_sizes.append(alpha_t)
         S_hist.append(S)
         
         x_old = x_mean.copy()
         x_mean = compute_x_mean(x_hist, step_sizes)
-        #print("Objective of mean iterate: ", f.eval(x_mean))
-
-        eta1 = (1/alpha_t) * np.linalg.norm(x_mean - x_old)
-        #print("Moreau envelope norm: ", eta1)  
+        
+        eta = (1/alpha_t) * np.linalg.norm(x_mean - x_old)
         
         if verbose:
-            #print(f"------------Iteration {iter_t} of the Stochastic SSNAL algorithm----------------")
-            print(out_fmt % (iter_t, obj[-1], eta, alpha_t, eta1))
+            #print(f"------------Iteration {iter_t} of the Stochastic Proximal Point algorithm----------------")
+            print(out_fmt % (iter_t, obj[-1], f.eval(x_mean) + phi.eval(x_mean), alpha_t, eta))
         
     if eta > eps:
         status = 'max iterations reached'    
         
-    print(f"Stochastic SSNAL terminated after {iter_t} iterations with accuracy {eta}")
-    print(f"Stochastic SSNAL status: {status}")
+    print(f"Stochastic ProxPoint terminated after {iter_t} iterations with accuracy {eta}")
+    print(f"Stochastic ProxPoint status: {status}")
     
     info = {'objective': np.array(obj), 'iterates': x_hist, 'step_sizes': step_sizes, 'samples' : np.array(S_hist), \
             'ssn_info': ssn_info}

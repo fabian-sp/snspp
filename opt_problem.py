@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from ssnal_solver import stochastic_ssnal
+from spp_solver import stochastic_prox_point
 
 
 class problem:
@@ -25,7 +25,7 @@ class problem:
         if self.x0 is None:
             self.x0 = np.zeros(self.n)
 
-        self.x, self.xavg, self.info = stochastic_ssnal(self.f, self.phi, self.x0, eps = 1e-4, params = None, \
+        self.x, self.xavg, self.info = stochastic_prox_point(self.f, self.phi, self.x0, eps = 1e-4, params = dict(), \
                          verbose = self.verbose, measure = False)
         
         return
@@ -33,7 +33,7 @@ class problem:
     def plot_path(self):
         
         fig, ax = plt.subplots()
-        sns.heatmap(self.info['iterates'], cmap = 'coolwarm', ax = ax)
+        sns.heatmap(self.info['iterates'], cmap = 'coolwarm', vmin = -1, vmax = 1, ax = ax)
     
     def plot_samples(self):
         tmpfun = lambda x: np.isin(np.arange(self.f.N), x)
