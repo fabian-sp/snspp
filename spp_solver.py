@@ -174,14 +174,22 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-4, params = dict(), verbose = Fal
     
     x_t = x0.copy()
     x_mean = x0.copy()
-    alpha_t = 10
+    
     
     # initialize for stopping criterion
     status = 'not optimal'
     eta = np.inf
     
+    if 'alpha_0' not in params.keys():    
+        alpha_t = 10
+    else:
+        alpha_t = params['alpha_0']
+        
     if 'max_iter' not in params.keys():    
         params['max_iter'] = 70
+        
+    if 'step_size_mult' not in params.keys():    
+        params['step_size_mult'] = 1.
     
     if 'sample_size' not in params.keys():    
         params['sample_size'] = min(f.N, max(15, int(f.N)/2))
@@ -192,6 +200,7 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-4, params = dict(), verbose = Fal
     
     step_sizes = [alpha_t]
     obj = list()
+    obj2 = list()
     S_hist = list()
     ssn_info = list()
     runtime = list()
@@ -209,26 +218,33 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-4, params = dict(), verbose = Fal
         if eta <= eps:
             status = 'optimal'
             break
-            
+        
+        # sample and update
         S = sampler(f.N, params['sample_size'])
         
         x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, newton_params = None, verbose = False)
         
+        # save all diagnostics
         ssn_info.append(this_ssn)
-        
         x_hist = np.vstack((x_hist, x_t))
         obj.append(f.eval(x_t) + phi.eval(x_t))
+        obj2.append(f.eval(x_mean) + phi.eval(x_mean))
         step_sizes.append(alpha_t)
         S_hist.append(S)
         
+        #calc x_mean 
         x_old = x_mean.copy()
         x_mean = compute_x_mean(x_hist, step_sizes)
         
         eta = (1/alpha_t) * np.linalg.norm(x_mean - x_old)
         
+        
         if verbose:
             #print(f"------------Iteration {iter_t} of the Stochastic Proximal Point algorithm----------------")
-            print(out_fmt % (iter_t, obj[-1], f.eval(x_mean) + phi.eval(x_mean), alpha_t, eta))
+            print(out_fmt % (iter_t, obj[-1], obj2[-1] , alpha_t, eta))
+            
+        # set new alpha_t
+        alpha_t *= params['step_size_mult']
         
     if eta > eps:
         status = 'max iterations reached'    
@@ -237,6 +253,6 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-4, params = dict(), verbose = Fal
     print(f"Stochastic ProxPoint status: {status}")
     
     info = {'objective': np.array(obj), 'iterates': x_hist, 'step_sizes': step_sizes, 'samples' : np.array(S_hist), \
-            'ssn_info': ssn_info}
+            'objective_mean': np.array(obj2), 'ssn_info': ssn_info}
     
     return x_t, x_mean, info

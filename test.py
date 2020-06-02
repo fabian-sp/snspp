@@ -35,20 +35,26 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False):
     return x, A, b, f, phi
 
 #%%
-N = 5
+N = 40
 n = 50
 k = 5
 l1 = .01
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False)
 
-P = problem(f, phi, verbose = True)
+params = {'max_iter' : 50, 'sample_size': 20, 'step_size_mult' : 1.01, 'alpha_0' : 100}
+
+P = problem(f, phi, params = params, verbose = True)
 
 P.solve()
 
 P.plot_path()
 
 P.plot_samples()
+
+P.plot_objective()
+
+info = P.info.copy()
 
 tmp = pd.DataFrame(np.vstack((xsol, P.xavg)).T, columns = ['true', 'estimated'])
 
