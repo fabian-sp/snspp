@@ -15,13 +15,6 @@ class lsq:
         self.N = len(b)
         self.m = np.ones(self.N, dtype = 'int')
         
-    # f = lambda x, i: (x - b[i])**2
-    # g = lambda x, i: 2 * (x - b[i])
-    
-    # fstar = lambda x, i: .25 * np.linalg.norm(x)**2 + b[i] * x
-    # gstar = lambda x, i: .5 * x + b[i]
-    
-    # Hstar = lambda x, i: .5 
     
     def eval(self, x):
         y = 0

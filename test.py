@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.linear_model import Lasso
 
 from lasso import Norm1, lsq, block_lsq
 from opt_problem import problem
@@ -11,13 +12,15 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False):
         m = np.random.randint(low = 3, high = 10, size = N)
     else:
         m = np.ones(N, dtype = 'int')
-
-    A = []
-    for i in np.arange(N):
-        A.append(np.random.rand(m[i], n))
     
-    
-    A = np.vstack(A)
+    if block:
+        A = np.random.randn(N,n)
+    else:
+        A = []
+        for i in np.arange(N):
+            A.append(np.random.randn(m[i], n))
+        
+        A = np.vstack(A)
     
     x = np.random.randn(k) 
     x = np.concatenate((x, np.zeros(n-k)))
@@ -34,32 +37,37 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False):
 
     return x, A, b, f, phi
 
-#%%
-N = 40
-n = 50
+#%% generate data
+N = 5
+n = 1000
 k = 5
 l1 = .01
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False)
 
-params = {'max_iter' : 50, 'sample_size': 20, 'step_size_mult' : 1.01, 'alpha_0' : 100}
+params = {'max_iter' : 50, 'sample_size': 5, 'step_size_mult' : 1.01, 'alpha_0' : 100}
 
 P = problem(f, phi, params = params, verbose = True)
 
 P.solve()
 
 P.plot_path()
-
 P.plot_samples()
-
 P.plot_objective()
 
 info = P.info.copy()
 
-tmp = pd.DataFrame(np.vstack((xsol, P.xavg)).T, columns = ['true', 'estimated'])
+#%% compare to scikit
+
+sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-5, selection = 'cyclic')
+sk.fit(A,b)
+
+x_sk = sk.coef_.copy()
 
 
-#%%
+all_x = pd.DataFrame(np.vstack((xsol, P.xavg, x_sk)).T, columns = ['true', 'spp', 'scikit'])
+
+#%% newton convergence
 sub_rsd = P.info['ssn_info']
 
 fig, axs = plt.subplots(5,10)
