@@ -27,7 +27,7 @@ class problem:
         if self.x0 is None:
             self.x0 = np.zeros(self.n)
 
-        self.x, self.xavg, self.info = stochastic_prox_point(self.f, self.phi, self.x0, eps = 1e-5, params = self.params, \
+        self.x, self.xavg, self.info = stochastic_prox_point(self.f, self.phi, self.x0, eps = 1e-4, params = self.params, \
                          verbose = self.verbose, measure = False)
         
         return

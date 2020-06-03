@@ -130,7 +130,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
             U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA)
             # reset if getting stuck
             counter +=1
-            if counter >= 6:
+            if counter >= 7:
                 beta = .7
                 break
         

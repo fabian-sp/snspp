@@ -38,14 +38,14 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False):
     return x, A, b, f, phi
 
 #%% generate data
-N = 5
-n = 1000
-k = 5
+N = 1000
+n = 100
+k = 10
 l1 = .01
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False)
 
-params = {'max_iter' : 50, 'sample_size': 5, 'step_size_mult' : 1.01, 'alpha_0' : 100}
+params = {'max_iter' : 52, 'sample_size': 100, 'step_size_mult' : 1.01, 'alpha_0' : 100}
 
 P = problem(f, phi, params = params, verbose = True)
 
@@ -71,6 +71,7 @@ all_x = pd.DataFrame(np.vstack((xsol, P.xavg, x_sk)).T, columns = ['true', 'spp'
 sub_rsd = P.info['ssn_info']
 
 fig, axs = plt.subplots(5,10)
+fig.legend(['residual', 'step_size', 'direction'])
 
 for j in np.arange(50):
     ax = axs.ravel()[j]
@@ -81,7 +82,7 @@ for j in np.arange(50):
     
     ax.set_yscale('log')
     
-#fig.legend(['residual', 'step_size', 'direction'])
+
 
 
 
