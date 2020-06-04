@@ -6,7 +6,7 @@ class lsq:
     f is the squared loss function (1/N) * ||Ax-b||**2
     each f_i is of the form x --> |x-b_i|**2
     _star denotes the convex conjugate
-    N is sample size
+    N is the sample size (i.e. number of summands)
     """
     
     def __init__(self, A, b):
@@ -17,6 +17,9 @@ class lsq:
         
     
     def eval(self, x):
+        """
+        method for evaluating f(x)
+        """
         y = 0
         z = self.A@x
         for i in np.arange(self.N):
@@ -25,6 +28,9 @@ class lsq:
         return (1/self.N)*y
 
     def f(self, x, i):
+        """
+        evaluate f_i(x)
+        """
         return (x - self.b[i])**2
     
     def g(self, x, i):
@@ -42,16 +48,21 @@ class lsq:
 #%%
 class logistic_loss:
     """ 
-    each row of A is a_i*b_i
+    f is the logistic loss function i.e. 1/N sum_i log(1+exp(b_i*(a_i @ x)))
+    transform input such that each A_i (notation of paper) is a_i*b_i 
+    
     """
     
     def __init__(self, A, b):
         #self.b = b
-        self.A = A * b
+        self.A = A * b[:, np.newaxis]
         self.N = len(b)
         self.m = np.ones(self.N, dtype = 'int')
         
     def eval(self, x):
+        """
+        method for evaluating f(x)
+        """
         y = 0
         z = self.A@x
         for i in np.arange(self.N):
@@ -60,6 +71,9 @@ class logistic_loss:
         return (1/self.N)*y
 
     def f(self, x, i):
+        """
+        evaluate f_i(x)
+        """
         return np.log(1+np.exp(-x))
     
     def g(self, x, i):
@@ -78,7 +92,7 @@ class logistic_loss:
     def gstar(self, x, i):
         
         if x >= 0 or x<= -1 :
-            res = 0.
+            res = 1e5
         else:
             res = np.log(-(1+x)/x)     
         return res
@@ -87,7 +101,7 @@ class logistic_loss:
     def Hstar(self, x, i):
         
         if x >= 0 or x<= -1 :
-            res = 0.
+            res = 1e5
         else:
             res = -1/(x**2+x)
         return res

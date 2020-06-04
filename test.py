@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.linear_model import Lasso
+from sklearn.linear_model import Lasso, LogisticRegression
 
-from lasso import Norm1, lsq, block_lsq
+from lasso import Norm1, lsq, block_lsq, logistic_loss
 from opt_problem import problem
 
 def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False):
@@ -18,18 +18,25 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False):
     else:
         A = []
         for i in np.arange(N):
-            A.append(np.random.randn(m[i], n))
-        
+            A.append(np.random.randn(m[i], n))    
         A = np.vstack(A)
     
+    # standardize
+    A = A - A.mean(axis=0)
+    A = (1/A.std(axis=0)) * A
+    
+    assert max(abs(A.mean(axis=0))) <= 1e-5
+    assert max(abs(A.std(axis=0) - 1)) <= 1e-5
+    
+    # create true solution
     x = np.random.randn(k) 
     x = np.concatenate((x, np.zeros(n-k)))
     np.random.shuffle(x)
     
+    # create measurements
     b = A @ x
     
     phi = Norm1(lambda1)    
-    #phi.prox(np.ones(3), alpha = 1)
     if block:
         f = block_lsq(A, b, m)
     else:
@@ -37,15 +44,46 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False):
 
     return x, A, b, f, phi
 
+def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1):
+    
+    A = np.random.randn(N,n)
+    
+    # standardize
+    A = A - A.mean(axis=0)
+    A = (1/A.std(axis=0)) * A
+    
+    assert max(abs(A.mean(axis=0))) <= 1e-5
+    assert max(abs(A.std(axis=0) - 1)) <= 1e-5
+    
+    # create true solution
+    x = np.random.randn(k) 
+    x = np.concatenate((x, np.zeros(n-k)))
+    np.random.shuffle(x)
+    
+    h = np.exp(A@x)
+    odds = h/(1+h)
+    
+    b = (odds >= .5)*2 -1
+    
+    phi = Norm1(lambda1) 
+    f = logistic_loss(A,b)
+    
+    return x, A, b, f, phi
+    
 #%% generate data
-N = 1000
-n = 100
+
+N = 10000
+n = 10000
 k = 10
 l1 = .01
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False)
 
-params = {'max_iter' : 52, 'sample_size': 100, 'step_size_mult' : 1.01, 'alpha_0' : 100}
+xsol, A, b, f, phi = logreg_test(N, n, k, l1)
+
+
+#%% solve with SPP
+params = {'max_iter' : 20, 'sample_size': 100, 'step_size_mult' : 1.01, 'alpha_0' : 100}
 
 P = problem(f, phi, params = params, verbose = True)
 
@@ -60,14 +98,16 @@ info = P.info.copy()
 #%% compare to scikit
 
 sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-5, selection = 'cyclic')
+sk = LogisticRegression(penalty = 'l1', C = 1/(N*l1), fit_intercept= False, solver = 'saga', max_iter = 100)
+
+
 sk.fit(A,b)
-
 x_sk = sk.coef_.copy()
-
 
 all_x = pd.DataFrame(np.vstack((xsol, P.xavg, x_sk)).T, columns = ['true', 'spp', 'scikit'])
 
 #%% newton convergence
+
 sub_rsd = P.info['ssn_info']
 
 fig, axs = plt.subplots(5,10)
@@ -81,8 +121,3 @@ for j in np.arange(50):
     ax2.plot(sub_rsd[j]['direction'], 'green')
     
     ax.set_yscale('log')
-    
-
-
-
-
