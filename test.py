@@ -73,9 +73,9 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1):
 #%% generate data
 
 N = 10000
-n = 10000
+n = 500
 k = 10
-l1 = .01
+l1 = .1
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False)
 
@@ -83,7 +83,7 @@ xsol, A, b, f, phi = logreg_test(N, n, k, l1)
 
 
 #%% solve with SPP
-params = {'max_iter' : 20, 'sample_size': 100, 'step_size_mult' : 1.01, 'alpha_0' : 100}
+params = {'max_iter' : 50, 'sample_size': 200, 'alpha_C' : 10.}
 
 P = problem(f, phi, params = params, verbose = True)
 
@@ -104,7 +104,7 @@ sk = LogisticRegression(penalty = 'l1', C = 1/(N*l1), fit_intercept= False, solv
 sk.fit(A,b)
 x_sk = sk.coef_.copy()
 
-all_x = pd.DataFrame(np.vstack((xsol, P.xavg, x_sk)).T, columns = ['true', 'spp', 'scikit'])
+all_x = pd.DataFrame(np.vstack((xsol, P.x, x_sk)).T, columns = ['true', 'spp', 'scikit'])
 
 #%% newton convergence
 

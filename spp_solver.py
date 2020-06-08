@@ -5,6 +5,7 @@ author: Fabian Schaipp
 import numpy as np
 from basic_linalg import block_diag
 from scipy.sparse.linalg import cg
+from scipy.sparse import csr_matrix
 import time
 
 def sampler(N, size):
@@ -157,14 +158,16 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
 
 def compute_x_mean(x_hist, step_sizes):
     a = np.array(step_sizes)
-    
     assert np.all(a > 0)
     
-    x_mean = (1/a.sum()) * x_hist.T @ a 
+    if len(x_hist.shape) == 1:
+        x_mean = x_hist.copy()
+    else:    
+        x_mean = (1/a.sum()) * x_hist.T @ a 
 
     return x_mean
 
-def stochastic_prox_point(f, phi, x0, eps = 1e-4, params = dict(), verbose = False, measure = False):
+def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = False, measure = False):
     
     # initialize all variables
     A = f.A.copy()
@@ -173,18 +176,19 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-4, params = dict(), verbose = Fal
     assert n == A.shape[1], "wrong dimensions"
     
     x_t = x0.copy()
-    x_mean = x0.copy()
-    
+    x_mean = x_t.copy()
     
     # initialize for stopping criterion
     status = 'not optimal'
     eta = np.inf
     
-    if 'alpha_0' not in params.keys():    
-        alpha_t = 10
+    if 'alpha_C' not in params.keys():
+        C = 1.
     else:
-        alpha_t = params['alpha_0']
+        C = params['alpha_C']
         
+    alpha_t = C
+    
     if 'max_iter' not in params.keys():    
         params['max_iter'] = 70
         
@@ -197,9 +201,8 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-4, params = dict(), verbose = Fal
     # initialize variables + containers
     xi = dict(zip(np.arange(f.N), [-0.9*np.random.rand(m[i]) for i in np.arange(f.N)]))
     
-    x_hist = x_t.copy()
     
-    step_sizes = [alpha_t]
+    step_sizes = list()
     obj = list()
     obj2 = list()
     S_hist = list()
@@ -209,7 +212,7 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-4, params = dict(), verbose = Fal
     hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s"
     out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
     if verbose:
-        print(hdr_fmt % ("iter", "obj (x_t)", "obj(x_mean)", "alpha_t", "grad_moreau"))
+        print(hdr_fmt % ("iter", "obj (x_t)", "obj(x_mean)", "alpha_t", "eta"))
     
     for iter_t in np.arange(params['max_iter']):
         
@@ -220,6 +223,8 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-4, params = dict(), verbose = Fal
             status = 'optimal'
             break
         
+        x_old = x_mean.copy()
+        
         # sample and update
         S = sampler(f.N, params['sample_size'])
         
@@ -227,17 +232,21 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-4, params = dict(), verbose = Fal
         
         # save all diagnostics
         ssn_info.append(this_ssn)
-        x_hist = np.vstack((x_hist, x_t))
+        if iter_t == 0:
+            x_hist = x_t.copy()         
+        else:
+            x_hist = np.vstack((x_hist, x_t))
+            
         obj.append(f.eval(x_t) + phi.eval(x_t))
-        obj2.append(f.eval(x_mean) + phi.eval(x_mean))
         step_sizes.append(alpha_t)
         S_hist.append(S)
         
         #calc x_mean 
-        x_old = x_mean.copy()
         x_mean = compute_x_mean(x_hist, step_sizes)
+        obj2.append(f.eval(x_mean) + phi.eval(x_mean))
         
-        eta = (1/alpha_t) * np.linalg.norm(x_mean - x_old)
+        #stop criterion
+        eta = np.linalg.norm(x_old - x_mean)/(np.linalg.norm(x_old)+1e-8)
         
         
         if verbose:
@@ -245,7 +254,9 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-4, params = dict(), verbose = Fal
             print(out_fmt % (iter_t, obj[-1], obj2[-1] , alpha_t, eta))
             
         # set new alpha_t
-        alpha_t *= params['step_size_mult']
+        #alpha_t *= params['step_size_mult']
+        if iter_t >= 0:
+            alpha_t = C/(iter_t + 1)
         
     if eta > eps:
         status = 'max iterations reached'    
