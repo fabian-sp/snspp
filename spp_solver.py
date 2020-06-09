@@ -163,8 +163,9 @@ def compute_x_mean(x_hist, step_sizes):
     if len(x_hist.shape) == 1:
         x_mean = x_hist.copy()
     else:    
-        x_mean = (1/a.sum()) * x_hist.T @ a 
-
+        #x_mean = (1/a.sum()) * x_hist.T @ a 
+        x_mean = x_hist.mean(axis = 0)
+        
     return x_mean
 
 def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = False, measure = False):

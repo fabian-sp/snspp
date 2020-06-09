@@ -13,7 +13,7 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False):
     else:
         m = np.ones(N, dtype = 'int')
     
-    if block:
+    if not block:
         A = np.random.randn(N,n)
     else:
         A = []
