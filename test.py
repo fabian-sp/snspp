@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import time
 from sklearn.linear_model import Lasso, LogisticRegression
 
 from lasso import Norm1, lsq, block_lsq, logistic_loss
@@ -79,7 +80,7 @@ l1 = .1
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False)
 
-xsol, A, b, f, phi = logreg_test(N, n, k, l1)
+#xsol, A, b, f, phi = logreg_test(N, n, k, l1)
 
 
 #%% solve with SPP
@@ -87,7 +88,11 @@ params = {'max_iter' : 50, 'sample_size': 200, 'alpha_C' : 10.}
 
 P = problem(f, phi, params = params, verbose = True)
 
+start = time.time()
 P.solve()
+end = time.time()
+
+print(f"Computing time: {end-start} sec")
 
 P.plot_path()
 P.plot_samples()
@@ -97,7 +102,7 @@ info = P.info.copy()
 
 #%% compare to scikit
 
-sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-5, selection = 'cyclic')
+sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-8, selection = 'cyclic')
 sk = LogisticRegression(penalty = 'l1', C = 1/(N*l1), fit_intercept= False, solver = 'saga', max_iter = 100)
 
 
@@ -105,6 +110,38 @@ sk.fit(A,b)
 x_sk = sk.coef_.copy()
 
 all_x = pd.DataFrame(np.vstack((xsol, P.x, x_sk)).T, columns = ['true', 'spp', 'scikit'])
+
+
+
+
+
+#%% plot error over iterations
+
+true_x = x_sk.copy()
+
+err_l2 = np.linalg.norm(P.info['iterates'] - x_sk, 2, axis = 1)
+err_linf = np.linalg.norm(P.info['iterates'] - x_sk, np.inf, axis = 1)
+
+
+#(P.info['iterates'] * P.info['step_sizes'][:,np.newaxis])
+tmp = P.info['iterates'].cumsum(axis = 0)
+
+scale = (1 / (np.arange(P.info['iterates'].shape[0]) + 1))[:,np.newaxis]
+xmean_hist = scale * tmp 
+
+err_l2_mean = np.linalg.norm(xmean_hist - x_sk, 2, axis = 1)
+
+
+
+
+plt.figure()
+plt.plot(err_l2)
+plt.plot(err_linf)
+plt.plot(err_l2_mean)
+
+plt.legend(labels = ['error xk (l2)', 'error xk(linf)', 'error xmean (l2)'])
+
+
 
 #%% newton convergence
 

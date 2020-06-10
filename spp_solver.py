@@ -61,7 +61,8 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     
     check_newton_params(newton_params)
     assert alpha > 0 , "step sizes are not positive"
-        
+      
+    xi_old = xi.copy()
     N = len(m)
     # creates a vector with nrows like A in order to index the relevant A_i from A
     dims = np.repeat(np.arange(N),m)
@@ -73,7 +74,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     
     # IMPORTANT: subA is ordered, i.e. it is in the order as np.arange(N) and NOT of S --> breaks if S not sorted
     #subA = A[np.isin(dims, S), :]
-    #alternatively (safer but slower): 
+    # alternatively (safer but slower): 
     subA = np.vstack([A[dims == i,:] for i in S])
     
     assert subA.shape[0] == M
@@ -107,7 +108,8 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
         tmp2 = (alpha/sample_size) * subA @ U @ subA.T
         
         tmp = [f.Hstar(xi[i], i) for i in S]
-        W = block_diag(tmp) + tmp2
+        eps_reg = 1e-6
+        W = block_diag(tmp) + tmp2 + eps_reg * np.eye(tmp2.shape[0])
         
     # step2: solve Newton system
         if verbose:
@@ -247,17 +249,17 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = Fal
         obj2.append(f.eval(x_mean) + phi.eval(x_mean))
         
         #stop criterion
-        eta = np.linalg.norm(x_old - x_mean)/(np.linalg.norm(x_old)+1e-8)
+        eta = np.linalg.norm(x_old - x_mean)/(np.linalg.norm(x_old))
         
         
         if verbose:
             #print(f"------------Iteration {iter_t} of the Stochastic Proximal Point algorithm----------------")
             print(out_fmt % (iter_t, obj[-1], obj2[-1] , alpha_t, eta))
             
-        # set new alpha_t
+        # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
         #alpha_t *= params['step_size_mult']
         if iter_t >= 0:
-            alpha_t = C/(iter_t + 1)
+            alpha_t = C/(iter_t + 2)**.9
         
     if eta > eps:
         status = 'max iterations reached'    
@@ -265,7 +267,7 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = Fal
     print(f"Stochastic ProxPoint terminated after {iter_t} iterations with accuracy {eta}")
     print(f"Stochastic ProxPoint status: {status}")
     
-    info = {'objective': np.array(obj), 'iterates': x_hist, 'step_sizes': step_sizes, 'samples' : np.array(S_hist), \
+    info = {'objective': np.array(obj), 'iterates': x_hist, 'step_sizes': np.array(step_sizes), 'samples' : np.array(S_hist), \
             'objective_mean': np.array(obj2), 'ssn_info': ssn_info}
     
     return x_t, x_mean, info
