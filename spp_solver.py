@@ -151,7 +151,16 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
         print(f"WARNING: reached maximal iterations in semismooth Newton -- accuracy {residual[-1]}")
     
     # update primal iterate
-    z = x - (alpha/sample_size) * (subA.T @ xi_stack)
+    reduce_variance = True
+    if reduce_variance:
+        xi_stack_old = np.hstack([xi_old[i] for i in S])
+        correct =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ np.hstack(xi_old))
+        #print(correct)
+    else:
+        correct = 0.
+    
+    
+    z = x - (alpha/sample_size) * (subA.T @ xi_stack)  
     new_x = phi.prox(z, alpha)
     
     info = {'residual': np.array(residual), 'direction' : norm_dir, 'step_size': step_sz }
