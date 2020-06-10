@@ -80,11 +80,11 @@ l1 = .1
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False)
 
-#xsol, A, b, f, phi = logreg_test(N, n, k, l1)
+xsol, A, b, f, phi = logreg_test(N, n, k, l1)
 
 
 #%% solve with SPP
-params = {'max_iter' : 50, 'sample_size': 200, 'alpha_C' : 10.}
+params = {'max_iter' : 50, 'sample_size': 500, 'alpha_C' : 10.}
 
 P = problem(f, phi, params = params, verbose = True)
 
@@ -103,7 +103,7 @@ info = P.info.copy()
 #%% compare to scikit
 
 sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-8, selection = 'cyclic')
-sk = LogisticRegression(penalty = 'l1', C = 1/(N*l1), fit_intercept= False, solver = 'saga', max_iter = 100)
+sk = LogisticRegression(penalty = 'l1', C = 1/(N*l1), fit_intercept= False, tol = 1e-8, solver = 'saga', max_iter = 10000, verbose = 1)
 
 
 sk.fit(A,b)
