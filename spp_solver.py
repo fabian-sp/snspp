@@ -35,7 +35,7 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
 
 def get_default_newton_params():
     
-    params = {'tau': .5, 'eta' : .5, 'rho': .7, 'mu': .1, 'eps': 1e-3, 'max_iter': 40}
+    params = {'tau': .5, 'eta' : .5, 'rho': .5, 'mu': .01, 'eps': 1e-6, 'max_iter': 40}
     
     return params
 
@@ -123,18 +123,20 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
         if verbose:
             print("Start Line search")
         U_old = Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA)
-        
+        #print(f"U_old: {U_old} with residual {np.linalg.norm(rhs)}")
         beta = 1.
         U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA)
         
         counter = 0
         while U_new > U_old + newton_params['mu'] * beta * (d @ -rhs):
+            #print(f"U_new: {U_new} vs . { U_old + newton_params['mu'] * beta * (d @ -rhs)} with beta being {beta}")
             beta *= newton_params['rho']
             U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA)
             # reset if getting stuck
             counter +=1
-            if counter >= 7:
-                beta = .7
+            if counter >= 15:
+                print("FIX!!")
+                beta = .8
                 break
         
         step_sz.append(beta)
@@ -155,14 +157,16 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     reduce_variance = True
     if reduce_variance:
         xi_stack_old = np.hstack([xi_old[i] for i in S])
-        correct =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ np.hstack(xi_old))
+        xi_full_old = np.hstack([xi_old[i] for i in range(f.N)])
+        correct =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)
     else:
         correct = 0.
     
-    print(np.linalg.norm(correct))
-    print(np.linalg.norm(xi_stack - xi_stack_old))
+    #print(np.linalg.norm(correct))
+    #print(np.linalg.norm(xi_full_old - xi_stack_old))
     
-    z = x - (alpha/sample_size) * (subA.T @ xi_stack) 
+    
+    z = x - (alpha/sample_size) * (subA.T @ xi_stack) + correct
     new_x = phi.prox(z, alpha)
     
     info = {'residual': np.array(residual), 'direction' : norm_dir, 'step_size': step_sz }
@@ -214,7 +218,7 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = Fal
     
     # initialize variables + containers
     #xi = dict(zip(np.arange(f.N), [-0.9*np.random.rand(m[i]) for i in np.arange(f.N)]))
-    xi = dict(zip(np.arange(f.N), [-0.9*np.zeros(m[i]) for i in np.arange(f.N)]))
+    xi = dict(zip(np.arange(f.N), [ -1e-8 + np.zeros(m[i]) for i in np.arange(f.N)]))
     
     
     step_sizes = list()

@@ -134,7 +134,7 @@ class Norm1:
     def moreau(self, x, alpha):
         assert alpha > 0
         z = self.prox(x, alpha)
-        return self.eval(z) + .5 * np.linalg.norm(z-x)**2
+        return alpha*self.eval(z) + .5 * np.linalg.norm(z-x)**2
     
 #%%
 
