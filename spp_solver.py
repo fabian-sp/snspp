@@ -218,7 +218,7 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = Fal
     
     # initialize variables + containers
     #xi = dict(zip(np.arange(f.N), [-0.9*np.random.rand(m[i]) for i in np.arange(f.N)]))
-    xi = dict(zip(np.arange(f.N), [ -1e-8 + np.zeros(m[i]) for i in np.arange(f.N)]))
+    xi = dict(zip(np.arange(f.N), [ -0*1e-8 + np.zeros(m[i]) for i in np.arange(f.N)]))
     
     
     step_sizes = list()

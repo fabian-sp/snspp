@@ -73,18 +73,18 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1):
     
 #%% generate data
 
-N = 1000
-n = 500
+N = 100
+n = 50
 k = 10
-l1 = .1
+l1 = .05
 
-xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False)
+xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = True)
 
 xsol, A, b, f, phi = logreg_test(N, n, k, l1)
 
 
 #%% solve with SPP
-params = {'max_iter' : 50, 'sample_size': 200, 'alpha_C' : 1.}
+params = {'max_iter' : 50, 'sample_size': 100, 'alpha_C' : 1.}
 
 P = problem(f, phi, params = params, verbose = True)
 
@@ -144,7 +144,7 @@ plt.legend(labels = ['error xk (l2)', 'error xk(linf)', 'error xmean (l2)'])
 #%% xonvergence of the xi variables
 
 info = P.info.copy()
-xis = [np.hstack(i.values()) for i in info['xi_hist']]
+xis = [np.hstack(list(i.values())) for i in info['xi_hist']]
 xis = np.vstack(xis)
 
 plt.figure()
