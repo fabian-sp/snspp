@@ -13,7 +13,7 @@ def sampler(N, size):
     samples a subset of {1,..,N} without replacement
     """
     assert size <= N, "specified a bigger sample size than N"
-    S = np.random.choice(a = np.arange(N), p = (1/N) * np.ones(N), size = size, replace = True)
+    S = np.random.choice(a = np.arange(N), p = (1/N) * np.ones(N), size = size, replace = False)
     
     S = S.astype('int')
     # sort S in order to avoid problems with indexing later on
@@ -151,16 +151,18 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
         print(f"WARNING: reached maximal iterations in semismooth Newton -- accuracy {residual[-1]}")
     
     # update primal iterate
+    reduce_variance = all([np.any(t!=0) for t in xi_old.values()])
     reduce_variance = True
     if reduce_variance:
         xi_stack_old = np.hstack([xi_old[i] for i in S])
         correct =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ np.hstack(xi_old))
-        #print(correct)
     else:
         correct = 0.
     
+    print(np.linalg.norm(correct))
+    print(np.linalg.norm(xi_stack - xi_stack_old))
     
-    z = x - (alpha/sample_size) * (subA.T @ xi_stack)  
+    z = x - (alpha/sample_size) * (subA.T @ xi_stack) 
     new_x = phi.prox(z, alpha)
     
     info = {'residual': np.array(residual), 'direction' : norm_dir, 'step_size': step_sz }
@@ -211,13 +213,15 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = Fal
         params['sample_size'] = min(f.N, max(15, int(f.N)/2))
     
     # initialize variables + containers
-    xi = dict(zip(np.arange(f.N), [-0.9*np.random.rand(m[i]) for i in np.arange(f.N)]))
+    #xi = dict(zip(np.arange(f.N), [-0.9*np.random.rand(m[i]) for i in np.arange(f.N)]))
+    xi = dict(zip(np.arange(f.N), [-0.9*np.zeros(m[i]) for i in np.arange(f.N)]))
     
     
     step_sizes = list()
     obj = list()
     obj2 = list()
     S_hist = list()
+    xi_hist = list()
     ssn_info = list()
     runtime = list()
     
@@ -252,6 +256,7 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = Fal
         obj.append(f.eval(x_t) + phi.eval(x_t))
         step_sizes.append(alpha_t)
         S_hist.append(S)
+        xi_hist.append(xi.copy())
         
         #calc x_mean 
         x_mean = compute_x_mean(x_hist, step_sizes)
@@ -276,7 +281,7 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = Fal
     print(f"Stochastic ProxPoint terminated after {iter_t} iterations with accuracy {eta}")
     print(f"Stochastic ProxPoint status: {status}")
     
-    info = {'objective': np.array(obj), 'iterates': x_hist, 'step_sizes': np.array(step_sizes), 'samples' : np.array(S_hist), \
+    info = {'objective': np.array(obj), 'iterates': x_hist, 'xi_hist': xi_hist, 'step_sizes': np.array(step_sizes), 'samples' : np.array(S_hist), \
             'objective_mean': np.array(obj2), 'ssn_info': ssn_info}
     
     return x_t, x_mean, info

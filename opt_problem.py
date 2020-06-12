@@ -56,7 +56,7 @@ class problem:
         ax1 = fig.add_subplot(grid[:, :-3])
         ax2 = fig.add_subplot(grid[:, -3:])
         
-        sns.heatmap(tmp.T, square = False, annot = False, cmap = 'Blues', cbar = False, \
+        sns.heatmap(tmp.T, square = False, annot = False, cmap = 'Blues', vmin = 0, vmax = tmp.max(), cbar = False, \
                     xticklabels = [], ax = ax1)
         sns.heatmap(tmp2[:,np.newaxis], square = False, annot = True, cmap = 'Blues', cbar = False, \
                     xticklabels = [], yticklabels = [], ax = ax2)
