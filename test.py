@@ -47,6 +47,8 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False):
 
 def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1):
     
+    np.random.seed(1234)
+    
     A = np.random.randn(N,n)
     
     # standardize
@@ -73,18 +75,18 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1):
     
 #%% generate data
 
-N = 100
-n = 50
+N = 200
+n = 100
 k = 10
-l1 = .05
+l1 = .1
 
-xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = True)
+xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False)
 
 xsol, A, b, f, phi = logreg_test(N, n, k, l1)
 
 
 #%% solve with SPP
-params = {'max_iter' : 50, 'sample_size': 100, 'alpha_C' : 1.}
+params = {'max_iter' : 70, 'sample_size': 200, 'alpha_C' : 10.}
 
 P = problem(f, phi, params = params, verbose = True)
 
@@ -103,17 +105,18 @@ info = P.info.copy()
 #%% compare to scikit
 
 sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-8, selection = 'cyclic')
-sk = LogisticRegression(penalty = 'l1', C = 1/(N*l1), fit_intercept= False, tol = 1e-8, solver = 'saga', max_iter = 10000, verbose = 1)
 
+sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-3, solver = 'saga', max_iter = 10000, verbose = 1)
 
 sk.fit(A,b)
 x_sk = sk.coef_.copy()
 
 all_x = pd.DataFrame(np.vstack((xsol, P.x, x_sk)).T, columns = ['true', 'spp', 'scikit'])
 
+#%%
+#from statsmodels.discrete.discrete_model import Logit
 
-
-
+#sm = Logit((b > 0).astype(int), A).fit_regularized(method = 'l1', alpha = N * phi.lambda1)
 
 #%% plot error over iterations
 

@@ -94,9 +94,9 @@ class logistic_loss:
     def gstar(self, x, i):
         
         if x > 0 or x < -1 :
-            res = 1e5
+            res = np.inf
         elif x == 0 or x == -1:
-            res = np.sign(x + .5)* 1e4
+            res = np.sign(x + .5) * 1e8
         else:
             res = np.log(-(1+x)/x)     
         return res
@@ -104,8 +104,10 @@ class logistic_loss:
     
     def Hstar(self, x, i):
         
-        if x >= 0 or x<= -1 :
-            res = 1e5
+        if x > 0 or x < -1 :
+            res = np.inf
+        elif x == 0 or x == -1:
+            res = 1e8
         else:
             res = -1/(x**2+x)
         return res

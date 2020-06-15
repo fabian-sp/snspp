@@ -154,7 +154,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     
     # update primal iterate
     reduce_variance = all([np.any(t!=0) for t in xi_old.values()])
-    reduce_variance = True
+    reduce_variance = False
     if reduce_variance:
         xi_stack_old = np.hstack([xi_old[i] for i in S])
         xi_full_old = np.hstack([xi_old[i] for i in range(f.N)])
@@ -218,7 +218,7 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = Fal
     
     # initialize variables + containers
     #xi = dict(zip(np.arange(f.N), [-0.9*np.random.rand(m[i]) for i in np.arange(f.N)]))
-    xi = dict(zip(np.arange(f.N), [ -0*1e-8 + np.zeros(m[i]) for i in np.arange(f.N)]))
+    xi = dict(zip(np.arange(f.N), [ -1e-8 + np.zeros(m[i]) for i in np.arange(f.N)]))
     
     
     step_sizes = list()
