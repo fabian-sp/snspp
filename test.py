@@ -113,10 +113,6 @@ x_sk = sk.coef_.copy()
 
 all_x = pd.DataFrame(np.vstack((xsol, P.x, x_sk)).T, columns = ['true', 'spp', 'scikit'])
 
-#%%
-#from statsmodels.discrete.discrete_model import Logit
-
-#sm = Logit((b > 0).astype(int), A).fit_regularized(method = 'l1', alpha = N * phi.lambda1)
 
 #%% plot error over iterations
 

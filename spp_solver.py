@@ -35,7 +35,7 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
 
 def get_default_newton_params():
     
-    params = {'tau': .5, 'eta' : .5, 'rho': .5, 'mu': .01, 'eps': 1e-6, 'max_iter': 40}
+    params = {'tau': .5, 'eta' : .5, 'rho': .5, 'mu': .01, 'eps': 1e-8, 'max_iter': 40}
     
     return params
 
@@ -114,9 +114,9 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     # step2: solve Newton system
         if verbose:
             print("Start CG method")
-        d, cg_status = cg(W, rhs, tol = 1e-6, maxiter = 500)
+        d, cg_status = cg(W, rhs, tol = 1e-8, maxiter = 500)
         
-        assert d@rhs > 0 , "No descent direction"
+        assert d@rhs > 0 , f"No descent direction, {d@rhs}"
         assert cg_status == 0, f"CG method did not converge, exited with status {cg_status}"
         norm_dir.append(np.linalg.norm(d))
     # step 3: backtracking line search
@@ -171,7 +171,10 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     
     info = {'residual': np.array(residual), 'direction' : norm_dir, 'step_size': step_sz }
     
-    return new_x, xi, info
+    new_z = new_x - (1/sample_size) * (subA.T @ xi_stack)
+    eta = np.linalg.norm(new_x - phi.prox(new_z, alpha = 1))
+    
+    return new_x, xi, eta, info
 
 def compute_x_mean(x_hist, step_sizes):
     a = np.array(step_sizes)
@@ -248,7 +251,7 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = Fal
         # sample and update
         S = sampler(f.N, params['sample_size'])
         
-        x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, newton_params = None, verbose = False)
+        x_t, xi, eta, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, newton_params = None, verbose = False)
         
         # save all diagnostics
         ssn_info.append(this_ssn)
@@ -267,7 +270,8 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = Fal
         obj2.append(f.eval(x_mean) + phi.eval(x_mean))
         
         #stop criterion
-        eta = np.linalg.norm(x_old - x_mean)/(np.linalg.norm(x_old))
+        eta = eta/np.linalg.norm(x_t)
+        #eta = np.linalg.norm(x_old - x_mean)/(np.linalg.norm(x_old))
         
         
         if verbose:
@@ -277,7 +281,7 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = Fal
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
         #alpha_t *= params['step_size_mult']
         if iter_t >= 0:
-            alpha_t = C/(iter_t + 2)**.9
+            alpha_t = C/(iter_t + 2)
         
     if eta > eps:
         status = 'max iterations reached'    
