@@ -75,10 +75,10 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1):
     
 #%% generate data
 
-N = 200
-n = 100
-k = 10
-l1 = .1
+N = 1000
+n = 200
+k = 50
+l1 = .01
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False)
 
@@ -86,7 +86,7 @@ xsol, A, b, f, phi = logreg_test(N, n, k, l1)
 
 
 #%% solve with SPP
-params = {'max_iter' : 70, 'sample_size': 200, 'alpha_C' : 10.}
+params = {'max_iter' : 70, 'sample_size': 1000, 'alpha_C' : 200.}
 
 P = problem(f, phi, params = params, verbose = True)
 
@@ -106,7 +106,7 @@ info = P.info.copy()
 
 sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-8, selection = 'cyclic')
 
-sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-3, solver = 'saga', max_iter = 10000, verbose = 1)
+sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-4, solver = 'saga', max_iter = 10000, verbose = 1)
 
 sk.fit(A,b)
 x_sk = sk.coef_.copy()
