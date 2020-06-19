@@ -20,13 +20,10 @@ class lsq:
         """
         method for evaluating f(x)
         """
-        y = 0
-        z = self.A@x
-        for i in np.arange(self.N):
-            y += self.f(z[i], i)
-        
-        return (1/self.N)*y
 
+        return (1/self.N) * np.linalg.norm(self.A@x - self.b)**2
+        
+        
     def f(self, x, i):
         """
         evaluate f_i(x)
@@ -63,11 +60,9 @@ class logistic_loss:
         """
         method for evaluating f(x)
         """
-        y = 0
         z = self.A@x
-        for i in np.arange(self.N):
-            y += self.f(z[i], i)
-        
+        y = np.log(1+ np.exp(-z)).sum()
+         
         return (1/self.N)*y
 
     def f(self, x, i):
@@ -116,7 +111,7 @@ class logistic_loss:
 
 class Norm1:
     """
-    class for the regularizer x --> lambda1 \|x\|_1
+    class for the regularizer x --> lambda1 ||x||_1
     """
     def __init__(self, lambda1):
         assert lambda1 > 0 
@@ -182,3 +177,10 @@ class block_lsq:
         return .5 * np.eye(self.m[i])
 
 
+#%%
+#template for eval method
+# y = 0
+# z = self.A@x
+# for i in np.arange(self.N):
+#     y += self.f(z[i], i)
+# return (1/self.N)*y

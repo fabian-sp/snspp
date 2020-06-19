@@ -5,7 +5,6 @@ author: Fabian Schaipp
 import numpy as np
 from basic_linalg import block_diag
 from scipy.sparse.linalg import cg
-from scipy.sparse import csr_matrix
 import time
 
 def sampler(N, size):
@@ -35,7 +34,7 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
 
 def get_default_newton_params():
     
-    params = {'tau': .5, 'eta' : .5, 'rho': .5, 'mu': .01, 'eps': 1e-8, 'max_iter': 40}
+    params = {'tau': .5, 'eta' : .5, 'rho': .5, 'mu': .2, 'eps': 1e-4, 'max_iter': 20}
     
     return params
 
@@ -114,9 +113,9 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     # step2: solve Newton system
         if verbose:
             print("Start CG method")
-        d, cg_status = cg(W, rhs, tol = 1e-8, maxiter = 500)
+        d, cg_status = cg(W, rhs, tol = 1e-3, maxiter = 500)
         
-        assert d@rhs > 0 , f"No descent direction, {d@rhs}"
+        assert d@rhs > -1e-8 , f"No descent direction, {d@rhs}"
         assert cg_status == 0, f"CG method did not converge, exited with status {cg_status}"
         norm_dir.append(np.linalg.norm(d))
     # step 3: backtracking line search
@@ -134,7 +133,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
             U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA)
             # reset if getting stuck
             counter +=1
-            if counter >= 15:
+            if counter >= 10:
                 print("FIX!!")
                 beta = .8
                 break
@@ -222,7 +221,6 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = Fal
     # initialize variables + containers
     #xi = dict(zip(np.arange(f.N), [-0.9*np.random.rand(m[i]) for i in np.arange(f.N)]))
     xi = dict(zip(np.arange(f.N), [ -1e-8 + np.zeros(m[i]) for i in np.arange(f.N)]))
-    
     
     step_sizes = list()
     obj = list()

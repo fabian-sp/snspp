@@ -77,7 +77,7 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1):
 
 N = 1000
 n = 200
-k = 50
+k = 10
 l1 = .01
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False)
@@ -86,7 +86,7 @@ xsol, A, b, f, phi = logreg_test(N, n, k, l1)
 
 
 #%% solve with SPP
-params = {'max_iter' : 70, 'sample_size': 1000, 'alpha_C' : 200.}
+params = {'max_iter' : 50, 'sample_size': 300, 'alpha_C' : 100.}
 
 P = problem(f, phi, params = params, verbose = True)
 
@@ -161,6 +161,6 @@ for j in np.arange(50):
     ax.plot(sub_rsd[j]['residual'], 'blue')
     ax2 = ax.twinx()
     ax2.plot(sub_rsd[j]['step_size'], 'orange')
-    #ax2.plot(sub_rsd[j]['direction'], 'green')
+    ax2.plot(sub_rsd[j]['direction'], 'green')
     
     ax.set_yscale('log')
