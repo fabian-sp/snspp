@@ -257,7 +257,6 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = Fal
             x_hist = x_t.copy()         
         else:
             x_hist = np.vstack((x_hist, x_t))
-            
         obj.append(f.eval(x_t) + phi.eval(x_t))
         step_sizes.append(alpha_t)
         S_hist.append(S)
