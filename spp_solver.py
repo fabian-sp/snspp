@@ -176,7 +176,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     return new_x, xi, eta, info
 
 
-def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = False, measure = False):
+def stochastic_prox_point(f, phi, x0, xi = None, eps = 1e-3, params = dict(), verbose = False, measure = False):
     
     # initialize all variables
     A = f.A.copy()
@@ -208,8 +208,9 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = Fal
         params['sample_size'] = min(f.N, max(15, int(f.N)/2))
     
     # initialize variables + containers
-    #xi = dict(zip(np.arange(f.N), [-0.9*np.random.rand(m[i]) for i in np.arange(f.N)]))
-    xi = dict(zip(np.arange(f.N), [ -1e-8 + np.zeros(m[i]) for i in np.arange(f.N)]))
+    if xi is None:
+        #xi = dict(zip(np.arange(f.N), [-0.9*np.random.rand(m[i]) for i in np.arange(f.N)]))
+        xi = dict(zip(np.arange(f.N), [ -1e-8 + np.zeros(m[i]) for i in np.arange(f.N)]))
     
     x_hist = list()
     step_sizes = list()
