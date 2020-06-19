@@ -38,10 +38,11 @@ def saga(f, phi, x0, eps = 1e-3, params = dict(), verbose = False, measure = Fal
     if 'max_iter' not in params.keys():    
         params['max_iter'] = 70
     
-    if 'gamma_0' not in params.keys():
-        gamma = 1.
+    if 'gamma' not in params.keys():
+        L = 2 * np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A).max()
+        gamma = 1./3*L
     else:
-        gamma = params['gamma_0']
+        gamma = params['gamma']
     
     # initialize for stopping criterion
     status = 'not optimal'

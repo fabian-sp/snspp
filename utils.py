@@ -1,5 +1,44 @@
 import numpy as np
 
+def compute_x_mean(x_hist, step_sizes = None):
+    """
+
+    Parameters
+    ----------
+    x_hist : list
+        contains all iterates 
+    step_sizes : list, optional
+        contains all step sizes
+        if None, then no weighting
+
+    Returns
+    -------
+    x_mean : array of length n
+        mean iterate
+
+    """
+    if step_sizes is not None:
+        a = np.array(step_sizes)
+        assert np.all(a > 0)
+        assert len(step_sizes) == len(x_hist)
+    else:
+        a = np.ones(len(x_hist))
+        
+    X = np.vstack(x_hist)
+    
+    if len(X.shape) == 1:
+        x_mean = x_hist.copy()
+    else:
+        x_mean = (1/a.sum()) * X.T @ a 
+        #x_mean = x_hist.mean(axis = 0)
+        
+    return x_mean
+
+
+
+
+
+
 def block_diag(arrs):
     """Create a block diagonal matrix from the provided arrays.
 

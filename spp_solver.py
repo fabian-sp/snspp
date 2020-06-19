@@ -3,7 +3,7 @@ author: Fabian Schaipp
 """
 
 import numpy as np
-from basic_linalg import block_diag
+from utils import block_diag, compute_x_mean
 from scipy.sparse.linalg import cg
 import time
 
@@ -175,17 +175,6 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     
     return new_x, xi, eta, info
 
-def compute_x_mean(x_hist, step_sizes):
-    a = np.array(step_sizes)
-    assert np.all(a > 0)
-    
-    if len(x_hist.shape) == 1:
-        x_mean = x_hist.copy()
-    else:    
-        #x_mean = (1/a.sum()) * x_hist.T @ a 
-        x_mean = x_hist.mean(axis = 0)
-        
-    return x_mean
 
 def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = False, measure = False):
     
@@ -222,6 +211,7 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = Fal
     #xi = dict(zip(np.arange(f.N), [-0.9*np.random.rand(m[i]) for i in np.arange(f.N)]))
     xi = dict(zip(np.arange(f.N), [ -1e-8 + np.zeros(m[i]) for i in np.arange(f.N)]))
     
+    x_hist = list()
     step_sizes = list()
     obj = list()
     obj2 = list()
@@ -253,10 +243,12 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = Fal
         
         # save all diagnostics
         ssn_info.append(this_ssn)
-        if iter_t == 0:
-            x_hist = x_t.copy()         
-        else:
-            x_hist = np.vstack((x_hist, x_t))
+        # if iter_t == 0:
+        #     x_hist = x_t.copy()         
+        # else:
+        #     x_hist = np.vstack((x_hist, x_t))
+        x_hist.append(x_t)
+            
         obj.append(f.eval(x_t) + phi.eval(x_t))
         step_sizes.append(alpha_t)
         S_hist.append(S)
@@ -286,7 +278,7 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = Fal
     print(f"Stochastic ProxPoint terminated after {iter_t} iterations with accuracy {eta}")
     print(f"Stochastic ProxPoint status: {status}")
     
-    info = {'objective': np.array(obj), 'iterates': x_hist, 'xi_hist': xi_hist, 'step_sizes': np.array(step_sizes), 'samples' : np.array(S_hist), \
+    info = {'objective': np.array(obj), 'iterates': np.vstack(x_hist), 'xi_hist': xi_hist, 'step_sizes': np.array(step_sizes), 'samples' : np.array(S_hist), \
             'objective_mean': np.array(obj2), 'ssn_info': ssn_info}
     
     return x_t, x_mean, info
