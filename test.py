@@ -86,7 +86,7 @@ xsol, A, b, f, phi = logreg_test(N, n, k, l1)
 
 
 #%% solve with SPP
-params = {'max_iter' : 50, 'sample_size': 20, 'alpha_C' : 100.}
+params = {'max_iter' : 50, 'sample_size': 50, 'alpha_C' : 100.}
 
 P = problem(f, phi, params = params, verbose = True)
 

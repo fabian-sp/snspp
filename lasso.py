@@ -121,6 +121,9 @@ class Norm1:
         return self.lambda1 * np.linalg.norm(x, 1)
     
     def prox(self, x, alpha):
+        """
+        calculates prox_{alpha*phi}(x)
+        """
         assert alpha > 0
         l = alpha * self.lambda1
         return np.sign(x) * np.maximum(abs(x) - l, 0)

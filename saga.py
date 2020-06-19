@@ -3,6 +3,7 @@ author: Fabian Schaipp
 """
 
 import numpy as np
+from utils import compute_x_mean
 import time
 
 
@@ -35,12 +36,12 @@ def saga(f, phi, x0, eps = 1e-3, params = dict(), verbose = False, measure = Fal
     gradients = np.vstack(gradients)
     assert gradients.shape == (N,n)
     
-    if 'max_iter' not in params.keys():    
-        params['max_iter'] = 70
+    if 'n_epochs' not in params.keys():    
+        params['n_epochs'] = 10
     
     if 'gamma' not in params.keys():
-        L = 2 * np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A).max()
-        gamma = 1./3*L
+        L = 2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A)**2).max()
+        gamma = 1./(3*L)
     else:
         gamma = params['gamma']
     
@@ -51,14 +52,14 @@ def saga(f, phi, x0, eps = 1e-3, params = dict(), verbose = False, measure = Fal
     # initialize for diagnostics
     x_hist = list()
     step_sizes = list()
-    obj = list()
+    obj = list(); obj2 = list()
     
     hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s"
     out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
     if verbose:
         print(hdr_fmt % ("iter", "obj (x_t)", "obj(x_mean)", "gamma", "eta"))
     
-    for iter_t in np.arange(params['max_iter']):
+    for iter_t in np.arange(f.N * params['n_epochs']):
         
         if eta <= eps:
             status = 'optimal'
@@ -78,16 +79,20 @@ def saga(f, phi, x0, eps = 1e-3, params = dict(), verbose = False, measure = Fal
         
         # compute prox step
         x_t = phi.prox(w_t, gamma)
+        eta = np.linalg.norm(g)
         
-        
+        # store everything
         x_hist.append(x_t)
         step_sizes.append(gamma)
         obj.append(f.eval(x_t) + phi.eval(x_t))
         
+        # calculate x_mean
+        x_mean = compute_x_mean(x_hist, step_sizes)
+        obj2.append(f.eval(x_mean) + phi.eval(x_mean))
+        
         if verbose:
-            print(out_fmt % (iter_t, obj[-1], np.pi , gamma, eta))
-        
-        
+            print(out_fmt % (iter_t, obj[-1], obj2[-1] , gamma, eta))
+          
         
     if eta > eps:
         status = 'max iterations reached'    
@@ -97,4 +102,8 @@ def saga(f, phi, x0, eps = 1e-3, params = dict(), verbose = False, measure = Fal
     
     info = {'objective': np.array(obj), 'iterates': np.vstack(x_hist), 'step_sizes': np.array(step_sizes)}
     
-    return x_t, info
+    return x_t, x_mean, info
+
+#%%
+#x0 = np.zeros(n)
+#x_saga, x_mean_saga, info = saga(f, phi, x0, eps = 1e-3, params = dict(), verbose = True, measure = False)

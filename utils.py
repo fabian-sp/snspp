@@ -30,40 +30,16 @@ def compute_x_mean(x_hist, step_sizes = None):
         x_mean = x_hist.copy()
     else:
         x_mean = (1/a.sum()) * X.T @ a 
-        #x_mean = x_hist.mean(axis = 0)
+        #x_mean = X.mean(axis = 0)
         
     return x_mean
 
 
 
-
-
-
 def block_diag(arrs):
-    """Create a block diagonal matrix from the provided arrays.
-
-    Given the inputs `A`, `B` and `C`, the output will have these
-    arrays arranged on the diagonal::
-
-        [[A, 0, 0],
-         [0, B, 0],
-         [0, 0, C]]
-
-    If all the input arrays are square, the output is known as a
-    block diagonal matrix.
-
-    Parameters
-    ----------
-    A, B, C, ... : array-like, up to 2D
-        Input arrays.  A 1D array or array-like sequence with length n is
-        treated as a 2D array with shape (1,n).
-
-    Returns
-    -------
-    D : ndarray
-        Array with `A`, `B`, `C`, ... on the diagonal.  `D` has the
-        same dtype as `A`.
-
+    """Create a block diagonal matrix from a list of provided arrays.
+    
+    This is source coded copied from scipy with slight modification!
     """
     if arrs == ():
         arrs = ([],)

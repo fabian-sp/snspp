@@ -243,10 +243,6 @@ def stochastic_prox_point(f, phi, x0, eps = 1e-3, params = dict(), verbose = Fal
         
         # save all diagnostics
         ssn_info.append(this_ssn)
-        # if iter_t == 0:
-        #     x_hist = x_t.copy()         
-        # else:
-        #     x_hist = np.vstack((x_hist, x_t))
         x_hist.append(x_t)
             
         obj.append(f.eval(x_t) + phi.eval(x_t))
