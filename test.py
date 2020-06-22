@@ -5,8 +5,8 @@ import seaborn as sns
 import time
 from sklearn.linear_model import Lasso, LogisticRegression
 
-from lasso import Norm1, lsq, block_lsq, logistic_loss
-from opt_problem import problem
+from ssnsp.helper.lasso import Norm1, lsq, block_lsq, logistic_loss
+from ssnsp.solver.opt_problem import problem
 
 def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False):
     if block:

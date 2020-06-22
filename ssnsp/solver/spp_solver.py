@@ -3,7 +3,7 @@ author: Fabian Schaipp
 """
 
 import numpy as np
-from utils import block_diag, compute_x_mean
+from ..helper.utils import block_diag, compute_x_mean
 from scipy.sparse.linalg import cg
 import time
 

@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from spp_solver import stochastic_prox_point
+from .spp_solver import stochastic_prox_point
 
 
 class problem:

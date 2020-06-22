@@ -3,7 +3,7 @@ author: Fabian Schaipp
 """
 
 import numpy as np
-from utils import compute_x_mean
+from ..helper.utils import compute_x_mean
 import time
 
 
