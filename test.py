@@ -31,7 +31,7 @@ params = {'max_iter' : 50, 'sample_size': 50, 'alpha_C' : 100.}
 P = problem(f, phi, params = params, verbose = True)
 
 start = time.time()
-P.solve()
+P.solve(solver = 'saga')
 end = time.time()
 
 print(f"Computing time: {end-start} sec")

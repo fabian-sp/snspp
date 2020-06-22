@@ -3,7 +3,7 @@ author: Fabian Schaipp
 """
 
 import numpy as np
-from ..helper.utils import compute_x_mean
+from ..helper.utils import compute_x_mean, compute_gradient_table
 import time
 
 
@@ -26,14 +26,8 @@ def saga(f, phi, x0, eps = 1e-3, params = dict(), verbose = False, measure = Fal
     # creates a vector with nrows like A in order to index the relevant A_i from A
     dims = np.repeat(np.arange(N),m)
 
-    # initialize object for storing all gradients
-    gradients = list()
-    for i in np.arange(N):
-        A_i =  A[dims == i].copy()
-        tmp_i = A_i.T @ f.g( A_i @ x_t, i)
-        gradients.append(tmp_i)
-        
-    gradients = np.vstack(gradients)
+    # initialize object for storing all gradients 
+    gradients = compute_gradient_table(f, x_t)
     assert gradients.shape == (N,n)
     
     if 'n_epochs' not in params.keys():    
@@ -100,7 +94,7 @@ def saga(f, phi, x0, eps = 1e-3, params = dict(), verbose = False, measure = Fal
     print(f"SAGA terminated after {iter_t} iterations with accuracy {eta}")
     print(f"SAGA status: {status}")
     
-    info = {'objective': np.array(obj), 'iterates': np.vstack(x_hist), 'step_sizes': np.array(step_sizes)}
+    info = {'objective': np.array(obj), 'objective_mean': np.array(obj2), 'iterates': np.vstack(x_hist), 'step_sizes': np.array(step_sizes)}
     
     return x_t, x_mean, info
 

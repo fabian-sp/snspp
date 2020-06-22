@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from .spp_solver import stochastic_prox_point
-
+from .saga import saga
 
 class problem:
     
@@ -22,14 +22,17 @@ class problem:
         self.verbose = verbose
         
     
-    def solve(self):
+    def solve(self, solver = 'ssnsp'):
         
         if self.x0 is None:
             self.x0 = np.zeros(self.n)
-
-        self.x, self.xavg, self.info = stochastic_prox_point(self.f, self.phi, self.x0, eps = 1e-4, params = self.params, \
-                         verbose = self.verbose, measure = False)
         
+        if solver == 'ssnsp':
+            self.x, self.xavg, self.info = stochastic_prox_point(self.f, self.phi, self.x0, eps = 1e-4, params = self.params, \
+                         verbose = self.verbose, measure = False)
+        elif solver == 'saga':
+            self.x, self.xavg, self.info =  saga(self.f, self.phi, self.x0, eps = 1e-4, params = self.params, \
+                                                 verbose = self.verbose, measure = False)
         return
     
     def plot_path(self):
@@ -46,6 +49,8 @@ class problem:
         return
     
     def plot_samples(self):
+        assert 'samples' in self.info.keys(), "No sample information"
+        
         tmpfun = lambda x: np.isin(np.arange(self.f.N), x)
         
         tmp = np.apply_along_axis(tmpfun, axis = 1, arr = self.info['samples'])

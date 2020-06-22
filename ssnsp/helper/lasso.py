@@ -1,4 +1,5 @@
 import numpy as np
+#from numba import jit
 
 
 class lsq:
@@ -21,8 +22,7 @@ class lsq:
         method for evaluating f(x)
         """
 
-        return (1/self.N) * np.linalg.norm(self.A@x - self.b)**2
-        
+        return (1/self.N) * np.linalg.norm(self.A@x - self.b)**2      
         
     def f(self, x, i):
         """

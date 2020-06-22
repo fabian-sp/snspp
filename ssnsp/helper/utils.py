@@ -1,5 +1,25 @@
 import numpy as np
 
+def compute_gradient_table(f, x):
+    """
+    computes a table of gradients at point x
+    returns: array of shape 
+    """
+    
+    dims = np.repeat(np.arange(f.N),f.m)
+
+    # initialize object for storing all gradients
+    gradients = list()
+    for i in np.arange(f.N):
+        A_i =  f.A[dims == i].copy()
+        tmp_i = A_i.T @ f.g( A_i @ x, i)
+        gradients.append(tmp_i)
+        
+    gradients = np.vstack(gradients)
+    
+    return gradients
+
+
 def compute_x_mean(x_hist, step_sizes = None):
     """
 
