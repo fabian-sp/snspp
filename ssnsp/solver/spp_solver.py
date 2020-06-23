@@ -173,7 +173,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     return new_x, xi, eta, info
 
 
-def stochastic_prox_point(f, phi, x0, xi = None, eps = 1e-3, params = dict(), verbose = False, measure = False):
+def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
     
     # initialize all variables
     A = f.A.copy()
@@ -228,7 +228,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, eps = 1e-3, params = dict(), ve
         if measure:
             start = time.time()
             
-        if eta <= eps:
+        if eta <= tol:
             status = 'optimal'
             break
         
@@ -257,7 +257,10 @@ def stochastic_prox_point(f, phi, x0, xi = None, eps = 1e-3, params = dict(), ve
         #eta = stop_mean_objective(obj2, cutoff = True)
         eta = stop_optimal(x_mean, f, phi)
         
-        
+        if measure:
+            end = time.time()
+            runtime.append(end-start)
+            
         if verbose:
             #print(f"------------Iteration {iter_t} of the Stochastic Proximal Point algorithm----------------")
             print(out_fmt % (iter_t, obj[-1], obj2[-1] , alpha_t, eta))
@@ -267,13 +270,13 @@ def stochastic_prox_point(f, phi, x0, xi = None, eps = 1e-3, params = dict(), ve
         if iter_t >= 0:
             alpha_t = C/(iter_t + 2)
         
-    if eta > eps:
+    if eta > tol:
         status = 'max iterations reached'    
         
     print(f"Stochastic ProxPoint terminated after {iter_t} iterations with accuracy {eta}")
     print(f"Stochastic ProxPoint status: {status}")
     
     info = {'objective': np.array(obj), 'iterates': np.vstack(x_hist), 'xi_hist': xi_hist, 'step_sizes': np.array(step_sizes), 'samples' : np.array(S_hist), \
-            'objective_mean': np.array(obj2), 'ssn_info': ssn_info}
+            'objective_mean': np.array(obj2), 'ssn_info': ssn_info, 'runtime': np.array(runtime)}
     
     return x_t, x_mean, info

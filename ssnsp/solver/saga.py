@@ -7,7 +7,7 @@ from ..helper.utils import compute_x_mean, compute_gradient_table, stop_optimal
 import time
 
 
-def saga(f, phi, x0, eps = 1e-3, params = dict(), verbose = False, measure = False):
+def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = False):
     """
     implementation of the SAGA algorithm for problems of the form 
     min 1/N * sum f_i(A_i x) + phi(x)
@@ -55,7 +55,7 @@ def saga(f, phi, x0, eps = 1e-3, params = dict(), verbose = False, measure = Fal
     
     for iter_t in np.arange(f.N * params['n_epochs']):
         
-        if eta <= eps:
+        if eta <= tol:
             status = 'optimal'
             break
         
@@ -89,7 +89,7 @@ def saga(f, phi, x0, eps = 1e-3, params = dict(), verbose = False, measure = Fal
             print(out_fmt % (iter_t, obj[-1], obj2[-1] , gamma, eta))
           
         
-    if eta > eps:
+    if eta > tol:
         status = 'max iterations reached'    
         
     print(f"SAGA terminated after {iter_t} iterations with accuracy {eta}")
@@ -101,4 +101,4 @@ def saga(f, phi, x0, eps = 1e-3, params = dict(), verbose = False, measure = Fal
 
 #%%
 #x0 = np.zeros(n)
-#x_saga, x_mean_saga, info = saga(f, phi, x0, eps = 1e-3, params = dict(), verbose = True, measure = False)
+#x_saga, x_mean_saga, info = saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = True, measure = False)

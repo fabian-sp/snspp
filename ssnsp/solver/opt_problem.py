@@ -11,15 +11,17 @@ from .saga import saga
 
 class problem:
     
-    def __init__(self, f, phi, x0 = None, params = dict(), verbose = False):
+    def __init__(self, f, phi, x0 = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
         self.f = f
         self.phi = phi
         self.A = f.A.copy()
         self.n = self.A.shape[1]
         
         self.x0 = x0
+        self.tol = tol
         self.params = params
         self.verbose = verbose
+        self.measure = measure
         
     
     def solve(self, solver = 'ssnsp'):
@@ -28,11 +30,11 @@ class problem:
             self.x0 = np.zeros(self.n)
         
         if solver == 'ssnsp':
-            self.x, self.xavg, self.info = stochastic_prox_point(self.f, self.phi, self.x0, eps = 1e-4, params = self.params, \
-                         verbose = self.verbose, measure = False)
+            self.x, self.xavg, self.info = stochastic_prox_point(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
+                         verbose = self.verbose, measure = self.measure)
         elif solver == 'saga':
-            self.x, self.xavg, self.info =  saga(self.f, self.phi, self.x0, eps = 1e-4, params = self.params, \
-                                                 verbose = self.verbose, measure = False)
+            self.x, self.xavg, self.info =  saga(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
+                                                 verbose = self.verbose, measure = self.measure)
         return
     
     def plot_path(self):
