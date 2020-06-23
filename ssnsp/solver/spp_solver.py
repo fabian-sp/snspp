@@ -3,7 +3,7 @@ author: Fabian Schaipp
 """
 
 import numpy as np
-from ..helper.utils import block_diag, compute_x_mean
+from ..helper.utils import block_diag, compute_x_mean, stop_mean_objective, stop_optimal
 from scipy.sparse.linalg import cg
 import time
 
@@ -113,7 +113,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     # step2: solve Newton system
         if verbose:
             print("Start CG method")
-        d, cg_status = cg(W, rhs, tol = 1e-3, maxiter = 500)
+        d, cg_status = cg(W, rhs, tol = 1e-4, maxiter = 500)
         
         assert d@rhs > -1e-8 , f"No descent direction, {d@rhs}"
         assert cg_status == 0, f"CG method did not converge, exited with status {cg_status}"
@@ -152,7 +152,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
         print(f"WARNING: reached maximal iterations in semismooth Newton -- accuracy {residual[-1]}")
     
     # update primal iterate
-    reduce_variance = all([np.any(t!=0) for t in xi_old.values()])
+    #reduce_variance = all([np.any(t!=0) for t in xi_old.values()])
     reduce_variance = False
     if reduce_variance:
         xi_stack_old = np.hstack([xi_old[i] for i in S])
@@ -160,9 +160,6 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
         correct =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)
     else:
         correct = 0.
-    
-    #print(np.linalg.norm(correct))
-    #print(np.linalg.norm(xi_full_old - xi_stack_old))
     
     
     z = x - (alpha/sample_size) * (subA.T @ xi_stack) + correct
@@ -252,12 +249,13 @@ def stochastic_prox_point(f, phi, x0, xi = None, eps = 1e-3, params = dict(), ve
         xi_hist.append(xi.copy())
         
         #calc x_mean 
-        x_mean = compute_x_mean(x_hist, step_sizes)
+        x_mean = compute_x_mean(x_hist, step_sizes = None)
         obj2.append(f.eval(x_mean) + phi.eval(x_mean))
         
         #stop criterion
-        eta = eta/np.linalg.norm(x_t)
-        #eta = np.linalg.norm(x_old - x_mean)/(np.linalg.norm(x_old))
+        #eta = eta/np.linalg.norm(x_t)
+        #eta = stop_mean_objective(obj2, cutoff = True)
+        eta = stop_optimal(x_mean, f, phi)
         
         
         if verbose:

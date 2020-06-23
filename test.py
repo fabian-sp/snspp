@@ -20,13 +20,13 @@ n = 20
 k = 10
 l1 = .01
 
-xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = True)
+xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False)
 
 xsol, A, b, f, phi = logreg_test(N, n, k, l1)
 
 
 #%% solve with SPP
-params = {'max_iter' : 50, 'sample_size': 50, 'alpha_C' : 100.}
+params = {'max_iter' : 120, 'sample_size': 90, 'alpha_C' : 100.}
 
 P = problem(f, phi, params = params, verbose = True)
 

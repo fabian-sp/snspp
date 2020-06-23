@@ -1,9 +1,47 @@
 import numpy as np
 
+
+############################################################################################
+### Stopping criteria
+############################################################################################
+
+def stop_mean_objective(obj, cutoff = True):
+    """
+    obj: list of the objective function values of the "mean iterate"
+    """
+    if cutoff:
+        if len(obj) >= 6:
+            objs = obj[3:]
+        else:
+            objs = obj.copy()
+    else:
+        objs = obj.copy()
+        
+    if len(objs) <= 3:
+        return np.inf
+    else:
+        return abs(objs[-1] - np.mean(objs) )
+    
+def stop_optimal(x, f, phi):
+    
+    gradf = compute_full_gradient(f,x) 
+    return np.linalg.norm(x - phi.prox(x- gradf, alpha = 1))
+
+
+############################################################################################
+### Useful functions for algorithms
+############################################################################################
+
+def compute_full_gradient(f,x):
+    
+    grads = compute_gradient_table(f, x)
+    return (1/f.N)*grads.sum(axis = 0)
+
+
 def compute_gradient_table(f, x):
     """
     computes a table of gradients at point x
-    returns: array of shape 
+    returns: array of shape Nxn
     """
     
     dims = np.repeat(np.arange(f.N),f.m)
@@ -54,7 +92,14 @@ def compute_x_mean(x_hist, step_sizes = None):
         
     return x_mean
 
+# FOR TESTING
+#x_hist = [np.random.rand(20) for i in range(10)]
+#step_sizes = [.3]*10
 
+
+############################################################################################
+### Linear ALgebra stuff
+############################################################################################
 
 def block_diag(arrs):
     """Create a block diagonal matrix from a list of provided arrays.
