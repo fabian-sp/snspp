@@ -11,6 +11,7 @@ class lsq:
     """
     
     def __init__(self, A, b):
+        self.name = 'squared'
         self.b = b
         self.A = A
         self.N = len(b)
@@ -52,6 +53,7 @@ class logistic_loss:
     
     def __init__(self, A, b):
         #self.b = b
+        self.name = 'logistic'
         self.A = A * b[:, np.newaxis]
         self.N = len(b)
         self.m = np.ones(self.N, dtype = 'int')
@@ -115,6 +117,7 @@ class Norm1:
     """
     def __init__(self, lambda1):
         assert lambda1 > 0 
+        self.name = '1norm'
         self.lambda1 = lambda1
         
     def eval(self, x):
@@ -150,6 +153,7 @@ class block_lsq:
     """
     
     def __init__(self, A, b, m):
+        self.name = 'squared'
         self.b = b
         self.A = A
         self.N = len(m)

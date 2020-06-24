@@ -30,7 +30,7 @@ params = {'max_iter' : 120, 'sample_size': 90, 'alpha_C' : 100.}
 
 params = {'n_epochs' : 20}
 
-P = problem(f, phi, tol = 1e-3, params = params, verbose = True)
+P = problem(f, phi, tol = 1e-3, params = params, verbose = True, measure = True )
 
 start = time.time()
 P.solve(solver = 'ssnsp')
