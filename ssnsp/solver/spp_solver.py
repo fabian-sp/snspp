@@ -34,7 +34,7 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
 
 def get_default_newton_params():
     
-    params = {'tau': .5, 'eta' : .5, 'rho': .5, 'mu': .2, 'eps': 1e-4, 'max_iter': 20}
+    params = {'tau': .5, 'eta' : 1e-2, 'rho': .5, 'mu': .2, 'eps': 1e-4, 'max_iter': 20}
     
     return params
 
@@ -113,7 +113,8 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     # step2: solve Newton system
         if verbose:
             print("Start CG method")
-        d, cg_status = cg(W, rhs, tol = 1e-4, maxiter = 500)
+        cg_tol = min(newton_params['eta'], np.linalg.norm(rhs)**(1+ newton_params['tau']))
+        d, cg_status = cg(W, rhs, tol = cg_tol, maxiter = 500)
         
         assert d@rhs > -1e-8 , f"No descent direction, {d@rhs}"
         assert cg_status == 0, f"CG method did not converge, exited with status {cg_status}"
@@ -167,10 +168,10 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     
     info = {'residual': np.array(residual), 'direction' : norm_dir, 'step_size': step_sz }
     
-    new_z = new_x - (1/sample_size) * (subA.T @ xi_stack)
-    eta = np.linalg.norm(new_x - phi.prox(new_z, alpha = 1))
+    #new_z = new_x - (1/sample_size) * (subA.T @ xi_stack)
+    #eta = np.linalg.norm(new_x - phi.prox(new_z, alpha = 1))
     
-    return new_x, xi, eta, info
+    return new_x, xi, info
 
 
 def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
@@ -237,7 +238,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         # sample and update
         S = sampler(f.N, params['sample_size'])
         
-        x_t, xi, eta, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, newton_params = None, verbose = False)
+        x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, newton_params = None, verbose = False)
         
         # save all diagnostics
         ssn_info.append(this_ssn)
@@ -253,7 +254,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         obj2.append(f.eval(x_mean) + phi.eval(x_mean))
         
         #stop criterion
-        #eta = eta/np.linalg.norm(x_t)
         #eta = stop_mean_objective(obj2, cutoff = True)
         eta = stop_optimal(x_mean, f, phi)
         
