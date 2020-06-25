@@ -18,7 +18,7 @@ from ssnsp.solver.opt_problem import problem
 N = 100
 n = 20
 k = 10
-l1 = .05
+l1 = .01
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False)
 
@@ -26,7 +26,7 @@ xsol, A, b, f, phi = logreg_test(N, n, k, l1)
 
 
 #%% solve with SPP
-params = {'max_iter' : 120, 'sample_size': 90, 'alpha_C' : 100.}
+params = {'max_iter' : 80, 'sample_size': 20, 'alpha_C' : 100.}
 
 params = {'n_epochs' : 40}
 

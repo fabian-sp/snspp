@@ -163,7 +163,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         tmp = np.vstack([gradient_table[i,:] for i in S])
         correct = (alpha/sample_size) * tmp.sum(axis = 0) - (alpha/f.N) * gradient_table.sum(axis = 0)
         #print(np.linalg.norm(correct))
-        correct = 0.
+        #correct = 0.
     else:
         correct = 0.
     
@@ -264,7 +264,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         eta = stop_optimal(x_mean, f, phi)
         
         full_m = int(f.N/params['sample_size'])
-        if reduce_variance and iter_t % full_m == 0 and iter_t >= full_m:
+        if reduce_variance and iter_t % full_m == 0 and iter_t >= 50:
             G = compute_gradient_table(f, x_t)
             #print("Norm of full gradient", np.linalg.norm(1/f.N * G.sum(axis=0)))
         
