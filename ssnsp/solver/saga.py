@@ -104,7 +104,8 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
     print(f"SAGA terminated after {iter_t} iterations with accuracy {eta}")
     print(f"SAGA status: {status}")
     
-    info = {'objective': np.array(obj), 'objective_mean': np.array(obj2), 'iterates': np.vstack(x_hist), 'step_sizes': np.array(step_sizes)}
+    info = {'objective': np.array(obj), 'objective_mean': np.array(obj2), 'iterates': np.vstack(x_hist), 'step_sizes': np.array(step_sizes), \
+            'gradient_table': gradients}
     
     return x_t, x_mean, info
 

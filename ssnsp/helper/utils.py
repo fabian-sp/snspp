@@ -42,7 +42,10 @@ def stop_optimal(x, f, phi):
 ############################################################################################
 
 def compute_full_gradient(f,x):
-    
+    """
+    computes the full gradient 1/N * sum (A_i.T @ grad f_i(A_ix))
+    NOTE: not storage optimized (needs O(N*n) storage)
+    """
     grads = compute_gradient_table(f, x)
     return (1/f.N)*grads.sum(axis = 0)
 

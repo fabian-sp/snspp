@@ -4,6 +4,7 @@ author: Fabian Schaipp
 
 import numpy as np
 from ..helper.utils import block_diag, compute_x_mean, stop_mean_objective, stop_optimal
+from ..helper.utils import compute_gradient_table
 from scipy.sparse.linalg import cg
 import time
 
@@ -50,7 +51,7 @@ def check_newton_params(newton_params):
     
     return
 
-def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbose = False):
+def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newton_params = None, verbose = False):
     """
     m: vector with all dimensions m_i, i = 1,..,N
     
@@ -63,6 +64,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
       
     xi_old = xi.copy()
     N = len(m)
+    
     # creates a vector with nrows like A in order to index the relevant A_i from A
     dims = np.repeat(np.arange(N),m)
     
@@ -72,7 +74,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     M = m[S].sum()
     
     # IMPORTANT: subA is ordered, i.e. it is in the order as np.arange(N) and NOT of S --> breaks if S not sorted
-    #subA = A[np.isin(dims, S), :]
+    # subA = A[np.isin(dims, S), :]
     # alternatively (safer but slower): 
     subA = np.vstack([A[dims == i,:] for i in S])
     
@@ -153,12 +155,15 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
         print(f"WARNING: reached maximal iterations in semismooth Newton -- accuracy {residual[-1]}")
     
     # update primal iterate
-    #reduce_variance = all([np.any(t!=0) for t in xi_old.values()])
-    reduce_variance = False
-    if reduce_variance:
-        xi_stack_old = np.hstack([xi_old[i] for i in S])
-        xi_full_old = np.hstack([xi_old[i] for i in range(f.N)])
-        correct =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)
+    if gradient_table is not None:
+        #xi_stack_old = np.hstack([xi_old[i] for i in S])
+        #xi_full_old = np.hstack([xi_old[i] for i in range(f.N)])
+        #correct =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)
+        
+        tmp = np.vstack([gradient_table[i,:] for i in S])
+        correct = (alpha/sample_size) * tmp.sum(axis = 0) - (alpha/f.N) * gradient_table.sum(axis = 0)
+        #print(np.linalg.norm(correct))
+        correct = 0.
     else:
         correct = 0.
     
@@ -216,6 +221,10 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     ssn_info = list()
     runtime = list()
     
+    # variance reduction
+    reduce_variance = False
+    G = None
+    
     hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s"
     out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
     if verbose:
@@ -229,13 +238,13 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         if eta <= tol:
             status = 'optimal'
             break
-        
+                
         x_old = x_mean.copy()
         
         # sample and update
         S = sampler(f.N, params['sample_size'])
         
-        x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, newton_params = None, verbose = False)
+        x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, gradient_table = G, newton_params = None, verbose = False)
         
         # save all diagnostics
         ssn_info.append(this_ssn)
@@ -253,6 +262,11 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #stop criterion
         #eta = stop_mean_objective(obj2, cutoff = True)
         eta = stop_optimal(x_mean, f, phi)
+        
+        full_m = int(f.N/params['sample_size'])
+        if reduce_variance and iter_t % full_m == 0 and iter_t >= full_m:
+            G = compute_gradient_table(f, x_t)
+            #print("Norm of full gradient", np.linalg.norm(1/f.N * G.sum(axis=0)))
         
         if measure:
             end = time.time()
