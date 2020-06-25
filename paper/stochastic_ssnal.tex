@@ -1,0 +1,763 @@
+\documentclass[12pt,a4paper,twoside]{article}
+
+% General document formatting
+\usepackage[margin=0.7in]{geometry}
+\usepackage[parfill]{parskip}
+\usepackage[utf8]{inputenc}
+\usepackage{caption}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{lipsum}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+%\usepackage{csvsimple}
+%\usepackage[export]{adjustbox}
+%\usepackage{authblk}
+
+% Related to math
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{mathtools}
+\usepackage{dsfont}
+%\usepackage[]{algorithm2e}
+\usepackage[]{algorithmic, algorithm}
+% for links in pdf
+\usepackage{hyperref}
+\hypersetup{
+	colorlinks=false,
+	citebordercolor=blue,
+	linkbordercolor=blue
+}
+\makeatletter
+\renewcommand*{\eqref}[1]{%
+	\hyperref[{#1}]{\textup{\tagform@{\ref*{#1}}}}%
+}
+\makeatother
+
+
+%read csv as table
+%\usepackage{pgfplotstable}
+
+%for txt file appendix
+%\usepackage{verbatim}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{asum}[thm]{Assumption}
+\newtheorem{rem}[thm]{Remark}
+\newtheoremstyle{note}% <name>
+{3pt}% <Space above>
+{3pt}% <Space below>
+{}% <Body font>
+{}% <Indent amount>
+{\itshape}% <Theorem head font>
+{.}% <Punctuation after theorem head>
+{.4em}% <Space after theorem headi>
+{}% <Theorem head spec (can be left empty, meaning `normal')>
+
+%\theoremstyle{definition}
+\newtheorem{defn}[thm]{Definition}
+\theoremstyle{note}
+\newtheorem*{exm}{Example}
+
+\numberwithin{thm}{section} 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\sgn}{\operatorname{sgn}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\abs}[1]{\ensuremath{\left\vert#1\right\vert}}
+\newcommand{\inner}[1]{\left\langle #1 \right\rangle}
+\newcommand{\trp}[1]{#1^{\intercal}}
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+\newcommand{\Arow}[2]{#1_{#2\boldsymbol{\cdot}}}
+\newcommand{\Acol}[2]{#1_{\boldsymbol{\cdot}#2}}
+\renewcommand{\exp}{{\rm e}}
+
+\newcommand{\prox}[2]{\text{Prox}_{#1}\left(#2\right)}
+\newcommand{\proxfun}[1]{\text{Prox}_{#1}}
+\newcommand{\onehalf}{\frac{1}{2}}
+\newcommand{\oneover}[1]{\frac{1}{#1}}
+\newcommand{\ixmap}[1]{{\kappa(#1)}}
+\DeclareMathOperator{\Tr}{Tr}
+
+\let\temp\phi
+\let\phi\varphi
+\let\varphi\temp
+
+\let\epsilon\varepsilon
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{url}
+\usepackage{cite}
+\bibliographystyle{apalike}
+
+
+\title{A semismooth Newton stochastic proximal point algorithm}
+\date{May 2020}
+%\author[*]{Andre Milzarek}
+%\author[**]{Fabian Schaipp}
+%\author[**]{Michael Ulbrich}
+%\affil[*]{Institute for Data and Decision Analytics, The Chinese University of Hong Kong, Shenzhen}
+%\affil[**]{Chair of Mathematical Optimization, Department of Mathematics, Technical University of Munich}
+
+\author{Andre Milzarek \thanks{Institute for Data and Decision Analytics, The Chinese University of Hong Kong, Shenzhen. }
+	\and Fabian Schaipp \thanks{Chair of Mathematical Optimization, Department of Mathematics, Technical University of Munich
+		.}
+	\and Michael Ulbrich \thanks{Chair of Mathematical Optimization, Department of Mathematics, Technical University of Munich
+		.}
+	}
+%\setcounter{secnumdepth}{-2}
+
+\begin{document}
+	\maketitle
+	\begin{abstract}
+		tbd
+	\end{abstract}
+
+
+\tableofcontents	
+\clearpage
+
+\section{Notation / Preliminaries}
+	Let $F:\mathbb{R}^n \to \mathbb{R}^n$ be a locally Lipschitz function. With $\partial F$ we denote its Clarke differential or - for the special case of $F$ being convex - its subdifferential.\\
+	In some situations, computing the Clarke differential is tedious, and it is sufficient to work with a multifunction that has similar properties. In such cases, we call such a multifunction a \textit{surrogate generalized differential} of $F$ and denote it with $\hat{\partial} F$.\\
+	
+	An essential groundwork of this article is the proximal point operator and - closely related to it - the Moreau envelope of a convex function.
+	\begin{defn}
+		Let $g: \mathbb{R}^n \to \mathbb{R}$ be a proper, closed and convex function. The proximal operator of $g$ at $x\in \mathbb{R}^n$ is given by
+		\begin{align*}
+			\prox{g}{x} := \arg \min_z \left\{g(z) + \onehalf \|x-z\|^2 \right\}
+		\end{align*}
+	\end{defn}
+
+	\begin{defn}
+	Let $g: \mathbb{R}^n \to \mathbb{R}$ be a proper, closed and convex function. The Moreau envelope of $g$ at $x\in \mathbb{R}^n$ is given by
+	\begin{align*}
+	\Psi_g(x) := \min_z \left\{g(z) + \onehalf \|x-z\|^2 \right\}.
+	\end{align*}
+	\end{defn}
+	
+	Using Theorem 6.60 in \cite{Beck2017}, the Moreau envelope is differentiable and its gradient is given by 
+	\begin{align}
+		\label{eqn:moreau_gradient}
+		\nabla \Psi_g(x) = x - \prox{g}{x}.
+	\end{align}
+	
+	Many more results on these concepts can be found in chapter 6 of \cite{Beck2017} or in chapter 12 and onwards of \cite{Bauschke2011}.\\
+	
+	\vspace{5mm}
+	A second fundamental concept of convex analysis is the (Fenchel) conjugate function. For a function $g: \mathbb{R}^n \to \mathbb{R}$ it is defined by
+	\begin{align}
+	\label{def:convex_conjugate}
+	g^\ast(x) = \sup_{y\in \mathbb{R}^{n}} \langle y,x\rangle -g(y)
+	\end{align} 	
+	\medskip
+	\begin{prop}
+		\label{prop:strongly_convex_lipschitz}
+		Let $g: \mathbb{R}^n \to \mathbb{R}$ be proper and closed. If $g$ is $\mu$-strongly convex then its Fenchel conjugate $g^\ast$ is differentiable and its gradient is given by
+		\begin{align*}
+		\nabla g^\ast(x) = \arg \max_{y\in \mathbb{R}^{m_i}} \langle y,x\rangle -g(y)
+		\end{align*}
+		Moreover, $\nabla g^\ast$ is Lipschitz continuous with Lipschitz constant $\mu^{-1}$.
+	\end{prop}
+	\textit{Proof:} The first part is an immediate consequence of Corollary 4.21 in \cite{Beck2017} and the fact that the supremum in \eqref{def:convex_conjugate} are attained uniquely because of strong convexity.\\
+	The second part is Theorem 4.2.1 in \cite{HiriartUrruty1993}.\\
+	\qed
+	\medskip
+	
+	\section{Introduction}
+	We consider problems of the form 
+	\begin{align}
+	\label{prob:deterministic}
+		\min_{x \in \mathbb{R}^n} \psi(x):= f(x) + \phi(x), \quad f(x) := \oneover{N}\sum_{i=1}^{N} f_i(A_ix)
+	\end{align}
+	with matrices $A_i \in \mathbb{R}^{m_i \times n}$. We assume the set of solutions $\mathcal{X}^\star := \arg \min_{x \in \mathbb{R}^n} \psi(x)$ to be non-empty and bounded. This is a mild assumption, as in statistical learning problems $f$ is typically a loss function which is bounded from below and $\phi$ is a coercive regularization function.
+	
+	Moreover, we make the following assumptions:
+	\begin{enumerate}
+		\item[(A1)] The functions $f_i: \mathbb{R}^{m_i} \to \mathbb{R}$ are continuously differentiable, convex functions. The function $\phi: \mathbb{R}^n \to \mathbb{R}\cup \{\infty\}$ is convex, proper and lower semi-continuous.
+		\item[(A2)] For $\alpha > 0$ and for all $x\in \mathbb{R}^n$ the proximal operator $\prox{\alpha \phi}{x}$ is strongly semismooth.
+		\item[(A3)] The functions $f_i^\ast$ are differentiable with locally Lipschitz continuous gradient. In particular, this is fulfilled if the functions $f_i$ are strongly convex using Proposition \ref{prop:strongly_convex_lipschitz}.
+		\item[(A4)] The functions $f_i^\ast$ are strongly convex with parameter $\mu_\ast > 0$ for all $i \in [N]$.
+		\item[(A5)] For all $i \in [N]$, the functions $z \mapsto \nabla f^\ast_i(z)$ are strongly semismooth at all $z$.
+	\end{enumerate}
+	\vspace{10mm}
+	
+	
+	
+	
+	Assumption (A1) and (A2) are fulfilled for many regularization functions commonly used for inducing (group) sparsity, e.g the $\ell_1$- or $\ell_2$-norm. Strong semismoothness of $\prox{\alpha \phi}{x}$ can be easily concluded from Proposition 2.26 in \cite{Ulbrich2011} whenever $\prox{\alpha \phi}{x}$ is a piecewise $\mathcal{C}^2$-function. For example, choosing $\phi(x) = \lambda \|x\|_1$ with $\lambda > 0$, the proximal operator is given by soft-thresholding which is piecewise affine. 
+	
+	Moreover, the composition of convex function with linear maps is convex. Thus, convexity of each $f_i$ implies that $f$ is also convex.  However, $f$ is in general not strongly convex, even if each $f_i$ would be strongly convex.\\
+	
+	(A5) is in particular fulfilled, if every $\nabla f^\ast_i$ is twice (piecewise) continuously differentiable (see Proposition 2.8 or 2.26 in \cite{Ulbrich2011}).\\
+	
+	Assumption (A4) implies uniform positive definiteness of all elements of $\partial (\nabla f^\ast_i)$, i.e.
+	\begin{align*}
+		M(z) \succeq \mu_\ast  \quad \forall M(z) \in \partial (\nabla f^\ast_i)(z) \quad \forall z \in \mathbb{R}^{m_i} 
+	\end{align*}
+	(TO DO: cite this result)
+	
+	\clearpage
+	\section{The stochastic proximal point method}
+	The classical proximal point algorithm for problem \eqref{prob:deterministic} has the iterates
+	\begin{align*}
+		x^{t+1} = \prox{\alpha_t \psi}{x^t} = \arg \min_x \psi(x) + \oneover{2\alpha_t}\|x-x^t\|^2
+	\end{align*}
+	for a sequence of step sizes $\{\alpha_t\}_{t\geq 0} > 0$.
+	We will reformulate the above proximal point update using its first-order optimality condition.
+	For a given $x \in \mathbb{R}^n$ and $\alpha > 0$, we have 
+	\begin{align*}
+	y = \prox{\alpha \psi}{x} &\Longleftrightarrow y \in x - \alpha \partial \psi(y)\\ &\Longleftrightarrow y \in x- \frac{\alpha}{N} \sum_{i=1}^{N} \trp{A}_i\nabla f_i(A_iy)- \alpha \partial\phi(y).
+	\end{align*}
+	Introducing $\xi_i := \nabla f_i(A_i y)$ we have $\xi_i = \nabla f_i(A_i y) \Longleftrightarrow \nabla f_i^\ast(\xi_i) = A_iy$ by Theorem 4.20 in \cite{Beck2017}. Thus, we can reformulate the above into
+	\begin{align}
+	\label{eqn:nonlinear_system}
+	\begin{split}
+	y = \prox{\alpha \psi}{x} \quad \Longleftrightarrow \quad &y = \prox{\alpha \phi}{x - \frac{\alpha}{N} \sum_{i=1}^{N} A_i^\intercal \xi_i}, \\
+	&\nabla f_i^\ast(\xi_i) = A_i \prox{\alpha \phi}{x - \frac{\alpha}{N} \sum_{i=1}^{N} A_i^\intercal \xi_i} \quad \forall i \in [N].
+	\end{split}
+	\end{align}
+	\vspace{10mm}
+	
+	The reformulation in \eqref{eqn:nonlinear_system} appears attractive as it results in a system of nonlinear equations with the variables $\xi_i$. Recalling the dimensions, i.e. $\xi_i \in \mathbb{R}^{m_i}$, we observe that this is beneficial whenever $A_i$ has significantly less rows than columns (i.e. $m_i \ll n$).
+	
+	However, our aim is to solve Problem \eqref{prob:deterministic} in a stochastic fashion. In stochastic programming literature, this is typically achieved by introducing a stochastic oracle which approximates the gradient (and/or the Hessian) (TO DO: add cites). In our case, the sum in the definition of $f$ can be interpreted as an empirical expectation. Sampling a random subset of summands $f_i(A_i \cdot)$ can thus be understood as a special case of a stochastic oracle. Similarly to standard assumptions for stochastic oracles (e.g. \cite{Ghadimi2013}) we want to define a suitable procedure for sampling. 
+	\vspace{5mm}
+	\begin{defn}
+		\label{def:admissible_sampling}
+		Let $(\Omega, \mathcal{F}, P)$ be a probability space and let $0<N_\mathcal{S}\leq N$ be deterministic. Let $\mathcal{S} \sim P$ be a list of $N_\mathcal{S}$ many elements of the set $[N]$.\\
+		For a given realization $\mathcal{S}$, let $\kappa:[N_\mathcal{S}] \to [N]$ be defined by mapping the index over $\mathcal{S}$ to its respective elements from $[N]$.\\
+		Moreover, for a realization $\mathcal{S}$ define 
+		\begin{align*}
+		f_{\mathcal{S}}(x) &:= \oneover{N_\mathcal{S}}\sum_{i=1}^{N_\mathcal{S}} f_\ixmap{i}(A_\ixmap{i} x),\\
+		\psi_\mathcal{S}(x) &:= f_\mathcal{S}(x) + \phi(x).
+		\end{align*}
+		We call $\mathcal{S} \sim P$ an admissible sampling procedure if 
+		\begin{align*}
+			\mathbb{E}_P [f_\mathcal{S}(x)] = f(x) \quad \forall x \in \mathbb{R}^n.
+		\end{align*}
+		Any realization of an admissible sampling procedure is called an admissible sample of $[N]$.
+	\end{defn}
+	\medskip
+
+%	\begin{rem}
+%		If the size of $\mathcal{S}$ is deterministic we can simply set $N_\mathcal{S} = |\mathcal{S}|$. However, this definition also includes sampling with random size.
+%	\end{rem}
+	From the definition above together with Proposition 2.2 in \cite{Bertsekas1973}, we can immediately follow that if $\mathcal{S} \sim P$ is an admissible sampling procedure then $\nabla f_S$ is also an unbiased estimator of $\nabla f$ under $P$, i.e.
+	\begin{align*}
+		\mathbb{E}_P [\nabla f_\mathcal{S}(x)] = \nabla f(x) \quad \forall x \in \mathbb{R}^n.
+	\end{align*}
+	The simplest approach to sampling from $[N]$ is by drawing $N_\mathcal{S}$ many elements under uniform distribution. We will now show that this indeed is an admissible sampling procedure regardless of the fact whether we draw with or without replacement.\\
+	\vspace{5mm}
+	
+	\begin{prop}
+	Let $0<N_\mathcal{S}\leq N$ and let $P$ be the probability distribution such that each element of $\mathcal{S}$ is drawn uniformly from $[N]$ with or without replacement. In both cases, $\mathcal{S} \sim P$ is an admissible sampling procedure.
+	\end{prop}
+	\textit{Proof:}
+
+	1) Drawing $\mathcal{S}$ with replacement:\\
+	We can see $\mathcal{S} = \{\mathcal{S}^1, \dots, \mathcal{S}^{N_\mathcal{S}}\}$ where $S^j \in [N]$ and $P(S^j=i) = \oneover{N} \quad \forall i=1,\dots N,~j = 1, \dots, N_\mathcal{S}$.\\
+	Now,
+	\begin{align*}
+	\mathbb{E}[f_\mathcal{S}(x)] = \mathbb{E}\left[\oneover{N_\mathcal{S}} \sum_{j=1}^{N_\mathcal{S}} f_{\mathcal{S}^j}(A_{\mathcal{S}^j}x)\right] = \oneover{N_\mathcal{S}} \sum_{j=1}^{N_\mathcal{S}} \mathbb{E}[f_{\mathcal{S}^j}(A_{\mathcal{S}^j}x)] = \oneover{N_\mathcal{S}} \sum_{j=1}^{N_\mathcal{S}} \sum_{i=1}^{N} \oneover{N} f_i(A_ix) = \oneover{N}\sum_{i=1}^{N} f_i(A_ix)
+	\end{align*}
+	 
+	2) Drawing $\mathcal{S}$ without replacement:\\
+	In this case, there are ${N \choose N_\mathcal{S}}$ possible outcomes and for a fixed $i\in [N]$ there are ${N-1 \choose N_\mathcal{S}-1}$ outcomes where $i\in \mathcal{S}$ and thus $f_i(A_ix)$ is a summand of $f_\mathcal{S}$. Hence, by definition of the expectation as the probability-weighted sum of each outcome it holds
+	\begin{align*}
+	\mathbb{E}[f_\mathcal{S}(x)] =   \oneover{N_\mathcal{S}} \sum_{i=1}^{N} \frac{{N-1 \choose N_\mathcal{S}-1}}{{N \choose N_\mathcal{S}}} f_i(A_ix) = \frac{N_\mathcal{S}}{N_\mathcal{S} \cdot N} \sum_{i=1}^{N} f_i(A_ix)  
+	\end{align*}
+	\qed
+	\\
+	\begin{rem}
+		Alternatively, one could do Bernoulli sampling with probability $p$ at each $i\in [N]$ and set $N_\mathcal{S} = pN$. However, this results in random sizes of $\mathcal{S}$ and requires a more general formulation of Definition \ref{def:admissible_sampling}.
+	\end{rem}	
+	From now on, assume that we have a sequence $\{\mathcal{S}_t\}_{t\geq 0}$ generated independently from an admissible sampling procedure.\\
+	The iterates of the stochastic analogon of the proximal point algorithm are thus given by
+	\begin{align*}
+		x^{t+1} = \prox{\alpha_t \psi_{\mathcal{S}_t}}{x^t} = \arg \min_x \psi_{\mathcal{S}_t}(x) + \oneover{2\alpha_t}\|x-x^t\|^2.
+	\end{align*}
+	Using \eqref{eqn:nonlinear_system}, this translates into
+	\begin{align}
+	\label{eqn:nonlinear_system_stochastic}
+	\begin{split}
+	x^{t+1} &= \prox{\alpha_t \phi}{x^t - \frac{\alpha_t}{N_{\mathcal{S}_t}} \sum_{i =1}^{N_{\mathcal{S}_t}} A_\ixmap{i}^\intercal \xi_i^{t+1}}, \\
+	\nabla f_\ixmap{i}^\ast(\xi_i^{t+1}) &= A_\ixmap{i} \prox{\alpha_t \phi}{x - \frac{\alpha_t}{N_{\mathcal{S}_t}}\sum_{i =1}^{N_{\mathcal{S}_t}} A_\ixmap{i}^\intercal \xi_i^{t+1}} \quad \forall i \in [N_{\mathcal{S}_t}].
+	\end{split}
+	\end{align}
+	
+\section{Solving the subproblem with a semismooth Newton method}
+	For the following section, we assume that we are given a single realization $\mathcal{S}$ of an admissible sampling procedure with $|\mathcal{S}| = N_\mathcal{S}$, a step size $\alpha >0$ and a point $x\in \mathbb{R}^n$. Let $M_{\mathcal{S}} := \sum_{i =1}^{N_\mathcal{S}}m_{\ixmap{i}}$ denote the dimension of the subproblem.
+	
+	Now, the second row of \eqref{eqn:nonlinear_system_stochastic} is a system of nonlinear equations which can be reformulated as
+	\begin{align}
+	\label{eqn:newton_equation}
+		\mathcal{V}(\xi) = 0
+	\end{align}
+	where
+	\begin{align}
+	\label{eqn:definition_V}
+	\begin{alignedat}{2}
+		&\xi := \left(\xi_1, \dots, \xi_{N_{\mathcal{S}}}\right) \in \mathbb{R}^{M_{\mathcal{S}}}\\
+		&\mathcal{V}: \mathbb{R}^{M_{\mathcal{S}}} \to \mathbb{R}^{M_{\mathcal{S}}}, \quad &&\xi \mapsto \left(\mathcal{V}_1(\xi), \dots, \mathcal{V}_{N_\mathcal{S}}(\xi)\right) \\
+		&\mathcal{V}_i: \mathbb{R}^{M_{\mathcal{S}}} \to \mathbb{R}^{m_\ixmap{i}}, \quad &&\xi \mapsto \nabla f_\ixmap{i}^\ast(\xi_i) - A_\ixmap{i} \prox{\alpha \phi}{x - \frac{\alpha}{N_{\mathcal{S}}} \sum_{i=1}^{N_{\mathcal{S}}} A_\ixmap{i}^\intercal \xi_i}
+	\end{alignedat}
+	\end{align}
+	
+	The Newton step of this system is given by 
+	\begin{align*}
+		\mathcal{W}(\xi)d = - \mathcal{V}(\xi)
+	\end{align*}
+	where
+	\begin{align}
+	\label{eqn:newton_step}
+	\begin{split}
+		\mathcal{W}(\xi) &= \Big(W_{ij}(\xi) \Big)_{i,j = 1,\dots, N_\mathcal{S}}, \quad W_{ij}(\xi) \in \mathbb{R}^{m_\ixmap{i} \times m_\ixmap{j}} \\
+		W_{ij}(\xi) &\in \frac{\hat{\partial} \mathcal{V}_i}{\partial \xi_j}(\xi) := 
+		\begin{cases}
+		\frac{\alpha}{N_{\mathcal{S}}} A_\ixmap{i} U(\xi) \trp{A}_\ixmap{j} &\quad i\neq j \\
+		\\
+		H_i(\xi_i) + \frac{\alpha}{N_{\mathcal{S}}} A_\ixmap{i} U(\xi) \trp{A}_\ixmap{i} &\quad i=j
+		\end{cases}\\
+		U(\xi) &\in \partial \prox{\alpha \phi}{x - \frac{\alpha}{N_\mathcal{S}} \sum_{i=1}^{N_{\mathcal{S}}} A_\ixmap{i}^\intercal \xi_i}\\
+		H_i(\xi_i) &\in \partial\left(\nabla f_\ixmap{i}^\ast\right)(\xi_i)
+	\end{split}
+	\end{align}
+	
+	In matrix notation, this simplifies to 
+	\begin{align*}
+		\mathcal{W}(\xi) \in \hat{\partial} \mathcal{V}(\xi) := \Bigg\{&\text{diag}\left(H_i(\xi_i)_{i = 1, \dots, N_\mathcal{S}}\right) + \frac{\alpha}{N_{\mathcal{S}}} \mathcal{A}_\mathcal{S}  U(\xi) \trp{\mathcal{A}_\mathcal{S}} \quad \Bigg \vert \quad U(\xi) \in \partial \prox{\alpha \phi}{x - \frac{\alpha}{N_\mathcal{S}} \sum_{i=1}^{N_{\mathcal{S}}} A_\ixmap{i}^\intercal \xi_i},\\
+		&\mathcal{A}_\mathcal{S} = \begin{pmatrix}A_\ixmap{1} \\ \vdots \\A_\ixmap{N_\mathcal{S}}\end{pmatrix}, ~
+		H_i(\xi_i) \in \partial\left(\nabla f_\ixmap{i}^\ast\right)(\xi_i)
+		\quad  \forall i \in [N_\mathcal{S}] \Bigg\}
+	\end{align*}
+	
+	The following result follows directly from the fact that proximal operators are monotone (see Theorem 6.42 in \cite{Beck2017}) and Proposition 2.3 in \cite{Jiang1995}.\\
+	
+	\begin{prop}
+		\label{prop:prox_phi_semidef}
+		Let $\alpha >0$ be given as well as an admissible sample $\mathcal{S}$ of $[N]$. Let $x \in \mathbb{R}^n$. Each
+		\begin{align*}
+			U(\xi) \in \partial \prox{\alpha \phi}{x}
+		\end{align*}
+		is positive semidefinite for all $\xi \in \mathbb{R}^{M_\mathcal{S}}$.
+	\end{prop}
+	\vspace{10mm}
+	\begin{prop}
+		Let the assumptions (A1) to (A5) hold. Let $\alpha >0$ be given as well as an admissible sample $\mathcal{S}$ of $[N]$. Let $x \in \mathbb{R}^n$. Then the function $\mathcal{V}$ defined as in \eqref{eqn:definition_V} is semismooth with respect to $\hat{\partial} \mathcal{V}$.
+	\end{prop}
+	\textit{Proof:} By assumption (A2), (A3) and (A5), this follows from the chain rule for semismooth functions (see Theorem 7.5.17 in \cite{Facchinei2004}).\\
+	\qed
+	
+	\vspace{5mm}
+	With the following result, we can interpret the function $\mathcal{V}$ as a gradient. Thus, finding a root of $\mathcal{V}$ is equivalent to finding a stationary point.\\
+	\begin{prop}
+		\label{prop:derive_U}
+		Let $\alpha >0$ be given as well as an admissible sample $\mathcal{S}$ of $[N]$. Let $x \in \mathbb{R}^n$. For the function $\xi \mapsto \mathcal{V}(\xi)$ as defined in \eqref{eqn:definition_V} it holds
+		\begin{align*}
+			\mathcal{V}(\xi) &= \nabla \mathcal{U}(\xi) \\
+			\mathcal{U}(\xi) &:= \sum_{i=1}^{N_\mathcal{S}} f_\ixmap{i}^\ast(\xi_i) + \frac{N_\mathcal{S}}{\alpha} \left(\onehalf \|z(\xi)\|^2 - \Psi_{\alpha \phi}(z(\xi))\right) \\
+			z(\xi) &:= x - \frac{\alpha}{N_\mathcal{S}} \sum_{i=1}^{N_{\mathcal{S}}} A_\ixmap{i}^\intercal \xi_i
+		\end{align*}
+		for all $\xi \in \mathbb{R}^{M_\mathcal{S}}$.
+	\end{prop}
+	\textit{Proof:} We have $Dz(\xi) = -\frac{\alpha}{N_\mathcal{S}}\left(
+	\trp{A_\ixmap{1}} , \dots, \trp{A_\ixmap{N_{\mathcal{S}}}}\right)$.
+	Now, for any $\xi \in \mathbb{R}^{M_\mathcal{S}}$ it holds
+	\begin{align*}
+		\nabla \mathcal{U}(\xi) &= 
+		\begin{pmatrix}\nabla f_\ixmap{1}^\ast(\xi_1) \\ \vdots \\\nabla f_\ixmap{{N_\mathcal{S}}}^\ast(\xi_{N_\mathcal{S}})\end{pmatrix} + \frac{N_\mathcal{S}}{\alpha} \Big(\trp{Dz(\xi)}z(\xi) - \trp{Dz(\xi)}\big(z(\xi) - \prox{\alpha \phi}{z(\xi)}\big) \Big) \\
+		&= \begin{pmatrix}\nabla f_\ixmap{1}^\ast(\xi_1) \\ \vdots \\\nabla f_\ixmap{{N_\mathcal{S}}}^\ast(\xi_{N_\mathcal{S}})\end{pmatrix} - 
+		\begin{pmatrix}
+		A_\ixmap{1} \\ \vdots \\ A_\ixmap{N_{\mathcal{S}}}
+		\end{pmatrix} \prox{\alpha \phi}{z(\xi)} = \mathcal{V}(\xi)
+	\end{align*}
+	where we used the gradient of the Moreau envelope given in \eqref{eqn:moreau_gradient}.\\
+	\qed
+		
+	Finally, we can formulate a semismooth Newton method in order to solve the nonlinear system \eqref{eqn:newton_equation} in each iteration. The result of Proposition \ref{prop:derive_U} motivates the use of Armijo line search.
+	 
+	\vspace{5mm}
+	\begin{algorithm}[H]
+		\caption{Semismooth Newton method}
+		\label{alg:semismooth_newton}
+		\begin{algorithmic}
+		\REQUIRE $x \in \mathbb{R}^n$, $\alpha > 0$ and a n admissible sample $\mathcal{S}$ of $[N]$. Choose a starting point $\xi^0 \in \mathbb{R}^{M_\mathcal{S}}$ and $\gamma \in (0, \onehalf)$, $\eta \in (0, 1)$, $\rho \in (0, 1)$, $\tau \in (0, 1]$. 
+		\FOR{$j = 0,1,2,\dots$}
+		\STATE 1. (Newton direction) Choose $\mathcal{W} \in \hat{\partial} \mathcal{V}(\xi^j)$ and solve the system 
+		\begin{align*}
+		\mathcal{W}d^j = -\mathcal{V}(\xi^j) 
+		\end{align*}
+		approximately, i.e. such that $\|\mathcal{W}d^j + \mathcal{V}(\xi^j) \| \leq \min(\eta, \|\mathcal{V}(\xi^j)\|^{1+\tau} )$ .\\
+		\STATE 2. (Armijo line search) Find smallest nonnegative integer $m_j$ such that
+		\begin{align*}
+		\mathcal{U}(\xi^j + \rho^{m_j} d^j) \leq \mathcal{U}(\xi^j) + \gamma\rho^{m_j} \langle d^j, \nabla \mathcal{U}(\xi^j) \rangle
+		\end{align*}
+		and set $\beta_j := \rho^{m_j}$.\\
+		\STATE 3. (Update) Compute the new iterate 
+		\begin{align*}
+		\xi^{j+1} = \xi^j + \beta_j d^j.
+		\end{align*}
+		\IF{$\xi^{j+1}$ fullfill a given stopping criterion}
+		\STATE \textbf{break}
+		\ENDIF
+		\ENDFOR
+		\RETURN $\xi^{j+1}$
+		\end{algorithmic}
+	\end{algorithm}
+	\vspace{5mm}
+	\begin{rem}
+		\label{rem:relax_2}
+		By construction, Algorithm \ref{alg:semismooth_newton} produces a descent in every iteration with respect to $\mathcal{U}$. Hence, if the sublevel sets of $\mathcal{U}$ are bounded, we can relax the assumptions on $f_i^\ast$ - in particular (A4) and (A5) - to bounded sets. 
+		%Sublevel sets are bounded if the set of solutions $\mathcal{X}^\star$ is nonempty and bounded by Theorem 3.1.4 in \cite{Nesterov2018}.
+	\end{rem}
+	We now want to specify a stopping criterion for Algorithm \ref{alg:semismooth_newton}. Again, we assume that $\alpha >0$ as well as $\mathcal{S}$ and $x \in \mathbb{R}^n$ are given. As $\mathcal{U}$ is $\mu_\ast$-strongly convex, it holds
+	\begin{align*}
+	\mu_\ast \|\xi_1 - \xi_2 \|^2 \leq (\nabla\mathcal{U}(\xi_1) - \nabla\mathcal{U}(\xi_2))^\intercal (\xi_1 - \xi_2) \quad \forall \xi_1, \xi_2\in \mathbb{R}^{M_\mathcal{S}}
+	\end{align*}
+	
+	For the exact minimizer $\xi^\star := \arg \min_{\xi} \mathcal{U}(\xi)$ it holds $\nabla\mathcal{U}(\xi^\star)=0$ and thus
+	\begin{align*}
+	\|\xi - \xi^\star \| \leq \mu_\ast^{-1}\|\nabla\mathcal{U}(\xi)\| \quad \forall \xi \in \mathbb{R}^{M_\mathcal{S}}
+	\end{align*}
+	where we used the Cauchy-Schwartz inequality. Altogether, we terminate Algorithm \ref{alg:semismooth_newton} after iteration $j$  if
+	\begin{align}
+		\|\nabla\mathcal{U}(\xi^{j+1})\| \leq \epsilon_{sub}
+	\end{align}
+	where $\epsilon_{sub} >0 $ is a given accuracy for the semismooth Newton method. In the next section, we will derive how $\epsilon_{sub}$ needs to be set in order to control the error of the primal iterates $x^t$. 
+	
+	\vspace{10mm}
+	\begin{thm}
+		Let the assumptions (A1)-(A5) hold. Let the sequence $\{\xi^j\}$ be generated by Algorithm \ref{alg:semismooth_newton}. Then $\{\xi^j\}$ converges to the unique solution $\xi^\star$ of equation \eqref{eqn:nonlinear_system_stochastic} and for $j$ sufficiently large, we have
+		\begin{align*}
+			\|\xi^{j+1} - \xi^\star\| = \mathcal{O}(\|\xi^{j} - \xi^\star\|^{1+\tau}).
+		\end{align*}
+	\end{thm}
+	\textit{Proof:} For any $\xi \in \mathbb{R}^{M_\mathcal{S}}$, all elements $W(\xi) \in \hat{\partial} \mathcal{V}(\xi)$ are uniformly positive definite by assumption (A4) and Proposition \ref{prop:prox_phi_semidef}. Moreover, $\mathcal{V}$ is semismooth. Hence, the result follows from Theorem 3.6 in \cite{Li2018} and references therein, in particular Theorem 3.4 and 3.5 in \cite{Zhao2010}.\\
+	\qed
+	
+	\vspace{5mm}
+	\begin{rem}
+		If either for any $i \in [N]$ the function $\nabla f_i^\ast$ or $\proxfun{\alpha \phi}$ is semismooth but not strongly semismooth, the above result can be shown but with superlinear convergence rate instead (see Theorem 3.2 in \cite{Pang1995}). 
+	\end{rem}
+
+\section{Algorithmic framework}
+	After deriving a method for solving each subproblem, we can now present the main stochastic proximal point algorithm in order to solve Problem \eqref{prob:deterministic}.
+	\vspace{5mm}
+	\begin{algorithm}[H]
+		\caption{Stochastic proximal point algorithm}
+		\label{alg:stochastic_ssnal}
+	\begin{algorithmic}
+		\REQUIRE $x^0 \in \mathbb{R}^n$, a sequence of step-sizes $\{\alpha_t\}_{t\geq 0} > 0$ and a sequence $\{\epsilon_t\}_{t\geq 0} > 0$.
+	
+	
+		\FOR{$t = 0,1,2,\dots$}
+		\STATE 1. (Sampling) Sample $\mathcal{S}_t$.
+		\STATE 2. (Solve subproblem) Set $\xi^{t+1}$ as the result of Algorithm \ref{alg:semismooth_newton} with input $x^t, \alpha_t, \mathcal{S}_t$ and with accuracy $\epsilon_{sub,t}$.
+		\STATE 3. (Update) Compute the new iterate 
+		\begin{align*}
+		x^{t+1} = \prox{\alpha_t \phi}{x^t - \frac{\alpha_t}{N_{\mathcal{S}_t}} \sum_{i =1}^{N_{\mathcal{S}_t}} A_\ixmap{i}^\intercal \xi_i^{t+1}}
+		\end{align*}
+		
+		\IF{$x^{t+1}$ fulfill a given stopping criterion}
+		\STATE \textbf{break}
+		\ENDIF
+		\ENDFOR	
+		\RETURN $x^{t+1}$
+	\end{algorithmic}
+	\end{algorithm}
+	\vspace{5mm}
+	
+	As we solve each subproblem inexactly, the proximal update of $x^{t+1}$ is inexact as well. Hence, it is desirable to control the error, i.e.
+	\begin{align*}
+		\|x^{t+1} - \prox{\alpha_t \psi_{\mathcal{S}_t}}{x^t}\| \leq \epsilon_t
+	\end{align*}
+	in each iteration.
+	Therefore, define $P_t(x^t) := \prox{\alpha_t \psi_{\mathcal{S}_t}}{x^t}$ and note that by \eqref{eqn:nonlinear_system_stochastic} it holds
+	\begin{align*}
+		P_t(x^t) = \prox{\alpha_t \phi}{x^t - \frac{\alpha_t}{N_{\mathcal{S}_t}} \sum_{i =1}^{N_{\mathcal{S}_t}} A_\ixmap{i}^\intercal \xi_i^{t+1, \star}}
+	\end{align*}
+	where $\xi^{t+1, \ast}$ is the exact minimizer of $\mathcal{U}$ for the respective iteration $t$. Thus, by Lipschitz continuity of the proximal operator we can estimate
+	
+	\begin{align*}
+		\Bigg\|x^{t+1} - P_t(x^t)\Bigg\| &= \Bigg\|\prox{\alpha_t \phi}{x^t - \frac{\alpha_t}{N_{\mathcal{S}_t}} \sum_{i =1}^{N_{\mathcal{S}_t}} A_\ixmap{i}^\intercal \xi_i^{t+1}} - \prox{\alpha_t \phi}{x^t - \frac{\alpha_t}{N_{\mathcal{S}_t}} \sum_{i =1}^{N_{\mathcal{S}_t}} A_\ixmap{i}^\intercal \xi_i^{t+1, \star}} \Bigg\| \\
+		&\leq \Bigg\| x^t - \frac{\alpha_t}{N_{\mathcal{S}_t}} \sum_{i =1}^{N_{\mathcal{S}_t}} A_\ixmap{i}^\intercal\xi_i^{t+1} - x^t +  \frac{\alpha_t}{N_{\mathcal{S}_t}} \sum_{i =1}^{N_{\mathcal{S}_t}} A_\ixmap{i}^\intercal \xi_i^{t+1, \star} \Bigg\| \\
+		&= \Bigg\| \frac{\alpha_t}{N_{\mathcal{S}_t}} \sum_{i =1}^{N_{\mathcal{S}_t}} A_\ixmap{i}^\intercal (\xi_i^{t+1} - \xi_i^{t+1, \star})\Bigg\| \\
+		&\leq \alpha_t \cdot M \cdot\mu_\ast^{-1} \epsilon_{sub} 
+	\end{align*}
+	where $M:= \max_{i \in [N]} \|\trp{A}_i\|$ and because $\|\xi_i^{t+1} - \xi_i^{t+1, \star}\| \leq \mu_\ast^{-1} \epsilon_{sub} \quad \forall i = 1,\dots, N_\mathcal{S}$.\\
+	Altogether, set $\epsilon_{sub} = \frac{\epsilon_t \mu_\ast}{\alpha_t M}$ in order to reach the desired error.\\
+	
+	\textbf{Stopping criterion:}\\
+	We want to terminate Algorithm \ref{alg:stochastic_ssnal} when we are close to the solution $x^\star$ of problem \eqref{prob:deterministic}. A necessary and sufficient optimality condition for convex problems is given by
+	\begin{align*}
+		0 \in \nabla f(x^\star) + \partial \phi(x^\star) &\Longleftrightarrow -\nabla f(x^\star) \in \partial \phi(x^\star) \\
+		&\Longleftrightarrow x^\star = \prox{\phi}{x^\star - \nabla f(x^\star) }
+	\end{align*}
+	where the last equivalency follows from Theorem 6.39 in \cite{Beck2017}.\\
+	
+	A candidate for a stopping criterion would be thus 
+	\begin{align*}
+		\frac{\|  x^{t+1} - \prox{\phi}{x^{t+1} - \nabla f(x^{t+1}) } \|}{\|x^{t+1}\|} \leq \epsilon
+	\end{align*}
+	for a given accuracy $\epsilon > 0$. However, we want to avoid evaluating the full gradient at every iteration. 
+	
+	\vspace{10mm}
+	\textbf{Variance reduction:}\\
+	For stochastic gradient methods, various techniques have been developped in order to reduce the variance of the sampled gradient. For example, at every $m$-the iteration the full gradient is evaluated at $\tilde{x} = x^m$ and in the subsequent iterations the stochastic oracle is given by 
+	\begin{align*}
+		\nabla f_j(x^t) - \nabla f_j(\tilde{x}) + \frac{1}{N} \sum_{i=1}^{N} \nabla f_i(\tilde{x})
+	\end{align*}
+	How could this technique be translated to the setting of a stochastic proximal point method?\\
+	As the dimension of the semismooth Newton method is given by $\mathbb{R}^{M_\mathcal{S}}$, we probably do not want to sample $\mathcal{S} = [N]$ at every $m$-the iteration. However, we could use the already computed dual variables from previous iterations.\\
+	Denote $\tilde{\xi} := \left(\tilde{\xi}_1, \dots, \tilde{\xi}_N \right) \in \mathbb{R}^{\sum_{i=1}^{N} m_i}$ as the collection of dual variables and at every iteration we update 
+	\begin{align*}
+		\tilde{\xi}_{\kappa(i)} = \xi^{t+1}_i \quad \forall i = 1, \dots, N_{\mathcal{S}_t}
+	\end{align*}
+	
+	We could then set 
+	\begin{align*}
+		x^{t+1} = \prox{\alpha_t \phi}{x^t - \alpha_t
+			\left( \frac{1}{N_{\mathcal{S}_t}}\sum_{i=1}^{N_{\mathcal{S}_t}} A_\ixmap{i}^\intercal \xi_i^{t+1}  
+					- \frac{1}{N_{\mathcal{S}_t}}\sum_{i=1}^{N_{\mathcal{S}_t}} A_\ixmap{i}^\intercal \tilde{\xi}_{\kappa(i)}
+					+ \frac{1}{N}\sum_{j=1}^{N} A_j^\intercal \tilde{\xi}_{j}
+			\right)
+		}
+	\end{align*}
+	\vspace{10mm}
+	
+%	\textbf{Next questions:}\\
+%	
+%	1. How can we control the error $\|x^{t+1} - \prox{\alpha_t \psi_{\mathcal{S}_t}}{x^t}\|$? \\
+%	see above\\
+%	We can control the residual of \eqref{eqn:newton_equation} but as $A_i$ will not have full rank in general this does not help.\\
+%	Another idea (similar to the original SSNAL paper) would be using strong convexity of the function $x \mapsto \psi_{\mathcal{S}_t}(x) + \oneover{2\alpha_t}\|x-x^t\|^2$.
+%	
+%	Define 
+%	\begin{align*}
+%	P_t(x^t) &:= \prox{\alpha_t \psi_{\mathcal{S}_t}}{x^t} \\
+%	\Phi_t(x) &:= \psi_{\mathcal{S}_t}(x) + \oneover{2\alpha_t}\|x-x^t\|^2
+%	\end{align*}
+%	$	\Phi_t$ is $1/\alpha_t$ - strongly convex. Hence,
+%	\begin{align*}
+%		\oneover{2\alpha_t}\|x^{t+1} -P_t(x^t)\|^2 \leq \Phi_t(x^{t+1}) - \min_x\Phi_t(x)
+%	\end{align*}
+%	However, this involves a lower bound of $\min_x\Phi_t(x)$.\\
+%	
+%	
+%	Now, $P_t(x^t) = \prox{\alpha_t \phi}{x^t - \frac{\alpha_t}{N_{\mathcal{S}_t}} \sum_{i =1}^{N_{\mathcal{S}_t}} A_\ixmap{i}^\intercal \xi_i^{t+1, \ast}}$. As the proximal operator is Lipschitz continuous we can estimate
+%	\begin{align*}
+%		\|x^{t+1} - P_t(x^t)\| \leq \|\frac{\alpha_t}{N_{\mathcal{S}_t}} \sum_{i =1}^{N_{\mathcal{S}_t}} A_\ixmap{i}^\intercal (\xi_i^{t+1} - \xi_i^{t+1, \ast}) \|
+%	\end{align*}
+%	2. With Assumption (A1) - (A5) it should be relatively easy to show global and local fast convergence of the semismooth Newton method (e.g. showing that directions and step sizes are admissible etc.).
+%
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+	\section{Stochastic proximal point: literature overview}
+	\subsection{\cite{Davis2019}}
+	In \cite{Davis2019} problems of the form
+	\begin{align*}
+		\min_{x \in \mathbb{R}^d}\quad &{\psi(x) := f(x) + \phi(x)}
+	\end{align*}
+	%are considered where $\xi$ is a random variable following the probability distribution $P$ 
+	(note that here the naming of the functions is different than in the paper because we want to be consistent Andre Milzarek's notation).
+	
+	Moreover, $\phi: \mathbb{R}^d\to \mathbb{R}$ is a closed convex function and $f: \mathbb{R}^d\to \mathbb{R}$ is a focally Lipschitz. \\
+	The authors make standard assumptions on a stochastic one-sided model $f_x(x, \xi)$ for a probability space $(\Omega, \mathcal{F}, P)$ and $\xi \in \Omega$.
+	 
+	 \begin{itemize}
+	 	\item[(B1)] It is possible to generate i.i.d realizations $\xi_1,\xi_2,\dots \sim P$.
+	 	\item[(B2)] There exists an open set $U \supset\text{dom}\phi$ such that
+	 	\begin{align*}
+	 	\mathbb{E}_\xi[f_x(y,\xi)] =  f(y) \quad \forall x,y\in U
+	 	\end{align*}
+	 	\item[(B3)] Each function $r(\cdot) + f_x(\cdot, \xi)$ is $\rho$-weakly convex for all $x\in U$ and $P$ almost every-where.
+	 	\item[(B4)] There exists $L\geq 0$ and $C_L \in \mathbb{R}$ with $\mathbb{E}[L(\xi)^2] \leq C_L $ such that 
+	 	\begin{align*}
+	 	f_x(x,\xi)-f_x(y,\xi) \leq L(\xi) \|x-y\| \quad \forall x,y\in U, \xi \in \Omega
+	 	\end{align*}
+	 \end{itemize} 
+
+
+	The main idea is to find a point which is close to an approximately optimal point. This can be identified with the Moreau envelope of $\psi$ with parameter $\lambda$, defined by $\psi_\lambda$. 
+	In Lemma 2.2. of the paper it is stated that if $\lambda \in (0, \rho^{-1})$, then for the proximal point $\hat{x} := \prox{\lambda \psi}{x}$ it holds
+	\begin{align*}
+		\|x - \hat{x}\| = \lambda \|\nabla \psi_\lambda(x)\| \\
+		\text{dist}(0; \partial \psi(\hat{x})) \leq \|\nabla \psi_\lambda(x)\|
+	\end{align*} Hence, $x$ is close to an approximately optimal point $\hat{x}$ if $\|\nabla \psi_\lambda(x)\|$ is small.\\
+	Their stochastic proximal point algorithm formulates as follows:
+%	\vspace{5mm}
+%	\hrule
+%	\begin{algorithm}[H]
+%		\SetKwInOut{Input}{Input}
+%		\SetKwInOut{Return}{Return}
+%		\Input{$x_0 \in \mathbb{R}^d$, a sequence $\{\alpha_t\}_{t\geq 0} \subset \mathbb{R}_+$, iteration counter $T$}
+%		\For{$t =0,\dots, T$}{
+%			sample $\xi_t \sim P$\;
+%			set
+%			\begin{align*}
+%			x_{t+1} = \arg \min_x r(x) + f_{x_t}(x, \xi_t) + \frac{\beta_t}{2}\|x-x_t\|^2
+%			\end{align*}
+%		}
+%		sample $t^\ast \in \{0,\dots,T\}$ according to a distribution defined by the step sizes \;
+%		\Return{$x_{t^\ast}$}
+%		\vspace{2mm}
+%		\caption{Algorithm 4.1 in \cite{Davis2019}}
+%	\end{algorithm}
+%	\hrule
+%	\vspace{5mm}
+	
+	A central result of the paper is Theorem 3.4: if $\bar{\rho} = 2\rho$ and $\alpha_k = \onehalf \min \{\frac{1}{\rho}, \sqrt{\frac{\Delta}{\rho L^2(T+1)}}  \}$ (i.e. constant step size) they establish
+	\begin{align*}
+		\mathbb{E}[\|\nabla \psi_{1/2\rho}(x_{t^\ast})\|^2 ] \leq 8 \max \left\{ \frac{\Delta \rho}{T+1}, L\sqrt{\frac{\rho\Delta}{T+1}}\right\} 
+	\end{align*}
+	where  $\Delta \geq \psi_{1/\bar{\rho}}(x_0) - \min \psi$.\\
+	\bigskip
+	
+%	Moreover, for $f \in \mathcal{C}^1$ with $\rho$-Lipschitz gradient, they replace Assumption (A3) with the following \textit{finite-variance} assumption:
+%	\begin{align*}
+%		\exists ~\sigma \geq 0: \quad \mathbb{E}_\xi[\|G(x,\xi) - \nabla f(x)\|^2] \leq \sigma^2 \quad \forall x\in \text{dom} \phi
+%	\end{align*}
+%	Under this setting, an almost identical result for $\mathbb{E}[\|\nabla \psi_{1/2\rho}(x_{t^\ast})\|^2 ]$ as the one above is stated (see Corollary 3.6).
+%	
+
+	
+	
+%	\vspace{10mm}
+%	PRELIMINARY:
+%	\hrule
+%	Can we extend that result if each update is only inexactly, i.e. if it holds
+%	\begin{align*}
+%		\|x_{t+1} - \prox{\alpha_t\phi}{x_t - \alpha_tG(x_t,\xi_t)}\| \leq \epsilon_t
+%	\end{align*}
+%	$P$-almost surely?\\
+%	
+%	Moreover, assume $\sum_{t=0}^{\infty} \epsilon_t < \infty$ and $\sum_{t=0}^{\infty} \epsilon_t^2 < \infty$. We also assume that there exists $C>0$ such that
+%	\begin{align*}
+%		\|x_t - \hat{x}_t\| \leq C \quad \forall t\geq 0
+%	\end{align*} \\
+%	Lemma 3.3 in \cite{Davis2019} now can be extended to:
+%	\begin{lem}
+%		Let $\bar{\rho} \in (\rho, 2\rho]$ and let $\alpha_t \in (0,\bar{\rho}^{-1}]$. Then 
+%		\begin{align*}
+%			\mathbb{E}_t[\|x_{t+1} - \hat{x}_t\|^2] \leq \epsilon_t^2 + 2\epsilon_t \left[(1-\alpha_t\bar{\rho})C + 2L\alpha_t\right] + \|x_t-\hat{x}_t\|^2 + 4\alpha_t^2L^2 - 2\alpha_t(\bar{\rho} -\rho) \|x_t - \hat{x}_t\|^2
+%		\end{align*}
+%	\end{lem}
+%	\textit{Proof:} We have 
+%	\begin{align*}
+%		\mathbb{E}_t[\|x_{t+1} - \hat{x}_t\|^2]  &\leq \mathbb{E}_t\left[\left(\|x_{t+1} - \prox{\alpha_t\phi}{x_t - \alpha_tG(x_t,\xi_t)}\| + \|\prox{\alpha_t\phi}{x_t - \alpha_tG(x_t,\xi_t)} - \hat{x}_t\|\right)^2\right]  \\
+%		&\leq 	\epsilon_t^2 + 2 \epsilon_t \mathbb{E}_t[\|\prox{\alpha_t\phi}{x_t - \alpha_tG(x_t,\xi_t)} - \hat{x}_t\|]  + \mathbb{E}_t[\|\prox{\alpha_t\phi}{x_t - \alpha_tG(x_t,\xi_t)} - \hat{x}_t\|^2]
+%	\end{align*} 
+%	The last summand can be treated exactly like in Lemma 3.3. For the second summand, 
+%	looking into the proof of Lemma 3.3 we can conclude analogously
+%	\begin{align*}
+%		\mathbb{E}_t[\|\prox{\alpha_t\phi}{x_t - \alpha_tG(x_t,\xi_t)} - \hat{x}_t\|] \leq (1-\alpha_t\bar{\rho})\|x_t - \hat{x}_t\| + 2L\alpha_t
+%	\end{align*}
+%	\hrule
+
+	\subsection{\cite{Bertsekas2011}}
+	This paper looks at problems of the form 
+		\begin{align*}
+	\min_{x \in \mathbb{R}^d}\quad &{\psi(x) := \sum_{i=1}^{m}f_i(x) + h_i(x)}
+	\end{align*}
+	with $f_i, h_i$ being real-valued, convex functions for all $i=1,\dots,m$.
+	
+	The incremental methods consist of separate subgradient steps and proximal point steps with respect to $f_i$ and $h_i$. Among other variants presented in the paper, the update rule of each iteration can be formulated as
+	\begin{align*}
+		z_k &= \arg \min_{x \in \mathbb{R}^d} \{f_{i_k}(x) + \frac{1}{2\alpha_k} \|x - x_k\|^2\} \\
+		x_{k+1} &= z_k - \alpha_k \tilde{\nabla} h_{i_k}(z_k)
+	\end{align*}
+	where $i_k \in \{1,\dots,m\}$, $\alpha_k > 0$ is the step size and $\tilde{\nabla}h_{i_k}(z_k)$ is a subgradient of $h_{i_k}$ at the point $z_k$.
+	
+	The authors show objective convergence for constant step-size in the case of a cyclic choice of $i_k$ as well as for a random choice over uniform distribution on $\{1,\dots,m\}$ (see Proposition 7 and 8 in \cite{Bertsekas2011}). They analyze constant step-sizes as well as step sizes which fulfill
+	\begin{align*}
+		%\alpha_k &\longrightarrow 0 \quad (k \rightarrow \infty)\\
+		\sum_{i=1}^{\infty} \alpha_k &= \infty \\
+		\sum_{i=1}^{\infty} \alpha_k^2 &< \infty 
+	\end{align*}
+	For the latter case, the results on convergence to an optimal point can be found in Proposition 6 and 9. For constant step sizes, objective convergence results with an error bound are given in Proposition 5 and 8.
+	\begin{rem}
+		The authors also assume global boundedness of the subdifferential of all $f_i$ and $h_i$.
+	\end{rem}
+	
+	
+	\subsection{\cite{Asi2019}}
+	This paper discusses purely model-based stochastic proximal point algorithms. It aims to solve the problem
+	\begin{align*}
+		\min_{x \in \mathcal{X}} F(x) := \min_{x \in \mathcal{X}} \mathbb{E}_P[f(x,S)]
+	\end{align*}
+	
+	The iterates are generated by
+	\begin{align*}
+		x_{k+1} &= \arg \min_{x \in \mathbb{R}^d} \{f_{x_k}(x;S_k) + \frac{1}{2\alpha_k} \|x - x_k\|^2\}
+	\end{align*}
+	where $f_{x}(\cdot;s)$ is a model of $f(\cdot;s)$ at $x$. $S_k$ are the i.i.d samples. Their framework includes as special cases the stochastic gradient descent (using the linear approximation with subgradients) and the stochastic proximal point method (using the exact $f$ as model).\\
+	One advantage is that - instead of assuming global boundedness - they derive their results with an arbitrary growth of the second moment of the subdifferentials (see Assumption A2 in their paper).\\
+	
+	Under the conditions 
+	\begin{align*}
+	%\alpha_k &\longrightarrow 0 \quad (k \rightarrow \infty)\\
+	\sum_{i=1}^{\infty} \alpha_k &= \infty \\
+	\sum_{i=1}^{\infty} \alpha_k^2 &< \infty 
+	\end{align*}
+	the authors show convergence, i.e. $\|x_k - x^\ast\| \rightarrow 0$ for some optimal point $x^\ast$ (see Proposition 3.8 and Corollary 3.9 therein)\\
+	
+	They give rates of convergence for \textit{easy problems} which are given whenever 
+	\begin{align*}
+		\inf_{x\in \mathcal{X}} f(x,s) = f(x^\ast, s) \quad \forall x^\ast \in \arg \min_{x\in \mathcal{X}}F(x)
+	\end{align*}
+	Hence, in the discrete case this means that each minimizer of the sum is also a minimizer of each summand. Under some extra conditions, they show linear convergence rate for easy problems (see Proposition 4.3 therein).\\
+	
+	It is easy to see that the least squares loss $\|Ax-b\|^2$ is an easy problem (if a solution to $Ax=b$ exists). However, for a lasso-type objective of the form $\frac{1}{m}\|Ax-b\|^2 + \|x\|_1$ this does not longer hold.\\
+	
+	Ultimately, they derive bounds for \textit{restricted strongly convex} functions, i.e. for all $s$ there exists a positive definite matrix $\Sigma(s)$ such that for all $x,y$ it holds 
+	\begin{align*}
+	 f(y;s) \geq f(x;s) \langle f'(x;s), y-x\rangle + \onehalf (x-y)^\intercal\Sigma(s)(x-y)
+	\end{align*}
+	for all subgradients $f'(x;s)$.
+	They state that for such functions the convergence rate is approximately 
+	\begin{align*}
+		\mathbb{E}[\|x_k - x^\ast\|^2] \leq \mathcal{O}(\alpha_k)
+	\end{align*}
+	(see Proposition 5.3 for details).
+%	\textit{Proof:} Consider $A= \begin{bmatrix}1 & 0 \\ \alpha & 1\end{bmatrix}$ and $b=\begin{bmatrix}10 \\0\end{bmatrix}$. Then $\hat{x} = [\frac{9}{1+\alpha^2},0]$ fulfills the first-order optimality condition (for an appropiate choice of $\alpha$), but in the second row we have 
+%	\begin{align*}
+%		|\langle [\alpha, 1], [\frac{9}{1+\alpha^2},0]\rangle|^2 + \|\hat{x}\|_1 > 0 = |\langle [\alpha, 1], [0,0]\rangle|^2 + \|[0,0]\|_1
+%	\end{align*}
+%	\qed 
+	
+	
+	\subsection{Other articles}
+	\cite{Toulis2017} derive convergence rates for both globally strongly convex and global Lipschitz functions (which is a contradiction on unbounded sets?). \\
+	\medskip
+	
+	\cite{Patrascu2017} relax this to functions that are either Lipschitz or strongly convex. They also include constraints of a (potentially infinite) intersection of convex sets. 
+	For the strongly convex case, they achieve a convergence rate of 
+	\begin{align*}
+		\mathbb{E}[\|x_k - x^\ast\|^2] \leq \mathcal{O}(k^{-\gamma})
+	\end{align*}
+	where the step sizes are given by $\alpha_k = \frac{\alpha_0}{k^\gamma},\quad \gamma \in (0,1)$ (see Corollary 15 for the exact statement).\\
+	\medskip
+	
+	In \cite{Boyd2014}, stability of the stochastic proximal point iterates (i.e. the distance to the set of solutions does not diverge) is proven under very mild conditions (see Theorem 6).
+	
+	In \cite{Luo2019}, stochastical proximal point algorithm are investigated for saddle point problems. They look at saddle functions of the form $f(x,y) = \frac{1}{n}\sum_{i=1}^{n} f_i(x,y)$ where each $f_i$ is strongly convex in the first and strongly concave in the second argument. Moreover, they assume Lipschitz continuous (sub)gradients.\\
+	In this setting and using a fixed step size, they can show 
+	\begin{align*}
+		\mathbb{E}[\|x_k - x^\ast\|^2 + \|y_k - y^\ast\|^2] < \epsilon \\
+		\text{for}\quad k = \mathcal{O}((n+\kappa\sqrt{n}) \log \frac{1}{\epsilon})
+	\end{align*}
+	
+	\clearpage
+	\bibliography{ssnal_library.bib}
+\end{document}

@@ -199,9 +199,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     if 'max_iter' not in params.keys():    
         params['max_iter'] = 70
         
-    if 'step_size_mult' not in params.keys():    
-        params['step_size_mult'] = 1.
-    
     if 'sample_size' not in params.keys():    
         params['sample_size'] = min(f.N, max(15, int(f.N)/2))
     
@@ -266,7 +263,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
             print(out_fmt % (iter_t, obj[-1], obj2[-1] , alpha_t, eta))
             
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
-        #alpha_t *= params['step_size_mult']
         if iter_t >= 0:
             alpha_t = C/(iter_t + 2)
         
