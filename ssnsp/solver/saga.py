@@ -3,7 +3,7 @@ author: Fabian Schaipp
 """
 
 import numpy as np
-from ..helper.utils import compute_x_mean, compute_gradient_table, stop_optimal
+from ..helper.utils import compute_x_mean, compute_gradient_table, stop_optimal, stop_scikit_saga
 import time
 
 
@@ -34,8 +34,14 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         params['n_epochs'] = 10
     
     if 'gamma' not in params.keys():
-        L = 2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A)**2).max()
-        gamma = 1./(3*L)
+        if f.name == 'squared':
+            L = 2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A)**2).max()
+        elif f.name == 'logistic':
+            L = .25 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A)**2).max()
+        else:
+            print("Determination of step size not possible! Probably get divergence..")
+            L = 1
+        gamma = 1./(3*L) 
     else:
         gamma = params['gamma']
     
@@ -58,6 +64,8 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         if eta <= tol:
             status = 'optimal'
             break
+        
+        x_old = x_t.copy()
         
         # sample
         j = np.random.randint(low = 0, high = N, size = 1).squeeze()
@@ -83,7 +91,8 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         x_mean = compute_x_mean(x_hist, step_sizes = None)
         obj2.append(f.eval(x_mean) + phi.eval(x_mean))
         
-        eta = stop_optimal(x_t, f, phi)
+        #eta = stop_optimal(x_t, f, phi)
+        eta = stop_scikit_saga(x_t, x_old)
         
         if verbose:
             print(out_fmt % (iter_t, obj[-1], obj2[-1] , gamma, eta))

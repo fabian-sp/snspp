@@ -5,6 +5,15 @@ import numpy as np
 ### Stopping criteria
 ############################################################################################
 
+def stop_scikit_saga(x_t, x_old):
+    """
+    ||x_t - x_t-1||_inf / ||x_t||_inf
+    """
+    nom = np.linalg.norm(x_t - x_old, np.inf)
+    denom = np.linalg.norm(x_t)
+    
+    return nom/denom
+
 def stop_mean_objective(obj, cutoff = True):
     """
     obj: list of the objective function values of the "mean iterate"
