@@ -35,11 +35,16 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False):
     # create measurements
     b = A @ x
     
+    A = A.astype('float32')
+    b = b.astype('float32')
+    x = x.astype('float32')
+    
     phi = Norm1(lambda1)    
     if block:
         f = block_lsq(A, b, m)
     else:
         f = lsq(A, b)
+        
 
     return x, A, b, f, phi
 

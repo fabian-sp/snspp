@@ -1,7 +1,17 @@
 import numpy as np
-#from numba import jit
+from numba.experimental import jitclass
+from numba import int64, float32, typeof
 
+spec = [
+    ('name', typeof('abc')),
+    ('b', float32[:]),               
+    ('A', float32[:,:]),
+    ('N', int64), 
+    ('m', int64[:]),
+]
+        
 
+@jitclass(spec)
 class lsq:
     """ 
     f is the squared loss function (1/N) * ||Ax-b||**2
@@ -15,14 +25,14 @@ class lsq:
         self.b = b
         self.A = A
         self.N = len(b)
-        self.m = np.ones(self.N, dtype = 'int')
+        self.m = np.repeat(1,self.N)
         
     
     def eval(self, x):
         """
         method for evaluating f(x)
+        x has to be the same type as A if numba is used (typicall use float32)
         """
-
         return (1/self.N) * np.linalg.norm(self.A@x - self.b)**2      
         
     def f(self, x, i):
@@ -56,7 +66,7 @@ class logistic_loss:
         self.name = 'logistic'
         self.A = A * b[:, np.newaxis]
         self.N = len(b)
-        self.m = np.ones(self.N, dtype = 'int')
+        self.m = np.repeat(1,self.N)
         
     def eval(self, x):
         """

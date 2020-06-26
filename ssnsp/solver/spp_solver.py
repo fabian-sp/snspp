@@ -250,14 +250,14 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         ssn_info.append(this_ssn)
         x_hist.append(x_t)
             
-        obj.append(f.eval(x_t) + phi.eval(x_t))
+        obj.append(f.eval(x_t.astype('float32')) + phi.eval(x_t))
         step_sizes.append(alpha_t)
         S_hist.append(S)
         xi_hist.append(xi.copy())
         
         #calc x_mean 
         x_mean = compute_x_mean(x_hist, step_sizes = None)
-        obj2.append(f.eval(x_mean) + phi.eval(x_mean))
+        obj2.append(f.eval(x_mean.astype('float32')) + phi.eval(x_mean))
         
         #stop criterion
         #eta = stop_mean_objective(obj2, cutoff = True)
