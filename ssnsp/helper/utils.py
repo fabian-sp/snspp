@@ -29,7 +29,7 @@ def stop_mean_objective(obj, cutoff = True):
     if len(objs) <= 3:
         return np.inf
     else:
-        return abs(objs[-1] - np.mean(objs) )
+        return abs(objs[-1] - np.mean(objs))
     
 def stop_optimal(x, f, phi):
     
