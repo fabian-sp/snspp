@@ -54,6 +54,9 @@ class lsq:
         return .5
 
 #%%
+
+
+#@jitclass(spec)
 class logistic_loss:
     """ 
     f is the logistic loss function i.e. 1/N sum_i log(1+exp(b_i*(a_i @ x)))
@@ -62,10 +65,10 @@ class logistic_loss:
     """
     
     def __init__(self, A, b):
-        #self.b = b
+        self.b = b.copy()
         self.name = 'logistic'
-        self.A = A * b[:, np.newaxis]
-        self.N = len(b)
+        self.A = A * self.b.copy().reshape(-1,1)
+        self.N = len(self.b)
         self.m = np.repeat(1,self.N)
         
     def eval(self, x):

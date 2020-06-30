@@ -163,7 +163,8 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         tmp_g = np.vstack([gradient_table[i,:] for i in S])
         correct = (alpha/sample_size) * tmp_g.sum(axis = 0) - (alpha/f.N) * gradient_table.sum(axis = 0)
         #print(np.linalg.norm(correct))
-        #correct = 0.
+        correct = 0.
+        
     else:
         correct = 0.
     
@@ -209,8 +210,10 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     # initialize variables + containers
     if xi is None:
-        #xi = dict(zip(np.arange(f.N), [-0.9*np.random.rand(m[i]) for i in np.arange(f.N)]))
-        xi = dict(zip(np.arange(f.N), [ -1e-8 + np.zeros(m[i]) for i in np.arange(f.N)]))
+        if f.name == 'logistic':
+            xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(m[i]) for i in np.arange(f.N)]))
+        else:
+            xi = dict(zip(np.arange(f.N), [np.zeros(m[i]) for i in np.arange(f.N)]))
     
     x_hist = list()
     step_sizes = list()

@@ -15,7 +15,7 @@ from ssnsp.solver.opt_problem import problem
     
 #%% generate data
 
-N = 1000
+N = 100
 n = 20
 k = 5
 l1 = .01
@@ -26,7 +26,7 @@ xsol, A, b, f, phi = logreg_test(N, n, k, l1)
 
 
 #%% solve with SPP
-params = {'max_iter' : 80, 'sample_size': 60, 'alpha_C' : 100.}
+params = {'max_iter' : 100, 'sample_size': 30, 'alpha_C' : 100.}
 
 params = {'n_epochs' : 100}
 
