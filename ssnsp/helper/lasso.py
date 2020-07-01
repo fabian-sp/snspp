@@ -1,11 +1,11 @@
 import numpy as np
 from numba.experimental import jitclass
-from numba import int64, float32, typeof
+from numba import int64, float32, float64, typeof
 
 spec = [
     ('name', typeof('abc')),
-    ('b', float32[:]),               
-    ('A', float32[:,:]),
+    ('b', float64[:]),               
+    ('A', float64[:,:]),
     ('N', int64), 
     ('m', int64[:]),
 ]
@@ -56,7 +56,6 @@ class lsq:
 #%%
 
 
-#@jitclass(spec)
 class logistic_loss:
     """ 
     f is the logistic loss function i.e. 1/N sum_i log(1+exp(b_i*(a_i @ x)))
@@ -126,7 +125,7 @@ class logistic_loss:
 
 spec_l1 = [
     ('name', typeof('abc')),
-    ('lambda1', float32)
+    ('lambda1', float64)
 ]
 
 @jitclass(spec_l1)
@@ -153,12 +152,14 @@ class Norm1:
     def jacobian_prox(self, x, alpha):
         assert alpha > 0
         l = alpha * self.lambda1
+        
+        # if numba is deactivated, use the next line instead of for loop
         #d = (abs(x) > l).astype(int)
         
         d = np.zeros_like(x)
         for j in np.arange(len(x)):
             if np.abs(x[j]) > l:
-                d[j] = 1
+                d[j] = 1.
         
         return np.diag(d)
     
