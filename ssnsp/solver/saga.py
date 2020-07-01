@@ -53,6 +53,7 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
     x_hist = list()
     step_sizes = list()
     obj = list(); obj2 = list()
+    runtime = list()
     
     hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s"
     out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
@@ -61,6 +62,9 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
     
     for iter_t in np.arange(f.N * params['n_epochs']):
         
+        if measure:
+            start = time.time()
+            
         if eta <= tol:
             status = 'optimal'
             break
@@ -94,6 +98,10 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         #eta = stop_optimal(x_t, f, phi)
         eta = stop_scikit_saga(x_t, x_old)
         
+        if measure:
+            end = time.time()
+            runtime.append(end-start)
+            
         if verbose:
             print(out_fmt % (iter_t, obj[-1], obj2[-1] , gamma, eta))
           
@@ -105,7 +113,7 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
     print(f"SAGA status: {status}")
     
     info = {'objective': np.array(obj), 'objective_mean': np.array(obj2), 'iterates': np.vstack(x_hist), 'step_sizes': np.array(step_sizes), \
-            'gradient_table': gradients}
+            'gradient_table': gradients, 'runtime': np.array(runtime)}
     
     return x_t, x_mean, info
 

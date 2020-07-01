@@ -8,6 +8,7 @@ import seaborn as sns
 
 from .spp_solver import stochastic_prox_point
 from .saga import saga
+from .warm_spp import warm_spp
 
 class problem:
     
@@ -35,6 +36,10 @@ class problem:
         elif solver == 'saga':
             self.x, self.xavg, self.info =  saga(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
                                                  verbose = self.verbose, measure = self.measure)
+                
+        elif solver == 'warm_ssnsp':
+            self.x, self.xavg, self.info = warm_spp(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
+                                                    verbose = self.verbose, measure = self.measure)
         return
     
     def plot_path(self):

@@ -28,12 +28,12 @@ xsol, A, b, f, phi = logreg_test(N, n, k, l1)
 #%% solve with SPP
 params = {'max_iter' : 100, 'sample_size': 30, 'alpha_C' : 100.}
 
-params = {'n_epochs' : 100}
+params = {'n_epochs' : 10}
 
 P = problem(f, phi, tol = 1e-6, params = params, verbose = True, measure = True)
 
 start = time.time()
-P.solve(solver = 'ssnsp')
+P.solve(solver = 'warm_ssnsp')
 end = time.time()
 
 print(f"Computing time: {end-start} sec")
@@ -46,12 +46,14 @@ info = P.info.copy()
 
 #%% compare to scikit
 
-sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-8, selection = 'cyclic')
+sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-8, max_iter = 10000, selection = 'cyclic')
 
 sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-6, solver = 'saga', max_iter = 10000, verbose = 1)
 
 sk.fit(A,b)
-x_sk = sk.coef_.copy()
+x_sk = sk.coef_.copy().squeeze()
+
+#f.eval(x_sk) + phi.eval(x_sk)
 
 all_x = pd.DataFrame(np.vstack((xsol, P.x, x_sk)).T, columns = ['true', 'spp', 'scikit'])
 
