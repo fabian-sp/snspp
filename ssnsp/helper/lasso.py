@@ -31,7 +31,7 @@ class lsq:
     def eval(self, x):
         """
         method for evaluating f(x)
-        x has to be the same type as A if numba is used (typicall use float32)
+        x has to be the same type as A if numba is used (typicall use float64)
         """
         return (1/self.N) * np.linalg.norm(self.A@x - self.b)**2      
         

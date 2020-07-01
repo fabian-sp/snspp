@@ -21,14 +21,14 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
     N = len(m)
     assert n == A.shape[1], "wrong dimensions"
     
-    x_t = x0.copy().astype('float32')
-    x_mean = x_t.copy().astype('float32')
+    x_t = x0.copy().astype('float64')
+    x_mean = x_t.copy().astype('float64')
     
     # creates a vector with nrows like A in order to index the relevant A_i from A
     dims = np.repeat(np.arange(N),m)
 
     # initialize object for storing all gradients 
-    gradients = compute_gradient_table(f, x_t).astype('float32')
+    gradients = compute_gradient_table(f, x_t).astype('float64')
     assert gradients.shape == (N,n)
     
     if 'n_epochs' not in params.keys():    
@@ -46,7 +46,7 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
     else:
         gamma = params['gamma']
     
-    gamma = np.float32(gamma)
+    gamma = np.float64(gamma)
     
     # initialize for stopping criterion
     status = 'not optimal'
@@ -80,7 +80,6 @@ def saga_loop(f, phi, x_t, A, dims, gamma, gradients, n_epochs):
     obj = List()
     
     for iter_t in np.arange(f.N * n_epochs):
-            
         # sample
         j = np.random.randint(low = 0, high = f.N, size = 1)
         A_j = A[dims == j,:]
@@ -88,7 +87,7 @@ def saga_loop(f, phi, x_t, A, dims, gamma, gradients, n_epochs):
         # compute the gradient
         g = A_j.T @ f.g(A_j@x_t, j)
         old_g = (-1) * gradients[j,:] + (1/f.N)*gradients.sum(axis = 0)
-        w_t = x_t - gamma * (g + old_g)
+        w_t = x_t - gamma * (g + old_g)[0,:]
         
         # store new gradient
         gradients[j,:] = g
@@ -99,18 +98,15 @@ def saga_loop(f, phi, x_t, A, dims, gamma, gradients, n_epochs):
         # store everything
         x_hist.append(x_t)
         step_sizes.append(gamma)
-        obj.append(.0) #f.eval(x_t) + phi.eval(x_t)
+        obj.append(.0)#f.eval(x_t) + phi.eval(x_t)
         
-        return x_t, x_hist, step_sizes, obj
+    return x_t, x_hist, step_sizes, obj
 
-#%%
-#x0 = np.zeros(n)
-#x_saga, x_mean_saga, info = saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = True, measure = False)
 
 
 #%%
-# x_t = np.random.rand(n).astype('float32')
-# dims = np.repeat(np.arange(N),f.m)
-# gradients = compute_gradient_table(f, x_t).astype('float32')
+# from ssnsp.solver.saga_fast import saga_fast
 
-# saga_loop(f, phi, x_t, f.A, dims, 1, gradients, 3)
+
+# x0 = np.zeros(n)
+# x_saga, x_mean_saga, info = saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = True, measure = False)
