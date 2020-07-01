@@ -105,7 +105,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
             converged = True
             break
         
-        U = phi.jacobian_prox(z, alpha = alpha)
+        U = phi.jacobian_prox(z, alpha)
         tmp2 = (alpha/sample_size) * subA @ U @ subA.T
         
         tmp = [f.Hstar(xi[i], i) for i in S]

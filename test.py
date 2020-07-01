@@ -15,9 +15,9 @@ from ssnsp.solver.opt_problem import problem
     
 #%% generate data
 
-N = 100
-n = 20
-k = 5
+N = 1000
+n = 100
+k = 10
 l1 = .01
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False)
@@ -26,14 +26,14 @@ xsol, A, b, f, phi = logreg_test(N, n, k, l1)
 
 
 #%% solve with SPP
-params = {'max_iter' : 100, 'sample_size': 30, 'alpha_C' : 100.}
+params = {'max_iter' : 50, 'sample_size': 100, 'alpha_C' : 100.}
 
 params = {'n_epochs' : 10}
 
 P = problem(f, phi, tol = 1e-6, params = params, verbose = True, measure = True)
 
 start = time.time()
-P.solve(solver = 'warm_ssnsp')
+P.solve(solver = 'ssnsp')
 end = time.time()
 
 print(f"Computing time: {end-start} sec")
@@ -46,7 +46,7 @@ info = P.info.copy()
 
 #%% compare to scikit
 
-sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-8, max_iter = 10000, selection = 'cyclic')
+sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-8, max_iter = 1000, selection = 'cyclic')
 
 sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-6, solver = 'saga', max_iter = 10000, verbose = 1)
 

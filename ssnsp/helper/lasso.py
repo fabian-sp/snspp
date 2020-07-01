@@ -124,6 +124,12 @@ class logistic_loss:
         
 #%%
 
+spec_l1 = [
+    ('name', typeof('abc')),
+    ('lambda1', float32)
+]
+
+@jitclass(spec_l1)
 class Norm1:
     """
     class for the regularizer x --> lambda1 ||x||_1
@@ -142,12 +148,17 @@ class Norm1:
         """
         assert alpha > 0
         l = alpha * self.lambda1
-        return np.sign(x) * np.maximum(abs(x) - l, 0)
+        return np.sign(x) * np.maximum( np.abs(x) - l, 0.)
     
     def jacobian_prox(self, x, alpha):
         assert alpha > 0
         l = alpha * self.lambda1
-        d = (abs(x) > l).astype(int)
+        #d = (abs(x) > l).astype(int)
+        
+        d = np.zeros_like(x)
+        for j in np.arange(len(x)):
+            if np.abs(x[j]) > l:
+                d[j] = 1
         
         return np.diag(d)
     

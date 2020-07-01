@@ -34,7 +34,7 @@ def stop_mean_objective(obj, cutoff = True):
 def stop_optimal(x, f, phi):
     
     gradf = compute_full_gradient(f,x) 
-    return np.linalg.norm(x - phi.prox(x- gradf, alpha = 1))
+    return np.linalg.norm(x - phi.prox( x- gradf, 1.))
 
 
 ############################################################################################

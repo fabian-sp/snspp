@@ -2,7 +2,7 @@ import numpy as np
 from numba import jit
 from numba.typed import List
 from numba.experimental import jitclass
-from numba import int32, int64, float32
+from numba import int32, int64, float32, typeof
 
 from ssnsp.helper.lasso import lsq
 
@@ -16,7 +16,7 @@ x = np.random.rand(n).astype('float32')
 
 #%%
 spec = [
-    ('name', numba.typeof('abc')),
+    ('name', typeof('abc')),
     ('b', float32[:]),               
     ('A', float32[:,:]),
     ('N', int64), 
@@ -96,3 +96,68 @@ assert res1 == res2
 
 %timeit fast_hessian(test_f, xi, S)
 %timeit [test_f.Hstar(xi[i], i) for i in S]
+
+
+#%%
+from numba.experimental import jitclass
+from numba import int32, int64, float32, typeof
+
+
+spec = [
+    ('name', typeof('abc')),
+    ('lambda1', float32)
+]
+#self.name = 'squared'
+        
+
+@jitclass(spec)
+class Norm1:
+    """
+    class for the regularizer x --> lambda1 ||x||_1
+    """
+    def __init__(self, lambda1):
+        assert lambda1 > 0 
+        self.name = '1norm'
+        self.lambda1 = lambda1
+        
+    def eval(self, x):
+        return self.lambda1 * np.linalg.norm(x, 1)
+    
+    def prox(self, x, alpha):
+        """
+        calculates prox_{alpha*phi}(x)
+        """
+        assert alpha > 0
+        l = alpha * self.lambda1
+        return np.sign(x) * np.maximum( np.abs(x) - l, 0.)
+    
+    def jacobian_prox(self, x, alpha):
+        assert alpha > 0
+        l = alpha * self.lambda1
+        #d = np.float32((np.abs(x) > l))
+        d = np.zeros_like(x)
+        for j in np.arange(len(x)):
+            if np.abs(x[j]) > l:
+                d[j] = 1
+            
+        
+        #d = np.int8((np.abs(x) > l))
+        
+        return np.diag(d)
+    
+    def moreau(self, x, alpha):
+        assert alpha > 0
+        z = self.prox(x, alpha)
+        return alpha*self.eval(z) + .5 * np.linalg.norm(z-x)**2
+    
+#%%
+import numpy as np
+x = np.random.rand(10).astype('float32')
+
+Norm1(1).prox(x,1.)
+
+
+Norm1(1).moreau(x, 1.)
+
+Norm1(1).jacobian_prox(x, .01)
+
