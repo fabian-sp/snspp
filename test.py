@@ -30,10 +30,10 @@ params = {'max_iter' : 50, 'sample_size': 100, 'alpha_C' : 100.}
 
 params = {'n_epochs' : 10}
 
-P = problem(f, phi, tol = 1e-6, params = params, verbose = True, measure = True)
+P = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)
 
 start = time.time()
-P.solve(solver = 'ssnsp')
+P.solve(solver = 'warm_ssnsp')
 end = time.time()
 
 print(f"Computing time: {end-start} sec")

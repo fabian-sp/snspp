@@ -4,7 +4,7 @@ author: Fabian Schaipp
 
 import numpy as np
 from .spp_solver import stochastic_prox_point
-from .saga import saga
+from .saga_fast import saga_fast
 
 
 
@@ -14,7 +14,7 @@ def warm_spp(f, phi, x0, tol = 1e-4, params = dict(), verbose = False, measure =
     if 'n_epochs' not in params.keys():    
         params['n_epochs'] = 2
     
-    x_t_saga, x_mean_saga, info_saga = saga(f, phi, x0, tol, params, verbose, measure)
+    x_t_saga, x_mean_saga, info_saga = saga_fast(f, phi, x0, tol, params, verbose, measure)
     
     ###### PHASE 2: SPP ########
     

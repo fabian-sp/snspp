@@ -50,9 +50,17 @@ class problem:
     
     def plot_path(self):
         
-        fig, ax = plt.subplots()
+        fig, axs = plt.subplots(1,2)
+        ax = axs[0]
         sns.heatmap(self.info['iterates'], cmap = 'coolwarm', vmin = -1, vmax = 1, ax = ax)
         
+        ax = axs[1]
+        ax.plot(self.info['iterates'])
+        ax.set_xlabel('iteration number')
+        ax.set_ylabel('coefficient')
+        
+        return
+    
     def plot_objective(self):
         fig, ax = plt.subplots()
         ax.plot(self.info['objective'])

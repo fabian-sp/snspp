@@ -49,12 +49,9 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
     
     gamma = np.float64(gamma)
     
-    # initialize for stopping criterion
-    status = 'not optimal'
-    eta = np.inf
-    
+    # Main loop
     start = time.time()
-    x_t, x_hist, step_sizes, obj = saga_loop(f, phi, x_t, A, dims, gamma, gradients, params['n_epochs'])
+    x_t, x_hist, step_sizes, obj, eta = saga_loop(f, phi, x_t, A, dims, tol, gamma, gradients, params['n_epochs'])
     end = time.time()
     
     x_hist = np.vstack(x_hist)
@@ -70,7 +67,9 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
     runtime = [(end-start)/n_iter]*n_iter
     
     if eta > tol:
-        status = 'max iterations reached'    
+        status = 'max iterations reached'
+    else:
+        status = 'optimal'
         
     print(f"SAGA terminated after {n_iter} iterations")
     print(f"SAGA status: {status}")
@@ -82,14 +81,21 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
 
 
 @njit()
-def saga_loop(f, phi, x_t, A, dims, gamma, gradients, n_epochs):
+def saga_loop(f, phi, x_t, A, dims, tol, gamma, gradients, n_epochs):
     
     # initialize for diagnostics
     x_hist = List()
     step_sizes = List()
     obj = List()
     
+    eta = 1e10
+    
     for iter_t in np.arange(f.N * n_epochs):
+        
+        if eta <= tol:
+            break
+        
+        x_old = x_t
         # sample
         j = np.random.randint(low = 0, high = f.N, size = 1)
         A_j = A[dims == j,:]
@@ -105,18 +111,19 @@ def saga_loop(f, phi, x_t, A, dims, gamma, gradients, n_epochs):
         # compute prox step
         x_t = phi.prox(w_t, gamma)
         
+        # stop criterion
+        eta = stop_scikit_saga(x_t, x_old)
+        
         # store everything
         x_hist.append(x_t)
         step_sizes.append(gamma)
         obj.append(f.eval(x_t) + phi.eval(x_t))
         
-    return x_t, x_hist, step_sizes, obj
+    return x_t, x_hist, step_sizes, obj, eta
 
 
 
 #%%
-#from ssnsp.solver.saga_fast import saga_fast
-
 
 #x0 = np.zeros(n)
 #x_saga, x_mean_saga, info = saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = True, measure = False)
