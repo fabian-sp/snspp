@@ -55,7 +55,16 @@ class lsq:
 
 #%%
 
+spec_log = [
+    ('name', typeof('abc')),
+    ('b', float64[:]),               
+    ('A', float64[:,:]),
+    ('N', int64), 
+    ('m', int64[:]),
+]
+        
 
+@jitclass(spec_log)
 class logistic_loss:
     """ 
     f is the logistic loss function i.e. 1/N sum_i log(1+exp(b_i*(a_i @ x)))
@@ -64,9 +73,9 @@ class logistic_loss:
     """
     
     def __init__(self, A, b):
-        self.b = b.copy()
         self.name = 'logistic'
-        self.A = A * self.b.copy().reshape(-1,1)
+        self.b = b
+        self.A = A * np.ascontiguousarray(self.b).reshape((-1,1))
         self.N = len(self.b)
         self.m = np.repeat(1,self.N)
         

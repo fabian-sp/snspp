@@ -71,6 +71,10 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1):
     
     b = (odds >= .5)*2 -1
     
+    A = A.astype('float64')
+    b = b.astype('float64')
+    x = x.astype('float64')
+    
     phi = Norm1(lambda1) 
     f = logistic_loss(A,b)
     
