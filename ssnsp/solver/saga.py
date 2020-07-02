@@ -89,11 +89,11 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         # store everything
         x_hist.append(x_t)
         step_sizes.append(gamma)
-        obj.append(f.eval(x_t.astype('float32')) + phi.eval(x_t))
+        obj.append(f.eval(x_t.astype('float64')) + phi.eval(x_t))
         
         # calculate x_mean
         x_mean = compute_x_mean(x_hist, step_sizes = None)
-        obj2.append(f.eval(x_mean.astype('float32')) + phi.eval(x_mean))
+        obj2.append(f.eval(x_mean.astype('float64')) + phi.eval(x_mean))
         
         #eta = stop_optimal(x_t, f, phi)
         eta = stop_scikit_saga(x_t, x_old)
