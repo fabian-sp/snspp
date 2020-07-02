@@ -33,7 +33,7 @@ params = {'n_epochs' : 70}
 P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
 start = time.time()
-P.solve(solver = 'ssnsp')
+P.solve(solver = 'warm_ssnsp')
 end = time.time()
 
 print(f"Computing time: {end-start} sec")
@@ -48,7 +48,7 @@ info = P.info.copy()
 
 sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-6, max_iter = 10000, selection = 'cyclic')
 
-sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-5, solver = 'saga', max_iter = 10000, verbose = 1)
+sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-8, solver = 'saga', max_iter = 10000, verbose = 1)
 
 sk.fit(A,b)
 x_sk = sk.coef_.copy().squeeze()

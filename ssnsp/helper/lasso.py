@@ -136,7 +136,13 @@ class logistic_loss:
             else:
                 Y[i] = -1/(x**2+x)
         return Y
-    
+
+################
+# The above functions are explicitly written for numba usage
+# As xi variables are arrays (possibly of shape (1,)) we need functions that operate on arrays (and not scalars)
+# Without numba, this is not necessary, and the below functions could be used instead
+################
+
     # def fstar(self, x, i):
         
     #     if x > 0 or x < -1 :
