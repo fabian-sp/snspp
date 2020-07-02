@@ -26,14 +26,14 @@ xsol, A, b, f, phi = logreg_test(N, n, k, l1)
 
 
 #%% solve with SPP
-params = {'max_iter' : 100, 'sample_size': 200, 'alpha_C' : 100.}
+params = {'max_iter' : 50, 'sample_size': 200, 'alpha_C' : 100.}
 
 params = {'n_epochs' : 70}
 
 P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
 start = time.time()
-P.solve(solver = 'warm_ssnsp')
+P.solve(solver = 'ssnsp')
 end = time.time()
 
 print(f"Computing time: {end-start} sec")

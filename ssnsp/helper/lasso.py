@@ -1,6 +1,7 @@
 import numpy as np
 from numba.experimental import jitclass
 from numba import int64, float32, float64, typeof
+from numba.typed import List
 
 spec = [
     ('name', typeof('abc')),
@@ -98,37 +99,75 @@ class logistic_loss:
         
         return -1/(1+np.exp(x)) 
     
-    def fstar(self, x, i):
-        
-        if x > 0 or x < -1 :
-            res = np.inf
-        elif x == 0 or x == -1:
-            res = 0
-        else:
-            res = -x*np.log(-x) + (1+x) * np.log(1+x)
-        
-        return res
+    def fstar(self, X, i):
+        Y = np.zeros_like(X)
+        for i in range(len(X)):
+            x = X[i]
+            if x > 0 or x < -1 :
+                Y[i] = np.inf
+            elif x == 0 or x == -1:
+                Y[i] = 0
+            else:
+                Y[i] = -x*np.log(-x) + (1+x) * np.log(1+x)
+            
+        return Y
     
-    def gstar(self, x, i):
-        
-        if x > 0 or x < -1 :
-            res = np.inf
-        elif x == 0 or x == -1:
-            res = np.sign(x + .5) * 1e8
-        else:
-            res = np.log(-(1+x)/x)     
-        return res
+    def gstar(self, X, i):
+        Y = np.zeros_like(X)
+        for i in range(len(X)):
+            x = X[i]
+            if x > 0 or x < -1 :
+                Y[i] = np.inf
+            elif x == 0 or x == -1:
+                Y[i] = np.sign(x + .5) * 1e8
+            else:
+                Y[i] = np.log(-(1+x)/x)     
+        return Y
     
     
-    def Hstar(self, x, i):
+    def Hstar(self, X, i):
+        Y = np.zeros_like(X)
+        for i in range(len(X)):
+            x = X[i]
+            if x > 0 or x < -1 :
+                Y[i] = np.inf
+            elif x == 0 or x == -1:
+                Y[i] = 1e8
+            else:
+                Y[i] = -1/(x**2+x)
+        return Y
+    
+    # def fstar(self, x, i):
         
-        if x > 0 or x < -1 :
-            res = np.inf
-        elif x == 0 or x == -1:
-            res = 1e8
-        else:
-            res = -1/(x**2+x)
-        return res
+    #     if x > 0 or x < -1 :
+    #         res = np.inf
+    #     elif x == 0 or x == -1:
+    #         res = 0
+    #     else:
+    #         res = -x*np.log(-x) + (1+x) * np.log(1+x)
+        
+    #     return res
+
+    # def gstar(self, x, i):
+        
+    #     if x > 0 or x < -1 :
+    #         res = np.inf
+    #     elif x == 0 or x == -1:
+    #         res = np.sign(x + .5) * 1e8
+    #     else:
+    #         res = np.log(-(1+x)/x)     
+    #     return res
+    
+    
+    # def Hstar(self, x, i):
+        
+    #     if x > 0 or x < -1 :
+    #         res = np.inf
+    #     elif x == 0 or x == -1:
+    #         res = 1e8
+    #     else:
+    #         res = -1/(x**2+x)
+    #     return res
         
 #%%
 

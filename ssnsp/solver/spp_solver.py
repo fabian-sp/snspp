@@ -29,7 +29,7 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
     z = x - (alpha/sample_size) * (subA.T @ xi_stack)
     tmp = .5 * np.linalg.norm(z)**2 - phi.moreau(z, alpha)
     
-    res = sum([f.fstar(xi_stack[sub_dims == l].squeeze(), S[l]) for l in range(sample_size)]) + (sample_size/alpha) * tmp
+    res = sum([f.fstar(xi_stack[sub_dims == l], S[l]) for l in range(sample_size)]) + (sample_size/alpha) * tmp
     
     return res.squeeze()
 
@@ -95,10 +95,10 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
     step_sz = list()
     
     while sub_iter < newton_params['max_iter']:
-        
+
     # step 1: construct Newton matrix and RHS
         z = x - (alpha/sample_size) * (subA.T @ xi_stack)
-        rhs = -1 * (np.hstack([f.gstar( xi[i].squeeze() ,i) for i in S]) - subA @ phi.prox(z, alpha))
+        rhs = -1 * (np.hstack([f.gstar(xi[i], i) for i in S]) - subA @ phi.prox(z, alpha))
         residual.append(np.linalg.norm(rhs))
         
         if np.linalg.norm(rhs) <= newton_params['eps']:
@@ -108,7 +108,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         U = phi.jacobian_prox(z, alpha)
         tmp2 = (alpha/sample_size) * subA @ U @ subA.T
         
-        tmp = [f.Hstar(xi[i].squeeze(), i) for i in S]
+        tmp = [f.Hstar(xi[i], i) for i in S]
         eps_reg = 1e-6
         W = block_diag(tmp) + tmp2 + eps_reg * np.eye(tmp2.shape[0])
         
