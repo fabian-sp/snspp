@@ -8,28 +8,15 @@ import time
 from numba.typed import List
 from numba import njit
 
-def saga_fast_wrapper(f, phi, A, x0, tol, params = dict(), verbose = False, measure = False):
-    
-    # set functions
-    if f.name == 'logistic':
-        f_eval = lambda x: f_logistic(x, f.A, f.N)
-        g_eval = g_logistic
-        
-    else:
-        raise ValueError("SAGA fast can only handle specific functions...")
-        
-    if phi.name == '1norm':
-        phi_eval = lambda x: phi_1norm(x, phi.lambda1)
-        phi_prox = lambda x, alpha: prox_1norm(x, phi.lambda1, alpha)        
-    else:
-        raise ValueError("SAGA fast can only handle specific functions...")
+def saga_fast_wrapper(f, phi, x0, tol, params = dict(), verbose = False, measure = False):
+
     
     # set step size
     if 'gamma' not in params.keys():
         if f.name == 'squared':
-            L = 2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
+            L = 2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A)**2).max()
         elif f.name == 'logistic':
-            L = .25 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
+            L = .25 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A)**2).max()
         else:
             print("Determination of step size not possible! Probably get divergence..")
             L = 1
@@ -40,11 +27,11 @@ def saga_fast_wrapper(f, phi, A, x0, tol, params = dict(), verbose = False, meas
     params['gamma'] = np.float64(gamma)
     
     # run saga fast
-    x_t, x_mean, info = saga_fast(f_eval, g_eval, phi_eval, phi_prox, A, f.m, x0, tol, params, verbose, measure)
+    x_t, x_mean, info = saga_fast(f.name, phi.name, phi.lambda1, f.A, f.m, x0, tol, params, verbose, measure)
     
     return x_t, x_mean, info
 
-def saga_fast(f_eval, g_eval, phi_eval, phi_prox, A, m, x0, tol = 1e-3, params = dict(), verbose = False, measure = False):
+def saga_fast(f_name, phi_name, l1, A, m, x0, tol = 1e-3, params = dict(), verbose = False, measure = False):
     """
     fast implementation of the SAGA algorithm for problems of the form 
     min 1/N * sum f_i(A_i x) + phi(x)
@@ -67,24 +54,37 @@ def saga_fast(f_eval, g_eval, phi_eval, phi_prox, A, m, x0, tol = 1e-3, params =
     assert gradients.shape == (N,n)
     
     if 'n_epochs' not in params.keys():    
-        params['n_epochs'] = 10
+        params['n_epochs'] = 5
     
     # Main loop
     start = time.time()
-    x_t, x_hist, step_sizes, obj, eta  = saga_loop(f_eval, g_eval, phi_eval, phi_prox, x_t, A, dims, N, tol, params['gamma'], gradients, params['n_epochs'])
-    
+    x_t, x_hist, step_sizes, obj, eta  = saga_loop(f_name, phi_name, l1, x_t, A, dims, N, tol, params['gamma'], gradients, params['n_epochs'])
+    #
     end = time.time()
     
     x_hist = np.vstack(x_hist)
     n_iter = x_hist.shape[0]
     
     # compute x_mean retrospectivly and evaluate objective
-    obj2= list()
+    obj = list(); obj2= list()
     xmean_hist = x_hist.cumsum(axis=0) / (np.arange(n_iter) + 1)[:,np.newaxis]
-    for j in np.arange(n_iter):
-        obj2.append(f_eval(xmean_hist[j,:]) + phi_eval(xmean_hist[j,:]))
     x_mean = xmean_hist[-1,:].copy()
     
+    if measure:
+        if f_name == 'logistic':
+            f_eval = lambda x: f_logistic(x, A, N)
+            
+        if phi_name == '1norm':
+            phi_eval = lambda x: phi_1norm(x, l1)
+        # evaluate objective at x_t after every epoch
+        for j in np.arange(n_iter)[::N]:
+            obj.append(f_eval(x_hist[j,:]) + phi_eval(x_hist[j,:]))
+        
+        # evaluate objective at x_mean after every epoch
+        for j in np.arange(n_iter)[::N]:
+            obj2.append(f_eval(xmean_hist[j,:]) + phi_eval(xmean_hist[j,:]))
+        
+        
     # distribute runtime uniformly on all iterations
     runtime = [(end-start)/n_iter]*n_iter
     
@@ -97,13 +97,13 @@ def saga_fast(f_eval, g_eval, phi_eval, phi_prox, A, m, x0, tol = 1e-3, params =
     print(f"SAGA status: {status}")
     
     info = {'objective': np.array(obj), 'objective_mean': np.array(obj2), 'iterates': x_hist, 'step_sizes': np.array(step_sizes), \
-            'gradient_table': gradients, 'runtime': np.array(runtime)}
-    
+             'gradient_table': gradients, 'runtime': np.array(runtime)}
+    #info = None
     return x_t, x_mean, info
 
 
 @njit()
-def saga_loop(f_eval, g_eval, phi_eval, phi_prox, x_t, A, dims, N, tol, gamma, gradients, n_epochs):
+def saga_loop(f_name, phi_name, l1, x_t, A, dims, N, tol, gamma, gradients, n_epochs):
     
     # initialize for diagnostics
     x_hist = List()
@@ -111,6 +111,7 @@ def saga_loop(f_eval, g_eval, phi_eval, phi_prox, x_t, A, dims, N, tol, gamma, g
     obj = List()
     
     eta = 1e10
+    g_sum = (1/N)*gradients.sum(axis = 0)
     
     for iter_t in np.arange(N * n_epochs):
         
@@ -120,18 +121,27 @@ def saga_loop(f_eval, g_eval, phi_eval, phi_prox, x_t, A, dims, N, tol, gamma, g
         x_old = x_t
         # sample
         j = np.random.randint(low = 0, high = N, size = 1)
-        A_j = A[dims == j,:]
         
         # compute the gradient
-        g = A_j.T @ g_eval(A_j@x_t, j)
-        old_g = (-1) * gradients[j,:] + (1/N)*gradients.sum(axis = 0)
-        w_t = x_t - gamma * (g + old_g)[0,:]
+        if f_name == 'logistic':
+            A_j = A[j,:]
+            g = (A_j * g_logistic(A_j@x_t)).reshape(-1)
+        else:
+            raise KeyError("Únknwon function")
+            
+        g_j = gradients[j,:].reshape(-1)
+        old_g = (-1) * g_j + g_sum
+        w_t = x_t - gamma * (g + old_g)
         
         # store new gradient
         gradients[j,:] = g
+        g_sum = g_sum - (1/N)*g_j + (1/N)*g
         
         # compute prox step
-        x_t = phi_prox(w_t, gamma)
+        if phi_name == '1norm':
+            x_t = prox_1norm(w_t, gamma, l1)
+        else:
+            raise KeyError("Únknwon function")
         
         # stop criterion
         eta = stop_scikit_saga(x_t, x_old)
@@ -139,7 +149,7 @@ def saga_loop(f_eval, g_eval, phi_eval, phi_prox, x_t, A, dims, N, tol, gamma, g
         # store everything
         x_hist.append(x_t)
         step_sizes.append(gamma)
-        obj.append(f_eval(x_t) + phi_eval(x_t))
+        obj.append(0)
         
     return x_t, x_hist, step_sizes, obj, eta
 
@@ -153,7 +163,7 @@ def f_logistic(x, A, N):
     return 1/N * np.log(1+np.exp(-A@x)).sum()
 
 @njit()
-def g_logistic(x, i):
+def g_logistic(x):
     """
     computes the gradient of function f_i at x
     """

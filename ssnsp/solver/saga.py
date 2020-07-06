@@ -86,6 +86,14 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         # compute prox step
         x_t = phi.prox(w_t, gamma)
         
+        # stop criterion
+        #eta = stop_optimal(x_t, f, phi)
+        eta = stop_scikit_saga(x_t, x_old)
+        
+        if measure:
+            end = time.time()
+            runtime.append(end-start)
+            
         # store everything
         x_hist.append(x_t)
         step_sizes.append(gamma)
@@ -94,13 +102,6 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         # calculate x_mean
         x_mean = compute_x_mean(x_hist, step_sizes = None)
         obj2.append(f.eval(x_mean.astype('float64')) + phi.eval(x_mean))
-        
-        #eta = stop_optimal(x_t, f, phi)
-        eta = stop_scikit_saga(x_t, x_old)
-        
-        if measure:
-            end = time.time()
-            runtime.append(end-start)
             
         if verbose:
             print(out_fmt % (iter_t, obj[-1], obj2[-1] , gamma, eta))

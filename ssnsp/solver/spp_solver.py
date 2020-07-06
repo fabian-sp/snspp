@@ -249,6 +249,20 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         
         x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, gradient_table = G, newton_params = None, verbose = False)
         
+        #stop criterion
+        #eta = stop_optimal(x_t, f, phi)
+        eta = stop_scikit_saga(x_t, x_old)
+        
+        # variance reduction
+        full_m = int(f.N/params['sample_size'])
+        if reduce_variance and iter_t % full_m == 0 and iter_t >= 30:
+            G = compute_gradient_table(f, x_t)
+            #print("Norm of full gradient", np.linalg.norm(1/f.N * G.sum(axis=0)))
+        
+        if measure:
+            end = time.time()
+            runtime.append(end-start)
+            
         # save all diagnostics
         ssn_info.append(this_ssn)
         x_hist.append(x_t)
@@ -261,20 +275,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #calc x_mean 
         x_mean = compute_x_mean(x_hist, step_sizes = None)
         obj2.append(f.eval(x_mean.astype('float64')) + phi.eval(x_mean))
-        
-        #stop criterion
-        #eta = stop_optimal(x_mean, f, phi)
-        eta = stop_scikit_saga(x_t, x_old)
-        
-        full_m = int(f.N/params['sample_size'])
-        if reduce_variance and iter_t % full_m == 0 and iter_t >= 30:
-            G = compute_gradient_table(f, x_t)
-            #print("Norm of full gradient", np.linalg.norm(1/f.N * G.sum(axis=0)))
-        
-        if measure:
-            end = time.time()
-            runtime.append(end-start)
-            
+          
         if verbose:
             #print(f"------------Iteration {iter_t} of the Stochastic Proximal Point algorithm----------------")
             print(out_fmt % (iter_t, obj[-1], obj2[-1] , alpha_t, eta))
