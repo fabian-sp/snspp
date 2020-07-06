@@ -60,6 +60,8 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
     if verbose:
         print(hdr_fmt % ("iter", "obj (x_t)", "obj(x_mean)", "gamma", "eta"))
     
+    
+    g_sum = (1/N)*gradients.sum(axis = 0)
     for iter_t in np.arange(f.N * params['n_epochs']):
         
         if measure:
@@ -77,11 +79,13 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         
         # compute the gradient
         g = A_j.T @ f.g(A_j@x_t, j)
-        old_g = (-1) * gradients[j,:].squeeze() + (1/N)*gradients.sum(axis = 0)
+        g_j = gradients[j,:].squeeze()
+        old_g = (-1) * g_j + g_sum
         w_t = x_t - gamma * (g + old_g)
         
         # store new gradient
         gradients[j,:] = g.copy()
+        g_sum = g_sum - (1/N)*g_j + (1/N)*g
         
         # compute prox step
         x_t = phi.prox(w_t, gamma)
@@ -97,14 +101,17 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         # store everything
         x_hist.append(x_t)
         step_sizes.append(gamma)
-        obj.append(f.eval(x_t.astype('float64')) + phi.eval(x_t))
+        
+        if measure and iter_t % N == 1:
+            obj.append(f.eval(x_t.astype('float64')) + phi.eval(x_t))
         
         # calculate x_mean
         x_mean = compute_x_mean(x_hist, step_sizes = None)
-        obj2.append(f.eval(x_mean.astype('float64')) + phi.eval(x_mean))
+        if measure and iter_t % N == 1:
+            obj2.append(f.eval(x_mean.astype('float64')) + phi.eval(x_mean))
             
-        if verbose:
-            print(out_fmt % (iter_t, obj[-1], obj2[-1] , gamma, eta))
+            if verbose:
+                print(out_fmt % (iter_t, obj[-1], obj2[-1] , gamma, eta))
           
         
     if eta > tol:
