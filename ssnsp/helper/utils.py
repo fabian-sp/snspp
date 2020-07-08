@@ -42,6 +42,18 @@ def stop_optimal(x, f, phi):
 ### Useful functions for algorithms
 ############################################################################################
 
+def compute_full_xi(f, x):
+    
+    dims = np.repeat(np.arange(f.N),f.m)
+    vals = list()
+    for i in np.arange(f.N):
+        A_i =  f.A[dims == i].copy()
+        vals.append(f.g(A_i @ x, i))
+        
+    xi  = dict(zip(np.arange(f.N), vals))
+    
+    return xi 
+
 def compute_full_gradient(f,x):
     """
     computes the full gradient 1/N * sum (A_i.T @ grad f_i(A_ix))

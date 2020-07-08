@@ -15,7 +15,7 @@ from ssnsp.solver.opt_problem import problem
 
 #%% generate data
 
-N = 1000
+N = 10000
 n = 100
 k = 10
 l1 = .01
@@ -26,14 +26,14 @@ xsol, A, b, f, phi = logreg_test(N, n, k, l1)
 
 
 #%% solve with SPP
-params = {'max_iter' : 50, 'sample_size': 200, 'alpha_C' : 100.}
+params = {'max_iter' : 20, 'sample_size': 100, 'alpha_C' : 1.}
 
 params = {'n_epochs' : 10}
 
 P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
 start = time.time()
-P.solve(solver = 'saga')
+P.solve(solver = 'warm_ssnsp')
 end = time.time()
 
 print(f"Computing time: {end-start} sec")

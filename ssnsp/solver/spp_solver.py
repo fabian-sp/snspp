@@ -13,7 +13,7 @@ def sampler(N, size):
     samples a subset of {1,..,N} without replacement
     """
     assert size <= N, "specified a bigger sample size than N"
-    S = np.random.choice(a = np.arange(N), p = (1/N) * np.ones(N), size = size, replace = False)
+    S = np.random.choice(a = np.arange(N).astype(int), p = (1/N) * np.ones(N), size = size, replace = False)
     
     S = S.astype('int')
     # sort S in order to avoid problems with indexing later on
@@ -80,6 +80,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
     
     assert subA.shape[0] == M
     assert np.all(list(xi.keys()) == np.arange(N)), "xi has wrong keys"
+    
     # sub_dims is helper array to index xi_stack wrt to the elements of S
     sub_dims = np.repeat(range(sample_size), m[S])
     xi_stack = np.hstack([xi[i] for i in S])
@@ -137,7 +138,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
             # reset if getting stuck
             counter +=1
             if counter >= 10:
-                print("FIX!!")
+                print("Semismooth Newton: reset step size and ignore Armijo")
                 beta = .8
                 break
         
@@ -235,8 +236,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     for iter_t in np.arange(params['max_iter']):
         
-        if measure:
-            start = time.time()
+        start = time.time()
             
         if eta <= tol:
             status = 'optimal'
@@ -259,25 +259,26 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
             G = compute_gradient_table(f, x_t)
             #print("Norm of full gradient", np.linalg.norm(1/f.N * G.sum(axis=0)))
         
-        if measure:
-            end = time.time()
-            runtime.append(end-start)
+        end = time.time()
+        runtime.append(end-start)
             
         # save all diagnostics
         ssn_info.append(this_ssn)
         x_hist.append(x_t)
-            
-        obj.append(f.eval(x_t.astype('float64')) + phi.eval(x_t))
+        
+        if measure:
+            obj.append(f.eval(x_t.astype('float64')) + phi.eval(x_t))
+        
         step_sizes.append(alpha_t)
         S_hist.append(S)
         xi_hist.append(xi.copy())
         
         #calc x_mean 
         x_mean = compute_x_mean(x_hist, step_sizes = None)
-        obj2.append(f.eval(x_mean.astype('float64')) + phi.eval(x_mean))
+        if measure:
+            obj2.append(f.eval(x_mean.astype('float64')) + phi.eval(x_mean))
           
-        if verbose:
-            #print(f"------------Iteration {iter_t} of the Stochastic Proximal Point algorithm----------------")
+        if verbose and measure:
             print(out_fmt % (iter_t, obj[-1], obj2[-1] , alpha_t, eta))
             
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0

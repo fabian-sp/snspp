@@ -105,9 +105,9 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         if measure and iter_t % N == 1:
             obj.append(f.eval(x_t.astype('float64')) + phi.eval(x_t))
         
-        # calculate x_mean
-        x_mean = compute_x_mean(x_hist, step_sizes = None)
+        # calculate x_mean       
         if measure and iter_t % N == 1:
+            x_mean = compute_x_mean(x_hist, step_sizes = None)
             obj2.append(f.eval(x_mean.astype('float64')) + phi.eval(x_mean))
             
             if verbose:

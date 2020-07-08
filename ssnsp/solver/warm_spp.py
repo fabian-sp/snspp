@@ -5,6 +5,7 @@ author: Fabian Schaipp
 import numpy as np
 from .spp_solver import stochastic_prox_point
 from .saga_fast import saga_fast
+from ..helper.utils import compute_full_xi
 
 
 
@@ -18,8 +19,8 @@ def warm_spp(f, phi, x0, tol = 1e-4, params = dict(), verbose = False, measure =
     
     ###### PHASE 2: SPP ########
     
-    #xi_0 = dict(zip(np.arange(f.N), [ -.5 * np.ones(m[i]) for i in np.arange(f.N)]))
-    xi_0 = None
+    xi_0 = compute_full_xi(f, x_t_saga)
+    #xi_0 = None
     
     x_t, x_mean, info_spp = stochastic_prox_point(f, phi, x_t_saga, xi_0, tol, params, verbose, measure)
     
@@ -35,6 +36,6 @@ def warm_spp(f, phi, x0, tol = 1e-4, params = dict(), verbose = False, measure =
         info['runtime'] = np.hstack((info_saga['runtime'], info_spp['runtime']))
 
     info['xi_hist'] = info_spp['xi_hist'].copy()
-    info['n_iter_saga'] = len(info_saga['objective'])
+    info['n_iter_saga'] = params['n_epochs'] * f.N
     
     return x_t, x_mean, info

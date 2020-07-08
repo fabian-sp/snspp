@@ -14,7 +14,7 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
     fast implementation of the SAGA algorithm for problems of the form 
     min 1/N * sum f_i(A_i x) + phi(x)
     
-    speedup achieved by numba
+    speedup achieved by numba, hence classes f and phi need to be jitted beforehand. If not possible use saga.py instead.
     """
     # initialize all variables
     n = len(x0)
@@ -55,6 +55,9 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
     x_t, x_hist, step_sizes, eta  = saga_loop(f, phi, x_t, A, dims, N, tol, gamma, gradients, params['n_epochs'])
     end = time.time()
     
+    if verbose:
+        print(f"SAGA main loop finished after {end-start} sec")
+    
     x_hist = np.vstack(x_hist)
     n_iter = x_hist.shape[0]
     
@@ -65,16 +68,16 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
     
     if measure:
         # evaluate objective at x_t after every epoch
-        for j in np.arange(n_iter)[::N]:
+        for j in np.arange(n_iter):
             obj.append(f.eval(x_hist[j,:]) + phi.eval(x_hist[j,:]))
         
         # evaluate objective at x_mean after every epoch
-        for j in np.arange(n_iter)[::N]:
+        for j in np.arange(n_iter):
             obj2.append(f.eval(xmean_hist[j,:]) + phi.eval(xmean_hist[j,:]))
         
         
     # distribute runtime uniformly on all iterations
-    runtime = [(end-start)/n_iter]*n_iter
+    runtime = [(end-start)/params['n_epochs']]*params['n_epochs']
     
     if eta > tol:
         status = 'max iterations reached'
@@ -128,9 +131,10 @@ def saga_loop(f, phi, x_t, A, dims, N, tol, gamma, gradients, n_epochs):
         # stop criterion
         eta = stop_scikit_saga(x_t, x_old)
         
-        # store everything
-        x_hist.append(x_t)
-        step_sizes.append(gamma)
+        # store everything (at end of each epoch)
+        if iter_t % N == N-1:
+            x_hist.append(x_t)
+            step_sizes.append(gamma)
         
     return x_t, x_hist, step_sizes, eta
 
