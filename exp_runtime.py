@@ -26,25 +26,33 @@ xsol, A, b, f, phi = logreg_test(N, n, k, l1)
 #%% solve with SAGA
 
 
-params = {'n_epochs' : 20}
+params = {'n_epochs' : 70}
 
 Q = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
 Q.solve(solver = 'saga_fast')
 
 
-Q.plot_objective()
+#%% plotting
+
+x = Q.info['runtime'].cumsum()
+y = Q.info['objective']
+
+plt.plot(x,y, '-o')
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 20, 'sample_size': 200, 'alpha_C' : 100., 'n_epochs': 10}
+params = {'max_iter' : 20, 'sample_size': 1000, 'alpha_C' : 1., 'n_epochs': 20}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
 P.solve(solver = 'warm_ssnsp')
 
 
-P.plot_objective()
+x = P.info['runtime'].cumsum()
+y = P.info['objective']
+
+plt.plot(x,y, '-o')
 
 #%%
 

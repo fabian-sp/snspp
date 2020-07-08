@@ -84,7 +84,7 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
     else:
         status = 'optimal'
         
-    print(f"SAGA terminated after {n_iter} iterations")
+    print(f"SAGA terminated during epoch {n_iter}")
     print(f"SAGA status: {status}")
     
     info = {'objective': np.array(obj), 'objective_mean': np.array(obj2), 'iterates': x_hist, 'step_sizes': np.array(step_sizes), \

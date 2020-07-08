@@ -183,6 +183,8 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
 
 def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
     
+    #print("Objective at x0:", f.eval(x0)+ phi.eval(x0))
+    
     # initialize all variables
     A = f.A.copy()
     n = len(x0)

@@ -84,7 +84,7 @@ plt.plot(err_l2_mean)
 
 plt.legend(labels = ['error xk (l2)', 'error xk(linf)', 'error xmean (l2)'])
 
-#%% xonvergence of the xi variables
+#%% convergence of the xi variables
 
 info = P.info.copy()
 xis = [np.hstack(list(i.values())) for i in info['xi_hist']]
