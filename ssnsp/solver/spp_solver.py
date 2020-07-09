@@ -13,7 +13,7 @@ def sampler(N, size):
     samples a subset of {1,..,N} without replacement
     """
     assert size <= N, "specified a bigger sample size than N"
-    S = np.random.choice(a = np.arange(N).astype(int), p = (1/N) * np.ones(N), size = size, replace = False)
+    S = np.random.choice(a = np.arange(N).astype('int'), p = (1/N) * np.ones(N), size = int(size), replace = False)
     
     S = S.astype('int')
     # sort S in order to avoid problems with indexing later on
@@ -35,7 +35,8 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
 
 def get_default_newton_params():
     
-    params = {'tau': .5, 'eta' : 1e-2, 'rho': .5, 'mu': .2, 'eps': 1e-4, 'max_iter': 20}
+    params = {'tau': .5, 'eta' : 1e-2, 'rho': .5, 'mu': .2, 'eps': 1e-4, \
+              'cg_max_iter': 20, 'max_iter': 20}
     
     return params
 
@@ -117,7 +118,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         if verbose:
             print("Start CG method")
         cg_tol = min(newton_params['eta'], np.linalg.norm(rhs)**(1+ newton_params['tau']))
-        d, cg_status = cg(W, rhs, tol = cg_tol, maxiter = 500)
+        d, cg_status = cg(W, rhs, tol = cg_tol, maxiter = newton_params['cg_max_iter'])
         
         assert d@rhs > -1e-8 , f"No descent direction, {d@rhs}"
         assert cg_status == 0, f"CG method did not converge, exited with status {cg_status}"

@@ -69,7 +69,9 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1):
     h = np.exp(A@x)
     odds = h/(1+h)
     
-    b = (odds >= .5)*2 -1
+    #b = (odds >= .5)*2 -1
+    b = np.random.binomial(1,p=odds)*2 - 1
+    
     
     A = A.astype('float64')
     b = b.astype('float64')

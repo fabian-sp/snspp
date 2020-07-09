@@ -20,7 +20,7 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
     n = len(x0)
     m = f.m.copy()
     N = len(f.m)
-    A = f.A.copy()
+    A = f.A.astype('float64')
     assert n == A.shape[1], "wrong dimensions"
     
     x_t = x0.copy().astype('float64')
@@ -46,7 +46,8 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
     else:
         gamma = params['gamma']
     
-    gamma = np.float64(gamma)    
+    gamma = np.float64(gamma)  
+    
     if 'n_epochs' not in params.keys():    
         params['n_epochs'] = 5
     

@@ -42,7 +42,7 @@ plt.plot(x,y, '-o')
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 20, 'sample_size': 1000, 'alpha_C' : 1., 'n_epochs': 20}
+params = {'max_iter' : 5, 'sample_size': 2000, 'alpha_C' : 1., 'n_epochs': 30}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 

@@ -36,6 +36,6 @@ def warm_spp(f, phi, x0, tol = 1e-4, params = dict(), verbose = False, measure =
         info['runtime'] = np.hstack((info_saga['runtime'], info_spp['runtime']))
 
     info['xi_hist'] = info_spp['xi_hist'].copy()
-    info['n_iter_saga'] = params['n_epochs'] * f.N
+    info['n_iter_saga'] = len(info_saga['objective'])# params['n_epochs'] * f.N
     
     return x_t, x_mean, info
