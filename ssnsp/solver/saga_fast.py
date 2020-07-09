@@ -78,7 +78,7 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
         
         
     # distribute runtime uniformly on all iterations
-    runtime = [(end-start)/params['n_epochs']]*params['n_epochs']
+    runtime = [(end-start)/n_iter]*n_iter
     
     if eta > tol:
         status = 'max iterations reached'

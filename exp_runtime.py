@@ -14,8 +14,8 @@ from ssnsp.solver.opt_problem import problem
 
 #%% generate data
 
-N = 4000
-n = 5000
+N = 20000
+n = 100
 k = 10
 l1 = .01
 
@@ -28,7 +28,7 @@ xsol, A, b, f, phi = logreg_test(N, n, k, l1)
 
 params = {'n_epochs' : 70}
 
-Q = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
+Q = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
 Q.solve(solver = 'saga_fast')
 
@@ -42,7 +42,7 @@ plt.plot(x,y, '-o')
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 5, 'sample_size': 2000, 'alpha_C' : 1., 'n_epochs': 30}
+params = {'max_iter' : 5, 'sample_size': 2000, 'alpha_C' : 1., 'n_epochs': 4}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 

@@ -35,7 +35,7 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
 
 def get_default_newton_params():
     
-    params = {'tau': .5, 'eta' : 1e-2, 'rho': .5, 'mu': .2, 'eps': 1e-4, \
+    params = {'tau': .5, 'eta' : 1e-2, 'rho': .5, 'mu': .2, 'eps': 1e-3, \
               'cg_max_iter': 20, 'max_iter': 20}
     
     return params
@@ -111,7 +111,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         tmp2 = (alpha/sample_size) * subA @ U @ subA.T
         
         tmp = [f.Hstar(xi[i], i) for i in S]
-        eps_reg = 1e-6
+        eps_reg = 1e-4
         W = block_diag(tmp) + tmp2 + eps_reg * np.eye(tmp2.shape[0])
         
     # step2: solve Newton system
@@ -121,7 +121,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         d, cg_status = cg(W, rhs, tol = cg_tol, maxiter = newton_params['cg_max_iter'])
         
         assert d@rhs > -1e-8 , f"No descent direction, {d@rhs}"
-        assert cg_status == 0, f"CG method did not converge, exited with status {cg_status}"
+        #assert cg_status == 0, f"CG method did not converge, exited with status {cg_status}"
         norm_dir.append(np.linalg.norm(d))
     # step 3: backtracking line search
         if verbose:
@@ -250,7 +250,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         # sample and update
         S = sampler(f.N, params['sample_size'])
         
-        x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, gradient_table = G, newton_params = None, verbose = False)
+        x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, gradient_table = G, \
+                                             newton_params = None, verbose = False)
         
         #stop criterion
         #eta = stop_optimal(x_t, f, phi)

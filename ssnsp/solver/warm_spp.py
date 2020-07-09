@@ -32,10 +32,13 @@ def warm_spp(f, phi, x0, tol = 1e-4, params = dict(), verbose = False, measure =
     info['iterates'] = np.vstack((info_saga['iterates'], info_spp['iterates']))
     info['step_sizes'] = np.hstack((info_saga['step_sizes'], info_spp['step_sizes']))
     
-    if measure:
-        info['runtime'] = np.hstack((info_saga['runtime'], info_spp['runtime']))
-
+    
+    info['runtime'] = np.hstack((info_saga['runtime'], info_spp['runtime']))
+    assert len(info_saga['runtime']) == len(info_saga['objective'])
+    
     info['xi_hist'] = info_spp['xi_hist'].copy()
     info['n_iter_saga'] = len(info_saga['objective'])# params['n_epochs'] * f.N
+    
+    info['ssn_info'] = info_spp['ssn_info']
     
     return x_t, x_mean, info
