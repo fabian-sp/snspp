@@ -20,20 +20,20 @@ n = 100
 k = 10
 l1 = .01
 
-xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False)
+xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = 1000)
 
 xsol, A, b, f, phi = logreg_test(N, n, k, l1)
 
 
 #%% solve with SPP
-params = {'max_iter' : 20, 'sample_size': 100, 'alpha_C' : 1.}
+params = {'max_iter' : 30, 'sample_size': 100, 'alpha_C' : 10.}
 
 params = {'n_epochs' : 10}
 
 P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
 start = time.time()
-P.solve(solver = 'warm_ssnsp')
+P.solve(solver = 'saga_fast')
 end = time.time()
 
 print(f"Computing time: {end-start} sec")
