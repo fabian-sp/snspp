@@ -11,6 +11,7 @@ from ..helper.utils import compute_full_xi
 
 def warm_spp(f, phi, x0, tol = 1e-4, params = dict(), verbose = False, measure = False):
     
+    info = dict()
     ###### PHASE 1: SAGA ########
     if 'n_epochs' not in params.keys():    
         params['n_epochs'] = 2
@@ -20,12 +21,12 @@ def warm_spp(f, phi, x0, tol = 1e-4, params = dict(), verbose = False, measure =
     ###### PHASE 2: SPP ########
     
     xi_0 = compute_full_xi(f, x_t_saga)
+    info['xi_0'] = xi_0.copy()
     #xi_0 = None
     
     x_t, x_mean, info_spp = stochastic_prox_point(f, phi, x_t_saga, xi_0, tol, params, verbose, measure)
     
     ###### Combine diagnostics ########
-    info = dict()
     
     info['objective'] = np.hstack((info_saga['objective'], info_spp['objective']))
     info['objective_mean'] = np.hstack((info_saga['objective_mean'], info_spp['objective_mean']))

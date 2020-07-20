@@ -130,7 +130,8 @@ def saga_loop(f, phi, x_t, A, dims, N, tol, gamma, gradients, n_epochs):
         x_t = phi.prox(w_t, gamma)
         
         # stop criterion
-        eta = stop_scikit_saga(x_t, x_old)
+        if iter_t > 10:
+            eta = stop_scikit_saga(x_t, x_old)
         
         # store everything (at end of each epoch)
         if iter_t % N == N-1:

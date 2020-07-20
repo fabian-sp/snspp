@@ -36,7 +36,7 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
 def get_default_newton_params():
     
     params = {'tau': .5, 'eta' : 1e-2, 'rho': .5, 'mu': .2, 'eps': 1e-3, \
-              'cg_max_iter': 20, 'max_iter': 20}
+              'cg_max_iter': 20, 'max_iter': 40}
     
     return params
 
@@ -108,7 +108,12 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
             break
         
         U = phi.jacobian_prox(z, alpha)
-        tmp2 = (alpha/sample_size) * subA @ U @ subA.T
+        if phi.name == '1norm':
+            # U is diagonal with only 1 or 0 --> speedup
+            bool_d = np.diag(U).astype(bool)
+            tmp2 = (alpha/sample_size) * subA[:, bool_d] @ subA[:, bool_d].T
+        else:
+            tmp2 = (alpha/sample_size) * subA @ U @ subA.T
         
         tmp = [f.Hstar(xi[i], i) for i in S]
         eps_reg = 1e-4
@@ -138,10 +143,10 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
             U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA)
             # reset if getting stuck
             counter +=1
-            if counter >= 10:
-                print("Semismooth Newton: reset step size and ignore Armijo")
-                beta = .8
-                break
+            # if counter >= 15:
+            #     print("Semismooth Newton: reset step size and ignore Armijo")
+            #     beta = .8
+            #     break
         
         step_sz.append(beta)
     # step 4: update xi
@@ -215,7 +220,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     # initialize variables + containers
     if xi is None:
         if f.name == 'logistic':
-            xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(m[i]) for i in np.arange(f.N)]))
+            xi = dict(zip(np.arange(f.N), [ -.1 * np.ones(m[i]) for i in np.arange(f.N)]))
         else:
             xi = dict(zip(np.arange(f.N), [np.zeros(m[i]) for i in np.arange(f.N)]))
     

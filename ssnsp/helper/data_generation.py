@@ -71,18 +71,32 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, kappa = None)
 
     return x, A, b, f, phi
 
-def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1):
+def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, kappa = None):
     
-    np.random.seed(1234)
+    #np.random.seed(1234)
     
-    A = np.random.randn(N,n)
+    if kappa is None:     
+        A = np.random.randn(N,n)
+        
+        # standardize
+        A = A - A.mean(axis=0)
+        A = (1/A.std(axis=0)) * A
+        
+        assert max(abs(A.mean(axis=0))) <= 1e-5
+        assert max(abs(A.std(axis=0) - 1)) <= 1e-5
     
-    # standardize
-    A = A - A.mean(axis=0)
-    A = (1/A.std(axis=0)) * A
+    else:
+        assert kappa > 1
+        A = A_target_condition(N, n, smax = kappa)
+        
+    # A = np.random.randn(N,n)
     
-    assert max(abs(A.mean(axis=0))) <= 1e-5
-    assert max(abs(A.std(axis=0) - 1)) <= 1e-5
+    # # standardize
+    # A = A - A.mean(axis=0)
+    # A = (1/A.std(axis=0)) * A
+    
+    # assert max(abs(A.mean(axis=0))) <= 1e-5
+    # assert max(abs(A.std(axis=0) - 1)) <= 1e-5
     
     # create true solution
     x = np.random.randn(k) 

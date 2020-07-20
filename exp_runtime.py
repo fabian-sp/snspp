@@ -14,13 +14,13 @@ from ssnsp.solver.opt_problem import problem
 
 #%% generate data
 
-N = 20000
-n = 100
-k = 10
-l1 = .01
+N = 2000
+n = 5000
+k = 100
+l1 = .5
 
-#xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = True)
-xsol, A, b, f, phi = logreg_test(N, n, k, l1)
+xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = 1e3)
+#xsol, A, b, f, phi = logreg_test(N, n, k, l1, kappa = None)
 
 
 #%% solve with SAGA
@@ -32,27 +32,30 @@ Q = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
 Q.solve(solver = 'saga_fast')
 
+Q.plot_path()
+
+#%% solve with SSNSP
+
+params = {'max_iter' : 15, 'sample_size': 600, 'alpha_C' : 10., 'n_epochs': 4}
+
+P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
+
+P.solve(solver = 'ssnsp')
+
+P.plot_path()
 
 #%% plotting
+fig,ax = plt.subplots()
 
 x = Q.info['runtime'].cumsum()
 y = Q.info['objective']
 
-plt.plot(x,y, '-o')
-
-#%% solve with SSNSP
-
-params = {'max_iter' : 5, 'sample_size': 2000, 'alpha_C' : 1., 'n_epochs': 4}
-
-P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
-
-P.solve(solver = 'warm_ssnsp')
-
+ax.plot(x,y, '-o')
 
 x = P.info['runtime'].cumsum()
 y = P.info['objective']
 
-plt.plot(x,y, '-o')
+ax.plot(x,y, '-o')
 
-#%%
-
+ax.set_xlabel('Runtime')
+ax.set_ylabel('Objective')
