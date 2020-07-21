@@ -35,11 +35,11 @@ Q.plot_path()
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 15, 'sample_size': 600, 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 15, 'sample_size': 2000, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
-P.solve(solver = 'warm_ssnsp')
+P.solve(solver = 'ssnsp')
 
 P.plot_path()
 

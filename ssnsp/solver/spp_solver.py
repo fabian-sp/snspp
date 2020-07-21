@@ -226,7 +226,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         params['sample_style'] = 'constant'
     
     if params['sample_style'] == 'increasing':     
-        batch_size = batch_size_constructor(np.arange(params['max_iter']), a = params['sample_size']/4, b = params['sample_size'], M = params['max_iter'])
+        batch_size = batch_size_constructor(np.arange(params['max_iter']), a = params['sample_size']/4, \
+                                            b = params['sample_size'], M = params['max_iter'])
     else:
         batch_size = params['sample_size'] * np.ones(params['max_iter'])
     
@@ -268,7 +269,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         
         # sample and update
         S = sampler(f.N, batch_size[iter_t])
-        #params['sample_size']
         
         x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, gradient_table = G, \
                                              newton_params = None, verbose = False)

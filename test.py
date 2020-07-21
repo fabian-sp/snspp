@@ -22,11 +22,11 @@ l1 = .01
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = 1000)
 
-xsol, A, b, f, phi = logreg_test(N, n, k, l1)
+xsol, A, b, f, phi = logreg_test(N, n, k, l1, kappa = 100)
 
 
 #%% solve with SPP
-params = {'max_iter' : 30, 'sample_size': 2000, 'sample_style': 'increasing', 'alpha_C' : 1.}
+params = {'max_iter' : 30, 'sample_size': 4000, 'sample_style': 'increasing', 'alpha_C' : 10.}
 
 params = {'n_epochs' : 10}
 

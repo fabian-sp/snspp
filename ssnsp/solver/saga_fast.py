@@ -103,14 +103,15 @@ def saga_loop(f, phi, x_t, A, dims, N, tol, gamma, gradients, n_epochs):
     step_sizes = List()
     
     eta = 1e10
+    x_old = x_t
     g_sum = (1/N)*gradients.sum(axis = 0)
+    
     
     for iter_t in np.arange(N * n_epochs):
         
         if eta <= tol:
             break
-        
-        x_old = x_t
+             
         # sample
         j = np.random.randint(low = 0, high = N, size = 1)
         
@@ -130,9 +131,10 @@ def saga_loop(f, phi, x_t, A, dims, N, tol, gamma, gradients, n_epochs):
         x_t = phi.prox(w_t, gamma)
         
         # stop criterion
-        if iter_t > 10:
+        if iter_t % N == N-1:
             eta = stop_scikit_saga(x_t, x_old)
-        
+            x_old = x_t
+            
         # store everything (at end of each epoch)
         if iter_t % N == N-1:
             x_hist.append(x_t)
