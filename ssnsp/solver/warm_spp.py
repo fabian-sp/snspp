@@ -19,6 +19,8 @@ def warm_spp(f, phi, x0, tol = 1e-4, params = dict(), verbose = False, measure =
     x_t_saga, x_mean_saga, info_saga = saga_fast(f, phi, x0, tol, params, verbose, measure)
     
     ###### PHASE 2: SPP ########
+    # sparsify
+    x_t_saga[abs(x_t_saga)  <= .5] = 0
     
     xi_0 = compute_full_xi(f, x_t_saga)
     info['xi_0'] = xi_0.copy()

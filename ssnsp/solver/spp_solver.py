@@ -186,6 +186,11 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
     
     return new_x, xi, info
 
+def batch_size_constructor(t, a, b, M):
+    c1 = np.log(b/a)/M
+    c2 = np.log(a)
+    
+    return np.exp(c1*t+c2).astype(int)
 
 def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
     
@@ -213,9 +218,18 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     if 'max_iter' not in params.keys():    
         params['max_iter'] = 70
-        
+    
     if 'sample_size' not in params.keys():    
-        params['sample_size'] = min(f.N, max(15, int(f.N)/2))
+        params['sample_size'] = max( int(f.N/4), 1)
+    
+    if 'sample_style' not in params.keys():    
+        params['sample_style'] = 'constant'
+    
+    if params['sample_style'] == 'increasing':     
+        batch_size = batch_size_constructor(np.arange(params['max_iter']), a = params['sample_size']/4, b = params['sample_size'], M = params['max_iter'])
+    else:
+        batch_size = params['sample_size'] * np.ones(params['max_iter'])
+    
     
     # initialize variables + containers
     if xi is None:
@@ -253,7 +267,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         x_old = x_t.copy()
         
         # sample and update
-        S = sampler(f.N, params['sample_size'])
+        S = sampler(f.N, batch_size[iter_t])
+        #params['sample_size']
         
         x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, gradient_table = G, \
                                              newton_params = None, verbose = False)

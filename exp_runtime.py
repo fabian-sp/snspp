@@ -17,7 +17,7 @@ from ssnsp.solver.opt_problem import problem
 N = 2000
 n = 5000
 k = 100
-l1 = .5
+l1 = 1
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = 1e3)
 #xsol, A, b, f, phi = logreg_test(N, n, k, l1, kappa = None)
@@ -25,8 +25,7 @@ xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = 1e3)
 
 #%% solve with SAGA
 
-
-params = {'n_epochs' : 70}
+params = {'n_epochs' : 120}
 
 Q = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -36,11 +35,11 @@ Q.plot_path()
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 15, 'sample_size': 600, 'alpha_C' : 10., 'n_epochs': 4}
+params = {'max_iter' : 15, 'sample_size': 600, 'alpha_C' : 10., 'n_epochs': 5}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
-P.solve(solver = 'ssnsp')
+P.solve(solver = 'warm_ssnsp')
 
 P.plot_path()
 
