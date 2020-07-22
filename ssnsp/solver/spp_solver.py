@@ -227,7 +227,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     if params['sample_style'] == 'increasing':     
         batch_size = batch_size_constructor(np.arange(params['max_iter']), a = params['sample_size']/4, \
-                                            b = params['sample_size'], M = params['max_iter'])
+                                            b = params['sample_size'], M = params['max_iter']-1)
     else:
         batch_size = params['sample_size'] * np.ones(params['max_iter'])
     
