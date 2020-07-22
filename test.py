@@ -15,18 +15,18 @@ from ssnsp.solver.opt_problem import problem
 
 #%% generate data
 
-N = 8000
-n = 10000
+N = 1000
+n = 2000
 k = 20
 l1 = .1
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = 1000)
 
-#xsol, A, b, f, phi = logreg_test(N, n, k, l1, kappa = 100)
+xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .1)
 
 
 #%% solve with SPP
-params = {'max_iter' : 30, 'sample_size': 4000, 'sample_style': 'increasing', 'alpha_C' : 10.}
+params = {'max_iter' : 10, 'sample_size': 1000, 'sample_style': 'increasing', 'alpha_C' : 10.}
 
 params = {'n_epochs' : 10}
 

@@ -76,8 +76,12 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, kappa = None)
 
     return x, A, b, f, phi
 
-def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, kappa = None):
-    
+def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
+    """
+    creates A, b for logistic regression
+    b \in{-1,1}
+    noise = probability of flipping b after generation --> the closer noise is to 1, the nosier the problem becomes
+    """
     #np.random.seed(1234)
     
     if kappa is None:     
@@ -94,15 +98,6 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, kappa = None):
         assert kappa > 1
         A = A_target_condition(N, n, smax = kappa)
         
-    # A = np.random.randn(N,n)
-    
-    # # standardize
-    # A = A - A.mean(axis=0)
-    # A = (1/A.std(axis=0)) * A
-    
-    # assert max(abs(A.mean(axis=0))) <= 1e-5
-    # assert max(abs(A.std(axis=0) - 1)) <= 1e-5
-    
     # create true solution
     x = np.random.randn(k) 
     x = np.concatenate((x, np.zeros(n-k)))
@@ -111,8 +106,16 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, kappa = None):
     h = np.exp(A@x)
     odds = h/(1+h)
     
-    #b = (odds >= .5)*2 -1
-    b = np.random.binomial(1,p=odds)*2 - 1
+    b = (odds >= .5)*2 -1
+    #b = np.random.binomial(1,p=odds)*2 - 1
+    
+    if noise > 0:
+        assert noise <= 1
+        f = np.random.binomial(n=1, p = noise, size = N)
+        f = (1 - f * 2)
+        
+        # flip signs (f in {-1,1})
+        b = b * f
     
     
     A = A.astype('float64')
