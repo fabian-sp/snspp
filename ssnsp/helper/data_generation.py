@@ -4,9 +4,14 @@
 
 import numpy as np
 
-from .lasso import Norm1, lsq, block_lsq, logistic_loss
 from scipy.stats import ortho_group
+from sklearn.datasets import load_digits
 
+from .lasso import Norm1, lsq, block_lsq, logistic_loss
+
+############################################################################################
+### Synthetic data
+############################################################################################
 
 def A_target_condition(N, n, smax = 100, smin = 1):
     
@@ -118,3 +123,16 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, kappa = None):
     f = logistic_loss(A,b)
     
     return x, A, b, f, phi
+
+############################################################################################
+### Actual data
+############################################################################################
+
+def get_mnist_dataset():
+    
+    digits = load_digits()
+    A = digits.data.astype('float64')
+    b = (digits.target >= 5)
+    b = (b*2-1).astype('float64')
+    
+    return A,b

@@ -15,14 +15,14 @@ from ssnsp.solver.opt_problem import problem
 
 #%% generate data
 
-N = 10000
-n = 100
-k = 10
-l1 = .01
+N = 8000
+n = 10000
+k = 20
+l1 = .1
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = 1000)
 
-xsol, A, b, f, phi = logreg_test(N, n, k, l1, kappa = 100)
+#xsol, A, b, f, phi = logreg_test(N, n, k, l1, kappa = 100)
 
 
 #%% solve with SPP
@@ -50,7 +50,13 @@ sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-6, max_iter = 10000, se
 
 sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-5, solver = 'saga', max_iter = 700000, verbose = 1)
 
+
+start = time.time()
 sk.fit(A,b)
+end = time.time()
+
+print(f"Computing time: {end-start} sec")
+
 x_sk = sk.coef_.copy().squeeze()
 
 #f.eval(x_sk) + phi.eval(x_sk)

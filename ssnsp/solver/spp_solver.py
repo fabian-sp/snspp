@@ -220,7 +220,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         params['max_iter'] = 70
     
     if 'sample_size' not in params.keys():    
-        params['sample_size'] = max( int(f.N/4), 1)
+        params['sample_size'] = max(int(f.N/4), 1)
     
     if 'sample_style' not in params.keys():    
         params['sample_style'] = 'constant'
