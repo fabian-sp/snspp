@@ -4,8 +4,14 @@
 
 import numpy as np
 
-from scipy.stats import ortho_group
-from sklearn.datasets import load_digits
+
+from sklearn.datasets import fetch_openml
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.utils import check_random_state
+
+#from sklearn.datasets import load_digits
+#from scipy.stats import ortho_group
 
 from .lasso import Norm1, lsq, block_lsq, logistic_loss
 
@@ -131,11 +137,35 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
 ### Actual data
 ############################################################################################
 
-def get_mnist_dataset():
+def get_mnist(lambda1 = 0.02, train_size = .8, scale = True):
+
+    # Load data from https://www.openml.org/d/554
+    X, y = fetch_openml('mnist_784', version=1, return_X_y=True)
     
-    digits = load_digits()
-    A = digits.data.astype('float64')
-    b = (digits.target >= 5)
-    b = (b*2-1).astype('float64')
+    random_state = check_random_state(0)
+    permutation = random_state.permutation(X.shape[0])
+    X = X[permutation].astype('float64')
+    y = y[permutation].astype('float64')
+    #X = X.reshape((X.shape[0], -1))
     
-    return A,b
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size)
+    
+    if scale:
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.transform(X_test)
+    
+    phi = Norm1(lambda1) 
+    f = logistic_loss(X_test,y_test)
+
+    return f, phi, X_train, y_train, X_test, y_test
+
+
+# def get_mnist_dataset():
+    
+#     digits = load_digits()
+#     A = digits.data.astype('float64')
+#     b = (digits.target >= 5)
+#     b = (b*2-1).astype('float64')
+    
+#     return A,b

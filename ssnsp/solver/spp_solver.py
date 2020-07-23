@@ -252,10 +252,10 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     reduce_variance = False
     G = None
     
-    hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s"
-    out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
+    hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s\t%10s"
+    out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
     if verbose:
-        print(hdr_fmt % ("iter", "obj (x_t)", "obj(x_mean)", "alpha_t", "eta"))
+        print(hdr_fmt % ("iter", "obj (x_t)", "obj(x_mean)", "alpha_t", "batch size", "eta"))
     
     for iter_t in np.arange(params['max_iter']):
         
@@ -303,12 +303,14 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
             obj2.append(f.eval(x_mean.astype('float64')) + phi.eval(x_mean))
           
         if verbose and measure:
-            print(out_fmt % (iter_t, obj[-1], obj2[-1] , alpha_t, eta))
+            print(out_fmt % (iter_t, obj[-1], obj2[-1] , alpha_t, len(S), eta))
             
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
         if iter_t >= 0:
             alpha_t = C/(iter_t + 2)
-        
+        else:
+            alpha_t = C
+            
     if eta > tol:
         status = 'max iterations reached'    
         

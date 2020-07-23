@@ -14,7 +14,7 @@ from ssnsp.solver.opt_problem import problem
 
 #%% generate data
 
-N = 4000
+N = 8000
 n = 5000
 k = 100
 l1 = .01
@@ -40,7 +40,7 @@ Q.plot_path()
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 8, 'sample_size': f.N, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 8, 'sample_size': f.N, 'sample_style': 'increasing', 'alpha_C' : 20., 'n_epochs': 5}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -56,7 +56,7 @@ P1 = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True
 
 P1.solve(solver = 'ssnsp')
 
-P1.plot_path()
+#P1.plot_path()
 
 #%%
 all_x = pd.DataFrame(np.vstack((xsol, Q.x, P.x, P1.x)).T, columns = ['true', 'saga', 'spp', 'spp_full'])
