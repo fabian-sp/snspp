@@ -10,9 +10,18 @@ from ssnsp.helper.data_generation import get_mnist
 f, phi, X_train, y_train, X_test, y_test = get_mnist()
 
 
+def predict(A,x):
+    
+    h = np.exp(A@x)
+    odds = h/(1+h)
+    
+    y = (odds >= .5)*2 -1
+    
+    return y
+
 #%% solve with SAGA
 
-params = {'n_epochs' : 50}
+params = {'n_epochs' : 70}
 
 Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -20,14 +29,15 @@ Q.solve(solver = 'saga_fast')
 
 Q.plot_path()
 
+predict(X_train, Q.x) == y_train
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 20, 'sample_size': f.N/4, 'sample_style': 'increasing', 'alpha_C' : .05, 'n_epochs': 5}
+params = {'max_iter' : 20, 'sample_size': f.N/2, 'sample_style': 'increasing', 'alpha_C' : 1, 'n_epochs': 5}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
-P.solve(solver = 'ssnsp')
+P.solve(solver = 'warm_ssnsp')
 
 P.plot_path()
 

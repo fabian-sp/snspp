@@ -61,7 +61,13 @@ class problem:
             ax.set_ylabel('coefficient')
         else:
             fig, ax = plt.subplots(1,1)
-            ax.plot(self.info['iterates'])
+            
+            coeffs = self.info['iterates'][-1,:]
+            c = plt.cm.Blues(abs(coeffs)/max(abs(coeffs)))
+            
+            for j in range(len(coeffs)):
+                ax.plot(self.info['iterates'][:,j], color = c[j])
+            
             ax.set_xlabel('iteration number')
             ax.set_ylabel('coefficient')
         return

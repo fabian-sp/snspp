@@ -140,7 +140,17 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
 def get_mnist(lambda1 = 0.02, train_size = .8, scale = True):
 
     # Load data from https://www.openml.org/d/554
-    X, y = fetch_openml('mnist_784', version=1, return_X_y=True)
+    X, y0 = fetch_openml('mnist_784', version=1, return_X_y=True)
+    y0 = y0.astype('float64')
+    y = y0.copy()
+    
+    set1 = [0,3,6,8,9]
+    set2 = [1,2,4,5,7]
+    
+    y[np.isin(y0, set1)] = 1
+    y[np.isin(y0, set2)] = -1
+    
+    assert np.all(np.isin(y,[-1,1]))
     
     random_state = check_random_state(0)
     permutation = random_state.permutation(X.shape[0])
