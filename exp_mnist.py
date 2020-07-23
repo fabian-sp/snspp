@@ -21,7 +21,7 @@ def predict(A,x):
 
 #%% solve with SAGA
 
-params = {'n_epochs' : 70}
+params = {'n_epochs' : 40}
 
 Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -29,22 +29,22 @@ Q.solve(solver = 'saga_fast')
 
 Q.plot_path()
 
-predict(X_train, Q.x) == y_train
+#predict(X_train, Q.x) == y_train
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 20, 'sample_size': f.N/2, 'sample_style': 'increasing', 'alpha_C' : 1, 'n_epochs': 5}
+params = {'max_iter' : 10, 'sample_size': f.N/4, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
-P.solve(solver = 'warm_ssnsp')
+P.solve(solver = 'ssnsp')
 
 P.plot_path()
 
 
 #%% solve with FULL SSNSP
 
-params = {'max_iter' : 6, 'sample_size': .7*f.N, 'sample_style': 'constant', 'alpha_C' : 1., 'n_epochs': 5}
+params = {'max_iter' : 10, 'sample_size': .5*f.N, 'sample_style': 'constant', 'alpha_C' : 1., 'n_epochs': 5}
 
 P1 = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 

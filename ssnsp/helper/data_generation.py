@@ -166,7 +166,7 @@ def get_mnist(lambda1 = 0.02, train_size = .8, scale = True):
         X_test = scaler.transform(X_test)
     
     phi = Norm1(lambda1) 
-    f = logistic_loss(X_test,y_test)
+    f = logistic_loss(X_train, y_train)
 
     return f, phi, X_train, y_train, X_test, y_test
 
