@@ -52,9 +52,12 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
     if 'n_epochs' not in params.keys():    
         params['n_epochs'] = 5
     
+    if 'reg' not in params.keys():    
+        params['reg'] = 0
+    
     # Main loop
     start = time.time()
-    x_t, x_hist, step_sizes, eta  = saga_loop(f, phi, x_t, A, dims, N, tol, gamma, gradients, params['n_epochs'])
+    x_t, x_hist, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['reg'])
     end = time.time()
     
     if verbose:
@@ -96,7 +99,7 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
 
 
 @njit()
-def saga_loop(f, phi, x_t, A, dims, N, tol, gamma, gradients, n_epochs):
+def saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, reg = 0):
     
     # initialize for diagnostics
     x_hist = List()
@@ -121,7 +124,7 @@ def saga_loop(f, phi, x_t, A, dims, N, tol, gamma, gradients, n_epochs):
             
         g_j = gradients[j,:].reshape(-1)
         old_g = (-1) * g_j + g_sum
-        w_t = x_t - gamma * (g + old_g)
+        w_t = (1-gamma*reg) * x_t - gamma * (g + old_g)
         
         # store new gradient
         gradients[j,:] = g

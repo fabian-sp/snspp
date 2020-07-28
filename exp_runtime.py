@@ -30,7 +30,7 @@ x_sk = sk.coef_.copy().squeeze()
 
 #%% solve with SAGA
 
-params = {'n_epochs' : 150}
+params = {'n_epochs' : 150, 'reg': 1e-4}
 
 Q = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
