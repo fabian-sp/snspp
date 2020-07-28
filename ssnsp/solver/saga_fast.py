@@ -113,11 +113,11 @@ def saga_loop(f, phi, x_t, A, dims, N, tol, gamma, gradients, n_epochs):
             break
              
         # sample, result is array --> take first element
-        j = np.random.randint(low = 0, high = N, size = 1)[0]
+        j = np.random.randint(low = 0, high = N, size = 1)
         
         # compute the gradient
         A_j = A[j,:]
-        g = A_j * f.g(A_j@x_t, j)
+        g = A_j.T @ f.g(A_j @ x_t, j)
             
         g_j = gradients[j,:].reshape(-1)
         old_g = (-1) * g_j + g_sum

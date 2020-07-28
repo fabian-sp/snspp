@@ -43,7 +43,7 @@ f.eval(x_sk) + phi.eval(x_sk)
 
 #%% solve with SAGA
 
-params = {'n_epochs' : 40}
+params = {'n_epochs' : 80}
 
 Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -55,7 +55,7 @@ Q.plot_path()
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 10, 'sample_size': f.N/4, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 10, 'sample_size': f.N/6, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -79,10 +79,9 @@ all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x)).T, columns = ['scikit', 'spp', 
 
 
 fig,ax = plt.subplots()
-
 Q.plot_objective(ax = ax)
 P.plot_objective(ax = ax)
-P1.plot_objective(ax = ax, label = "ssnsp_constant")
+#P1.plot_objective(ax = ax, label = "ssnsp_constant")
 
 fig,ax = plt.subplots(1,2)
 Q.plot_path(ax = ax[0])
