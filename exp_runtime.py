@@ -14,27 +14,27 @@ from ssnsp.solver.opt_problem import problem
 
 #%% generate data
 
-N = 8000
+N = 2000
 n = 5000
 k = 100
-l1 = .01
+l1 = .1
 
-#xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = 1e3)
-xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .05)
+xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = 1e3)
+#xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .05)
 
-#sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-9, max_iter = 20000, selection = 'cyclic')
-sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-5, solver = 'saga', max_iter = 700000, verbose = 1)
+sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-9, max_iter = 20000, selection = 'cyclic')
+#sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-5, solver = 'saga', max_iter = 700000, verbose = 1)
 
 sk.fit(A,b)
 x_sk = sk.coef_.copy().squeeze()
 
 #%% solve with SAGA
 
-params = {'n_epochs' : 120}
+params = {'n_epochs' : 150}
 
 Q = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
-Q.solve(solver = 'saga_fast')
+Q.solve(solver = 'saga')
 
 Q.plot_path()
 
@@ -75,10 +75,10 @@ y = P.info['objective']
 
 ax.plot(x,y, '-o', label = 'SSNSP')
 
-x = P1.info['runtime'].cumsum()
-y = P1.info['objective']
+#x = P1.info['runtime'].cumsum()
+#y = P1.info['objective']
 
-ax.plot(x,y, '-o', label = 'Full SSNSP')
+#ax.plot(x,y, '-o', label = 'Full SSNSP')
 
 
 #ax.hlines(f.eval(x_sk) + phi.eval(x_sk), 0, ax.get_xlim()[1], ls ='--')
