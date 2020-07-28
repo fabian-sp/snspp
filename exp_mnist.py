@@ -55,7 +55,7 @@ Q.plot_path()
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 10, 'sample_size': f.N/6, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 15, 'sample_size': f.N/8, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 

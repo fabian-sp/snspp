@@ -74,10 +74,12 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
     # dimension of the problem induced by S
     M = m[S].sum()
     
-    # IMPORTANT: subA is ordered, i.e. it is in the order as np.arange(N) and NOT of S --> breaks if S not sorted
-    # subA = A[np.isin(dims, S), :]
-    # alternatively (safer but slower): 
-    subA = np.vstack([A[dims == i,:] for i in S])
+    # IMPORTANT: subA is ordered, i.e. it is in the order as np.arange(N) and NOT of S --> breaks if S not sorted 
+    # if m_i = 1 for all i, we cann speed things up
+    if m.max() == 1:
+        subA = A[S,:]
+    else:
+        subA = np.vstack([A[dims == i,:] for i in S])
     
     assert subA.shape[0] == M
     assert np.all(list(xi.keys()) == np.arange(N)), "xi has wrong keys"
@@ -115,9 +117,13 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         else:
             tmp2 = (alpha/sample_size) * subA @ U @ subA.T
         
-        tmp = [f.Hstar(xi[i], i) for i in S]
+        if m.max() == 1:
+            tmp = np.diag(np.hstack([f.Hstar(xi[i], i) for i in S]))
+        else:
+            tmp = block_diag([f.Hstar(xi[i], i) for i in S])
+        
         eps_reg = 1e-4
-        W = block_diag(tmp) + tmp2 + eps_reg * np.eye(tmp2.shape[0])
+        W = tmp + tmp2 + eps_reg * np.eye(tmp2.shape[0])
         
     # step2: solve Newton system
         if verbose:
@@ -136,13 +142,13 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         beta = 1.
         U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA)
         
-        counter = 0
+        #counter = 0
         while U_new > U_old + newton_params['mu'] * beta * (d @ -rhs):
             #print(f"U_new: {U_new} vs . { U_old + newton_params['mu'] * beta * (d @ -rhs)} with beta being {beta}")
             beta *= newton_params['rho']
             U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA)
             # reset if getting stuck
-            counter +=1
+            #counter +=1
             # if counter >= 15:
             #     print("Semismooth Newton: reset step size and ignore Armijo")
             #     beta = .8
@@ -161,21 +167,19 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
     if not converged:
         print(f"WARNING: reached maximal iterations in semismooth Newton -- accuracy {residual[-1]}")
     
-    # update primal iterate
     if gradient_table is not None:
         #xi_stack_old = np.hstack([xi_old[i] for i in S])
         #xi_full_old = np.hstack([xi_old[i] for i in range(f.N)])
         #correct =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)
         
-        tmp_g = np.vstack([gradient_table[i,:] for i in S])
-        correct = (alpha/sample_size) * tmp_g.sum(axis = 0) - (alpha/f.N) * gradient_table.sum(axis = 0)
+        #tmp_g = np.vstack([gradient_table[i,:] for i in S])
+        #correct = (alpha/sample_size) * tmp_g.sum(axis = 0) - (alpha/f.N) * gradient_table.sum(axis = 0)
         #print(np.linalg.norm(correct))
-        correct = 0.
-        
+        correct = 0.      
     else:
         correct = 0.
     
-    
+    # update primal iterate
     z = x - (alpha/sample_size) * (subA.T @ xi_stack) + correct
     new_x = phi.prox(z, alpha)
     
@@ -278,8 +282,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         eta = stop_scikit_saga(x_t, x_old)
         
         # variance reduction
-        full_m = int(f.N/params['sample_size'])
-        if reduce_variance and iter_t % full_m == 0 and iter_t >= 30:
+        if reduce_variance:
             G = compute_gradient_table(f, x_t)
             #print("Norm of full gradient", np.linalg.norm(1/f.N * G.sum(axis=0)))
         
