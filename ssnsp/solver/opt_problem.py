@@ -11,6 +11,10 @@ from .saga import saga
 from .warm_spp import warm_spp
 from .saga_fast import saga_fast
 
+sns.set()
+sns.set_context("paper")
+
+
 class problem:
     
     def __init__(self, f, phi, x0 = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
@@ -35,7 +39,7 @@ class problem:
         if solver == 'ssnsp':
             self.x, self.xavg, self.info = stochastic_prox_point(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
                          verbose = self.verbose, measure = self.measure)
-        elif solver == 'saga_slow':
+        elif solver == 'saga_pure':
             self.x, self.xavg, self.info =  saga(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
                                                  verbose = self.verbose, measure = self.measure)
         elif solver == 'saga':
@@ -54,22 +58,23 @@ class problem:
         
         if ax is None:
             fig, ax = plt.subplots()
-        
+            
         coeffs = self.info['iterates'][-1,:]
         c = plt.cm.Blues(abs(coeffs)/max(abs(coeffs)))
         
         for j in range(len(coeffs)):
             if runtime:
                 ax.plot(self.info['runtime'].cumsum(), self.info['iterates'][:,j], color = c[j])
-                ax.set_xlabel('cumulative runtime')
+                ax.set_xlabel('Cumulative runtime')
             else:
                 ax.plot(self.info['iterates'][:,j], color = c[j])
-                ax.set_xlabel('iteration/epoch number')
+                ax.set_xlabel('Iteration/ epoch number')
         
-        ax.set_ylabel('coefficient')
+        ax.set_ylabel('Coefficient')
+        ax.set_title('Coefficient history for solver - ' + self.solver)
         return
     
-    def plot_objective(self, ax = None, runtime = True):
+    def plot_objective(self, ax = None, runtime = True, label = None):
         if ax is None:
             fig, ax = plt.subplots()
         
@@ -81,7 +86,9 @@ class problem:
         y = self.info['objective']
         #y1 = self.info['objective_mean']
         
-        ax.plot(x,y, '-o', label = self.solver)
+        if label is None:
+            label = self.solver
+        ax.plot(x,y, '-o', label = label)
         ax.legend()
         #ax.set_yscale('log')
         

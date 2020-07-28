@@ -14,6 +14,7 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
     fast implementation of the SAGA algorithm for problems of the form 
     min 1/N * sum f_i(A_i x) + phi(x)
     
+    works only if m_i = 1 forall i, i.e. one sample gives one summand!
     speedup achieved by numba, hence classes f and phi need to be jitted beforehand. If not possible use saga.py instead.
     """
     # initialize all variables
@@ -94,7 +95,6 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
     return x_t, x_mean, info
 
 
-#%%
 @njit()
 def saga_loop(f, phi, x_t, A, dims, N, tol, gamma, gradients, n_epochs):
     
@@ -112,12 +112,12 @@ def saga_loop(f, phi, x_t, A, dims, N, tol, gamma, gradients, n_epochs):
         if eta <= tol:
             break
              
-        # sample
-        j = np.random.randint(low = 0, high = N, size = 1)
+        # sample, result is array --> take first element
+        j = np.random.randint(low = 0, high = N, size = 1)[0]
         
         # compute the gradient
-        A_j = A[dims == j,:]
-        g = A_j.T @ f.g(A_j@x_t, j).reshape(-1)
+        A_j = A[j,:]
+        g = A_j * f.g(A_j@x_t, j)
             
         g_j = gradients[j,:].reshape(-1)
         old_g = (-1) * g_j + g_sum
