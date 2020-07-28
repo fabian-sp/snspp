@@ -28,16 +28,17 @@ class problem:
     
     def solve(self, solver = 'ssnsp'):
         
+        self.solver = solver
         if self.x0 is None:
             self.x0 = np.zeros(self.n)
         
         if solver == 'ssnsp':
             self.x, self.xavg, self.info = stochastic_prox_point(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
                          verbose = self.verbose, measure = self.measure)
-        elif solver == 'saga':
+        elif solver == 'saga_slow':
             self.x, self.xavg, self.info =  saga(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
                                                  verbose = self.verbose, measure = self.measure)
-        elif solver == 'saga_fast':
+        elif solver == 'saga':
             self.x, self.xavg, self.info =  saga_fast(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
                                                  verbose = self.verbose, measure = self.measure)        
         elif solver == 'warm_ssnsp':
@@ -48,35 +49,41 @@ class problem:
             
         return
     
-    def plot_path(self):
+    def plot_path(self, ax = None, runtime = True):
+        # sns.heatmap(self.info['iterates'], cmap = 'coolwarm', vmin = -1, vmax = 1, ax = ax)
         
-        if self.n <= 100:
-            fig, axs = plt.subplots(1,2)
-            ax = axs[0]
-            sns.heatmap(self.info['iterates'], cmap = 'coolwarm', vmin = -1, vmax = 1, ax = ax)
-            
-            ax = axs[1]
-            ax.plot(self.info['iterates'])
-            ax.set_xlabel('iteration number')
-            ax.set_ylabel('coefficient')
-        else:
-            fig, ax = plt.subplots(1,1)
-            
-            coeffs = self.info['iterates'][-1,:]
-            c = plt.cm.Blues(abs(coeffs)/max(abs(coeffs)))
-            
-            for j in range(len(coeffs)):
+        if ax is None:
+            fig, ax = plt.subplots()
+        
+        coeffs = self.info['iterates'][-1,:]
+        c = plt.cm.Blues(abs(coeffs)/max(abs(coeffs)))
+        
+        for j in range(len(coeffs)):
+            if runtime:
+                ax.plot(self.info['runtime'].cumsum(), self.info['iterates'][:,j], color = c[j])
+                ax.set_xlabel('cumulative runtime')
+            else:
                 ax.plot(self.info['iterates'][:,j], color = c[j])
-            
-            ax.set_xlabel('iteration number')
-            ax.set_ylabel('coefficient')
+                ax.set_xlabel('iteration/epoch number')
+        
+        ax.set_ylabel('coefficient')
         return
     
-    def plot_objective(self):
-        fig, ax = plt.subplots()
-        ax.plot(self.info['objective'])
-        ax.plot(self.info['objective_mean'])
-        ax.legend(['obj(x_t)', 'obj(x_star)'])
+    def plot_objective(self, ax = None, runtime = True):
+        if ax is None:
+            fig, ax = plt.subplots()
+        
+        if runtime:
+            x = self.info['runtime'].cumsum()
+        else:
+            x = np.arange(len(self.info['objective']))
+        
+        y = self.info['objective']
+        #y1 = self.info['objective_mean']
+        
+        ax.plot(x,y, '-o', label = self.solver)
+        ax.legend()
+        #ax.set_yscale('log')
         
         return
     
