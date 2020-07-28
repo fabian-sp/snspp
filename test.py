@@ -16,11 +16,11 @@ from ssnsp.solver.opt_problem import problem
 #%% generate data
 
 N = 1000
-n = 2000
+n = 100
 k = 20
 l1 = .1
 
-xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = 1000)
+xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = None)
 
 xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .1)
 
@@ -103,10 +103,10 @@ sns.heatmap(xis, cmap = 'coolwarm', vmin = -1, vmax = 1)
 
 sub_rsd = P.info['ssn_info']
 
-fig, axs = plt.subplots(5,10)
+fig, axs = plt.subplots(5,5)
 fig.legend(['residual', 'step_size', 'direction'])
 
-for j in np.arange(50):
+for j in np.arange(25):
     ax = axs.ravel()[j]
     ax.plot(sub_rsd[j]['residual'], 'blue')
     ax2 = ax.twinx()

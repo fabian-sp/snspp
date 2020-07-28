@@ -33,9 +33,12 @@ def stop_mean_objective(obj, cutoff = True):
         return abs(objs[-1] - np.mean(objs))
     
 def stop_optimal(x, f, phi):
-    
+    """
+    Optimality residual using second prox theorem
+    Computationally expensive if N is large!!
+    """
     gradf = compute_full_gradient(f,x) 
-    return np.linalg.norm(x - phi.prox( x- gradf, 1.))
+    return np.linalg.norm(x - phi.prox( x - gradf, 1.))
 
 
 ############################################################################################
@@ -59,8 +62,13 @@ def compute_full_gradient(f,x):
     computes the full gradient 1/N * sum (A_i.T @ grad f_i(A_ix))
     NOTE: not storage optimized (needs O(N*n) storage)
     """
-    grads = compute_gradient_table(f, x)
-    return (1/f.N)*grads.sum(axis = 0)
+    if f.name == 'logistic':
+        g = logreg_gradient(f, x)
+    else:
+        grads = compute_gradient_table(f, x)
+        g = (1/f.N)*grads.sum(axis = 0)
+        
+    return g
 
 
 def compute_gradient_table(f, x):
@@ -116,6 +124,15 @@ def compute_x_mean(x_hist, step_sizes = None):
         #x_mean = X.mean(axis = 0)
         
     return x_mean
+
+
+def logreg_gradient(f, x):
+    
+    g_i = -1/( 1+ np.exp(f.A @ x) )[:,np.newaxis] * f.A 
+    g = (1/f.N) * g_i.sum(axis=0)
+    
+    return g
+
 
 # FOR TESTING
 #x_hist = [np.random.rand(20) for i in range(10)]

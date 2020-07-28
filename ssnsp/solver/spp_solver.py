@@ -4,7 +4,7 @@ author: Fabian Schaipp
 
 import numpy as np
 from ..helper.utils import block_diag, compute_x_mean, stop_mean_objective, stop_optimal, stop_scikit_saga
-from ..helper.utils import compute_gradient_table
+from ..helper.utils import compute_gradient_table, compute_full_xi
 from scipy.sparse.linalg import cg
 import time
 
@@ -239,7 +239,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     # initialize variables + containers
     if xi is None:
         if f.name == 'logistic':
-            xi = dict(zip(np.arange(f.N), [ -.1 * np.ones(m[i]) for i in np.arange(f.N)]))
+            xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(m[i]) for i in np.arange(f.N)]))
         else:
             xi = dict(zip(np.arange(f.N), [np.zeros(m[i]) for i in np.arange(f.N)]))
     

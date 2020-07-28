@@ -6,6 +6,7 @@ import seaborn as sns
 
 from ssnsp.solver.opt_problem import problem
 from ssnsp.helper.data_generation import get_mnist
+from ssnsp.helper.utils import stop_optimal
 
 from sklearn.linear_model import LogisticRegression
 
@@ -43,7 +44,7 @@ f.eval(x_sk) + phi.eval(x_sk)
 
 #%% solve with SAGA
 
-params = {'n_epochs' : 80}
+params = {'n_epochs' : 100}
 
 Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -55,7 +56,7 @@ Q.plot_path()
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 15, 'sample_size': f.N/8, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 15, 'sample_size': f.N/10, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -64,9 +65,9 @@ P.solve(solver = 'ssnsp')
 P.plot_path()
 
 
-#%% solve with FULL SSNSP
+#%% solve with CONSTANT SSNSP
 
-params = {'max_iter' : 15, 'sample_size': f.N/10, 'sample_style': 'constant', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 50, 'sample_size': 2000, 'sample_style': 'constant', 'alpha_C' : 10., 'n_epochs': 5}
 
 P1 = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -87,18 +88,31 @@ fig,ax = plt.subplots(1,2)
 Q.plot_path(ax = ax[0])
 P.plot_path(ax = ax[1])
             
-# x = Q.info['runtime'].cumsum()
-# y = Q.info['objective']
 
-# ax.plot(x,y, '-o', label = 'SAGA')
 
-# x = P.info['runtime'].cumsum()
-# y = P.info['objective']
+#%%
 
-# ax.plot(x,y, '-o', label = 'SSNSP')
+resQ = list()
 
-# ax.legend()
-# ax.set_xlabel('Runtime')
-# ax.set_ylabel('Objective')
+for j in range(Q.info['iterates'].shape[0]):
+    xj = Q.info['iterates'][j,:]
+    resQ.append(stop_optimal(xj, f, phi))
+    
+resQ = np.hstack(resQ)
 
-#ax.set_yscale('log')
+print("DONE")
+resP = list()
+
+for j in range(P.info['iterates'].shape[0]):
+    xj = P.info['iterates'][j,:]
+    resP.append(stop_optimal(xj, f, phi))
+    
+resP = np.hstack(resP)    
+    
+
+plt.figure()
+plt.plot(Q.info['runtime'].cumsum(), resQ)
+plt.plot(P.info['runtime'].cumsum(), resP)
+
+
+
