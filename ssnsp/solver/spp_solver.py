@@ -93,7 +93,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
     sub_dims = np.repeat(range(sample_size), m[S])
     xi_stack = np.hstack([xi[i] for i in S])
     
-    assert np.all([np.all(xi[S[l]] == xi_stack[sub_dims == l]) for l in range(sample_size)]), "Something went wrong in the sorting/stacking of xi"
+    #assert np.all([np.all(xi[S[l]] == xi_stack[sub_dims == l]) for l in range(sample_size)]), "Something went wrong in the sorting/stacking of xi"
     assert len(xi_stack) == M
     
     sub_iter = 0
@@ -209,8 +209,6 @@ def batch_size_constructor(t, a, b, M):
 
 def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
     
-    #print("Objective at x0:", f.eval(x0)+ phi.eval(x0))
-    
     # initialize all variables
     A = f.A.copy()
     n = len(x0)
@@ -239,6 +237,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     if 'sample_style' not in params.keys():    
         params['sample_style'] = 'constant'
+        
+    if 'newton_params' not in params.keys():
+        params['newton_params'] = get_default_newton_params()
     
     if params['sample_style'] == 'increasing':     
         batch_size = batch_size_constructor(np.arange(params['max_iter']), a = params['sample_size']/4, \
@@ -286,7 +287,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         S = sampler(f.N, batch_size[iter_t])
         
         x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, gradient_table = G, \
-                                             newton_params = None, verbose = False)
+                                             newton_params = params['newton_params'], verbose = False)
         
         #stop criterion
         #eta = stop_optimal(x_t, f, phi)
