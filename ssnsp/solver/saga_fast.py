@@ -17,9 +17,13 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
     works only if m_i = 1 forall i, i.e. one sample gives one summand!
     speedup achieved by numba, hence classes f and phi need to be jitted beforehand. If not possible use saga.py instead.
     """
+    
+    name = 'SAGA'
+    
     # initialize all variables
     n = len(x0)
     m = f.m.copy()
+    assert np.all(f.m==1), "These implementations are restricted to the case m_i = 1, use saga.py if not the case"
     N = len(f.m)
     A = f.A.astype('float64')
     assert n == A.shape[1], "wrong dimensions"
@@ -61,7 +65,7 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
     end = time.time()
     
     if verbose:
-        print(f"SAGA main loop finished after {end-start} sec")
+        print(f"{name} main loop finished after {end-start} sec")
     
     x_hist = np.vstack(x_hist)
     n_iter = x_hist.shape[0]
@@ -89,8 +93,8 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
     else:
         status = 'optimal'
         
-    print(f"SAGA terminated during epoch {n_iter} with tolerance {eta}")
-    print(f"SAGA status: {status}")
+    print(f"{name} terminated during epoch {n_iter} with tolerance {eta}")
+    print(f"{name} status: {status}")
     
     info = {'objective': np.array(obj), 'objective_mean': np.array(obj2), 'iterates': x_hist, 'step_sizes': np.array(step_sizes), \
              'gradient_table': gradients, 'runtime': np.array(runtime)}
@@ -115,7 +119,7 @@ def saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, reg = 0):
         if eta <= tol:
             break
              
-        # sample, result is array
+        # sample, result is ARRAY!
         j = np.random.randint(low = 0, high = N, size = 1)
         
         # compute the gradient, A_j is array of shape (n,1)
@@ -165,7 +169,7 @@ def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
         if eta <= tol:
             break
         
-        # sample, result is array
+        # sample
         S = np.random.randint(low = 0, high = N, size = batch_size)
         S = np.sort(S)
         
