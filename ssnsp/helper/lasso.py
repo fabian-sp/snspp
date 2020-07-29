@@ -203,6 +203,15 @@ class Norm1:
         l = alpha * self.lambda1
         return np.sign(x) * np.maximum( np.abs(x) - l, 0.)
     
+    def adagrad_prox(self, x, L):
+        """
+        calculates prox_{phi}^L (x)
+        L is the matrix Lambda_t (in the notation of Milzarek et al.)
+        """
+        l = self.lambda1/np.diag(L) 
+        
+        return np.sign(x) * np.maximum( np.abs(x) - l, 0.)
+    
     def jacobian_prox(self, x, alpha):
         assert alpha > 0
         l = alpha * self.lambda1

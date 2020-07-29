@@ -90,6 +90,29 @@ def compute_gradient_table(f, x):
     
     return gradients
 
+def compute_batch_gradient(f, x, S):
+    """
+    computes a table of gradients at point x with mini batch S
+    returns: array of shape n
+    """
+    
+    dims = np.repeat(np.arange(f.N),f.m)
+
+    # initialize object for storing all gradients
+    gradients = list()
+    for i in S:
+        if f.m.max() == 1:
+            A_i =  f.A[[i]].copy()
+        else:    
+            A_i =  f.A[dims == i].copy()
+        
+        tmp_i = A_i.T @ f.g( A_i @ x, i)
+        gradients.append(tmp_i)
+        
+    gradients = np.vstack(gradients)
+    g = (1/len(S))*gradients.sum(axis = 0)
+    
+    return g
 
 def compute_x_mean(x_hist, step_sizes = None):
     """
@@ -127,7 +150,9 @@ def compute_x_mean(x_hist, step_sizes = None):
 
 
 def logreg_gradient(f, x):
-    
+    """
+    computes full gradient for fbeing the logistic loss
+    """
     g_i = -1/( 1+ np.exp(f.A @ x) )[:,np.newaxis] * f.A 
     g = (1/f.N) * g_i.sum(axis=0)
     

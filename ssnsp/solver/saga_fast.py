@@ -2,7 +2,7 @@
 author: Fabian Schaipp
 """
 import numpy as np
-from ..helper.utils import compute_gradient_table, stop_optimal, stop_scikit_saga
+from ..helper.utils import compute_gradient_table, compute_batch_gradient, stop_optimal, stop_scikit_saga
 import time
 
 from numba.typed import List
@@ -115,10 +115,10 @@ def saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, reg = 0):
         if eta <= tol:
             break
              
-        # sample, result is array --> take first element
+        # sample, result is array
         j = np.random.randint(low = 0, high = N, size = 1)
         
-        # compute the gradient
+        # compute the gradient, A_j is array of shape (n,1)
         A_j = A[j,:]
         g = A_j.T @ f.g(A_j @ x_t, j)
             
@@ -146,6 +146,51 @@ def saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, reg = 0):
     return x_t, x_hist, step_sizes, eta
 
 
+#%%
+@njit()
+def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
+    
+    # initialize for diagnostics
+    x_hist = List()
+    step_sizes = List()
+    
+    eta = 1e10
+    x_old = x_t
+    
+    n = len(x_t)
+    G = np.zeros(n)
+    
+    for iter_t in np.arange(N * n_epochs):
+        
+        if eta <= tol:
+            break
+        
+        # sample, result is array
+        S = np.random.randint(low = 0, high = N, size = batch_size)
+        S = np.sort(S)
+        
+        # mini-batch gradient step
+        G_t = compute_batch_gradient(f, x_t, S)
+        G += G_t * G_t
+        
+        L_t = (1/gamma) * (delta + np.sqrt(np.diag(G)))
+        w_t = x_t - (1/L_t) * G_t
+        
+        # compute Adagrad prox step
+        x_t = phi.adagrad_prox(w_t, L_t)
+        
+        # stop criterion
+        if iter_t % N == N-1:
+            eta = stop_scikit_saga(x_t, x_old)
+            x_old = x_t
+            
+        # store everything (at end of each epoch)
+        if iter_t % N == N-1:
+            x_hist.append(x_t)
+            step_sizes.append(gamma)
+
+    return x_t, x_hist, step_sizes, eta
 
 
-
+# x_t = np.random.rand(100)
+# adagrad_loop(f, phi, x_t, f.A, f.N, tol = 1e-3, gamma = .1, delta = 0.1, n_epochs = 2, batch_size = 10)
