@@ -9,7 +9,7 @@ from numba.typed import List
 from numba import njit
 
 
-def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = False):
+def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict(), verbose = False, measure = False):
     """
     fast implementation of the SAGA algorithm for problems of the form 
     min 1/N * sum f_i(A_i x) + phi(x)
@@ -18,8 +18,8 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
     speedup achieved by numba, hence classes f and phi need to be jitted beforehand. If not possible use saga.py instead.
     """
     
-    name = 'SAGA'
-    
+    name = solver.upper()
+        
     # initialize all variables
     n = len(x0)
     m = f.m.copy()
@@ -56,17 +56,34 @@ def saga_fast(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure 
     if 'n_epochs' not in params.keys():    
         params['n_epochs'] = 5
     
-    if 'reg' not in params.keys():    
-        params['reg'] = 0
+    #########################################################
+    ## Solver dependent parameters
+    #########################################################
+    if solver == 'saga':
+        if 'reg' not in params.keys():    
+            params['reg'] = 0
     
+    elif solver == 'adagrad':
+        if 'delta' not in params.keys():    
+                params['delta'] = 1e-6
+        if 'batch_size' not in params.keys():    
+            params['batch_size'] = max(int(f.N * 0.05), 1)
+    #########################################################
     # Main loop
+    #########################################################
     start = time.time()
-    x_t, x_hist, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['reg'])
+    
+    if solver == 'saga':
+        x_t, x_hist, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['reg'])
+    
+    elif solver == 'adagrad':
+        x_t, x_hist, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, gamma, params['delta'] , params['n_epochs'], params['batch_size'])
     end = time.time()
     
     if verbose:
         print(f"{name} main loop finished after {end-start} sec")
     
+    #########################################################
     x_hist = np.vstack(x_hist)
     n_iter = x_hist.shape[0]
     
@@ -177,7 +194,8 @@ def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
         G_t = compute_batch_gradient(f, x_t, S)
         G += G_t * G_t
         
-        L_t = (1/gamma) * (delta + np.sqrt(np.diag(G)))
+        L_t = (1/gamma) * (delta + np.sqrt(G))
+        
         w_t = x_t - (1/L_t) * G_t
         
         # compute Adagrad prox step

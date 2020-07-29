@@ -9,7 +9,7 @@ import seaborn as sns
 from .spp_solver import stochastic_prox_point
 from .saga import saga
 from .warm_spp import warm_spp
-from .saga_fast import saga_fast
+from .fast_gradient import stochastic_gradient
 
 sns.set()
 sns.set_context("paper")
@@ -20,8 +20,8 @@ class problem:
     def __init__(self, f, phi, x0 = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
         self.f = f
         self.phi = phi
-        self.A = f.A.copy()
-        self.n = self.A.shape[1]
+        #self.A = f.A.copy()
+        self.n = f.A.shape[1]
         
         self.x0 = x0
         self.tol = tol
@@ -42,8 +42,8 @@ class problem:
         elif solver == 'saga_pure':
             self.x, self.xavg, self.info =  saga(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
                                                  verbose = self.verbose, measure = self.measure)
-        elif solver == 'saga':
-            self.x, self.xavg, self.info =  saga_fast(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
+        elif solver == 'saga' or solver == 'adagrad':
+            self.x, self.xavg, self.info =  stochastic_gradient(self.f, self.phi, self.x0, solver = self.solver, tol = self.tol, params = self.params, \
                                                  verbose = self.verbose, measure = self.measure)        
         elif solver == 'warm_ssnsp':
             self.x, self.xavg, self.info = warm_spp(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \

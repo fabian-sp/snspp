@@ -28,19 +28,19 @@ xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .1)
 #%% solve with SPP
 params = {'max_iter' : 10, 'sample_size': 1000, 'sample_style': 'increasing', 'alpha_C' : 10.}
 
-params = {'n_epochs' : 10}
+params = {'n_epochs' : 100}
 
 P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
 start = time.time()
-P.solve(solver = 'ssnsp')
+P.solve(solver = 'adagrad')
 end = time.time()
 
 print(f"Computing time: {end-start} sec")
 
 P.plot_path()
-P.plot_samples()
 P.plot_objective()
+P.plot_samples()
 
 info = P.info.copy()
 

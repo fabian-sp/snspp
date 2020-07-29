@@ -1,5 +1,6 @@
 import numpy as np
 from numba import njit
+from numba.typed import List
 
 ############################################################################################
 ### Stopping criteria
@@ -90,29 +91,27 @@ def compute_gradient_table(f, x):
     
     return gradients
 
+@njit()
 def compute_batch_gradient(f, x, S):
     """
     computes a table of gradients at point x with mini batch S
     returns: array of shape n
-    """
-    
-    dims = np.repeat(np.arange(f.N),f.m)
-
+    """   
+    S = np.sort(S)    
     # initialize object for storing all gradients
-    gradients = list()
+    gradients = np.zeros_like(x)
+    
     for i in S:
-        if f.m.max() == 1:
-            A_i =  f.A[[i]].copy()
-        else:    
-            A_i =  f.A[dims == i].copy()
-        
+        # A_i needs shape (1,n)
+        A_i =  np.ascontiguousarray(f.A[i,:]).reshape(1,-1)
         tmp_i = A_i.T @ f.g( A_i @ x, i)
-        gradients.append(tmp_i)
+        gradients += tmp_i
         
-    gradients = np.vstack(gradients)
-    g = (1/len(S))*gradients.sum(axis = 0)
+    g = (1/len(S))*gradients
     
     return g
+
+
 
 def compute_x_mean(x_hist, step_sizes = None):
     """

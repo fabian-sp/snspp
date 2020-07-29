@@ -206,9 +206,10 @@ class Norm1:
     def adagrad_prox(self, x, L):
         """
         calculates prox_{phi}^L (x)
-        L is the matrix Lambda_t (in the notation of Milzarek et al.)
+        L is the diagonal(!) of Lambda_t (in the notation of Milzarek et al.)
         """
-        l = self.lambda1/np.diag(L) 
+             
+        l = np.divide(self.lambda1 * np.ones_like(L), L) 
         
         return np.sign(x) * np.maximum( np.abs(x) - l, 0.)
     
