@@ -27,16 +27,21 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
     sample_size = len(S)
     
     z = x - (alpha/sample_size) * (subA.T @ xi_stack)
-    tmp = .5 * np.linalg.norm(z)**2 - phi.moreau(z, alpha)
+    term2 = .5 * np.linalg.norm(z)**2 - phi.moreau(z, alpha)
     
-    res = sum([f.fstar(xi_stack[sub_dims == l], S[l]) for l in range(sample_size)]) + (sample_size/alpha) * tmp
+    if f.m.max() == 1:
+        term1 = sum([f.fstar(xi_stack[[l]], S[l]) for l in range(sample_size)])
+    else:
+        term1 = sum([f.fstar(xi_stack[sub_dims == l], S[l]) for l in range(sample_size)])
+    
+    res = term1 + (sample_size/alpha) * term2
     
     return res.squeeze()
 
 def get_default_newton_params():
     
     params = {'tau': .5, 'eta' : 1e-2, 'rho': .5, 'mu': .2, 'eps': 1e-3, \
-              'cg_max_iter': 20, 'max_iter': 40}
+              'cg_max_iter': 15, 'max_iter': 40}
     
     return params
 
@@ -159,9 +164,15 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         if verbose:
             print("Update xi variables")
         xi_stack += beta * d
-        for l in range(sample_size):
-            xi[S[l]] = xi_stack[sub_dims == l].copy()
-            
+        
+        if m.max() == 1:
+            # double bracket because xi have to be arrays (not scalars!)
+            for l in range(sample_size):
+                xi[S[l]] = xi_stack[[l]].copy()
+        else:
+            for l in range(sample_size):
+                xi[S[l]] = xi_stack[sub_dims == l].copy()
+                
         sub_iter += 1
         
     if not converged:
