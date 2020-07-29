@@ -29,7 +29,7 @@ def predict(A,x):
 #%% solve with scikit (SAGA)
 
 sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-4, \
-                        solver = 'saga', max_iter = 40, verbose = 1)
+                        solver = 'saga', max_iter = 100, verbose = 1)
 
 
 start = time.time()
@@ -56,7 +56,7 @@ Q.plot_path()
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 15, 'sample_size': f.N/10, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 20, 'sample_size': f.N/12, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -67,7 +67,7 @@ P.plot_path()
 
 #%% solve with CONSTANT SSNSP
 
-params = {'max_iter' : 50, 'sample_size': 2000, 'sample_style': 'constant', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 50, 'sample_size': 1500, 'sample_style': 'constant', 'alpha_C' : 10., 'n_epochs': 5}
 
 P1 = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 

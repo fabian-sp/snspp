@@ -40,14 +40,18 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     
     # set step size
     if 'gamma' not in params.keys():
-        if f.name == 'squared':
-            L = 2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
-        elif f.name == 'logistic':
-            L = .25 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
-        else:
-            print("Determination of step size not possible! Probably get divergence..")
-            L = 1
-        gamma = 1./(3*L) 
+        if solver == 'saga':
+            if f.name == 'squared':
+                L = 2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
+            elif f.name == 'logistic':
+                L = .25 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
+            else:
+                print("Determination of step size not possible! Probably get divergence..")
+                L = 1
+            gamma = 1./(3*L)
+        
+        elif solver == 'adagrad':
+            gamma = .05
     else:
         gamma = params['gamma']
     
@@ -67,7 +71,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
         if 'delta' not in params.keys():    
                 params['delta'] = 1e-6
         if 'batch_size' not in params.keys():    
-            params['batch_size'] = max(int(f.N * 0.05), 1)
+            params['batch_size'] = max(int(f.N * 0.01), 1)
     #########################################################
     # Main loop
     #########################################################

@@ -28,7 +28,7 @@ xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .1)
 #%% solve with SPP
 params = {'max_iter' : 10, 'sample_size': 1000, 'sample_style': 'increasing', 'alpha_C' : 10.}
 
-params = {'n_epochs' : 100}
+params = {'n_epochs' : 300}
 
 P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
