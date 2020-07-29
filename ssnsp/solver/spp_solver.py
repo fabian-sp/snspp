@@ -40,7 +40,7 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
 
 def get_default_newton_params():
     
-    params = {'tau': .5, 'eta' : 1e-2, 'rho': .5, 'mu': .2, 'eps': 5e-3, \
+    params = {'tau': .9, 'eta' : 1e-2, 'rho': .5, 'mu': .45, 'eps': 1e-3, \
               'cg_max_iter': 15, 'max_iter': 40}
     
     return params
@@ -118,7 +118,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         if phi.name == '1norm':
             # U is diagonal with only 1 or 0 --> speedup
             bool_d = np.diag(U).astype(bool)
-            subA_d = subA[:, bool_d]
+            subA_d = subA[:, bool_d].astype('float32')
             tmp2 = (alpha/sample_size) * subA_d @ subA_d.T
         else:
             tmp2 = (alpha/sample_size) * subA @ U @ subA.T
@@ -130,6 +130,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         
         eps_reg = 1e-4
         W = tmp + tmp2 + eps_reg * np.eye(tmp2.shape[0])
+        
         
     # step2: solve Newton system
         if verbose:
