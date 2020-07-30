@@ -6,6 +6,7 @@ import numpy as np
 
 
 from sklearn.datasets import fetch_openml
+from sklearn.datasets import fetch_rcv1
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils import check_random_state
@@ -165,7 +166,24 @@ def get_mnist(lambda1 = 0.02, train_size = .8, scale = True):
 
     return f, phi, X_train, y_train, X_test, y_test
 
-
+def get_rcv1(lambda1 = 0.02, train_size = .8, scale = True):
+    
+    rcv1 = fetch_rcv1()
+    
+    X = rcv1.data.astype('float64')
+    y = rcv1.target[:,0].astype('float64')
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size)
+    
+    if scale:
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.transform(X_test)
+    
+    phi = Norm1(lambda1) 
+    f = logistic_loss(X_train, y_train)
+    
+    return f, phi, X_train, y_train, X_test, y_test
 # def get_mnist_dataset():
     
 #     digits = load_digits()
