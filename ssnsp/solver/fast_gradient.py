@@ -192,7 +192,6 @@ def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
         
         # sample
         S = np.random.randint(low = 0, high = N, size = batch_size)
-        S = np.sort(S)
         
         # mini-batch gradient step
         G_t = compute_batch_gradient(f, x_t, S)

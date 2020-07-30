@@ -24,12 +24,7 @@ def A_target_condition(N, n, smax = 100, smin = 1):
     A = np.random.randn(N,n)
     U,_,V = np.linalg.svd(A, full_matrices = False)
     
-    # print("Generate random normal matrices...")
-    # U = ortho_group.rvs(dim = m)
-    # V = ortho_group.rvs(dim = m)
-    # print("...Done!")
-    
-    d = np.linspace(smax, smin, min(n,N))
+    d = np.linspace(np.sqrt(smax), np.sqrt(smin), min(n,N))
     
     # if n > N:
     #     D = np.hstack((np.diag(d), np.zeros((N,n-N))))  

@@ -97,7 +97,7 @@ def compute_batch_gradient(f, x, S):
     computes a table of gradients at point x with mini batch S
     returns: array of shape n
     """   
-    S = np.sort(S)    
+    #S = np.sort(S)    
     # initialize object for storing all gradients
     gradients = np.zeros_like(x)
     

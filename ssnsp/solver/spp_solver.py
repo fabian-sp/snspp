@@ -106,6 +106,8 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
     while sub_iter < newton_params['max_iter']:
 
     # step 1: construct Newton matrix and RHS
+        if verbose:
+            print("Construct")
         z = x - (alpha/sample_size) * (subA.T @ xi_stack)
         rhs = -1 * (np.hstack([f.gstar(xi[i], i) for i in S]) - subA @ phi.prox(z, alpha))
         residual.append(np.linalg.norm(rhs))
@@ -123,6 +125,8 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         else:
             tmp2 = (alpha/sample_size) * subA @ U @ subA.T
         
+        if verbose:
+            print("Construct2")
         if m.max() == 1:
             tmp = np.diag(np.hstack([f.Hstar(xi[i], i) for i in S]))
         else:
@@ -168,9 +172,10 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         xi_stack += beta * d
         
         if m.max() == 1:
-            # double bracket because xi have to be arrays (not scalars!)
-            for l in range(sample_size):
-                xi[S[l]] = xi_stack[[l]].copy()
+            # double bracket/ reshape because xi have to be arrays (not scalars!)
+            # for l in range(sample_size):
+            #    xi[S[l]] = xi_stack[[l]].copy()
+            xi.update(dict(zip(S,xi_stack.reshape(-1,1))))
         else:
             for l in range(sample_size):
                 xi[S[l]] = xi_stack[sub_dims == l].copy()

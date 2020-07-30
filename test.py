@@ -15,10 +15,10 @@ from ssnsp.solver.opt_problem import problem
 
 #%% generate data
 
-N = 1000
-n = 100
-k = 20
-l1 = .1
+N = 10000
+n = 1000
+k = 200
+l1 = .01
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = None)
 
@@ -26,14 +26,14 @@ xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .1)
 
 
 #%% solve with SPP
-params = {'max_iter' : 10, 'sample_size': 1000, 'sample_style': 'increasing', 'alpha_C' : 10.}
+params = {'max_iter' : 10, 'sample_size': 1000, 'sample_style': 'constant', 'alpha_C' : 10.}
 
-params = {'n_epochs' : 300}
+params = {'n_epochs' : 5}
 
 P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
 start = time.time()
-P.solve(solver = 'adagrad')
+P.solve(solver = 'ssnsp')
 end = time.time()
 
 print(f"Computing time: {end-start} sec")

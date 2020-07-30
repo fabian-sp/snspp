@@ -44,6 +44,8 @@ f.eval(x_sk) + phi.eval(x_sk)
 
 #%% solve with SAGA
 
+#params = {'n_epochs' : 30, 'batch_size': 10}
+
 params = {'n_epochs' : 100}
 
 Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
