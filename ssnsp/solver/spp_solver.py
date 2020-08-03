@@ -108,10 +108,13 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
     # step 1: construct Newton matrix and RHS
         if verbose:
             print("Construct")
-        z = x - (alpha/sample_size) * (subA.T @ xi_stack)
-        rhs = -1 * (np.hstack([f.gstar(xi[i], i) for i in S]) - subA @ phi.prox(z, alpha))
-        residual.append(np.linalg.norm(rhs))
         
+        z = x - (alpha/sample_size) * (subA.T @ xi_stack)  
+        rhs = -1. * (np.hstack([f.gstar(xi[i], i) for i in S]) - subA @ phi.prox(z, alpha))
+        
+        #start = time.time() 
+        residual.append(np.linalg.norm(rhs))
+        #end = time.time(); print(end-start)
         if np.linalg.norm(rhs) <= newton_params['eps']:
             converged = True
             break
@@ -129,23 +132,27 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         
         if verbose:
             print("Construct3")
+            
         eps_reg = 1e-4
         
         if m.max() == 1:
-            tmp = np.diag(np.hstack([f.Hstar(xi[i], i) for i in S]))
+            tmp = np.diag(np.hstack([f.Hstar(xi[i], i) for i in S]) + eps_reg)
         else:
             tmp = block_diag([f.Hstar(xi[i], i) for i in S])
-            
-        W = tmp + tmp2 + eps_reg*np.eye(tmp2.shape[0])
+        
+        W = tmp + tmp2
+         
     # step2: solve Newton system
         if verbose:
             print("Start CG method")
+        
         cg_tol = min(newton_params['eta'], np.linalg.norm(rhs)**(1+ newton_params['tau']))
         d, cg_status = cg(W, rhs, tol = cg_tol, maxiter = newton_params['cg_max_iter'])
         
         assert d@rhs > -1e-8 , f"No descent direction, {d@rhs}"
         #assert cg_status == 0, f"CG method did not converge, exited with status {cg_status}"
         norm_dir.append(np.linalg.norm(d))
+        
     # step 3: backtracking line search
         if verbose:
             print("Start Line search")
@@ -167,6 +174,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
             #     break
         
         step_sz.append(beta)
+        
     # step 4: update xi
         if verbose:
             print("Update xi variables")
