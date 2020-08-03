@@ -70,7 +70,7 @@ Q1.plot_path()
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 20, 'sample_size': f.N/10, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 20, 'sample_size': f.N/12, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -81,7 +81,7 @@ P.plot_path()
 
 #%% solve with CONSTANT SSNSP
 
-params = {'max_iter' : 15, 'sample_size': 2500, 'sample_style': 'constant', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 5, 'sample_size': 5000, 'sample_style': 'constant', 'alpha_C' : 10., 'n_epochs': 5}
 
 P1 = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -109,11 +109,20 @@ ax[1].set_ylim(-.2,.2)
 
 #%%
 
+def logreg_error(A, b, x):
+    y = predict(A,x)
+    
+    return (np.sign(y) == np.sign(b)).sum() / len(b)
+    
+
 resQ = list()
 
 for j in range(Q.info['iterates'].shape[0]):
     xj = Q.info['iterates'][j,:]
-    resQ.append(stop_optimal(xj, f, phi))
+    #resQ.append(stop_optimal(xj, f, phi))
+    resQ.append(logreg_error(f.A, f.b, xj))
+    
+    
     
 resQ = np.hstack(resQ)
 
@@ -122,7 +131,8 @@ resP = list()
 
 for j in range(P.info['iterates'].shape[0]):
     xj = P.info['iterates'][j,:]
-    resP.append(stop_optimal(xj, f, phi))
+    #resP.append(stop_optimal(xj, f, phi))
+    resP.append(logreg_error(f.A, f.b, xj))
     
 resP = np.hstack(resP)    
     

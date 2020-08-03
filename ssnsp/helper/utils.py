@@ -148,6 +148,13 @@ def compute_x_mean(x_hist, step_sizes = None):
     return x_mean
 
 
+def compute_x_mean_hist(iterates):
+    
+    scaler = 1/ (np.arange(len(iterates)) + 1)   
+    res = scaler[:,np.newaxis] * iterates.cumsum(axis = 0)
+    
+    return res
+
 def logreg_gradient(f, x):
     """
     computes full gradient for fbeing the logistic loss

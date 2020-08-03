@@ -129,15 +129,14 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         
         if verbose:
             print("Construct3")
+        eps_reg = 1e-4
+        
         if m.max() == 1:
             tmp = np.diag(np.hstack([f.Hstar(xi[i], i) for i in S]))
         else:
             tmp = block_diag([f.Hstar(xi[i], i) for i in S])
-        
-        eps_reg = 1e-4
-        W = tmp + tmp2 + eps_reg * np.eye(tmp2.shape[0])
-        
-        
+            
+        W = tmp + tmp2 + eps_reg*np.eye(tmp2.shape[0])
     # step2: solve Newton system
         if verbose:
             print("Start CG method")
