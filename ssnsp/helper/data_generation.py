@@ -23,6 +23,7 @@ from .lasso import Norm1, lsq, block_lsq, logistic_loss
 def A_target_condition(N, n, smax = 100, smin = 1):
     
     A = np.random.randn(N,n)
+    
     U,_,V = np.linalg.svd(A, full_matrices = False)
     
     d = np.linspace(np.sqrt(smax), np.sqrt(smin), min(n,N))
@@ -116,6 +117,8 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
         f = np.random.binomial(n=1, p = noise, size = N)
         f = (1 - f * 2)
         
+        print((f==-1).sum())
+        
         # flip signs (f in {-1,1})
         b = b * f
     
@@ -184,11 +187,3 @@ def get_rcv1(lambda1 = 0.02, train_size = .8, scale = True):
     f = logistic_loss(X_train, y_train)
     
     return f, phi, X_train, y_train, X_test, y_test
-# def get_mnist_dataset():
-    
-#     digits = load_digits()
-#     A = digits.data.astype('float64')
-#     b = (digits.target >= 5)
-#     b = (b*2-1).astype('float64')
-    
-#     return A,b

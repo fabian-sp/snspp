@@ -220,10 +220,13 @@ class Norm1:
         # if numba is deactivated, use the next line instead of for loop
         #d = (abs(x) > l).astype(int)
         
-        d = np.zeros_like(x)
-        for j in np.arange(len(x)):
-            if np.abs(x[j]) > l:
-                d[j] = 1.
+        d = np.ones_like(x)
+        d[np.abs(x) <= l] = 0.
+        
+        # d = np.zeros_like(x)
+        # for j in np.arange(len(x)):
+        #     if np.abs(x[j]) > l:
+        #         d[j] = 1.
         
         return np.diag(d)
     

@@ -116,6 +116,8 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
             converged = True
             break
         
+        if verbose:
+            print("Construct2")
         U = phi.jacobian_prox(z, alpha)
         if phi.name == '1norm':
             # U is diagonal with only 1 or 0 --> speedup
@@ -126,7 +128,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
             tmp2 = (alpha/sample_size) * subA @ U @ subA.T
         
         if verbose:
-            print("Construct2")
+            print("Construct3")
         if m.max() == 1:
             tmp = np.diag(np.hstack([f.Hstar(xi[i], i) for i in S]))
         else:
@@ -209,10 +211,18 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
     return new_x, xi, info
 
 def batch_size_constructor(t, a, b, M):
+    """
+    a: batch size at t=0
+    b: batch size at t=M
+    """
     c1 = np.log(b/a)/M
     c2 = np.log(a)
+    y = np.exp(c1*t+c2).astype(int)
     
-    return np.exp(c1*t+c2).astype(int)
+    #k = np.log(1e3)/M
+    #y = b/(1+np.exp(-k*t))
+    
+    return y
 
 def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
     
