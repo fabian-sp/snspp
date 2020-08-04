@@ -223,12 +223,8 @@ class Norm1:
         d = np.ones_like(x)
         d[np.abs(x) <= l] = 0.
         
-        # d = np.zeros_like(x)
-        # for j in np.arange(len(x)):
-        #     if np.abs(x[j]) > l:
-        #         d[j] = 1.
-        
-        return np.diag(d)
+        # actual result is np.diag(d), but saving memory!
+        return d
     
     def moreau(self, x, alpha):
         assert alpha > 0

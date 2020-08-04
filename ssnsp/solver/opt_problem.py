@@ -88,8 +88,16 @@ class problem:
         
         if label is None:
             label = self.solver
+        
         ax.plot(x,y, '-o', label = label)
+        
         ax.legend()
+        if runtime:
+            ax.set_xlabel("Runtime [sec]")
+        else:
+            ax.set_xlabel("Iteration / epoch number")
+        
+        ax.set_ylabel("Objective")
         #ax.set_yscale('log')
         
         return

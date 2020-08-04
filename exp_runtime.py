@@ -19,7 +19,7 @@ n = 5000
 k = 200
 l1 = .2
 
-xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = 1e4)
+xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = 1e6)
 #xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .5)
 
 sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-9, max_iter = 20000, selection = 'cyclic')
@@ -30,24 +30,36 @@ x_sk = sk.coef_.copy().squeeze()
 
 #%% solve with SAGA
 
-params = {'n_epochs' : 150, 'reg': 1e-4}
+params = {'n_epochs' : 300, 'reg': 1e-4}
 
 Q = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
 Q.solve(solver = 'saga')
 
 print(f.eval(Q.x) +phi.eval(Q.x))
-Q.plot_path()
+#Q.plot_path()
+
+
+#%% solve with ADAGRAD
+
+params = {'n_epochs' : 100, 'batch_size': 10}
+
+Q1 = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
+
+Q1.solve(solver = 'adagrad')
+
+print(f.eval(Q1.x) +phi.eval(Q1.x))
+#Q1.plot_path()
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 10, 'sample_size': f.N, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 15, 'sample_size': f.N, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
 P.solve(solver = 'ssnsp')
 
-P.plot_path()
+#P.plot_path()
 
 #%% solve with FULL SSNSP
 
@@ -66,6 +78,9 @@ all_x = pd.DataFrame(np.vstack((xsol, Q.x, P.x, P1.x, x_sk)).T, columns = ['true
 #%% plotting
 fig,ax = plt.subplots()
 Q.plot_objective(ax = ax)
+Q1.plot_objective(ax = ax)
 P.plot_objective(ax = ax)
+
+P1.plot_objective(ax = ax, label = 'full ssnsp')
 
 ax.set_yscale('log')

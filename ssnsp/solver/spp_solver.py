@@ -40,7 +40,7 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
 
 def get_default_newton_params():
     
-    params = {'tau': .9, 'eta' : 1e-2, 'rho': .5, 'mu': .45, 'eps': 1e-3, \
+    params = {'tau': .9, 'eta' : 1e-2, 'rho': .8, 'mu': .45, 'eps': 1e-3, \
               'cg_max_iter': 15, 'max_iter': 40}
     
     return params
@@ -120,15 +120,19 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         
         if verbose:
             print("Construct2")
+        
+        start = time.time()
         U = phi.jacobian_prox(z, alpha)
+        
         if phi.name == '1norm':
-            # U is diagonal with only 1 or 0 --> speedup
-            bool_d = np.diag(U).astype(bool)
+            # U is 1d array with only 1 or 0 --> speedup by not constructing 2d diagonal array
+            bool_d = U.astype(bool)
+            
             subA_d = subA[:, bool_d].astype('float32')
             tmp2 = (alpha/sample_size) * subA_d @ subA_d.T
         else:
             tmp2 = (alpha/sample_size) * subA @ U @ subA.T
-        
+        #end = time.time(); print("construct", end-start)
         if verbose:
             print("Construct3")
             
