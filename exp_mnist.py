@@ -44,7 +44,6 @@ f.eval(x_sk) + phi.eval(x_sk)
 
 #%% solve with SAGA
 
-#params = {'n_epochs' : 30, 'batch_size': 10}
 params = {'n_epochs' : 100}
 
 Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
@@ -70,7 +69,7 @@ Q1.plot_path()
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 20, 'sample_size': f.N/10, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 25, 'sample_size': f.N/12, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -81,7 +80,7 @@ P.plot_path()
 
 #%% solve with CONSTANT SSNSP
 
-params = {'max_iter' : 5, 'sample_size': 5000, 'sample_style': 'constant', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 10, 'sample_size': 5000, 'sample_style': 'constant', 'alpha_C' : 10., 'n_epochs': 5}
 
 P1 = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -95,9 +94,10 @@ all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x)).T, columns = ['scikit', 'spp', 
 
 fig,ax = plt.subplots()
 Q.plot_objective(ax = ax)
-P.plot_objective(ax = ax)
 Q1.plot_objective(ax = ax)
-#P1.plot_objective(ax = ax, label = "ssnsp_constant")
+P.plot_objective(ax = ax)
+
+P1.plot_objective(ax = ax, label = "ssnsp_constant")
 
 
 fig,ax = plt.subplots(1,2)

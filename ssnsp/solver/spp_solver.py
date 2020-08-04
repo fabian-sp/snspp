@@ -147,10 +147,16 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         if verbose:
             print("Start CG method")
             
-        start = time.time()
+        #start = time.time()
         cg_tol = min(newton_params['eta'], np.linalg.norm(rhs)**(1+ newton_params['tau']))
-        d, cg_status = cg(W, rhs, tol = cg_tol, maxiter = newton_params['cg_max_iter'])
-        end = time.time(); print("CG", end-start)
+        
+        if m.max() == 1:
+            precond = np.diag(1/tmp_d)
+        else:
+            precond = None
+        
+        d, cg_status = cg(W, rhs, tol = cg_tol, maxiter = newton_params['cg_max_iter'], M = precond)
+        #end = time.time(); print("CG", end-start)
         
         assert d@rhs > -1e-8 , f"No descent direction, {d@rhs}"
         #assert cg_status == 0, f"CG method did not converge, exited with status {cg_status}"
