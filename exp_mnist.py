@@ -70,7 +70,7 @@ Q1.plot_path()
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 20, 'sample_size': f.N/12, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 20, 'sample_size': f.N/10, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 

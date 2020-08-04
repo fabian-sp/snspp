@@ -53,10 +53,11 @@ def check_newton_params(newton_params):
     assert newton_params['rho'] > 0 and newton_params['rho'] < 1
     
     assert newton_params['eps'] >= 0
-    #assert newton_params['delta'] >= 0 and newton_params['delta'] < 1
     
     return
 
+
+    
 def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newton_params = None, verbose = False):
     """
     m: vector with all dimensions m_i, i = 1,..,N
@@ -68,7 +69,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
     check_newton_params(newton_params)
     assert alpha > 0 , "step sizes are not positive"
       
-    xi_old = xi.copy()
+    #xi_old = xi.copy()
     N = len(m)
     
     # creates a vector with nrows like A in order to index the relevant A_i from A
@@ -112,9 +113,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         z = x - (alpha/sample_size) * (subA.T @ xi_stack)  
         rhs = -1. * (np.hstack([f.gstar(xi[i], i) for i in S]) - subA @ phi.prox(z, alpha))
         
-        #start = time.time() 
         residual.append(np.linalg.norm(rhs))
-        #end = time.time(); print(end-start)
         if np.linalg.norm(rhs) <= newton_params['eps']:
             converged = True
             break
@@ -136,18 +135,22 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         eps_reg = 1e-4
         
         if m.max() == 1:
-            tmp = np.diag(np.hstack([f.Hstar(xi[i], i) for i in S]) + eps_reg)
+            tmp_d = np.hstack([f.Hstar(xi[i], i) for i in S])
+            tmp = np.diag(tmp_d + eps_reg)
         else:
             tmp = block_diag([f.Hstar(xi[i], i) for i in S])
+            tmp += eps_reg * np.eye(tmp.shape[0])
         
         W = tmp + tmp2
-         
+        
     # step2: solve Newton system
         if verbose:
             print("Start CG method")
-        
+            
+        start = time.time()
         cg_tol = min(newton_params['eta'], np.linalg.norm(rhs)**(1+ newton_params['tau']))
         d, cg_status = cg(W, rhs, tol = cg_tol, maxiter = newton_params['cg_max_iter'])
+        end = time.time(); print("CG", end-start)
         
         assert d@rhs > -1e-8 , f"No descent direction, {d@rhs}"
         #assert cg_status == 0, f"CG method did not converge, exited with status {cg_status}"
@@ -157,21 +160,13 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         if verbose:
             print("Start Line search")
         U_old = Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA)
-        #print(f"U_old: {U_old} with residual {np.linalg.norm(rhs)}")
         beta = 1.
         U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA)
         
-        #counter = 0
+        
         while U_new > U_old + newton_params['mu'] * beta * (d @ -rhs):
-            #print(f"U_new: {U_new} vs . { U_old + newton_params['mu'] * beta * (d @ -rhs)} with beta being {beta}")
             beta *= newton_params['rho']
             U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA)
-            # reset if getting stuck
-            #counter +=1
-            # if counter >= 15:
-            #     print("Semismooth Newton: reset step size and ignore Armijo")
-            #     beta = .8
-            #     break
         
         step_sz.append(beta)
         
@@ -182,9 +177,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         
         if m.max() == 1:
             # double bracket/ reshape because xi have to be arrays (not scalars!)
-            # for l in range(sample_size):
-            #    xi[S[l]] = xi_stack[[l]].copy()
-            xi.update(dict(zip(S,xi_stack.reshape(-1,1))))
+            xi.update(dict(zip(S, xi_stack.reshape(-1,1))))
         else:
             for l in range(sample_size):
                 xi[S[l]] = xi_stack[sub_dims == l].copy()
@@ -194,26 +187,13 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
     if not converged:
         print(f"WARNING: reached maximal iterations in semismooth Newton -- accuracy {residual[-1]}")
     
-    if gradient_table is not None:
-        #xi_stack_old = np.hstack([xi_old[i] for i in S])
-        #xi_full_old = np.hstack([xi_old[i] for i in range(f.N)])
-        #correct =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)
-        
-        #tmp_g = np.vstack([gradient_table[i,:] for i in S])
-        #correct = (alpha/sample_size) * tmp_g.sum(axis = 0) - (alpha/f.N) * gradient_table.sum(axis = 0)
-        #print(np.linalg.norm(correct))
-        correct = 0.      
-    else:
-        correct = 0.
     
     # update primal iterate
-    z = x - (alpha/sample_size) * (subA.T @ xi_stack) + correct
+    z = x - (alpha/sample_size) * (subA.T @ xi_stack)
     new_x = phi.prox(z, alpha)
     
     info = {'residual': np.array(residual), 'direction' : norm_dir, 'step_size': step_sz }
     
-    #new_z = new_x - (1/sample_size) * (subA.T @ xi_stack)
-    #eta = np.linalg.norm(new_x - phi.prox(new_z, alpha = 1))
     
     return new_x, xi, info
 
