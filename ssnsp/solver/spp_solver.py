@@ -137,6 +137,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         if m.max() == 1:
             tmp_d = np.hstack([f.Hstar(xi[i], i) for i in S])
             tmp = np.diag(tmp_d + eps_reg)
+            
         else:
             tmp = block_diag([f.Hstar(xi[i], i) for i in S])
             tmp += eps_reg * np.eye(tmp.shape[0])
@@ -296,6 +297,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         # sample and update
         S = sampler(f.N, batch_size[iter_t])
         
+        params['newton_params']['eps'] =  min(1e-2, 1e-1/(iter_t+1)**3)
+        
         x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, gradient_table = G, \
                                              newton_params = params['newton_params'], verbose = False)
         
@@ -331,10 +334,10 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
             print(out_fmt % (iter_t, obj[-1], obj2[-1] , alpha_t, len(S), eta))
             
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
-        if iter_t >= 0:
-            alpha_t = C/(iter_t + 2)
-        else:
-            alpha_t = C
+        alpha_t = C/(iter_t + 2)
+        
+        
+        
             
     if eta > tol:
         status = 'max iterations reached'    

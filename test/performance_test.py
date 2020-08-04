@@ -26,3 +26,6 @@ def plus_diag(A, d):
     np.fill_diagonal(A, d2)
     return A
 
+%timeit plus(A,d)
+
+%timeit plus_diag(A,d)
