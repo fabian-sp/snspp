@@ -213,12 +213,12 @@ def batch_size_constructor(t, a, b, M):
     a: batch size at t=0
     b: batch size at t=M
     """
-    c1 = np.log(b/a)/M
-    c2 = np.log(a)
-    y = np.exp(c1*t+c2).astype(int)
+    #c1 = np.log(b/a)/M
+    #c2 = np.log(a)
+    #y = np.exp(c1*t+c2).astype(int)
     
-    #k = np.log(1e3)/M
-    #y = b/(1+np.exp(-k*t))
+    k = np.log(1e3)/M
+    y = b/(1+np.exp(-k*t))
     
     return y
 

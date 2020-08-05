@@ -69,7 +69,7 @@ Q1.plot_path()
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 20, 'sample_size': f.N/10, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 20, 'sample_size': f.N/12, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -89,7 +89,7 @@ P1.solve(solver = 'ssnsp')
 
 #%% plotting
 
-all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x)).T, columns = ['scikit', 'spp', 'saga'])
+all_x = pd.DataFrame(np.vstack((x_sk, P.xavg, Q.x, Q1.x)).T, columns = ['scikit', 'spp', 'saga', 'adagrad'])
 
 
 fig,ax = plt.subplots()
@@ -100,11 +100,13 @@ P.plot_objective(ax = ax)
 P1.plot_objective(ax = ax, label = "ssnsp_constant")
 
 
-fig,ax = plt.subplots(1,2)
+fig,ax = plt.subplots(1,3)
 Q.plot_path(ax = ax[0])
+Q1.plot_path(ax = ax[2])
 P.plot_path(ax = ax[1])
-ax[0].set_ylim(-.2,.2)
-ax[1].set_ylim(-.2,.2)
+
+for a in ax:
+    a.set_ylim(-.2,.2)
 
 
 #%%
@@ -135,7 +137,7 @@ y = distance_to_sol(Q1.info['iterates'], x_sk)
 plt.plot(x, y, label = Q1.solver)
 
 x = P.info['runtime'].cumsum()
-y = distance_to_sol(P.info['mean_hist'], x_sk)
+y = distance_to_sol(P.info['iterates'], x_sk)
 plt.plot(x, y, label = P.solver)
 
 
