@@ -69,7 +69,7 @@ Q1.plot_path()
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 25, 'sample_size': f.N/12, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 20, 'sample_size': f.N/10, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -93,8 +93,8 @@ all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x)).T, columns = ['scikit', 'spp', 
 
 
 fig,ax = plt.subplots()
-Q.plot_objective(ax = ax)
-Q1.plot_objective(ax = ax)
+Q.plot_objective(ax = ax, ls = '--', marker = '<')
+Q1.plot_objective(ax = ax, ls = '--', marker = '<')
 P.plot_objective(ax = ax)
 
 P1.plot_objective(ax = ax, label = "ssnsp_constant")
@@ -114,6 +114,39 @@ def logreg_error(A, b, x):
     
     return (np.sign(y) == np.sign(b)).sum() / len(b)
     
+
+def distance_to_sol(x_hist, x_ref):
+    d = list()
+    for j in range(x_hist.shape[0]):
+        d.append(np.linalg.norm(x_hist[j,:] - x_ref))
+        
+    return np.array(d)
+
+
+
+fig,ax = plt.subplots()
+
+x = Q.info['runtime'].cumsum()
+y = distance_to_sol(Q.info['iterates'], x_sk)
+plt.plot(x, y, label = Q.solver)
+
+x = Q1.info['runtime'].cumsum()
+y = distance_to_sol(Q1.info['iterates'], x_sk)
+plt.plot(x, y, label = Q1.solver)
+
+x = P.info['runtime'].cumsum()
+y = distance_to_sol(P.info['mean_hist'], x_sk)
+plt.plot(x, y, label = P.solver)
+
+
+ax.legend()
+
+#%%
+
+
+
+
+
 
 resQ = list()
 

@@ -4,7 +4,7 @@ author: Fabian Schaipp
 
 import numpy as np
 from ..helper.utils import block_diag, compute_x_mean, stop_mean_objective, stop_optimal, stop_scikit_saga
-from ..helper.utils import compute_gradient_table, compute_full_xi
+from ..helper.utils import compute_gradient_table, compute_full_xi, compute_x_mean_hist
 from scipy.sparse.linalg import cg
 import time
 
@@ -121,7 +121,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
         if verbose:
             print("Construct2")
         
-        start = time.time()
+        #start = time.time()
         U = phi.jacobian_prox(z, alpha)
         
         if phi.name == '1norm':
@@ -340,16 +340,18 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
         alpha_t = C/(iter_t + 2)
         
-        
-        
             
     if eta > tol:
         status = 'max iterations reached'    
-        
+    
+    
+    
     print(f"Stochastic ProxPoint terminated after {iter_t} iterations with accuracy {eta}")
     print(f"Stochastic ProxPoint status: {status}")
     
-    info = {'objective': np.array(obj), 'iterates': np.vstack(x_hist), 'xi_hist': xi_hist, 'step_sizes': np.array(step_sizes), 'samples' : np.array(S_hist), \
-            'objective_mean': np.array(obj2), 'ssn_info': ssn_info, 'runtime': np.array(runtime)}
+    info = {'objective': np.array(obj), 'objective_mean': np.array(obj2), 'iterates': np.vstack(x_hist), \
+            'mean_hist': compute_x_mean_hist(np.vstack(x_hist)), 'xi_hist': xi_hist,\
+            'step_sizes': np.array(step_sizes), 'samples' : np.array(S_hist), \
+            'ssn_info': ssn_info, 'runtime': np.array(runtime)}
     
     return x_t, x_mean, info

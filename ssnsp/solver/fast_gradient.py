@@ -2,7 +2,7 @@
 author: Fabian Schaipp
 """
 import numpy as np
-from ..helper.utils import compute_gradient_table, compute_batch_gradient, stop_optimal, stop_scikit_saga
+from ..helper.utils import compute_gradient_table, compute_batch_gradient, compute_x_mean_hist, stop_scikit_saga
 import time
 
 from numba.typed import List
@@ -93,7 +93,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     
     # compute x_mean retrospectivly and evaluate objective
     obj = list(); obj2= list()
-    xmean_hist = x_hist.cumsum(axis=0) / (np.arange(n_iter) + 1)[:,np.newaxis]
+    xmean_hist = compute_x_mean_hist(x_hist)
     x_mean = xmean_hist[-1,:].copy()
     
     if measure:
@@ -117,8 +117,9 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     print(f"{name} terminated during epoch {n_iter} with tolerance {eta}")
     print(f"{name} status: {status}")
     
-    info = {'objective': np.array(obj), 'objective_mean': np.array(obj2), 'iterates': x_hist, 'step_sizes': np.array(step_sizes), \
-             'gradient_table': gradients, 'runtime': np.array(runtime)}
+    info = {'objective': np.array(obj), 'objective_mean': np.array(obj2), 'iterates': x_hist,\
+            'mean_hist': xmean_hist, 'step_sizes': np.array(step_sizes), \
+            'gradient_table': gradients, 'runtime': np.array(runtime)}
     #info = None
     return x_t, x_mean, info
 

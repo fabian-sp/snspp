@@ -74,7 +74,7 @@ class problem:
         ax.set_title('Coefficient history for solver - ' + self.solver)
         return
     
-    def plot_objective(self, ax = None, runtime = True, label = None):
+    def plot_objective(self, ax = None, runtime = True, label = None, marker = 'o', ls = '-'):
         if ax is None:
             fig, ax = plt.subplots()
         
@@ -89,7 +89,7 @@ class problem:
         if label is None:
             label = self.solver
         
-        ax.plot(x,y, '-o', label = label)
+        ax.plot(x,y, marker = marker, ls = ls, label = label)
         
         ax.legend()
         if runtime:
