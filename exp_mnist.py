@@ -40,6 +40,9 @@ print(f"Computing time: {end-start} sec")
 
 x_sk = sk.coef_.copy().squeeze()
 
+
+#(np.sign(predict(X_train, x_sk)) == np.sign(y_train)).sum() / len(y_train)
+
 f.eval(x_sk) + phi.eval(x_sk)
 
 #%% solve with SAGA
@@ -95,17 +98,18 @@ all_x = pd.DataFrame(np.vstack((x_sk, P.xavg, Q.x, Q1.x)).T, columns = ['scikit'
 fig,ax = plt.subplots()
 Q.plot_objective(ax = ax, ls = '--', marker = '<')
 Q1.plot_objective(ax = ax, ls = '--', marker = '<')
-P.plot_objective(ax = ax)
+P.plot_objective(ax = ax, mean_obj = True)
 
 P1.plot_objective(ax = ax, label = "ssnsp_constant")
 
 
-fig,ax = plt.subplots(1,3)
-Q.plot_path(ax = ax[0])
-Q1.plot_path(ax = ax[2])
-P.plot_path(ax = ax[1])
+fig,ax = plt.subplots(2,2)
+Q.plot_path(ax = ax[0,0])
+Q1.plot_path(ax = ax[0,1])
+P.plot_path(ax = ax[1,0])
+P.plot_path(ax = ax[1,1], mean = True)
 
-for a in ax:
+for a in ax.ravel():
     a.set_ylim(-.2,.2)
 
 
@@ -145,7 +149,7 @@ ax.legend()
 
 #%%
 
-
+logreg_error(X_test, y_test, P.x)
 
 
 
@@ -155,7 +159,7 @@ resQ = list()
 for j in range(Q.info['iterates'].shape[0]):
     xj = Q.info['iterates'][j,:]
     #resQ.append(stop_optimal(xj, f, phi))
-    resQ.append(logreg_error(f.A, f.b, xj))
+    resQ.append(logreg_error(X_test, y_test, xj))
     
     
     
@@ -167,7 +171,7 @@ resP = list()
 for j in range(P.info['iterates'].shape[0]):
     xj = P.info['iterates'][j,:]
     #resP.append(stop_optimal(xj, f, phi))
-    resP.append(logreg_error(f.A, f.b, xj))
+    resP.append(logreg_error(X_test, y_test, xj))
     
 resP = np.hstack(resP)    
     

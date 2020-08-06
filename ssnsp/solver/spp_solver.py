@@ -301,7 +301,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         # sample and update
         S = sampler(f.N, batch_size[iter_t])
         
-        params['newton_params']['eps'] =  min(1e-2, 1e-1/(iter_t+1)**3)
+        params['newton_params']['eps'] =  min(1e-2, 1e-1/(iter_t+1)**2)
         
         x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, gradient_table = G, \
                                              newton_params = params['newton_params'], verbose = False)

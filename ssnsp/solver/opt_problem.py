@@ -53,7 +53,7 @@ class problem:
             
         return
     
-    def plot_path(self, ax = None, runtime = True):
+    def plot_path(self, ax = None, runtime = True, mean = False):
         # sns.heatmap(self.info['iterates'], cmap = 'coolwarm', vmin = -1, vmax = 1, ax = ax)
         
         if ax is None:
@@ -62,19 +62,26 @@ class problem:
         coeffs = self.info['iterates'][-1,:]
         c = plt.cm.Blues(abs(coeffs)/max(abs(coeffs)))
         
+        if  not mean:
+            to_plot = 'iterates'
+            title_suffix = ''
+        else:
+            to_plot = 'mean_hist'
+            title_suffix = ' (mean iterate)'
+            
         for j in range(len(coeffs)):
             if runtime:
-                ax.plot(self.info['runtime'].cumsum(), self.info['iterates'][:,j], color = c[j])
+                ax.plot(self.info['runtime'].cumsum(), self.info[to_plot][:,j], color = c[j])
                 ax.set_xlabel('Cumulative runtime')
             else:
-                ax.plot(self.info['iterates'][:,j], color = c[j])
+                ax.plot(self.info[to_plot][:,j], color = c[j])
                 ax.set_xlabel('Iteration/ epoch number')
         
         ax.set_ylabel('Coefficient')
-        ax.set_title('Coefficient history for solver - ' + self.solver)
+        ax.set_title('Coefficient history for solver ' + self.solver + title_suffix)
         return
     
-    def plot_objective(self, ax = None, runtime = True, label = None, marker = 'o', ls = '-'):
+    def plot_objective(self, ax = None, runtime = True, mean_obj = False, label = None, marker = 'o', ls = '-'):
         if ax is None:
             fig, ax = plt.subplots()
         
@@ -84,13 +91,18 @@ class problem:
             x = np.arange(len(self.info['objective']))
         
         y = self.info['objective']
-        #y1 = self.info['objective_mean']
+        
         
         if label is None:
             label = self.solver
         
-        ax.plot(x,y, marker = marker, ls = ls, label = label)
+        pt = ax.plot(x,y, marker = marker, ls = ls, label = label)
         
+        if mean_obj:
+            y1 = self.info['objective_mean']
+            ax.plot(x,y1, marker = None, ls = 'dotted', lw = 2, label = label + '_mean',\
+                    c = pt[0].get_color())
+            
         ax.legend()
         if runtime:
             ax.set_xlabel("Runtime [sec]")
