@@ -54,8 +54,8 @@ Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 Q.solve(solver = 'saga')
 
 print(f.eval(Q.x) +phi.eval(Q.x))
-Q.plot_path()
 
+#Q.plot_path()
 #(predict(X_train, Q.x) == y_train).sum()
 
 #%%
@@ -66,24 +66,24 @@ Q1 = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True
 Q1.solve(solver = 'adagrad')
 
 print(f.eval(Q1.x) +phi.eval(Q1.x))
-Q1.plot_path()
 
+#Q1.plot_path()
 #(predict(X_train, Q1.x) == y_train).sum()
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 20, 'sample_size': f.N/12, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 35, 'sample_size': f.N/12, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
 P.solve(solver = 'ssnsp')
 
-P.plot_path()
+#P.plot_path()
 
 
 #%% solve with CONSTANT SSNSP
 
-params = {'max_iter' : 10, 'sample_size': 5000, 'sample_style': 'constant', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 30, 'sample_size': 3000, 'sample_style': 'constant', 'alpha_C' : 10., 'n_epochs': 5}
 
 P1 = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -92,15 +92,15 @@ P1.solve(solver = 'ssnsp')
 
 #%% plotting
 
-all_x = pd.DataFrame(np.vstack((x_sk, P.xavg, Q.x, Q1.x)).T, columns = ['scikit', 'spp', 'saga', 'adagrad'])
+all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q1.x)).T, columns = ['scikit', 'spp', 'saga', 'adagrad'])
 
 
 fig,ax = plt.subplots()
 Q.plot_objective(ax = ax, ls = '--', marker = '<')
 Q1.plot_objective(ax = ax, ls = '--', marker = '<')
-P.plot_objective(ax = ax, mean_obj = True)
+P.plot_objective(ax = ax)
 
-P1.plot_objective(ax = ax, label = "ssnsp_constant")
+P1.plot_objective(ax = ax, label = "ssnsp_constant", marker = "x")
 
 
 fig,ax = plt.subplots(2,2)

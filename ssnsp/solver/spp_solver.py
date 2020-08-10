@@ -13,7 +13,8 @@ def sampler(N, size):
     samples a subset of {1,..,N} without replacement
     """
     assert size <= N, "specified a bigger sample size than N"
-    S = np.random.choice(a = np.arange(N).astype('int'), p = (1/N) * np.ones(N), size = int(size), replace = False)
+    S = np.random.choice(a = np.arange(N).astype('int'), p = (1/N) * np.ones(N), \
+                         size = int(size), replace = True)
     
     S = S.astype('int')
     # sort S in order to avoid problems with indexing later on
@@ -213,12 +214,18 @@ def batch_size_constructor(t, a, b, M):
     a: batch size at t=0
     b: batch size at t=M
     """
-    #c1 = np.log(b/a)/M
-    #c2 = np.log(a)
-    #y = np.exp(c1*t+c2).astype(int)
+    if M > 20:
+        M1 = 20
+        c1 = np.log(b/a)/M1
+    else:
+        c1 = np.log(b/a)/M
+        
+    c2 = np.log(a)
     
-    k = np.log(1e3)/M
-    y = b/(1+np.exp(-k*t))
+    y = np.exp(c1* np.minimum(t,20) +c2).astype(int)
+
+    #k = np.log(1e3)/M
+    #y = b/(1+np.exp(-k*t))
     
     return y
 
@@ -339,7 +346,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
             
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
         alpha_t = C/(iter_t + 2)
-        
             
     if eta > tol:
         status = 'max iterations reached'    
