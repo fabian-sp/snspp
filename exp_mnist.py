@@ -102,6 +102,10 @@ P.plot_objective(ax = ax)
 
 P1.plot_objective(ax = ax, label = "ssnsp_constant", marker = "x")
 
+save = False
+if save:
+    fig.savefig(f'data/plots/exp_mnist/obj.png', dpi = 300)
+
 
 fig,ax = plt.subplots(2,2)
 Q.plot_path(ax = ax[0,0])
