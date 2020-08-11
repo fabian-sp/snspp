@@ -42,7 +42,7 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
 def get_default_newton_params():
     
     params = {'tau': .9, 'eta' : 1e-2, 'rho': .8, 'mu': .45, 'eps': 1e-3, \
-              'cg_max_iter': 15, 'max_iter': 40}
+              'cg_max_iter': 15, 'max_iter': 50}
     
     return params
 
@@ -209,20 +209,20 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
     
     return new_x, xi, info
 
-def batch_size_constructor(t, a, b, M):
+def batch_size_constructor(t, a, b, M, cutoff = 20):
     """
     a: batch size at t=0
     b: batch size at t=M
     """
-    if M > 20:
-        M1 = 20
+    if M > cutoff:
+        M1 = cutoff
         c1 = np.log(b/a)/M1
     else:
         c1 = np.log(b/a)/M
         
     c2 = np.log(a)
     
-    y = np.exp(c1* np.minimum(t,20) +c2).astype(int)
+    y = np.exp(c1* np.minimum(t, cutoff) +c2).astype(int)
 
     #k = np.log(1e3)/M
     #y = b/(1+np.exp(-k*t))
@@ -266,6 +266,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     if params['sample_style'] == 'increasing':     
         batch_size = batch_size_constructor(np.arange(params['max_iter']), a = params['sample_size']/4, \
                                             b = params['sample_size'], M = params['max_iter']-1)
+    elif params['sample_style'] == 'fast_increasing': 
+        batch_size = batch_size_constructor(np.arange(params['max_iter']), a = params['sample_size']/4, \
+                                            b = params['sample_size'], M = params['max_iter']-1, cutoff = 5)
     else:
         batch_size = params['sample_size'] * np.ones(params['max_iter'])
     
