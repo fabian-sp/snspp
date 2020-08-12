@@ -53,7 +53,7 @@ class problem:
             
         return
     
-    def plot_path(self, ax = None, runtime = True, mean = False):
+    def plot_path(self, ax = None, runtime = True, mean = False, xlabel = True, ylabel = True):
         # sns.heatmap(self.info['iterates'], cmap = 'coolwarm', vmin = -1, vmax = 1, ax = ax)
         
         if ax is None:
@@ -72,13 +72,16 @@ class problem:
         for j in range(len(coeffs)):
             if runtime:
                 ax.plot(self.info['runtime'].cumsum(), self.info[to_plot][:,j], color = c[j])
-                ax.set_xlabel('Cumulative runtime')
+                if xlabel:
+                    ax.set_xlabel('Runtime [sec]')
             else:
                 ax.plot(self.info[to_plot][:,j], color = c[j])
-                ax.set_xlabel('Iteration/ epoch number')
+                if xlabel:
+                    ax.set_xlabel('Iteration/ epoch number')
         
-        ax.set_ylabel('Coefficient')
-        ax.set_title('Coefficient history for solver ' + self.solver + title_suffix)
+        if ylabel:
+            ax.set_ylabel('Coefficient')
+        ax.set_title(self.solver + title_suffix)
         return
     
     def plot_objective(self, ax = None, runtime = True, mean_obj = False, label = None, marker = 'o', ls = '-'):

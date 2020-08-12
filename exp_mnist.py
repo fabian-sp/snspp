@@ -94,27 +94,34 @@ P1.solve(solver = 'ssnsp')
 
 all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q1.x)).T, columns = ['scikit', 'spp', 'saga', 'adagrad'])
 
+save = False
 
-fig,ax = plt.subplots()
+fig,ax = plt.subplots(figsize = (7,5))
 Q.plot_objective(ax = ax, ls = '--', marker = '<')
 Q1.plot_objective(ax = ax, ls = '--', marker = '<')
 P.plot_objective(ax = ax)
 
 P1.plot_objective(ax = ax, label = "ssnsp_constant", marker = "x")
 
-save = False
+#ax.set_yscale('log')
+
 if save:
-    fig.savefig(f'data/plots/exp_mnist/obj.png', dpi = 300)
+    fig.savefig(f'data/plots/exp_mnist/obj.pdf', dpi = 300)
 
 
-fig,ax = plt.subplots(2,2)
-Q.plot_path(ax = ax[0,0])
-Q1.plot_path(ax = ax[0,1])
+fig,ax = plt.subplots(2, 2,  figsize = (7,5))
+Q.plot_path(ax = ax[0,0], xlabel = False)
+Q1.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
 P.plot_path(ax = ax[1,0])
-P.plot_path(ax = ax[1,1], mean = True)
+P.plot_path(ax = ax[1,1], mean = True, ylabel = False)
 
 for a in ax.ravel():
     a.set_ylim(-.2,.2)
+    
+plt.subplots_adjust(hspace = 0.265)
+
+if save:
+    fig.savefig(f'data/plots/exp_mnist/coeff.pdf', dpi = 300)
 
 
 #%%
@@ -131,7 +138,6 @@ def distance_to_sol(x_hist, x_ref):
         d.append(np.linalg.norm(x_hist[j,:] - x_ref))
         
     return np.array(d)
-
 
 
 fig,ax = plt.subplots()
@@ -156,25 +162,19 @@ ax.legend()
 logreg_error(X_test, y_test, P.x)
 
 
-
-
 resQ = list()
 
 for j in range(Q.info['iterates'].shape[0]):
     xj = Q.info['iterates'][j,:]
-    #resQ.append(stop_optimal(xj, f, phi))
     resQ.append(logreg_error(X_test, y_test, xj))
-    
-    
-    
+      
 resQ = np.hstack(resQ)
 
-print("DONE")
+
 resP = list()
 
 for j in range(P.info['iterates'].shape[0]):
     xj = P.info['iterates'][j,:]
-    #resP.append(stop_optimal(xj, f, phi))
     resP.append(logreg_error(X_test, y_test, xj))
     
 resP = np.hstack(resP)    

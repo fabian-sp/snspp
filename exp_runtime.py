@@ -20,7 +20,7 @@ n = 5000
 k = 100
 l1 = .2
 
-kappa = 1e4
+kappa = 1e6
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = kappa)
 #xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .5)
@@ -90,7 +90,7 @@ all_x = pd.DataFrame(np.vstack((xsol, Q.x, Q1.x, P.x, P1.x, x_sk)).T, columns = 
 #%% plotting
 save = False
 
-fig,ax = plt.subplots(figsize = (7,5))
+fig,ax = plt.subplots(figsize = (6,4))
 Q.plot_objective(ax = ax, ls = '--', marker = '<')
 Q1.plot_objective(ax = ax, ls = '--', marker = '<')
 P.plot_objective(ax = ax)
@@ -98,10 +98,14 @@ P.plot_objective(ax = ax)
 P1.plot_objective(ax = ax, label = 'ssnsp_constant')
 
 ax.set_yscale('log')
-#fig.suptitle('Lasso problem - objective')
+
+if kappa <= 1e5:
+    ax.set_xlim(0, 7)
+
+fig.tight_layout()
 
 if save:
-    fig.savefig(f'data/plots/exp_runtime/lasso_obj_{kappa}.png', dpi = 300)
+    fig.savefig(f'data/plots/exp_runtime/lasso_obj_{int(np.log10(kappa))}.pdf', dpi = 300)
 
 
 #%%
