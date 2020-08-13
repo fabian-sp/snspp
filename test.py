@@ -114,3 +114,4 @@ for j in np.arange(25):
     ax2.plot(sub_rsd[j]['direction'], 'green')
     
     ax.set_yscale('log')
+    ax2.set_yticks([])

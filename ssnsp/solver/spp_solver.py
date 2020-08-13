@@ -41,7 +41,7 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
 
 def get_default_newton_params():
     
-    params = {'tau': .9, 'eta' : 1e-2, 'rho': .8, 'mu': .45, 'eps': 1e-3, \
+    params = {'tau': .9, 'eta' : 1e-5, 'rho': .8, 'mu': .45, 'eps': 1e-3, \
               'cg_max_iter': 15, 'max_iter': 50}
     
     return params

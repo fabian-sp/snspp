@@ -151,10 +151,10 @@ def get_mnist(lambda1 = 0.02, train_size = .8, scale = True):
     
     assert np.all(np.isin(y,[-1,1]))
     
-    random_state = check_random_state(0)
-    permutation = random_state.permutation(X.shape[0])
-    X = X[permutation].astype('float64')
-    y = y[permutation].astype('float64')
+    #random_state = check_random_state(0)
+    #permutation = random_state.permutation(X.shape[0])
+    X = X.astype('float64')
+    y = y.astype('float64')
     #X = X.reshape((X.shape[0], -1))
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size)
