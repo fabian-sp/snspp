@@ -55,11 +55,11 @@ Q.solve(solver = 'saga')
 
 print(f.eval(Q.x) +phi.eval(Q.x))
 
-#Q.plot_path()
 #(predict(X_train, Q.x) == y_train).sum()
 
-#%%
-params = {'n_epochs' : 30, 'batch_size': 10}
+#%% solve with ADAGRAD
+
+params = {'n_epochs' : 30, 'batch_size': 10, 'gamma': .01}
 
 Q1 = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -67,18 +67,17 @@ Q1.solve(solver = 'adagrad')
 
 print(f.eval(Q1.x) +phi.eval(Q1.x))
 
-#Q1.plot_path()
 #(predict(X_train, Q1.x) == y_train).sum()
+
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 35, 'sample_size': f.N/12, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
+#params = {'max_iter' : 35, 'sample_size': f.N/12, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', 'alpha_C' : 10.}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
 P.solve(solver = 'ssnsp')
-
-#P.plot_path()
 
 
 #%% solve with CONSTANT SSNSP
@@ -90,9 +89,11 @@ P1 = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True
 P1.solve(solver = 'ssnsp')
 
 
-#%% plotting
+#%% coeffcient frame
 
 all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q1.x)).T, columns = ['scikit', 'spp', 'saga', 'adagrad'])
+
+#%% plotting
 
 save = False
 

@@ -209,7 +209,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
     
     return new_x, xi, info
 
-def batch_size_constructor(t, a, b, M, cutoff = 20):
+def batch_size_constructor(t, a, b, M, cutoff = 18):
     """
     a: batch size at t=0
     b: batch size at t=M

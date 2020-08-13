@@ -169,21 +169,64 @@ def get_mnist(lambda1 = 0.02, train_size = .8, scale = True):
 
     return f, phi, X_train, y_train, X_test, y_test
 
-def get_rcv1(lambda1 = 0.02, train_size = .8, scale = True):
+def get_gisette(lambda1 = 0.02):
+    X = np.load('data/gisette_X.npy')
+    y = np.load('data/gisette_y.npy')
     
-    rcv1 = fetch_rcv1()
-    
-    X = rcv1.data.astype('float64')
-    y = rcv1.target[:,0].astype('float64')
-    
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size)
-    
-    if scale:
-        scaler = StandardScaler()
-        X_train = scaler.fit_transform(X_train)
-        X_test = scaler.transform(X_test)
+    assert np.all(np.isin(y,[-1,1]))
     
     phi = Norm1(lambda1) 
-    f = logistic_loss(X_train, y_train)
+    f = logistic_loss(X, y)
+        
+    return f, phi, X, y
+
+#%% misc snippets
+
+# for loading gisette from .txt
+
+# with open('data/gisette_scale', 'r') as f:
+        
+#         data = []
+#         labels = []
+#         for line in f:
+            
+#             tmp = line.split(' ')
+#             label = int(tmp[0])
+#             feat = tmp[1:]
+            
+#             keys = []
+#             vals = []
+#             for f in feat:
+#                 if f == '\n':
+#                     continue
+#                 f.split(':')
+#                 keys.append(f.split(':')[0])
+#                 vals.append(float(f.split(':')[1]))
+            
+#             d = dict(zip(keys,vals))
+#             data.append(d)
+#             labels.append(label)
     
-    return f, phi, X_train, y_train, X_test, y_test
+#     print("Done reading")
+            
+#     y = np.array(labels)
+#     X = pd.DataFrame(data).values.astype('float64')
+    
+# def get_rcv1(lambda1 = 0.02, train_size = .8, scale = True):
+    
+#     rcv1 = fetch_rcv1()
+    
+#     X = rcv1.data.astype('float64')
+#     y = rcv1.target[:,0].astype('float64')
+    
+#     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size)
+    
+#     if scale:
+#         scaler = StandardScaler()
+#         X_train = scaler.fit_transform(X_train)
+#         X_test = scaler.transform(X_test)
+    
+#     phi = Norm1(lambda1) 
+#     f = logistic_loss(X_train, y_train)
+    
+#     return f, phi, X_train, y_train, X_test, y_test
