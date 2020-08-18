@@ -111,7 +111,8 @@ for j in np.arange(25):
     ax.plot(sub_rsd[j]['residual'], 'blue')
     ax2 = ax.twinx()
     ax2.plot(sub_rsd[j]['step_size'], 'orange')
-    ax2.plot(sub_rsd[j]['direction'], 'green')
+    #ax2.plot(sub_rsd[j]['direction'], 'green')
     
     ax.set_yscale('log')
+    ax2.set_ylim(0,1.1)
     ax2.set_yticks([])

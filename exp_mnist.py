@@ -40,7 +40,6 @@ print(f"Computing time: {end-start} sec")
 
 x_sk = sk.coef_.copy().squeeze()
 
-
 #(np.sign(predict(X_train, x_sk)) == np.sign(y_train)).sum() / len(y_train)
 
 f.eval(x_sk) + phi.eval(x_sk)
@@ -73,7 +72,7 @@ print(f.eval(Q1.x) +phi.eval(Q1.x))
 #%% solve with SSNSP
 
 #params = {'max_iter' : 35, 'sample_size': f.N/12, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
-params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', 'alpha_C' : 10.}
+params = {'max_iter' : 25, 'sample_size': f.N/10, 'sample_style': 'increasing', 'alpha_C' : 10.}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
