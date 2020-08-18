@@ -229,6 +229,22 @@ def batch_size_constructor(t, a, b, M, cutoff = 18):
     
     return y
 
+def cyclic_batch(N, batch_size, t):
+    
+    C = batch_size.cumsum() % N
+    if t > 0:
+        a = C[t-1]
+        b = C[t]
+        if a <= b:
+            S = np.arange(a,b)
+        else:
+            S = np.hstack((np.arange(0,b),  np.arange(a, N)))
+    else:
+        S = np.arange(0, C[t])
+    
+    np.sort(S)
+    return S
+    
 def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
     
     # initialize all variables
@@ -276,7 +292,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     # initialize variables + containers
     if xi is None:
         if f.name == 'logistic':
-            xi = dict(zip(np.arange(f.N), [ -.314 * np.ones(m[i]) for i in np.arange(f.N)]))
+            xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(m[i]) for i in np.arange(f.N)]))
         else:
             xi = dict(zip(np.arange(f.N), [np.zeros(m[i]) for i in np.arange(f.N)]))
     
@@ -310,6 +326,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         
         # sample and update
         S = sampler(f.N, batch_size[iter_t])
+        #S = cyclic_batch(f.N, batch_size, iter_t)
+        
         
         params['newton_params']['eps'] =  min(1e-2, 1e-1/(iter_t+1)**2)
         
