@@ -122,7 +122,7 @@ class problem:
         
         tmpfun = lambda x: np.isin(np.arange(self.f.N), x)
         
-        tmp = np.apply_along_axis(tmpfun, axis = 1, arr = self.info['samples'])
+        tmp = np.array([tmpfun(s) for s in self.info['samples']])
         tmp2 = tmp.sum(axis=0)
         
         fig = plt.figure(figsize=(6, 6))

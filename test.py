@@ -99,6 +99,11 @@ xis = np.vstack(xis)
 plt.figure()
 sns.heatmap(xis, cmap = 'coolwarm', vmin = -1, vmax = 1)
 
+plt.figure()
+sns.distplot(np.hstack(info['xi_hist'][-1].values()))
+
+
+
 #%% newton convergence
 
 sub_rsd = P.info['ssn_info']

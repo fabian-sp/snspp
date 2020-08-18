@@ -276,7 +276,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     # initialize variables + containers
     if xi is None:
         if f.name == 'logistic':
-            xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(m[i]) for i in np.arange(f.N)]))
+            xi = dict(zip(np.arange(f.N), [ -.314 * np.ones(m[i]) for i in np.arange(f.N)]))
         else:
             xi = dict(zip(np.arange(f.N), [np.zeros(m[i]) for i in np.arange(f.N)]))
     
@@ -360,7 +360,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     info = {'objective': np.array(obj), 'objective_mean': np.array(obj2), 'iterates': np.vstack(x_hist), \
             'mean_hist': compute_x_mean_hist(np.vstack(x_hist)), 'xi_hist': xi_hist,\
-            'step_sizes': np.array(step_sizes), 'samples' : np.array(S_hist), \
+            'step_sizes': np.array(step_sizes), 'samples' : S_hist, \
             'ssn_info': ssn_info, 'runtime': np.array(runtime)}
     
     return x_t, x_mean, info
