@@ -286,7 +286,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         batch_size = batch_size_constructor(np.arange(params['max_iter']), a = params['sample_size']/4, \
                                             b = params['sample_size'], M = params['max_iter']-1, cutoff = 5)
     else:
-        batch_size = params['sample_size'] * np.ones(params['max_iter'])
+        batch_size = params['sample_size'] * np.ones(params['max_iter'], dtype = 'int64')
     
     
     # initialize variables + containers

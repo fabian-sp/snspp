@@ -15,6 +15,13 @@ from .fast_gradient import stochastic_gradient
 #sns.set()
 #sns.set_context("paper")
 
+
+color_dict = {"default": "#002A4A", "saga": "#FFB03B", "adagrad" : "#B64926", "ssnsp": "#468966"}
+
+
+##FFF0A5
+##8E2800
+
 class problem:
     
     def __init__(self, f, phi, x0 = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
@@ -111,8 +118,14 @@ class problem:
         
         if label is None:
             label = self.solver
+        else:
+            label = self.solver + label
         
-        pt = ax.plot(x,y, marker = marker, ls = ls, label = label, markersize = 5)
+        try:
+            c = color_dict[label]
+        except:
+            c = color_dict["default"]
+        pt = ax.plot(x,y, marker = marker, ls = ls, label = label, markersize = 5, c = c)
         
         if mean_obj:
             y1 = self.info['objective_mean']

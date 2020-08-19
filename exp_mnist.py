@@ -72,7 +72,7 @@ print(f.eval(Q1.x) +phi.eval(Q1.x))
 #%% solve with SSNSP
 
 #params = {'max_iter' : 35, 'sample_size': f.N/12, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
-params = {'max_iter' : 25, 'sample_size': f.N/10, 'sample_style': 'increasing', 'alpha_C' : 10.}
+params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', 'alpha_C' : 10.}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -98,10 +98,10 @@ save = False
 
 fig,ax = plt.subplots(figsize = (7,5))
 Q.plot_objective(ax = ax, ls = '--', marker = '<')
-Q1.plot_objective(ax = ax, ls = '--', marker = '<')
+Q1.plot_objective(ax = ax, ls = '-.', marker = '>')
 P.plot_objective(ax = ax)
 
-P1.plot_objective(ax = ax, label = "ssnsp_constant", marker = "x")
+P1.plot_objective(ax = ax, label = "_constant", marker = "x")
 
 #ax.set_yscale('log')
 
