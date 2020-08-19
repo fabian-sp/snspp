@@ -157,7 +157,8 @@ def get_mnist(lambda1 = 0.02, train_size = .8, scale = True):
     y = y.astype('float64')
     #X = X.reshape((X.shape[0], -1))
     
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+                                                        random_state = 12345)
     
     if scale:
         scaler = StandardScaler()
@@ -177,7 +178,8 @@ def get_gisette(lambda1 = 0.02, train_size = .8):
     
     X = X.astype('float64')
     y = y.astype('float64')
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+                                                        random_state = 1234)
     
     phi = Norm1(lambda1) 
     f = logistic_loss(X_train, y_train)

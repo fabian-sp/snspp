@@ -3,6 +3,7 @@
 """
 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -11,9 +12,8 @@ from .saga import saga
 from .warm_spp import warm_spp
 from .fast_gradient import stochastic_gradient
 
-sns.set()
-sns.set_context("paper")
-
+#sns.set()
+#sns.set_context("paper")
 
 class problem:
     
@@ -55,6 +55,8 @@ class problem:
     
     def plot_path(self, ax = None, runtime = True, mean = False, xlabel = True, ylabel = True):
         # sns.heatmap(self.info['iterates'], cmap = 'coolwarm', vmin = -1, vmax = 1, ax = ax)
+        plt.rcParams["font.family"] = "serif"
+        plt.rcParams['font.size'] = 10
         
         if ax is None:
             fig, ax = plt.subplots()
@@ -82,9 +84,20 @@ class problem:
         if ylabel:
             ax.set_ylabel('Coefficient')
         ax.set_title(self.solver + title_suffix)
+        
+        #ax.grid(axis = 'y', ls = '-', lw = .5)
+        
         return
     
     def plot_objective(self, ax = None, runtime = True, mean_obj = False, label = None, marker = 'o', ls = '-'):
+        
+        plt.rcParams["font.family"] = "serif"
+        plt.rcParams['font.size'] = 10
+        plt.rcParams['axes.linewidth'] = 1
+        #plt.rc('text', usetex=False)
+        #plt.rc('xtick', labelsize=12)
+        #plt.rc('ytick', labelsize=12)
+        
         if ax is None:
             fig, ax = plt.subplots()
         
@@ -99,7 +112,7 @@ class problem:
         if label is None:
             label = self.solver
         
-        pt = ax.plot(x,y, marker = marker, ls = ls, label = label)
+        pt = ax.plot(x,y, marker = marker, ls = ls, label = label, markersize = 5)
         
         if mean_obj:
             y1 = self.info['objective_mean']
@@ -113,6 +126,8 @@ class problem:
             ax.set_xlabel("Iteration / epoch number")
         
         ax.set_ylabel("Objective")
+        ax.grid(ls = '-', lw = .5)
+        
         #ax.set_yscale('log')
         
         return

@@ -118,7 +118,7 @@ P.plot_path(ax = ax[1,1], mean = True, ylabel = False)
 for a in ax.ravel():
     a.set_ylim(-.2,.2)
     
-plt.subplots_adjust(hspace = 0.265)
+plt.subplots_adjust(hspace = 0.33)
 
 if save:
     fig.savefig(f'data/plots/exp_mnist/coeff.pdf', dpi = 300)
