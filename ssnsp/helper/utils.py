@@ -50,9 +50,17 @@ def compute_full_xi(f, x):
     
     dims = np.repeat(np.arange(f.N),f.m)
     vals = list()
+    
+    lazy = (f.m.max() == 1)
+    
     for i in np.arange(f.N):
-        A_i =  f.A[dims == i].copy()
+        if lazy:
+            A_i = f.A[[i],:].copy()
+        else:
+            A_i =  f.A[dims == i].copy()
+            
         vals.append(f.g(A_i @ x, i))
+    
         
     xi  = dict(zip(np.arange(f.N), vals))
     
@@ -83,7 +91,10 @@ def compute_gradient_table(f, x):
     # initialize object for storing all gradients
     gradients = list()
     for i in np.arange(f.N):
-        A_i =  f.A[dims == i].copy()
+        if f.m.max() == 1:
+            A_i = f.A[[i],:].copy()
+        else:
+            A_i =  f.A[dims == i].copy()
         tmp_i = A_i.T @ f.g( A_i @ x, i)
         gradients.append(tmp_i)
         

@@ -59,7 +59,7 @@ def check_newton_params(newton_params):
 
 
     
-def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newton_params = None, verbose = False):
+def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbose = False):
     """
     m: vector with all dimensions m_i, i = 1,..,N
     
@@ -70,7 +70,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
     check_newton_params(newton_params)
     assert alpha > 0 , "step sizes are not positive"
       
-    #xi_old = xi.copy()
+    xi_old = xi.copy()
     N = len(m)
     
     # creates a vector with nrows like A in order to index the relevant A_i from A
@@ -201,7 +201,15 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, gradient_table = None, newto
     
     
     # update primal iterate
-    z = x - (alpha/sample_size) * (subA.T @ xi_stack)
+    if alpha <= -100:
+        xi_stack_old = np.hstack([xi_old[i] for i in S])
+        xi_full_old = np.hstack([xi_old[i] for i in range(f.N)])
+        correct =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)
+        print(np.linalg.norm(correct))
+    else:
+        correct = 0.
+        
+    z = x - (alpha/sample_size) * (subA.T @ xi_stack) + correct
     new_x = phi.prox(z, alpha)
     
     info = {'residual': np.array(residual), 'direction' : norm_dir, 'step_size': step_sz }
@@ -230,7 +238,9 @@ def batch_size_constructor(t, a, b, M, cutoff = 18):
     return y
 
 def cyclic_batch(N, batch_size, t):
-    
+    """
+    returns array of samples for cyclic sampling at iteration t, with vector of target batch sizes batch_size
+    """
     C = batch_size.cumsum() % N
     if t > 0:
         a = C[t-1]
@@ -307,8 +317,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     # variance reduction
     reduce_variance = False
-    G = None
-    
+
     hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s\t%10s"
     out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
     if verbose:
@@ -331,17 +340,15 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         
         params['newton_params']['eps'] =  min(1e-2, 1e-1/(iter_t+1)**2)
         
-        x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, gradient_table = G, \
+        x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, \
                                              newton_params = params['newton_params'], verbose = False)
+        #if iter_t == 1:
+        #    xi = compute_full_xi(f, x_t)
         
         #stop criterion
         #eta = stop_optimal(x_t, f, phi)
         eta = stop_scikit_saga(x_t, x_old)
         
-        # variance reduction
-        if reduce_variance:
-            G = compute_gradient_table(f, x_t)
-            #print("Norm of full gradient", np.linalg.norm(1/f.N * G.sum(axis=0)))
         
         end = time.time()
         runtime.append(end-start)
