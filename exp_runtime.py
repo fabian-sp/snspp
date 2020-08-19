@@ -20,7 +20,7 @@ n = 5000
 k = 100
 l1 = .2
 
-kappa = 1e6
+kappa = 1e4
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = kappa)
 #xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .5)
@@ -52,9 +52,11 @@ print(f.eval(Q.x) +phi.eval(Q.x))
 
 
 #%% solve with ADAGRAD
-
-params = {'n_epochs' : 100, 'batch_size': 10, 'gamma': .1}
-
+if kappa >= 1e5:
+    params = {'n_epochs' : 100, 'batch_size': 10, 'gamma': .1}
+else:
+    params = {'n_epochs' : 100, 'batch_size': 10, 'gamma': .02}
+    
 Q1 = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
 Q1.solve(solver = 'adagrad')
@@ -92,10 +94,10 @@ save = False
 
 fig,ax = plt.subplots(figsize = (6,4))
 Q.plot_objective(ax = ax, ls = '--', marker = '<')
-Q1.plot_objective(ax = ax, ls = '--', marker = '<')
+Q1.plot_objective(ax = ax, ls = '-.', marker = '>')
 P.plot_objective(ax = ax)
 
-P1.plot_objective(ax = ax, label = 'ssnsp_constant')
+P1.plot_objective(ax = ax, label = '_constant')
 
 ax.set_yscale('log')
 

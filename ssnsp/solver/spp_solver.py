@@ -325,8 +325,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         x_old = x_t.copy()
         
         # sample and update
-        #S = sampler(f.N, batch_size[iter_t])
-        S = cyclic_batch(f.N, batch_size, iter_t)
+        S = sampler(f.N, batch_size[iter_t])
+        #S = cyclic_batch(f.N, batch_size, iter_t)
         
         
         params['newton_params']['eps'] =  min(1e-2, 1e-1/(iter_t+1)**2)
