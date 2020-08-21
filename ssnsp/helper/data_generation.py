@@ -171,13 +171,16 @@ def get_mnist(lambda1 = 0.02, train_size = .8, scale = True):
     return f, phi, X_train, y_train, X_test, y_test
 
 def get_gisette(lambda1 = 0.02, train_size = .8):
-    X = np.load('../../data/gisette_X.npy')
-    y = np.load('../../data/gisette_y.npy')
+    X = np.load('data/gisette_X.npy')
+    y = np.load('data/gisette_y.npy')
     
     assert np.all(np.isin(y,[-1,1]))
     
     X = X.astype('float64')
     y = y.astype('float64')
+    
+    np.nan_to_num(X, copy = False)
+    
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
                                                         random_state = 1234)
     
