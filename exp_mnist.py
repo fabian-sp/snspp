@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from ssnsp.solver.opt_problem import problem
+from ssnsp.solver.opt_problem import problem, color_dict
 from ssnsp.helper.data_generation import get_mnist
 from ssnsp.helper.utils import stop_optimal
 
@@ -67,16 +67,29 @@ print(f.eval(Q1.x) +phi.eval(Q1.x))
 
 #(predict(X_train, Q1.x) == y_train).sum()
 
-
 #%% solve with SSNSP
 
 #params = {'max_iter' : 35, 'sample_size': f.N/12, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
 params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', 'alpha_C' : 10.}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
-
 P.solve(solver = 'ssnsp')
 
+#%% solve with SSNSP (multiple times)
+
+K = 3
+allP = list()
+for k in range(K):
+    
+    P_k = problem(f, phi, tol = 1e-7, params = params, verbose = False, measure = True)
+    P_k.solve(solver = 'ssnsp')
+    allP.append(P_k.info)
+
+all_obj = np.vstack([allP[k]["objective"] for k in range(K)])
+all_mean = all_obj.mean(axis=0)
+all_std = all_obj.std(axis=0)
+
+all_rt = np.vstack([allP[k]["runtime"] for k in range(K)]).mean(axis=0).cumsum()
 
 #%% solve with CONSTANT SSNSP
 
@@ -91,7 +104,7 @@ P1.solve(solver = 'ssnsp')
 
 all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q1.x)).T, columns = ['scikit', 'spp', 'saga', 'adagrad'])
 
-#%% plotting
+#%% objective plot
 
 save = False
 
@@ -102,11 +115,16 @@ P.plot_objective(ax = ax)
 
 P1.plot_objective(ax = ax, label = "_constant", marker = "x")
 
+ax.plot(all_rt, all_mean, marker = 'o', color = color_dict["ssnsp"])
+ax.fill_between(all_rt, all_mean-all_std, all_mean+all_std, \
+                color = color_dict["ssnsp"], alpha = .5)
+
 #ax.set_yscale('log')
 
 if save:
     fig.savefig(f'data/plots/exp_mnist/obj.pdf', dpi = 300)
 
+#%% coefficent plot
 
 fig,ax = plt.subplots(2, 2,  figsize = (7,5))
 Q.plot_path(ax = ax[0,0], xlabel = False)
