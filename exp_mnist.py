@@ -2,7 +2,6 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 
 from ssnsp.solver.opt_problem import problem
 from ssnsp.helper.data_generation import get_mnist
