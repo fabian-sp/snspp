@@ -11,7 +11,7 @@ from ssnsp.helper.utils import stop_optimal
 from sklearn.linear_model import LogisticRegression
 
 
-f, phi, X_train, y_train, X_test, y_test = get_gisette(lambda1 = 0.1)
+f, phi, X_train, y_train, X_test, y_test = get_gisette(lambda1 = 0.05)
 
 
 print("Regularization parameter lambda:", phi.lambda1)
@@ -28,8 +28,7 @@ def predict(A,x):
 #%% solve with scikit (SAGA)
 
 sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-8, \
-                        solver = 'saga', max_iter = 50, verbose = 1)
-
+                        solver = 'saga', max_iter = 100, verbose = 1)
 
 start = time.time()
 sk.fit(X_train, y_train)
@@ -57,7 +56,7 @@ print(f.eval(Q.x) +phi.eval(Q.x))
 
 #%% solve with ADAGRAD
 
-params = {'n_epochs' : 30, 'batch_size': 20, 'gamma': .005}
+params = {'n_epochs' : 40, 'batch_size': 10, 'gamma': .005}
 
 Q1 = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -70,8 +69,7 @@ print(f.eval(Q1.x) +phi.eval(Q1.x))
 
 #%% solve with SSNSP
 
-#params = {'max_iter' : 35, 'sample_size': f.N/12, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
-params = {'max_iter' : 25, 'sample_size': f.N/2, 'sample_style': 'fast_increasing', 'alpha_C' : 10.}
+params = {'max_iter' : 25, 'sample_size': 0.8* f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 30.}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -116,7 +114,7 @@ P.plot_path(ax = ax[1,0])
 P.plot_path(ax = ax[1,1], mean = True, ylabel = False)
 
 for a in ax.ravel():
-    a.set_ylim(-1.,1.)
+    a.set_ylim(-.5,.5)
     
 plt.subplots_adjust(hspace = 0.33)
 
