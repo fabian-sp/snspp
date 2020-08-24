@@ -17,7 +17,7 @@ from .fast_gradient import stochastic_gradient
 
 
 color_dict = {"default": "#002A4A", "saga": "#FFB03B", "adagrad" : "#B64926", \
-              "ssnsp": "#468966", "ssnsp_cyclic": "gainsboro"}
+              "ssnsp": "#468966", "ssnsp_noVR": "gainsboro"}
 
 
 ##FFF0A5

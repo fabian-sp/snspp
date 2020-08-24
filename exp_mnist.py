@@ -6,6 +6,7 @@ import pandas as pd
 from ssnsp.solver.opt_problem import problem, color_dict
 from ssnsp.helper.data_generation import get_mnist
 from ssnsp.helper.utils import stop_optimal
+from ssnsp.experiments.experiment_utils import plot_multiple
 
 from sklearn.linear_model import LogisticRegression
 
@@ -66,18 +67,11 @@ Q1.solve(solver = 'adagrad')
 print(f.eval(Q1.x) +phi.eval(Q1.x))
 
 #(predict(X_train, Q1.x) == y_train).sum()
+    
+#%% solve with SSNSP (multiple times, VR)
 
-#%% solve with SSNSP
-
-#params = {'max_iter' : 35, 'sample_size': f.N/12, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
 params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', \
           'alpha_C' : 10., 'reduce_variance': True}
-
-P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
-P.solve(solver = 'ssnsp')
-
-#%% solve with SSNSP (multiple times)
-
 K = 10
 allP = list()
 for k in range(K):
@@ -86,12 +80,26 @@ for k in range(K):
     P_k.solve(solver = 'ssnsp')
     allP.append(P_k.info)
 
-# compute mean and std of objectives
-all_obj = np.vstack([allP[k]["objective"] for k in range(K)])
-all_mean = all_obj.mean(axis=0)
-all_std = all_obj.std(axis=0)
+#%% solve with SSNSP (multiple times, no VR)
 
-all_rt = np.vstack([allP[k]["runtime"] for k in range(K)]).mean(axis=0).cumsum()
+params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', \
+          'alpha_C' : 10., 'reduce_variance': False}
+K = 10
+allP1 = list()
+for k in range(K):
+    
+    P_k = problem(f, phi, tol = 1e-7, params = params, verbose = False, measure = True)
+    P_k.solve(solver = 'ssnsp')
+    allP1.append(P_k.info)
+    
+#%% solve with SSNSP
+
+#params = {'max_iter' : 35, 'sample_size': f.N/12, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', \
+          'alpha_C' : 10., 'reduce_variance': True}
+
+P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
+P.solve(solver = 'ssnsp')
 
 #%% solve with CONSTANT SSNSP
 
@@ -117,12 +125,10 @@ Q1.plot_objective(ax = ax, ls = '-.', marker = '>')
 #P.plot_objective(ax = ax)
 #P1.plot_objective(ax = ax, label = "_constant", marker = "x")
 
-ax.plot(all_rt, all_mean, marker = 'o', color = color_dict["ssnsp"], label = "ssnsp")
-ax.fill_between(all_rt, all_mean-all_std, all_mean+all_std, \
-                color = color_dict["ssnsp"], alpha = .5)
+plot_multiple(allP, ax = ax , label = "ssnsp")
+plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)")
 
 ax.legend()
-
 #ax.set_yscale('log')
 
 if save:
