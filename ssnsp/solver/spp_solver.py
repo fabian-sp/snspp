@@ -59,7 +59,7 @@ def check_newton_params(newton_params):
 
 
     
-def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbose = False):
+def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce_variance = False, verbose = False):
     """
     m: vector with all dimensions m_i, i = 1,..,N
     
@@ -201,11 +201,11 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, verbos
     
     
     # update primal iterate
-    if alpha <= -100:
+    if reduce_variance:
         xi_stack_old = np.hstack([xi_old[i] for i in S])
         xi_full_old = np.hstack([xi_old[i] for i in range(f.N)])
         correct =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)
-        print(np.linalg.norm(correct))
+        #print(np.linalg.norm(correct))
     else:
         correct = 0.
         
@@ -285,6 +285,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     if 'sample_style' not in params.keys():    
         params['sample_style'] = 'constant'
+    
+    if 'reduce_variance' not in params.keys():    
+        params['reduce_variance'] = False
         
     if 'newton_params' not in params.keys():
         params['newton_params'] = get_default_newton_params()
@@ -340,10 +343,15 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         
         params['newton_params']['eps'] =  min(1e-2, 1e-1/(iter_t+1)**2)
         
+        # variance reduction
+        reduce_variance = params['reduce_variance'] and (iter_t >= 5)
+                
         x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, \
-                                             newton_params = params['newton_params'], verbose = False)
-        #if iter_t == 1:
-        #    xi = compute_full_xi(f, x_t)
+                                             newton_params = params['newton_params'], reduce_variance = reduce_variance, verbose = False)
+        
+        if params['reduce_variance']:
+            if iter_t == 1:
+                xi = compute_full_xi(f, x_t)
         
         #stop criterion
         #eta = stop_optimal(x_t, f, phi)

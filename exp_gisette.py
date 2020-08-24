@@ -56,7 +56,8 @@ print(f.eval(Q.x) +phi.eval(Q.x))
 
 #%% solve with ADAGRAD
 
-params = {'n_epochs' : 40, 'batch_size': 10, 'gamma': .005}
+#params = {'n_epochs' : 40, 'batch_size': 10, 'gamma': .005}
+params = {'n_epochs' : 7, 'batch_size': 100, 'gamma': .009}
 
 Q1 = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 

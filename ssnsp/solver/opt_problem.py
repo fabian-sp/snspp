@@ -16,7 +16,8 @@ from .fast_gradient import stochastic_gradient
 #sns.set_context("paper")
 
 
-color_dict = {"default": "#002A4A", "saga": "#FFB03B", "adagrad" : "#B64926", "ssnsp": "#468966"}
+color_dict = {"default": "#002A4A", "saga": "#FFB03B", "adagrad" : "#B64926", \
+              "ssnsp": "#468966", "ssnsp_cyclic": "gainsboro"}
 
 
 ##FFF0A5
