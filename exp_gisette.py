@@ -107,6 +107,7 @@ P1.plot_objective(ax = ax, label = "_constant", marker = "x")
 if save:
     fig.savefig(f'data/plots/exp_gisette/obj.pdf', dpi = 300)
 
+#%%
 
 fig,ax = plt.subplots(2, 2,  figsize = (7,5))
 Q.plot_path(ax = ax[0,0], xlabel = False)

@@ -82,13 +82,14 @@ for k in range(K):
 
 #%% solve with SSNSP (multiple times, no VR)
 
-params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', \
-          'alpha_C' : 10., 'reduce_variance': False}
+params1 = params.copy()
+params1["reduce_variance"] = False
+
 K = 10
 allP1 = list()
 for k in range(K):
     
-    P_k = problem(f, phi, tol = 1e-7, params = params, verbose = False, measure = True)
+    P_k = problem(f, phi, tol = 1e-7, params = params1, verbose = False, measure = True)
     P_k.solve(solver = 'ssnsp')
     allP1.append(P_k.info)
     
@@ -103,7 +104,7 @@ P.solve(solver = 'ssnsp')
 
 #%% solve with CONSTANT SSNSP
 
-params = {'max_iter' : 30, 'sample_size': 3000, 'sample_style': 'constant', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 30, 'sample_size': 3000, 'sample_style': 'constant', 'alpha_C' : 10.}
 
 P1 = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -119,15 +120,19 @@ all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q1.x)).T, columns = ['scikit', '
 save = False
 
 fig,ax = plt.subplots(figsize = (7,5))
+
 Q.plot_objective(ax = ax, ls = '--', marker = '<')
 Q1.plot_objective(ax = ax, ls = '-.', marker = '>')
+
+
+plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)")
+plot_multiple(allP, ax = ax , label = "ssnsp")
 
 #P.plot_objective(ax = ax)
 #P1.plot_objective(ax = ax, label = "_constant", marker = "x")
 
-plot_multiple(allP, ax = ax , label = "ssnsp")
-plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)")
 
+ax.set_xlim(-1,30)
 ax.legend()
 #ax.set_yscale('log')
 
@@ -143,7 +148,7 @@ P.plot_path(ax = ax[1,0])
 P.plot_path(ax = ax[1,1], mean = True, ylabel = False)
 
 for a in ax.ravel():
-    a.set_ylim(-.2,.2)
+    a.set_ylim(-.22,.22)
     
 plt.subplots_adjust(hspace = 0.33)
 

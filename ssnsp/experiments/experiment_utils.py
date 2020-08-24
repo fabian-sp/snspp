@@ -22,9 +22,13 @@ def plot_multiple(allP, ax = None, label = "ssnsp", name = None):
 
     all_rt = np.vstack([allP[k]["runtime"] for k in range(K)]).mean(axis=0).cumsum()
     
-    
-    ax.plot(all_rt, all_mean, marker = 'o', color = color_dict[label], label = name)
-    ax.fill_between(all_rt, all_mean-all_std, all_mean+all_std, \
-                    color = color_dict[label], alpha = .5)
+    try:
+        c = color_dict[label]
+    except:
+        c = color_dict["default"]
+        
+    ax.plot(all_rt, all_mean, marker = 'o', color = c, label = name)
+    ax.fill_between(all_rt, all_mean-2*all_std, all_mean+2*all_std, \
+                    color = c, alpha = .5)
         
     return
