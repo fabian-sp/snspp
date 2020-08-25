@@ -341,10 +341,11 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #S = cyclic_batch(f.N, batch_size, iter_t)
         
         
-        params['newton_params']['eps'] =  min(1e-2, 1e-1/(iter_t+1)**2)
+        #params['newton_params']['eps'] =  min(1e-2, 1e-1/(iter_t+1)**2)
+        params['newton_params']['eps'] =  min(1e-2, 1e-1/(iter_t+1)**(1.5))
         
         # variance reduction
-        reduce_variance = params['reduce_variance'] and (iter_t >= 10)
+        reduce_variance = params['reduce_variance'] and (iter_t >= 6)
                 
         x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, \
                                              newton_params = params['newton_params'], reduce_variance = reduce_variance, verbose = False)
@@ -381,8 +382,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
             print(out_fmt % (iter_t, obj[-1], obj2[-1] , alpha_t, len(S), eta))
             
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
-        alpha_t = C/(iter_t + 2)
-            
+        #alpha_t = C/(iter_t + 2)
+        alpha_t = C/(iter_t + 2)**(0.55)
+             
     if eta > tol:
         status = 'max iterations reached'    
     

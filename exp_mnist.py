@@ -67,7 +67,16 @@ Q1.solve(solver = 'adagrad')
 print(f.eval(Q1.x) +phi.eval(Q1.x))
 
 #(predict(X_train, Q1.x) == y_train).sum()
-    
+  
+#%% solve with SSNSP
+
+#params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', 'alpha_C' : 10., 'reduce_variance': True}
+params = {'max_iter' : 50, 'sample_size': 3000, 'sample_style': 'increasing', \
+          'alpha_C' : 3., 'reduce_variance': True}
+
+P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
+P.solve(solver = 'ssnsp')
+  
 #%% solve with SSNSP (multiple times, VR)
 
 params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', \
@@ -93,14 +102,6 @@ for k in range(K):
     P_k.solve(solver = 'ssnsp')
     allP1.append(P_k.info)
     
-#%% solve with SSNSP
-
-#params = {'max_iter' : 35, 'sample_size': f.N/12, 'sample_style': 'increasing', 'alpha_C' : 10., 'n_epochs': 5}
-params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', \
-          'alpha_C' : 10., 'reduce_variance': True}
-
-P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
-P.solve(solver = 'ssnsp')
 
 #%% solve with CONSTANT SSNSP
 
@@ -125,14 +126,14 @@ Q.plot_objective(ax = ax, ls = '--', marker = '<')
 Q1.plot_objective(ax = ax, ls = '-.', marker = '>')
 
 
-plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)")
+#plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)")
 plot_multiple(allP, ax = ax , label = "ssnsp")
 
 #P.plot_objective(ax = ax)
 #P1.plot_objective(ax = ax, label = "_constant", marker = "x")
 
 
-ax.set_xlim(-1,30)
+#ax.set_xlim(-1,30)
 ax.legend()
 #ax.set_yscale('log')
 
