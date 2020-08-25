@@ -65,7 +65,7 @@ print(f.eval(Q1.x) +phi.eval(Q1.x))
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 15, 'sample_size': f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 10.}
+params = {'max_iter' : 15, 'sample_size': f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 10., 'reduce_variance': False}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -75,7 +75,7 @@ P.solve(solver = 'ssnsp')
 
 #%% solve with CONSTANT SSNSP
 
-params = {'max_iter' : 20, 'sample_size': f.N/3, 'sample_style': 'constant', 'alpha_C' : 10.}
+params = {'max_iter' : 20, 'sample_size': f.N, 'sample_style': 'constant', 'alpha_C' : 10.}
 
 P1 = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 

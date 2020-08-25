@@ -179,7 +179,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         while U_new > U_old + newton_params['mu'] * beta * (d @ -rhs):
             beta *= newton_params['rho']
             U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA)
-        
+            
         step_sz.append(beta)
         
     # step 4: update xi
