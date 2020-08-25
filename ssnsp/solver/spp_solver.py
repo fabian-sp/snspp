@@ -3,7 +3,7 @@ author: Fabian Schaipp
 """
 
 import numpy as np
-from ..helper.utils import block_diag, compute_x_mean, stop_mean_objective, stop_optimal, stop_scikit_saga
+from ..helper.utils import block_diag, compute_x_mean, stop_optimal, stop_scikit_saga
 from ..helper.utils import compute_gradient_table, compute_full_xi, compute_x_mean_hist
 from scipy.sparse.linalg import cg
 import time

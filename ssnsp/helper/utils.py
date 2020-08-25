@@ -47,24 +47,32 @@ def stop_optimal(x, f, phi):
 ############################################################################################
 
 def compute_full_xi(f, x):
-    
-    dims = np.repeat(np.arange(f.N),f.m)
-    vals = list()
-    
+     
     lazy = (f.m.max() == 1)
     
-    for i in np.arange(f.N):
-        if lazy:
-            A_i = f.A[[i],:].copy()
-        else:
+    if lazy:
+        vals = compute_xi_inner(f, x)
+    else:
+        dims = np.repeat(np.arange(f.N),f.m)
+        vals = list()
+        for i in np.arange(f.N):
             A_i =  f.A[dims == i].copy()
-            
-        vals.append(f.g(A_i @ x, i))
-    
-        
+            vals.append(f.g(A_i @ x, i))
+                 
     xi  = dict(zip(np.arange(f.N), vals))
     
     return xi 
+
+@njit()
+def compute_xi_inner(f, x):
+    
+    vals = List()
+    
+    for i in np.arange(f.N):
+        A_i = np.ascontiguousarray(f.A[i,:]).reshape(1,-1)
+        vals.append(f.g(A_i @ x, i))
+        
+    return vals
 
 def compute_full_gradient(f,x):
     """
