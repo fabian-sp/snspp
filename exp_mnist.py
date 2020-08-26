@@ -129,7 +129,7 @@ Q1.plot_objective(ax = ax, ls = '-.', marker = '>')
 #plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)")
 plot_multiple(allP, ax = ax , label = "ssnsp")
 
-#P.plot_objective(ax = ax)
+P.plot_objective(ax = ax)
 #P1.plot_objective(ax = ax, label = "_constant", marker = "x")
 
 
