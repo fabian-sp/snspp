@@ -386,7 +386,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
             
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
         #alpha_t = C/(iter_t + 2)
-        alpha_t = C/(iter_t + 2)**(0.55)
+        alpha_t = C/(iter_t + 2)**(0.51)
              
     if eta > tol:
         status = 'max iterations reached'    
