@@ -95,7 +95,7 @@ class problem:
         
         return
     
-    def plot_objective(self, ax = None, runtime = True, mean_obj = False, label = None, marker = 'o', ls = '-'):
+    def plot_objective(self, ax = None, runtime = True, mean_obj = False, label = None, marker = 'o', ls = '-', f_star = 0, log_scale = False):
         
         plt.rcParams["font.family"] = "serif"
         plt.rcParams['font.size'] = 10
@@ -112,7 +112,7 @@ class problem:
         else:
             x = np.arange(len(self.info['objective']))
         
-        y = self.info['objective']
+        y = self.info['objective'] - f_star
         
         
         if label is None:
@@ -127,7 +127,7 @@ class problem:
         pt = ax.plot(x,y, marker = marker, ls = ls, label = label, markersize = 5, c = c)
         
         if mean_obj:
-            y1 = self.info['objective_mean']
+            y1 = self.info['objective_mean'] - f_star
             ax.plot(x,y1, marker = None, ls = 'dotted', lw = 2, label = label + '_mean',\
                     c = pt[0].get_color())
             
@@ -140,7 +140,8 @@ class problem:
         ax.set_ylabel("Objective")
         ax.grid(ls = '-', lw = .5)
         
-        #ax.set_yscale('log')
+        if log_scale:
+            ax.set_yscale('log')
         
         return
     

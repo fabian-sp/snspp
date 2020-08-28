@@ -1,15 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from sklearn.linear_model import Lasso, LogisticRegression
+from sklearn.linear_model import Lasso
 
 
-from ssnsp.helper.data_generation import lasso_test, logreg_test
+from ssnsp.helper.data_generation import lasso_test
 from ssnsp.solver.opt_problem import problem
 
-N = 5000
-n = 50
-k = 10
+N = 10000
+n = 1000
+k = 100
 l1 = .01
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False)
@@ -21,64 +21,55 @@ sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-8, selection = 'cyclic'
 sk.fit(A,b)
 xsol = sk.coef_.copy()
 
+f_star = f.eval(xsol) + phi.eval(xsol)
+print("Optimal value: ", f_star)
+
 #%%
 
-params = {'max_iter' : 120, 'alpha_C' : 100.}
-err = lambda x: np.linalg.norm(x-xsol)
+alpha_0 = [.1, 1., 10., 100.]
+batch_size = [0.01, 0.05, 0.1]
 
-num_p = 5
-sizeS = np.linspace(N/10, N-1, num_p).astype(int)
+A, B = np.meshgrid(alpha_0, batch_size)
+
+# K ~ len(batch_size), L ~ len(alpha_0)
+K,L = A.shape
+
+
+f_tol = 1e-3 
+err = lambda x: np.linalg.norm(x-xsol)
 
 
 all_err = list()
-all_time = list()
+all_time = np.zeros_like(A)
 
-for j in np.arange(num_p):
-    params['sample_size'] = sizeS[j]
+for k in np.arange(K):
+    for l in np.arange(L):
+        
+        params = {'max_iter': 500, 'sample_style': 'increasing', 'reduce_variance': True}
+        params['sample_size'] = max(1, int(B[k,l] * f.N))
+        params['alpha_C'] = A[k,l]
+        
+        print(params)
+        
+        P = problem(f, phi, tol = 1e-4, params = params, verbose = False, measure = True)
+        P.solve(solver = 'ssnsp')
+        
+        
+        xhist = P.info['iterates'].copy()
+        obj = P.info['objective'].copy()
+        
+        print("Last objective value: ", obj[-1])
+        
+        if np.any(obj <= f_star + f_tol):
+            stop = np.where(obj <= f_star + f_tol)[0][0]
+        else:
+            stop = -1
+            print("NO CONVERGENCE!")
+            
+        this_time = P.info['runtime'].cumsum()[stop]
+        all_time[k,l] = this_time
+        
+        
 
-    P = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True )
-
-    start = time.time()
-    P.solve(solver = 'ssnsp')
-    end = time.time()
-    
-    xhist = P.info['iterates'].copy()
-    
-    print(f"Batch size: {np.round(sizeS[j]/N, 2)} * N")
-    print(f"Computing time: {end-start} sec")
-
-
-    this_err = np.apply_along_axis(err, axis = 1, arr = xhist)
-    this_time = P.info['runtime'].cumsum()
-    
-    all_err.append(this_err)
-    all_time.append(this_time)
-    
 #%%
-
-fig, ax = plt.subplots(1,1)
-
-for j in np.arange(num_p):
-    ax.plot( all_time[j],  all_err[j])
-    
-ax.set_yscale('log')
-
-   
-#%%
-
-fig, axs = plt.subplots(1,2)
-
-ax = axs[0]
-for j in np.arange(num_p):
-    ax.plot(all_err[j])
-    
-ax.set_yscale('log')
-
-
-ax = axs[1]
-for j in np.arange(num_p):
-    ax.plot(all_time[j])
-    
-ax.set_yscale('log')
-
-
+fig, ax = plt.subplots()
