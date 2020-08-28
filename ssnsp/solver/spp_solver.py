@@ -234,9 +234,6 @@ def batch_size_constructor(t, a, b, M, cutoff = 18):
     c2 = np.log(a)
     
     y = np.exp(c1* np.minimum(t, cutoff) +c2).astype(int)
-
-    #k = np.log(1e3)/M
-    #y = b/(1+np.exp(-k*t))
     
     return y
 
@@ -282,7 +279,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     if 'max_iter' not in params.keys():    
         params['max_iter'] = 70
-    
+    else:
+        assert type(params['max_iter']) == int, "Max. iter needs to be integer"
+        
     if 'sample_size' not in params.keys():    
         params['sample_size'] = max(int(f.N/4), 1)
     

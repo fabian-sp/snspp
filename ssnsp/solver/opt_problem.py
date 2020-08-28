@@ -95,8 +95,33 @@ class problem:
         
         return
     
-    def plot_objective(self, ax = None, runtime = True, mean_obj = False, label = None, marker = 'o', ls = '-', f_star = 0, log_scale = False):
+    def plot_objective(self, ax = None, runtime = True, mean_obj = False, label = None, marker = 'o', ls = '-', psi_star = 0, log_scale = False):
+        """
         
+        Parameters
+        ----------
+        ax : matplotlib.axes, optional
+            Axis where to plot. The default is None.
+        runtime : bool, optional
+            whether to plot runtime as x-axis (or iteration number). The default is True.
+        mean_obj : bool, optional
+            plot additionally the objective of the mean iterate. The default is False.
+        label : str, optional
+            label for legend. The default is None.
+        marker : str, optional
+            markerstyle. The default is 'o'.
+        ls : str, optional
+            linestyle. The default is '-'.
+        psi_star : float, optional
+            offset with true optimal value. The default is 0.
+        log_scale : bool, optional
+            plot y-axis in log scale. The default is False.
+
+        Returns
+        -------
+        None.
+
+        """
         plt.rcParams["font.family"] = "serif"
         plt.rcParams['font.size'] = 10
         plt.rcParams['axes.linewidth'] = 1
@@ -112,7 +137,7 @@ class problem:
         else:
             x = np.arange(len(self.info['objective']))
         
-        y = self.info['objective'] - f_star
+        y = self.info['objective'] - psi_star
         
         
         if label is None:
@@ -127,7 +152,7 @@ class problem:
         pt = ax.plot(x,y, marker = marker, ls = ls, label = label, markersize = 5, c = c)
         
         if mean_obj:
-            y1 = self.info['objective_mean'] - f_star
+            y1 = self.info['objective_mean'] - psi_star
             ax.plot(x,y1, marker = None, ls = 'dotted', lw = 2, label = label + '_mean',\
                     c = pt[0].get_color())
             
