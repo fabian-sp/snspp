@@ -7,6 +7,8 @@ import seaborn as sns
 from ssnsp.solver.opt_problem import problem
 from ssnsp.helper.data_generation import get_gisette
 from ssnsp.helper.utils import stop_optimal
+from ssnsp.experiments.experiment_utils import plot_multiple
+
 
 from sklearn.linear_model import LogisticRegression
 
@@ -57,7 +59,7 @@ print(f.eval(Q.x) +phi.eval(Q.x))
 #%% solve with ADAGRAD
 
 #params = {'n_epochs' : 40, 'batch_size': 10, 'gamma': .005}
-params = {'n_epochs' : 7, 'batch_size': 100, 'gamma': .009}
+params = {'n_epochs' : 200, 'batch_size': 250, 'gamma': .009}
 
 Q1 = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -67,15 +69,26 @@ print(f.eval(Q1.x) +phi.eval(Q1.x))
 
 #(predict(X_train, Q1.x) == y_train).sum()
 
-
 #%% solve with SSNSP
 
-params = {'max_iter' : 25, 'sample_size': 0.8* f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 30.}
+params = {'max_iter' : 25, 'sample_size': 0.8* f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 30.,\
+          "reduce_variance": True}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
 P.solve(solver = 'ssnsp')
 
+#%% solve with SSNSP (multiple times, VR)
+
+params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', \
+          'alpha_C' : 10., 'reduce_variance': True}
+K = 10
+allP = list()
+for k in range(K):
+    
+    P_k = problem(f, phi, tol = 1e-7, params = params, verbose = False, measure = True)
+    P_k.solve(solver = 'ssnsp')
+    allP.append(P_k.info)
 
 #%% solve with CONSTANT SSNSP
 
@@ -99,6 +112,9 @@ Q.plot_objective(ax = ax, ls = '--', marker = '<')
 Q1.plot_objective(ax = ax, ls = '-.', marker = '>')
 P.plot_objective(ax = ax)
 
+#plot_multiple(allP, ax = ax , label = "ssnsp")
+
+ax.set_yscale('log')
 
 P1.plot_objective(ax = ax, label = "_constant", marker = "x")
 

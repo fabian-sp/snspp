@@ -186,7 +186,15 @@ def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
     n = len(x_t)
     G = np.zeros(n)
     
-    for iter_t in np.arange(N * n_epochs):
+    # construct array which tells us when to store (at the END of each epoch)
+    max_iter = int(N * n_epochs/batch_size)
+    counter = np.arange(max_iter)*batch_size/N % 1
+    counter = np.append(counter,0)
+    
+    store = (counter[1:] <= counter[:-1])
+    assert len(store) == max_iter
+    
+    for iter_t in np.arange(max_iter):
         
         if eta <= tol:
             break
@@ -205,13 +213,13 @@ def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
         # compute Adagrad prox step
         x_t = phi.adagrad_prox(w_t, L_t)
         
-        # stop criterion
-        if iter_t % N == N-1:
+        # stop criterion (at end of each epoch)
+        if store[iter_t]:
             eta = stop_scikit_saga(x_t, x_old)
             x_old = x_t
             
         # store everything (at end of each epoch)
-        if iter_t % N == N-1:
+        if store[iter_t]:
             x_hist.append(x_t)
             step_sizes.append(gamma)
 
