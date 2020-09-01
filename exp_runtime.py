@@ -35,8 +35,8 @@ print(f"Computing time: {end-start} sec")
 
 x_sk = sk.coef_.copy().squeeze()
 
-print(f.eval(x_sk) +phi.eval(x_sk))
-
+psi_star = f.eval(x_sk) +phi.eval(x_sk)
+print(psi_star)
 
 #%% solve with SAGA
 
@@ -52,9 +52,9 @@ print(f.eval(Q.x) +phi.eval(Q.x))
 
 #%% solve with ADAGRAD
 if kappa >= 1e5:
-    params = {'n_epochs' : 100, 'batch_size': 10, 'gamma': .1}
+    params = {'n_epochs' : 600, 'batch_size': 10, 'gamma': .01}
 else:
-    params = {'n_epochs' : 100, 'batch_size': 10, 'gamma': .02}
+    params = {'n_epochs' : 400, 'batch_size': 10, 'gamma': .02}
     
 Q1 = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -65,7 +65,9 @@ print(f.eval(Q1.x) +phi.eval(Q1.x))
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 15, 'sample_size': f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 10., 'reduce_variance': False}
+#params = {'max_iter' : 15, 'sample_size': f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 10., 'reduce_variance': False}
+params = {'max_iter' : 15, 'sample_size': f.N, 'sample_style': 'fast_increasing',\
+          'alpha_C' : 10., 'reduce_variance': True}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -92,18 +94,20 @@ all_x = pd.DataFrame(np.vstack((xsol, Q.x, Q1.x, P.x, P1.x, x_sk)).T, columns = 
 save = False
 
 fig,ax = plt.subplots(figsize = (6,4))
-Q.plot_objective(ax = ax, ls = '--', marker = '<')
-Q1.plot_objective(ax = ax, ls = '-.', marker = '>')
-P.plot_objective(ax = ax)
 
-P1.plot_objective(ax = ax, label = '_constant')
+kwargs = {"psi_star": psi_star, "log_scale": True}
 
-ax.set_yscale('log')
+Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
+P.plot_objective(ax = ax, **kwargs)
+
+P1.plot_objective(ax = ax, label = ' constant', **kwargs)
+
+#ax.set_yscale('log')
 
 if kappa <= 1e5:
     ax.set_xlim(0, 7)
 
-fig.tight_layout()
 
 if save:
     fig.savefig(f'data/plots/exp_runtime/lasso_obj_{int(np.log10(kappa))}.pdf', dpi = 300)

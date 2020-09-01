@@ -58,7 +58,7 @@ print(f.eval(Q.x) +phi.eval(Q.x))
 
 #%% solve with ADAGRAD
 
-params = {'n_epochs' : 200, 'batch_size': 100, 'gamma': .01}
+params = {'n_epochs' : 200, 'batch_size': 100, 'gamma': .005}
 
 Q1 = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -122,7 +122,7 @@ save = False
 
 fig,ax = plt.subplots(figsize = (7,5))
 
-kwargs = {"psi_star": psi_star, "log_scale": False}
+kwargs = {"psi_star": psi_star, "log_scale": True}
 
 Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
