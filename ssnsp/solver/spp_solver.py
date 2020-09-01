@@ -353,7 +353,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
                                              newton_params = params['newton_params'], reduce_variance = reduce_variance, verbose = False)
         
         if params['reduce_variance']:
-            if iter_t in [1,20,30]:
+            if iter_t in [1,20,30,40]:
                 xi = compute_full_xi(f, x_t)
         
         #stop criterion

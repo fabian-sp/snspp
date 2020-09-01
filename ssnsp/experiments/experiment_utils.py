@@ -33,6 +33,6 @@ def plot_multiple(allP, ax = None, label = "ssnsp", name = None, psi_star = 0, l
                     color = c, alpha = .5)
     
     if log_scale:
-            ax.set_yscale('log')
+        ax.set_yscale('log')
             
     return

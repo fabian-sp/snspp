@@ -42,7 +42,7 @@ x_sk = sk.coef_.copy().squeeze()
 
 #(np.sign(predict(X_train, x_sk)) == np.sign(y_train)).sum() / len(y_train)
 
-f.eval(x_sk) + phi.eval(x_sk)
+psi_star = f.eval(x_sk) + phi.eval(x_sk)
 
 #%% solve with SAGA
 
@@ -58,7 +58,7 @@ print(f.eval(Q.x) +phi.eval(Q.x))
 
 #%% solve with ADAGRAD
 
-params = {'n_epochs' : 200, 'batch_size': 10, 'gamma': .01}
+params = {'n_epochs' : 200, 'batch_size': 100, 'gamma': .01}
 
 Q1 = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -79,8 +79,8 @@ P.solve(solver = 'ssnsp')
   
 #%% solve with SSNSP (multiple times, VR)
 
-params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', \
-          'alpha_C' : 10., 'reduce_variance': True}
+params = {'max_iter' : 50, 'sample_size': 3000, 'sample_style': 'increasing', \
+          'alpha_C' : 3., 'reduce_variance': True}
 K = 10
 allP = list()
 for k in range(K):
@@ -122,14 +122,16 @@ save = False
 
 fig,ax = plt.subplots(figsize = (7,5))
 
-Q.plot_objective(ax = ax, ls = '--', marker = '<')
-Q1.plot_objective(ax = ax, ls = '-.', marker = '>')
+kwargs = {"psi_star": psi_star, "log_scale": False}
+
+Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
 
 
-#plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)")
-#plot_multiple(allP, ax = ax , label = "ssnsp")
+plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **kwargs)
+plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
 
-P.plot_objective(ax = ax)
+#P.plot_objective(ax = ax)
 #P1.plot_objective(ax = ax, label = "_constant", marker = "x")
 
 

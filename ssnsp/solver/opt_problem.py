@@ -123,9 +123,9 @@ class problem:
 
         """
         plt.rcParams["font.family"] = "serif"
-        plt.rcParams['font.size'] = 10
+        plt.rcParams['font.size'] = 12
         plt.rcParams['axes.linewidth'] = 1
-        #plt.rc('text', usetex=False)
+        plt.rc('text', usetex=True)
         #plt.rc('xtick', labelsize=12)
         #plt.rc('ytick', labelsize=12)
         
@@ -158,11 +158,16 @@ class problem:
             
         ax.legend()
         if runtime:
-            ax.set_xlabel("Runtime [sec]")
+            ax.set_xlabel("Runtime [sec]", fontsize = 12)
         else:
-            ax.set_xlabel("Iteration / epoch number")
+            ax.set_xlabel("Iteration / epoch number", fontsize = 12)
         
-        ax.set_ylabel("Objective")
+        if psi_star == 0:
+            ax.set_ylabel(r"$\psi(x^k)$", fontsize = 12)
+        else:
+            ax.set_ylabel(r"$\psi(x^k) - \psi^\star$", fontsize = 12)
+            
+        
         ax.grid(ls = '-', lw = .5)
         
         if log_scale:
