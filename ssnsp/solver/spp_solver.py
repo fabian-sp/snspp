@@ -23,11 +23,11 @@ def sampler(N, size):
     return S
 
 
-def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA):
+def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, correct):
     
     sample_size = len(S)
     
-    z = x - (alpha/sample_size) * (subA.T @ xi_stack)
+    z = x - (alpha/sample_size) * (subA.T @ xi_stack) + correct
     term2 = .5 * np.linalg.norm(z)**2 - phi.moreau(z, alpha)
     
     if f.m.max() == 1:
@@ -105,13 +105,25 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     norm_dir = list()
     step_sz = list()
     
+    # compute var. reduction term
+    if reduce_variance:
+        xi_stack_old = np.hstack([xi_old[i] for i in S])
+        xi_full_old = np.hstack([xi_old[i] for i in range(f.N)])
+        correct =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)
+        if np.linalg.norm(correct) >= 1e3:     
+            correct = 0.
+        else:
+            print(np.linalg.norm(correct))
+    else:
+        correct = 0.
+    
     while sub_iter < newton_params['max_iter']:
 
     # step 1: construct Newton matrix and RHS
         if verbose:
             print("Construct")
         
-        z = x - (alpha/sample_size) * (subA.T @ xi_stack)  
+        z = x - (alpha/sample_size) * (subA.T @ xi_stack)  + correct
         rhs = -1. * (np.hstack([f.gstar(xi[i], i) for i in S]) - subA @ phi.prox(z, alpha))
         
         residual.append(np.linalg.norm(rhs))
@@ -171,14 +183,14 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     # step 3: backtracking line search
         if verbose:
             print("Start Line search")
-        U_old = Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA)
+        U_old = Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, correct)
         beta = 1.
-        U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA)
+        U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA, correct)
         
         
         while U_new > U_old + newton_params['mu'] * beta * (d @ -rhs):
             beta *= newton_params['rho']
-            U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA)
+            U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA, correct)
             
         step_sz.append(beta)
         
@@ -199,19 +211,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     if not converged:
         print(f"WARNING: reached maximal iterations in semismooth Newton -- accuracy {residual[-1]}")
     
-    
     # update primal iterate
-    if reduce_variance:
-        xi_stack_old = np.hstack([xi_old[i] for i in S])
-        xi_full_old = np.hstack([xi_old[i] for i in range(f.N)])
-        correct =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)
-        if np.linalg.norm(correct) >= 0.25:     
-            correct = 0.
-        #else:
-            #print(np.linalg.norm(correct))
-    else:
-        correct = 0.
-        
     z = x - (alpha/sample_size) * (subA.T @ xi_stack) + correct
     new_x = phi.prox(z, alpha)
     
@@ -347,13 +347,13 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         params['newton_params']['eps'] =  min(1e-2, 1e-1/(iter_t+1)**(1.5))
         
         # variance reduction
-        reduce_variance = params['reduce_variance'] and (iter_t >= 2)
+        reduce_variance = params['reduce_variance'] and (iter_t >= 1)
                 
         x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, \
                                              newton_params = params['newton_params'], reduce_variance = reduce_variance, verbose = False)
         
         if params['reduce_variance']:
-            if iter_t in [1,20,30,40]:
+            if iter_t in [0,20,30,40]:
                 xi = compute_full_xi(f, x_t)
         
         #stop criterion

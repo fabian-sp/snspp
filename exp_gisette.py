@@ -42,7 +42,8 @@ x_sk = sk.coef_.copy().squeeze()
 
 #(np.sign(predict(X_test, x_sk)) == np.sign(y_test)).sum() / len(y_test)
 
-f.eval(x_sk) + phi.eval(x_sk)
+psi_star = f.eval(x_sk) + phi.eval(x_sk)
+print(psi_star)
 
 #%% solve with SAGA
 
@@ -71,7 +72,7 @@ print(f.eval(Q1.x) +phi.eval(Q1.x))
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 25, 'sample_size': 0.8* f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 30.,\
+params = {'max_iter' : 25, 'sample_size': 0.8*f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 30.,\
           "reduce_variance": True}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
@@ -92,7 +93,8 @@ for k in range(K):
 
 #%% solve with CONSTANT SSNSP
 
-params = {'max_iter' : 30, 'sample_size': 3000, 'sample_style': 'constant', 'alpha_C' : 10., 'n_epochs': 5}
+params = {'max_iter' : 20, 'sample_size': f.N, 'sample_style': 'constant', 'alpha_C' : 30.,\
+          "reduce_variance": True}
 
 P1 = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -107,16 +109,18 @@ all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q1.x)).T, columns = ['scikit', '
 
 save = False
 
-fig,ax = plt.subplots(figsize = (7,5))
-Q.plot_objective(ax = ax, ls = '--', marker = '<')
-Q1.plot_objective(ax = ax, ls = '-.', marker = '>')
-P.plot_objective(ax = ax)
+kwargs = {"psi_star": psi_star, "log_scale": True}
 
-#plot_multiple(allP, ax = ax , label = "ssnsp")
+fig,ax = plt.subplots(figsize = (7,5))
+Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
+P.plot_objective(ax = ax, **kwargs)
+
+#plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
 
 ax.set_yscale('log')
 
-P1.plot_objective(ax = ax, label = "_constant", marker = "x")
+P1.plot_objective(ax = ax, label = " constant", marker = "x", **kwargs)
 
 
 

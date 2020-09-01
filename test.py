@@ -97,7 +97,7 @@ xis = [np.hstack(list(i.values())) for i in info['xi_hist']]
 xis = np.vstack(xis)
 
 plt.figure()
-sns.heatmap(xis, cmap = 'coolwarm', vmin = -1, vmax = 1)
+sns.heatmap(xis, cmap = 'coolwarm', vmin = -1, vmax = 0.)
 
 plt.figure()
 sns.distplot(np.hstack(info['xi_hist'][-1].values()))
