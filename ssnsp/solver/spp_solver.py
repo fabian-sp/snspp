@@ -23,11 +23,11 @@ def sampler(N, size):
     return S
 
 
-def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, correct):
+def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, Lambda):
     
     sample_size = len(S)
     
-    z = x - (alpha/sample_size) * (subA.T @ xi_stack) + correct
+    z = x - (alpha/sample_size) * (subA.T @ xi_stack) + Lambda
     term2 = .5 * np.linalg.norm(z)**2 - phi.moreau(z, alpha)
     
     if f.m.max() == 1:
@@ -109,13 +109,13 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     if reduce_variance:
         xi_stack_old = np.hstack([xi_old[i] for i in S])
         xi_full_old = np.hstack([xi_old[i] for i in range(f.N)])
-        correct =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)
-        if np.linalg.norm(correct) >= 1e3:     
-            correct = 0.
+        Lambda =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)
+        if np.linalg.norm(Lambda) >= 1e3:     
+            Lambda = 0.
         else:
-            print(np.linalg.norm(correct))
+            print(np.linalg.norm(Lambda))
     else:
-        correct = 0.
+        Lambda = 0.
     
     while sub_iter < newton_params['max_iter']:
 
@@ -123,7 +123,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         if verbose:
             print("Construct")
         
-        z = x - (alpha/sample_size) * (subA.T @ xi_stack)  + correct
+        z = x - (alpha/sample_size) * (subA.T @ xi_stack)  + Lambda
         rhs = -1. * (np.hstack([f.gstar(xi[i], i) for i in S]) - subA @ phi.prox(z, alpha))
         
         residual.append(np.linalg.norm(rhs))
@@ -183,14 +183,14 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     # step 3: backtracking line search
         if verbose:
             print("Start Line search")
-        U_old = Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, correct)
+        U_old = Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, Lambda)
         beta = 1.
-        U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA, correct)
+        U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA, Lambda)
         
         
         while U_new > U_old + newton_params['mu'] * beta * (d @ -rhs):
             beta *= newton_params['rho']
-            U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA, correct)
+            U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA, Lambda)
             
         step_sz.append(beta)
         
@@ -212,7 +212,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         print(f"WARNING: reached maximal iterations in semismooth Newton -- accuracy {residual[-1]}")
     
     # update primal iterate
-    z = x - (alpha/sample_size) * (subA.T @ xi_stack) + correct
+    z = x - (alpha/sample_size) * (subA.T @ xi_stack) + Lambda
     new_x = phi.prox(z, alpha)
     
     info = {'residual': np.array(residual), 'direction' : norm_dir, 'step_size': step_sz }
