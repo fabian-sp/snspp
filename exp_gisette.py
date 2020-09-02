@@ -59,20 +59,19 @@ print(f.eval(Q.x) +phi.eval(Q.x))
 
 #%% solve with ADAGRAD
 
-#params = {'n_epochs' : 40, 'batch_size': 10, 'gamma': .005}
-params = {'n_epochs' : 200, 'batch_size': 250, 'gamma': .009}
+params = {'n_epochs' : 200, 'batch_size': 240, 'gamma': .009}
 
 Q1 = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
 Q1.solve(solver = 'adagrad')
 
-print(f.eval(Q1.x) +phi.eval(Q1.x))
+print(f.eval(Q1.x)+phi.eval(Q1.x))
 
 #(predict(X_train, Q1.x) == y_train).sum()
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 25, 'sample_size': 0.8*f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 30.,\
+params = {'max_iter' : 25, 'sample_size': 0.2*f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 30.,\
           "reduce_variance": True}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
@@ -81,8 +80,8 @@ P.solve(solver = 'ssnsp')
 
 #%% solve with SSNSP (multiple times, VR)
 
-params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', \
-          'alpha_C' : 10., 'reduce_variance': True}
+params = {'max_iter' : 25, 'sample_size': 0.8*f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 30.,\
+          "reduce_variance": True}
 K = 10
 allP = list()
 for k in range(K):
@@ -120,7 +119,7 @@ P.plot_objective(ax = ax, **kwargs)
 
 ax.set_yscale('log')
 
-P1.plot_objective(ax = ax, label = " constant", marker = "x", **kwargs)
+#P1.plot_objective(ax = ax, label = " constant", marker = "x", **kwargs)
 
 
 

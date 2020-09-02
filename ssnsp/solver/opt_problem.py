@@ -125,7 +125,7 @@ class problem:
         plt.rcParams["font.family"] = "serif"
         plt.rcParams['font.size'] = 12
         plt.rcParams['axes.linewidth'] = 1
-        #plt.rc('text', usetex=True)
+        plt.rc('text', usetex=True)
         #plt.rc('xtick', labelsize=12)
         #plt.rc('ytick', labelsize=12)
         
