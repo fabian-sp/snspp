@@ -72,7 +72,7 @@ print(f.eval(Q1.x) +phi.eval(Q1.x))
 
 #params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', 'alpha_C' : 10., 'reduce_variance': True}
 params = {'max_iter' : 50, 'sample_size': 1000, 'sample_style': 'fast_increasing', \
-          'alpha_C' : 3., 'reduce_variance': True}
+          'alpha_C' : 10., 'reduce_variance': True}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 P.solve(solver = 'ssnsp')
@@ -80,7 +80,7 @@ P.solve(solver = 'ssnsp')
 #%% solve with SSNSP (multiple times, VR)
 
 params = {'max_iter' : 70, 'sample_size': 1000, 'sample_style': 'fast_increasing', \
-          'alpha_C' : 3., 'reduce_variance': True}
+          'alpha_C' : 10., 'reduce_variance': True}
 K = 10
 allP = list()
 for k in range(K):
