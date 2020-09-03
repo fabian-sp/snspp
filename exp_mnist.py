@@ -71,7 +71,7 @@ print(f.eval(Q1.x) +phi.eval(Q1.x))
 #%% solve with SSNSP
 
 #params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', 'alpha_C' : 10., 'reduce_variance': True}
-params = {'max_iter' : 50, 'sample_size': 1000, 'sample_style': 'fast_increasing', \
+params = {'max_iter' : 60, 'sample_size': 1000, 'sample_style': 'fast_increasing', \
           'alpha_C' : 3., 'reduce_variance': True}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
@@ -134,7 +134,7 @@ plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **k
 #P1.plot_objective(ax = ax, label = "_constant", marker = "x")
 
 
-#ax.set_xlim(-1,30)
+ax.set_xlim(-1,16)
 ax.legend()
 #ax.set_yscale('log')
 

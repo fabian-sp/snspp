@@ -28,7 +28,7 @@ def plot_multiple(allP, ax = None, label = "ssnsp", name = None, psi_star = 0, l
     except:
         c = color_dict["default"]
         
-    ax.plot(all_rt, all_mean, marker = 'o', color = c, label = name)
+    ax.plot(all_rt, all_mean, marker = 'o', markersize = 3, color = c, label = name)
     ax.fill_between(all_rt, all_mean-2*all_std, all_mean+2*all_std, \
                     color = c, alpha = .5)
     

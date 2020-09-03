@@ -12,7 +12,7 @@ from sklearn.linear_model import Lasso, LogisticRegression
 from ssnsp.helper.data_generation import lasso_test, logreg_test
 from ssnsp.solver.opt_problem import problem
 
-
+from ssnal_elastic.ssnal_elastic_core import ssnal_elastic_core
 #%% generate data
 
 N = 10000
