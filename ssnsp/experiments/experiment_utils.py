@@ -27,9 +27,10 @@ def plot_multiple(allP, ax = None, label = "ssnsp", name = None, psi_star = 0, l
         c = color_dict[label]
     except:
         c = color_dict["default"]
-        
-    ax.plot(all_rt, all_mean, marker = 'o', markersize = 3, color = c, label = name)
-    ax.fill_between(all_rt, all_mean-2*all_std, all_mean+2*all_std, \
+    
+    sigma = 2.
+    ax.plot(all_rt, all_mean, marker = 'o', markersize = 4, color = c, label = name)
+    ax.fill_between(all_rt, all_mean-sigma*all_std, all_mean+sigma*all_std, \
                     color = c, alpha = .5)
     
     if log_scale:

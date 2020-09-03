@@ -149,7 +149,7 @@ class problem:
             c = color_dict[label]
         except:
             c = color_dict["default"]
-        pt = ax.plot(x,y, marker = marker, ls = ls, label = label, markersize = 3, c = c)
+        pt = ax.plot(x,y, marker = marker, ls = ls, label = label, markersize = 4, c = c)
         
         if mean_obj:
             y1 = self.info['objective_mean'] - psi_star

@@ -71,7 +71,7 @@ print(f.eval(Q1.x) +phi.eval(Q1.x))
 #%% solve with SSNSP
 
 #params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', 'alpha_C' : 10., 'reduce_variance': True}
-params = {'max_iter' : 60, 'sample_size': 1000, 'sample_style': 'fast_increasing', \
+params = {'max_iter' : 50, 'sample_size': 1000, 'sample_style': 'fast_increasing', \
           'alpha_C' : 3., 'reduce_variance': True}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
@@ -79,7 +79,7 @@ P.solve(solver = 'ssnsp')
   
 #%% solve with SSNSP (multiple times, VR)
 
-params = {'max_iter' : 60, 'sample_size': 1000, 'sample_style': 'fast_increasing', \
+params = {'max_iter' : 70, 'sample_size': 1000, 'sample_style': 'fast_increasing', \
           'alpha_C' : 3., 'reduce_variance': True}
 K = 10
 allP = list()
@@ -119,7 +119,7 @@ all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q1.x)).T, columns = ['scikit', '
 
 save = False
 
-fig,ax = plt.subplots(figsize = (7,5))
+fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
 kwargs = {"psi_star": psi_star, "log_scale": True}
 
@@ -137,6 +137,13 @@ plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **k
 ax.set_xlim(-1,16)
 ax.legend()
 #ax.set_yscale('log')
+
+fig.subplots_adjust(top=0.96,
+                    bottom=0.14,
+                    left=0.165,
+                    right=0.965,
+                    hspace=0.2,
+                    wspace=0.2)
 
 if save:
     fig.savefig(f'data/plots/exp_mnist/obj.pdf', dpi = 300)
