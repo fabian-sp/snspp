@@ -46,7 +46,7 @@ psi_star = f.eval(x_sk) + phi.eval(x_sk)
 
 #%% solve with SAGA
 
-params = {'n_epochs' : 100}
+params = {'n_epochs' : 70}
 
 Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -79,7 +79,7 @@ P.solve(solver = 'ssnsp')
   
 #%% solve with SSNSP (multiple times, VR)
 
-params = {'max_iter' : 50, 'sample_size': 3000, 'sample_style': 'increasing', \
+params = {'max_iter' : 60, 'sample_size': 1000, 'sample_style': 'fast_increasing', \
           'alpha_C' : 3., 'reduce_variance': True}
 K = 10
 allP = list()
@@ -94,7 +94,6 @@ for k in range(K):
 params1 = params.copy()
 params1["reduce_variance"] = False
 
-K = 10
 allP1 = list()
 for k in range(K):
     
@@ -128,10 +127,10 @@ Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
 
 
-#plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **kwargs)
-#plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
+plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
+plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **kwargs)
 
-P.plot_objective(ax = ax, **kwargs)
+#P.plot_objective(ax = ax, **kwargs)
 #P1.plot_objective(ax = ax, label = "_constant", marker = "x")
 
 
@@ -161,63 +160,63 @@ if save:
 
 #%%
 
-def logreg_error(A, b, x):
-    y = predict(A,x)
+# def logreg_error(A, b, x):
+#     y = predict(A,x)
     
-    return (np.sign(y) == np.sign(b)).sum() / len(b)
+#     return (np.sign(y) == np.sign(b)).sum() / len(b)
     
 
-def distance_to_sol(x_hist, x_ref):
-    d = list()
-    for j in range(x_hist.shape[0]):
-        d.append(np.linalg.norm(x_hist[j,:] - x_ref))
+# def distance_to_sol(x_hist, x_ref):
+#     d = list()
+#     for j in range(x_hist.shape[0]):
+#         d.append(np.linalg.norm(x_hist[j,:] - x_ref))
         
-    return np.array(d)
+#     return np.array(d)
 
 
-fig,ax = plt.subplots()
+# fig,ax = plt.subplots()
 
-x = Q.info['runtime'].cumsum()
-y = distance_to_sol(Q.info['iterates'], x_sk)
-plt.plot(x, y, label = Q.solver)
+# x = Q.info['runtime'].cumsum()
+# y = distance_to_sol(Q.info['iterates'], x_sk)
+# plt.plot(x, y, label = Q.solver)
 
-x = Q1.info['runtime'].cumsum()
-y = distance_to_sol(Q1.info['iterates'], x_sk)
-plt.plot(x, y, label = Q1.solver)
+# x = Q1.info['runtime'].cumsum()
+# y = distance_to_sol(Q1.info['iterates'], x_sk)
+# plt.plot(x, y, label = Q1.solver)
 
-x = P.info['runtime'].cumsum()
-y = distance_to_sol(P.info['iterates'], x_sk)
-plt.plot(x, y, label = P.solver)
+# x = P.info['runtime'].cumsum()
+# y = distance_to_sol(P.info['iterates'], x_sk)
+# plt.plot(x, y, label = P.solver)
 
 
-ax.legend()
+# ax.legend()
 
 #%%
 
-logreg_error(X_test, y_test, P.x)
+# logreg_error(X_test, y_test, P.x)
 
 
-resQ = list()
+# resQ = list()
 
-for j in range(Q.info['iterates'].shape[0]):
-    xj = Q.info['iterates'][j,:]
-    resQ.append(logreg_error(X_test, y_test, xj))
+# for j in range(Q.info['iterates'].shape[0]):
+#     xj = Q.info['iterates'][j,:]
+#     resQ.append(logreg_error(X_test, y_test, xj))
       
-resQ = np.hstack(resQ)
+# resQ = np.hstack(resQ)
 
 
-resP = list()
+# resP = list()
 
-for j in range(P.info['iterates'].shape[0]):
-    xj = P.info['iterates'][j,:]
-    resP.append(logreg_error(X_test, y_test, xj))
+# for j in range(P.info['iterates'].shape[0]):
+#     xj = P.info['iterates'][j,:]
+#     resP.append(logreg_error(X_test, y_test, xj))
     
-resP = np.hstack(resP)    
+# resP = np.hstack(resP)    
     
 
-plt.figure()
-plt.plot(Q.info['runtime'].cumsum(), resQ)
-plt.plot(P.info['runtime'].cumsum(), resP)
+# plt.figure()
+# plt.plot(Q.info['runtime'].cumsum(), resQ)
+# plt.plot(P.info['runtime'].cumsum(), resP)
 
 
 

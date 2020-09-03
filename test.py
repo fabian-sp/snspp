@@ -26,9 +26,9 @@ xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .1)
 
 
 #%% solve with SPP
-params = {'max_iter' : 10, 'sample_size': 1000, 'sample_style': 'constant', 'alpha_C' : 10.}
+params = {'max_iter' : 20, 'sample_size': 1000, 'sample_style': 'increasing', 'alpha_C' : 10.}
 
-params = {'n_epochs' : 5}
+#params = {'n_epochs' : 5}
 
 P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -61,8 +61,15 @@ x_sk = sk.coef_.copy().squeeze()
 
 #f.eval(x_sk) + phi.eval(x_sk)
 
-all_x = pd.DataFrame(np.vstack((xsol, P.x, x_sk)).T, columns = ['true', 'spp', 'scikit'])
 
+#%% compare to SSNAL
+
+
+
+
+#%% coeffcient frame
+
+all_x = pd.DataFrame(np.vstack((xsol, P.x, x_sk)).T, columns = ['true', 'spp', 'scikit'])
 
 #%% plot error over iterations
 

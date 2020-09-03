@@ -112,8 +112,8 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         Lambda =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)
         if np.linalg.norm(Lambda) >= 1e3:     
             Lambda = 0.
-        else:
-            print(np.linalg.norm(Lambda))
+        #else:
+        #    print(np.linalg.norm(Lambda))
     else:
         Lambda = 0.
     
