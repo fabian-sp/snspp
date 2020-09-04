@@ -360,7 +360,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
                                              
         
         if params['reduce_variance']:
-            if iter_t in [0,20,30,40]:
+            if iter_t in [0,4,8,12,16,20]:#[0,20,30,40]:
                 #xi = compute_full_xi(f, x_t)
                 xi_tilde = compute_full_xi(f, x_t)
                 xi = xi_tilde.copy()

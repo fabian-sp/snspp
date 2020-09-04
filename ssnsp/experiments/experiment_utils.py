@@ -32,7 +32,9 @@ def plot_multiple(allP, ax = None, label = "ssnsp", name = None, psi_star = 0, l
     
     sigma = 1.
     ax.plot(all_rt, all_mean, marker = 'o', markersize = 4, color = c, label = name)
-    ax.fill_between(all_rt, all_mean-sigma*all_std, all_mean+sigma*all_std, \
+    ax.fill_between(all_rt, \
+                    all_mean -sigma*all_std\
+                    , all_mean+sigma*all_std, \
                     color = c, alpha = .5)
     
     
