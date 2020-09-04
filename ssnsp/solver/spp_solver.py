@@ -59,7 +59,7 @@ def check_newton_params(newton_params):
 
 
     
-def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce_variance = False, verbose = False):
+def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce_variance = False, xi_tilde = None, verbose = False):
     """
     m: vector with all dimensions m_i, i = 1,..,N
     
@@ -70,7 +70,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     check_newton_params(newton_params)
     assert alpha > 0 , "step sizes are not positive"
       
-    xi_old = xi.copy()
+    #xi_tilde = xi.copy()
     N = len(m)
     
     # creates a vector with nrows like A in order to index the relevant A_i from A
@@ -107,8 +107,8 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     
     # compute var. reduction term
     if reduce_variance:
-        xi_stack_old = np.hstack([xi_old[i] for i in S])
-        xi_full_old = np.hstack([xi_old[i] for i in range(f.N)])
+        xi_stack_old = np.hstack([xi_tilde[i] for i in S])
+        xi_full_old = np.hstack([xi_tilde[i] for i in range(f.N)])
         Lambda =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)
         if np.linalg.norm(Lambda) >= 1e3:     
             Lambda = 0.
@@ -322,7 +322,11 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     # variance reduction
     reduce_variance = False
-
+    if reduce_variance:
+        xi_tilde = xi.copy()
+    else:
+        xi_tilde = None
+        
     hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s\t%10s"
     out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
     if verbose:
@@ -350,12 +354,17 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         reduce_variance = params['reduce_variance'] and (iter_t >= 1)
                 
         x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, \
-                                             newton_params = params['newton_params'], reduce_variance = reduce_variance, verbose = False)
+                                             newton_params = params['newton_params'],\
+                                             reduce_variance = reduce_variance, xi_tilde = xi_tilde,\
+                                             verbose = False)
+                                             
         
         if params['reduce_variance']:
             if iter_t in [0,20,30,40]:
-                xi = compute_full_xi(f, x_t)
-        
+                #xi = compute_full_xi(f, x_t)
+                xi_tilde = compute_full_xi(f, x_t)
+                xi = xi_tilde.copy()
+                
         #stop criterion
         #eta = stop_optimal(x_t, f, phi)
         eta = stop_scikit_saga(x_t, x_old)
