@@ -321,8 +321,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     runtime = list()
     
     # variance reduction
-    reduce_variance = False
-    if reduce_variance:
+    if params['reduce_variance']:
+        counter = batch_size.cumsum() % f.N
+        xi_tilde_update = (np.diff(counter, prepend = f.N) < 0)
         xi_tilde = xi.copy()
     else:
         xi_tilde = None
@@ -358,13 +359,18 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
                                              reduce_variance = reduce_variance, xi_tilde = xi_tilde,\
                                              verbose = False)
                                              
-        
+        # xi_tilde gets updated every epoch
         if params['reduce_variance']:
-            if iter_t in [0,4,8,12,16,20]:#[0,20,30,40]:
-                #xi = compute_full_xi(f, x_t)
+            if xi_tilde_update[iter_t]:#[0,20,30,40]:
                 xi_tilde = compute_full_xi(f, x_t)
                 xi = xi_tilde.copy()
-                
+        
+        # alternative: SAGA style, xi_tilde is the current xi and updated every epoch
+        # if params['reduce_variance']: 
+        #     if xi_tilde_update[iter_t]:#[0,20,30,40]:
+        #         xi = compute_full_xi(f, x_t)
+        #     xi_tilde = xi.copy()
+                  
         #stop criterion
         #eta = stop_optimal(x_t, f, phi)
         eta = stop_scikit_saga(x_t, x_old)
