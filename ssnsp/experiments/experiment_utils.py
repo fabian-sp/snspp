@@ -50,7 +50,7 @@ def adagrad_step_size_tuner(f, phi, gamma_range = None, params = None):
     either provide range of gamma values or it is automatically tuned on log-scale (see range below)
     """
     if params is None:
-        params = {'n_epochs' : 200, 'batch_size': int(0.05*f.N)}
+        params = {'n_epochs' : 200, 'batch_size': min(2000, int(0.05*f.N))}
     
     if gamma_range is None:
         
