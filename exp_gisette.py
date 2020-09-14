@@ -6,7 +6,7 @@ import seaborn as sns
 
 from ssnsp.solver.opt_problem import problem
 from ssnsp.helper.data_generation import get_gisette
-from ssnsp.experiments.experiment_utils import plot_multiple
+from ssnsp.experiments.experiment_utils import plot_multiple, adagrad_step_size_tuner
 
 
 from sklearn.linear_model import LogisticRegression
@@ -58,7 +58,9 @@ print(f.eval(Q.x) +phi.eval(Q.x))
 
 #%% solve with ADAGRAD
 
-params = {'n_epochs' : 200, 'batch_size': 240, 'gamma': .009}
+opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = None)
+
+params = {'n_epochs' : 200, 'batch_size': 240, 'gamma': opt_gamma}
 
 Q1 = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
