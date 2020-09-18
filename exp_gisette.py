@@ -58,7 +58,8 @@ print(f.eval(Q.x) +phi.eval(Q.x))
 
 #%% solve with ADAGRAD
 
-opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = None)
+#opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = None)
+opt_gamma = 0.02#0.043
 
 params = {'n_epochs' : 200, 'batch_size': 240, 'gamma': opt_gamma}
 
@@ -72,7 +73,9 @@ print(f.eval(Q1.x)+phi.eval(Q1.x))
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 25, 'sample_size': 0.2*f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 30.,\
+# params = {'max_iter' : 25, 'sample_size': 0.2*f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 30.,\
+#           "reduce_variance": True}
+params = {'max_iter' : 50, 'sample_size': 1000, 'sample_style': 'fast_increasing', 'alpha_C' : 30.,\
           "reduce_variance": True}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
@@ -81,7 +84,7 @@ P.solve(solver = 'ssnsp')
 
 #%% solve with SSNSP (multiple times, VR)
 
-params = {'max_iter' : 25, 'sample_size': 0.2*f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 30.,\
+params = {'max_iter' : 50, 'sample_size': 1000, 'sample_style': 'fast_increasing', 'alpha_C' : 30.,\
           "reduce_variance": True}
 K = 10
 allP = list()
@@ -158,7 +161,7 @@ P.plot_path(ax = ax[1,0])
 P.plot_path(ax = ax[1,1], mean = True, ylabel = False)
 
 for a in ax.ravel():
-    a.set_ylim(-.5,.5)
+    a.set_ylim(-.5,.3)
     
 plt.subplots_adjust(hspace = 0.33)
 

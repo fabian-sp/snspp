@@ -327,7 +327,10 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         xi_tilde = xi.copy()
     else:
         xi_tilde = None
-        
+    
+    #print(batch_size)
+    #print(xi_tilde_update)
+            
     hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s\t%10s"
     out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
     if verbose:
@@ -361,7 +364,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
                                              
         # xi_tilde gets updated every epoch
         if params['reduce_variance']:
-            if xi_tilde_update[iter_t]:#[0,20,30,40]:
+            #if xi_tilde_update[iter_t]:
+            if iter_t%10==0:
                 xi_tilde = compute_full_xi(f, x_t)
                 xi = xi_tilde.copy()
         
@@ -378,7 +382,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         
         end = time.time()
         runtime.append(end-start)
-            
+        
         # save all diagnostics
         ssn_info.append(this_ssn)
         x_hist.append(x_t)
@@ -397,11 +401,12 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
           
         if verbose and measure:
             print(out_fmt % (iter_t, obj[-1], obj2[-1] , alpha_t, len(S), eta))
-            
+        
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
         #alpha_t = C/(iter_t + 2)
         alpha_t = C/(iter_t + 2)**(0.51)
-             
+        
+        
     if eta > tol:
         status = 'max iterations reached'    
     

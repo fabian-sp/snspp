@@ -6,7 +6,7 @@ import pandas as pd
 from ssnsp.solver.opt_problem import problem, color_dict
 from ssnsp.helper.data_generation import get_mnist
 from ssnsp.helper.utils import stop_optimal
-from ssnsp.experiments.experiment_utils import plot_multiple
+from ssnsp.experiments.experiment_utils import plot_multiple, adagrad_step_size_tuner
 
 from sklearn.linear_model import LogisticRegression
 
@@ -46,7 +46,7 @@ psi_star = f.eval(x_sk) + phi.eval(x_sk)
 
 #%% solve with SAGA
 
-params = {'n_epochs' : 70}
+params = {'n_epochs' : 50}
 
 Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -58,7 +58,10 @@ print(f.eval(Q.x) +phi.eval(Q.x))
 
 #%% solve with ADAGRAD
 
-params = {'n_epochs' : 200, 'batch_size': 100, 'gamma': .005}
+#opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = None)
+opt_gamma = 0.018738 #0.005
+
+params = {'n_epochs' : 200, 'batch_size': int(f.N*0.05), 'gamma': opt_gamma}
 
 Q1 = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -71,7 +74,7 @@ print(f.eval(Q1.x) +phi.eval(Q1.x))
 #%% solve with SSNSP
 
 #params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', 'alpha_C' : 10., 'reduce_variance': True}
-params = {'max_iter' : 50, 'sample_size': 1000, 'sample_style': 'fast_increasing', \
+params = {'max_iter' : 70, 'sample_size': 1000, 'sample_style': 'fast_increasing', \
           'alpha_C' : 10., 'reduce_variance': True}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
