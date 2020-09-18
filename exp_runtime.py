@@ -15,14 +15,14 @@ from ssnsp.experiments.experiment_utils import plot_multiple
 
 #%% generate data
 
-N = 2000
-n = 5000
+N = 6000
+n = 10000
 k = 100
 l1 = .2
 
 kappa = 1e6
 
-xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = kappa)
+xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = None)
 #xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .5)
 
 sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-9, max_iter = 20000, selection = 'cyclic')
@@ -41,7 +41,7 @@ print(psi_star)
 
 #%% solve with SAGA
 
-params = {'n_epochs' : 300, 'reg': 1e-4}
+params = {'n_epochs' : 100, 'reg': 1e-4}
 
 Q = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -64,8 +64,7 @@ print(f.eval(Q1.x) +phi.eval(Q1.x))
 
 #%% solve with SSNSP
 
-#params = {'max_iter' : 15, 'sample_size': f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 10., 'reduce_variance': False}
-params = {'max_iter' : 25, 'sample_size': f.N ,'sample_style': 'fast_increasing',\
+params = {'max_iter' : 25, 'sample_size': 1000 ,'sample_style': 'fast_increasing',\
           'alpha_C' : 10., 'reduce_variance': True}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
@@ -100,7 +99,7 @@ for k in range(K):
     
 #%% solve with CONSTANT SSNSP
 
-params = {'max_iter' : 20, 'sample_size': f.N, 'sample_style': 'constant', 'alpha_C' : 10.}
+params = {'max_iter' : 10, 'sample_size': f.N, 'sample_style': 'constant', 'alpha_C' : 10.}
 
 P1 = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
@@ -119,13 +118,13 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 kwargs = {"psi_star": psi_star, "log_scale": True}
 
 Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
+#Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
 
 
-plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
-plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **kwargs)
+#plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
+#plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **kwargs)
 
-#P.plot_objective(ax = ax, **kwargs)
+P.plot_objective(ax = ax, **kwargs)
 P1.plot_objective(ax = ax, label = " constant", marker = "x", **kwargs)
 
 

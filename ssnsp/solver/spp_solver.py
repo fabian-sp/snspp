@@ -110,10 +110,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         xi_stack_old = np.hstack([xi_tilde[i] for i in S])
         xi_full_old = np.hstack([xi_tilde[i] for i in range(f.N)])
         Lambda =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)
-        if np.linalg.norm(Lambda) >= 1e3:     
-            Lambda = 0.
-        #else:
-        #    print(np.linalg.norm(Lambda))
+        
     else:
         Lambda = 0.
     
@@ -350,8 +347,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         S = sampler(f.N, batch_size[iter_t])
         #S = cyclic_batch(f.N, batch_size, iter_t)
         
-        
-        #params['newton_params']['eps'] =  min(1e-2, 1e-1/(iter_t+1)**2)
         params['newton_params']['eps'] =  min(1e-2, 1e-1/(iter_t+1)**(1.5))
         
         # variance reduction
@@ -365,7 +360,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         # xi_tilde gets updated every epoch
         if params['reduce_variance']:
             #if xi_tilde_update[iter_t]:
-            if iter_t%10==0:
+            if iter_t % 10 == 0:
                 xi_tilde = compute_full_xi(f, x_t)
                 xi = xi_tilde.copy()
         
@@ -376,7 +371,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #     xi_tilde = xi.copy()
                   
         #stop criterion
-        #eta = stop_optimal(x_t, f, phi)
         eta = stop_scikit_saga(x_t, x_old)
         
         
@@ -403,7 +397,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
             print(out_fmt % (iter_t, obj[-1], obj2[-1] , alpha_t, len(S), eta))
         
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
-        #alpha_t = C/(iter_t + 2)
+        #alpha_t = 4.
         alpha_t = C/(iter_t + 2)**(0.51)
         
         
