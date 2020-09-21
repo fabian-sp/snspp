@@ -70,7 +70,6 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     check_newton_params(newton_params)
     assert alpha > 0 , "step sizes are not positive"
       
-    #xi_tilde = xi.copy()
     N = len(m)
     
     # creates a vector with nrows like A in order to index the relevant A_i from A
@@ -109,8 +108,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     if reduce_variance:
         xi_stack_old = np.hstack([xi_tilde[i] for i in S])
         xi_full_old = np.hstack([xi_tilde[i] for i in range(f.N)])
-        Lambda =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)
-        
+        Lambda =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)      
     else:
         Lambda = 0.
     
@@ -319,8 +317,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     # variance reduction
     if params['reduce_variance']:
-        counter = batch_size.cumsum() % f.N
-        xi_tilde_update = (np.diff(counter, prepend = f.N) < 0)
+        #counter = batch_size.cumsum() % f.N
+        #xi_tilde_update = (np.diff(counter, prepend = f.N) < 0)
         xi_tilde = xi.copy()
         vr_min_iter = 10
     else:
@@ -362,7 +360,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         if params['reduce_variance']:
             #if xi_tilde_update[iter_t]:
             if iter_t % 10 == 0 and iter_t >= vr_min_iter:
-                print("Ful xi update!")
                 xi_tilde = compute_full_xi(f, x_t)
                 xi = xi_tilde.copy()
         
@@ -399,7 +396,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
             print(out_fmt % (iter_t, obj[-1], obj2[-1] , alpha_t, len(S), eta))
         
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
-        #alpha_t = 4.
         alpha_t = C/(iter_t + 2)**(0.51)
         
         
