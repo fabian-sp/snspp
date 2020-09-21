@@ -296,7 +296,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
                                             b = params['sample_size'], M = params['max_iter']-1)
     elif params['sample_style'] == 'fast_increasing': 
         batch_size = batch_size_constructor(np.arange(params['max_iter']), a = params['sample_size']/4, \
-                                            b = params['sample_size'], M = params['max_iter']-1, cutoff = 5)
+                                            b = params['sample_size'], M = params['max_iter']-1, cutoff = 10)
     else:
         batch_size = params['sample_size'] * np.ones(params['max_iter'], dtype = 'int64')
     
@@ -321,7 +321,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     if params['reduce_variance']:
         counter = batch_size.cumsum() % f.N
         xi_tilde_update = (np.diff(counter, prepend = f.N) < 0)
-        xi_tilde = xi.copy()
+        xi_tilde = compute_full_xi(f, x0) #xi.copy()
+        vr_min_iter = 10
     else:
         xi_tilde = None
     
@@ -350,7 +351,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         params['newton_params']['eps'] =  min(1e-2, 1e-1/(iter_t+1)**(1.5))
         
         # variance reduction
-        reduce_variance = params['reduce_variance'] and (iter_t >= 1)
+        reduce_variance = params['reduce_variance'] and (iter_t > vr_min_iter)
                 
         x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, \
                                              newton_params = params['newton_params'],\
@@ -360,7 +361,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         # xi_tilde gets updated every epoch
         if params['reduce_variance']:
             #if xi_tilde_update[iter_t]:
-            if iter_t % 10 == 0:
+            if iter_t % 10 == 0 and iter_t >= vr_min_iter:
+                print("Ful xi update!")
                 xi_tilde = compute_full_xi(f, x_t)
                 xi = xi_tilde.copy()
         
