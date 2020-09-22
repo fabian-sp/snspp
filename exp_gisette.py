@@ -6,7 +6,7 @@ import seaborn as sns
 
 from ssnsp.solver.opt_problem import problem
 from ssnsp.helper.data_generation import get_gisette
-from ssnsp.experiments.experiment_utils import plot_multiple, adagrad_step_size_tuner
+from ssnsp.experiments.experiment_utils import plot_multiple, adagrad_step_size_tuner, initialize_fast_gradient
 
 
 from sklearn.linear_model import LogisticRegression
@@ -20,8 +20,7 @@ print("Regularization parameter lambda:", phi.lambda1)
 def predict(A,x):
     
     h = np.exp(A@x)
-    odds = h/(1+h)
-    
+    odds = h/(1+h)  
     y = (odds >= .5)*2 -1
     
     return y
@@ -43,6 +42,7 @@ x_sk = sk.coef_.copy().squeeze()
 
 psi_star = f.eval(x_sk) + phi.eval(x_sk)
 print(psi_star)
+initialize_fast_gradient(f, phi)
 
 #%% solve with SAGA
 
@@ -53,8 +53,6 @@ Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 Q.solve(solver = 'saga')
 
 print(f.eval(Q.x) +phi.eval(Q.x))
-
-#(predict(X_train, Q.x) == y_train).sum()
 
 #%% solve with ADAGRAD
 
@@ -68,8 +66,6 @@ Q1 = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True
 Q1.solve(solver = 'adagrad')
 
 print(f.eval(Q1.x)+phi.eval(Q1.x))
-
-#(predict(X_train, Q1.x) == y_train).sum()
 
 #%% solve with SSNSP
 

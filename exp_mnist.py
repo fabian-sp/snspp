@@ -6,7 +6,7 @@ import pandas as pd
 from ssnsp.solver.opt_problem import problem, color_dict
 from ssnsp.helper.data_generation import get_mnist
 from ssnsp.helper.utils import stop_optimal
-from ssnsp.experiments.experiment_utils import plot_multiple, adagrad_step_size_tuner
+from ssnsp.experiments.experiment_utils import plot_multiple, adagrad_step_size_tuner, initialize_fast_gradient
 
 from sklearn.linear_model import LogisticRegression
 
@@ -20,8 +20,7 @@ print("Regularization parameter lambda:", phi.lambda1)
 def predict(A,x):
     
     h = np.exp(A@x)
-    odds = h/(1+h)
-    
+    odds = h/(1+h)    
     y = (odds >= .5)*2 -1
     
     return y
@@ -43,6 +42,7 @@ x_sk = sk.coef_.copy().squeeze()
 #(np.sign(predict(X_train, x_sk)) == np.sign(y_train)).sum() / len(y_train)
 
 psi_star = f.eval(x_sk) + phi.eval(x_sk)
+initialize_fast_gradient(f, phi)
 
 #%% solve with SAGA
 
@@ -53,8 +53,6 @@ Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 Q.solve(solver = 'saga')
 
 print(f.eval(Q.x) +phi.eval(Q.x))
-
-#(predict(X_train, Q.x) == y_train).sum()
 
 #%% solve with ADAGRAD
 
@@ -69,8 +67,7 @@ Q1.solve(solver = 'adagrad')
 
 print(f.eval(Q1.x) +phi.eval(Q1.x))
 
-#(predict(X_train, Q1.x) == y_train).sum()
-  
+ 
 #%% solve with SSNSP
 
 #params = {'max_iter' : 25, 'sample_size': f.N/9, 'sample_style': 'increasing', 'alpha_C' : 10., 'reduce_variance': True}
@@ -169,12 +166,6 @@ if save:
 
 
 #%%
-
-# def logreg_error(A, b, x):
-#     y = predict(A,x)
-    
-#     return (np.sign(y) == np.sign(b)).sum() / len(b)
-    
 
 # def distance_to_sol(x_hist, x_ref):
 #     d = list()

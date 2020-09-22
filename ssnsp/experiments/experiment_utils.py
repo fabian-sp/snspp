@@ -43,6 +43,19 @@ def plot_multiple(allP, ax = None, label = "ssnsp", name = None, psi_star = 0, l
             
     return
 
+def initialize_fast_gradient(f, phi):
+    """
+    initializes SAGA and Adagrad jitiing
+    """
+    params = {'n_epochs' : 10}
+    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
+    tmpP.solve(solver = 'saga')
+    
+    params = {'n_epochs' : 10, 'batch_size': int(f.N*0.05), 'gamma': 0.01}  
+    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)   
+    tmpP.solve(solver = 'adagrad')
+    
+    return
 
 def adagrad_step_size_tuner(f, phi, gamma_range = None, params = None):
     """

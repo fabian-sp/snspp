@@ -10,7 +10,7 @@ import time
 
 from ssnsp.helper.data_generation import lasso_test, logreg_test
 from ssnsp.solver.opt_problem import problem
-from ssnsp.experiments.experiment_utils import plot_multiple
+from ssnsp.experiments.experiment_utils import plot_multiple, initialize_fast_gradient
 
 
 #%% generate data
@@ -38,6 +38,7 @@ x_sk = sk.coef_.copy().squeeze()
 
 psi_star = f.eval(x_sk) +phi.eval(x_sk)
 print(psi_star)
+initialize_fast_gradient(f, phi)
 
 #%% solve with SAGA
 
