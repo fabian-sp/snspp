@@ -102,8 +102,8 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
             obj.append(f.eval(x_hist[j,:]) + phi.eval(x_hist[j,:]))
         
         # evaluate objective at x_mean after every epoch
-        for j in np.arange(n_iter):
-            obj2.append(f.eval(xmean_hist[j,:]) + phi.eval(xmean_hist[j,:]))
+        #for j in np.arange(n_iter):
+        #    obj2.append(f.eval(xmean_hist[j,:]) + phi.eval(xmean_hist[j,:]))
         
         
     # distribute runtime uniformly on all iterations
@@ -114,8 +114,9 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     else:
         status = 'optimal'
         
-    print(f"{name} terminated during epoch {n_iter} with tolerance {eta}")
-    print(f"{name} status: {status}")
+    if verbose:
+        print(f"{name} terminated during epoch {n_iter} with tolerance {eta}")
+        print(f"{name} status: {status}")
     
     info = {'objective': np.array(obj), 'objective_mean': np.array(obj2), 'iterates': x_hist,\
             'mean_hist': xmean_hist, 'step_sizes': np.array(step_sizes), \

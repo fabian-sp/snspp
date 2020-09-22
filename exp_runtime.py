@@ -10,7 +10,7 @@ import time
 
 from ssnsp.helper.data_generation import lasso_test, logreg_test
 from ssnsp.solver.opt_problem import problem
-from ssnsp.experiments.experiment_utils import plot_multiple, initialize_fast_gradient
+from ssnsp.experiments.experiment_utils import plot_multiple, initialize_fast_gradient, adagrad_step_size_tuner
 
 
 #%% generate data
@@ -52,13 +52,17 @@ print(f.eval(Q.x) +phi.eval(Q.x))
 
 
 #%% solve with ADAGRAD
-if kappa >= 1e5:
-    params = {'n_epochs' : 1000, 'batch_size': 100, 'gamma': .1}
-else:
-    params = {'n_epochs' : 400, 'batch_size': 100, 'gamma': .02}
-    
-Q1 = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
+# if kappa >= 1e5:
+#     params = {'n_epochs' : 1000, 'batch_size': 100, 'gamma': .1}
+# else:
+#     params = {'n_epochs' : 400, 'batch_size': 100, 'gamma': .02}
 
+#opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = None)
+opt_gamma = .01
+
+params = {'n_epochs' : 200, 'batch_size': int(f.N*0.05), 'gamma': opt_gamma}
+
+Q1 = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 Q1.solve(solver = 'adagrad')
 
 print(f.eval(Q1.x) +phi.eval(Q1.x))
@@ -119,14 +123,14 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 kwargs = {"psi_star": psi_star, "log_scale": True}
 
 Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-#Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
+Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
 
 
-#plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
+plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
 #plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **kwargs)
 
-P.plot_objective(ax = ax, **kwargs)
-P1.plot_objective(ax = ax, label = " constant", marker = "x", **kwargs)
+#P.plot_objective(ax = ax, **kwargs)
+#P1.plot_objective(ax = ax, label = " constant", marker = "x", **kwargs)
 
 
 #ax.set_xlim(-.1,20)
@@ -139,7 +143,6 @@ fig.subplots_adjust(top=0.96,
                     right=0.965,
                     hspace=0.2,
                     wspace=0.2)
-
 
 if save:
     fig.savefig(f'data/plots/exp_runtime/lasso_obj_{int(np.log10(kappa))}.pdf', dpi = 300)

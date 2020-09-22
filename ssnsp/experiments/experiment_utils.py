@@ -48,11 +48,11 @@ def initialize_fast_gradient(f, phi):
     initializes SAGA and Adagrad jitiing
     """
     params = {'n_epochs' : 10}
-    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
+    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)
     tmpP.solve(solver = 'saga')
     
     params = {'n_epochs' : 10, 'batch_size': int(f.N*0.05), 'gamma': 0.01}  
-    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)   
+    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)   
     tmpP.solve(solver = 'adagrad')
     
     return
