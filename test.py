@@ -20,13 +20,14 @@ n = 1000
 k = 200
 l1 = .01
 
-xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = None)
+xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = True, kappa = None)
 
 xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .1)
 
 
 #%% solve with SPP
-params = {'max_iter' : 20, 'sample_size': 1000, 'sample_style': 'increasing', 'alpha_C' : 10.}
+params = {'max_iter' : 30, 'sample_size': 1000, 'sample_style': 'fast_increasing', 'alpha_C' : 10.,\
+          'reduce_variance': True}
 
 #params = {'n_epochs' : 5}
 
