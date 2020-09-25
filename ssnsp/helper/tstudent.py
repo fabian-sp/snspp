@@ -15,6 +15,7 @@ spec_tstud = [
     ('v', float64),
     ('N', int64), 
     ('m', int64[:]),
+    ('tol', float64),
 ]
 
 #@jitclass(spec_tstud)
@@ -34,6 +35,8 @@ class tstudent_loss:
         self.v = v
         self.N = len(self.b)
         self.m = np.repeat(1,self.N)
+        
+        self.tol = 1e-2
         
     def eval(self, x):
         """
@@ -92,9 +95,9 @@ class tstudent_loss:
         Y = np.zeros_like(X)
         for j in range(len(X)):
             x = X[j]
-            if self.v*x**2 >= 1-1e-4:
+            if self.v*x**2 >= 1:
                 Y[j] = np.inf
-            elif np.abs(x) <= 1e-4:
+            elif np.abs(x) <= self.tol:
                 Y[j] = self.v/2
             else:
                 a = np.sqrt(1-self.v*x**2)
