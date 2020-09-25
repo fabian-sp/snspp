@@ -110,40 +110,40 @@ class logistic_loss:
     
     def fstar(self, X, i):
         Y = np.zeros_like(X)
-        for i in range(len(X)):
-            x = X[i]
+        for j in range(len(X)):
+            x = X[j]
             if x > 0 or x < -1 :
-                Y[i] = np.inf
+                Y[j] = np.inf
             elif x == 0 or x == -1:
-                Y[i] = 0
+                Y[j] = 0
             else:
-                Y[i] = -x*np.log(-x) + (1+x) * np.log(1+x)
+                Y[j] = -x*np.log(-x) + (1+x) * np.log(1+x)
             
         return Y
     
     def gstar(self, X, i):
         Y = np.zeros_like(X)
-        for i in range(len(X)):
-            x = X[i]
+        for j in range(len(X)):
+            x = X[j]
             if x > 0 or x < -1 :
-                Y[i] = np.inf
+                Y[j] = np.inf
             elif x == 0 or x == -1:
-                Y[i] = np.sign(x + .5) * 1e8
+                Y[j] = np.sign(x + .5) * 1e8
             else:
-                Y[i] = np.log(-(1+x)/x)     
+                Y[j] = np.log(-(1+x)/x)     
         return Y
     
     
     def Hstar(self, X, i):
         Y = np.zeros_like(X)
-        for i in range(len(X)):
-            x = X[i]
+        for j in range(len(X)):
+            x = X[j]
             if x > 0 or x < -1 :
-                Y[i] = np.inf
+                Y[j] = np.inf
             elif x == 0 or x == -1:
-                Y[i] = 1e8
+                Y[j] = 1e8
             else:
-                Y[i] = -1/(x**2+x)
+                Y[j] = -1/(x**2+x)
         return Y
 
 ################

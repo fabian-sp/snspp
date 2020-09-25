@@ -60,47 +60,47 @@ class tstudent_loss:
     
     def fstar(self, X, i):
         Y = np.zeros_like(X)
-        for i in range(len(X)):
-            x = X[i]
-            if x >= np.sqrt(self.v) :
-                Y[i] = np.inf
+        for j in range(len(X)):
+            x = X[j]
+            if abs(x) >= np.sqrt(self.v) :
+                Y[j] = np.inf
             elif x == 0:
-                Y[i] = 0
+                Y[j] = 0
             else:
                 a = np.sqrt(1-self.v*x**2)
-                Y[i] = self.b[i]*x-a-np.log(2*(1-a)/(self.v*x**2)) +1
+                Y[j] = self.b[i]*x -a-np.log(2*(1-a)/(self.v*x**2)) +1
             
         return Y
     
     def gstar(self, X, i):
         Y = np.zeros_like(X)
-        for i in range(len(X)):
-            x = X[i]
-            if x >= np.sqrt(self.v):
-                Y[i] = np.inf
+        for j in range(len(X)):
+            x = X[j]
+            if abs(x) >= np.sqrt(self.v):
+                Y[j] = np.inf
             elif x == 0 :
-                Y[i] = self.b[i]
+                Y[j] = self.b[i]
             else:
                 a = np.sqrt(1-self.v*x**2)
                 nom = self.b[i]*x*a - self.b[i]*x + self.v*x**2+2*a-2
                 denom = x*(a-1)
-                Y[i] = nom/denom
+                Y[j] = nom/denom
         return Y
     
     
     def Hstar(self, X, i):
         Y = np.zeros_like(X)
-        for i in range(len(X)):
-            x = X[i]
-            if x >= np.sqrt(self.v) :
-                Y[i] = np.inf
+        for j in range(len(X)):
+            x = X[j]
+            if abs(x) >= np.sqrt(self.v) :
+                Y[j] = np.inf
             elif x == 0:
-                Y[i] = self.v/2
+                Y[j] = self.v/2
             else:
                 a = np.sqrt(1-self.v*x**2)
                 nom = -self.v*x**2*a + 3*self.v*x**2 + 4*a - 4
                 denom = x**2*(self.v*x**2*a - 2*self.v*x**2 - 2*a + 2)
-                Y[i] = nom/denom
+                Y[j] = nom/denom
         return Y
 
 #%%    
@@ -110,6 +110,13 @@ class tstudent_loss:
 # x = np.random.randn(100)
 
 # t = tstudent_loss(A, b, v=1)
+
+# for i in range(1000):
+    
+#     x = np.random.randn(1)
+#     y = np.random.randn(1)
+    
+#     print(t.f(x,3) + t.fstar(y,3) - x*y)
 
 # t.eval(x)
 
