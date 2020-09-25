@@ -57,7 +57,6 @@ def check_newton_params(newton_params):
     
     return
 
-
     
 def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce_variance = False, xi_tilde = None, verbose = False):
     """
@@ -129,7 +128,6 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         if verbose:
             print("Construct2")
         
-        #start = time.time()
         U = phi.jacobian_prox(z, alpha)
         
         if phi.name == '1norm':
@@ -140,7 +138,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
             tmp2 = (alpha/sample_size) * subA_d @ subA_d.T
         else:
             tmp2 = (alpha/sample_size) * subA @ U @ subA.T
-        #end = time.time(); print("construct", end-start)
+            
         if verbose:
             print("Construct3")
             
@@ -148,8 +146,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         
         if m.max() == 1:
             tmp_d = np.hstack([f.Hstar(xi[i], i) for i in S])
-            tmp = np.diag(tmp_d + eps_reg)
-            
+            tmp = np.diag(tmp_d + eps_reg)           
         else:
             tmp = block_diag([f.Hstar(xi[i], i) for i in S])
             tmp += eps_reg * np.eye(tmp.shape[0])

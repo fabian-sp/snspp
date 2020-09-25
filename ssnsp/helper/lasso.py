@@ -5,6 +5,7 @@ from numba.typed import List
 
 spec = [
     ('name', typeof('abc')),
+    ('convex', typeof(True)),
     ('b', float64[:]),               
     ('A', float64[:,:]),
     ('N', int64), 
@@ -23,12 +24,15 @@ class lsq:
     
     def __init__(self, A, b):
         self.name = 'squared'
+        self.convex = True
+        
         self.b = b
         self.A = A
         self.N = len(b)
         self.m = np.repeat(1,self.N)
         
-    
+        return
+         
     def eval(self, x):
         """
         method for evaluating f(x)
@@ -58,6 +62,7 @@ class lsq:
 
 spec_log = [
     ('name', typeof('abc')),
+    ('convex', typeof(True)),
     ('b', float64[:]),               
     ('A', float64[:,:]),
     ('N', int64), 
@@ -75,11 +80,15 @@ class logistic_loss:
     
     def __init__(self, A, b):
         self.name = 'logistic'
+        self.convex = True
+        
         self.b = b
         self.A = A * np.ascontiguousarray(self.b).reshape((-1,1))
         self.N = len(self.b)
         self.m = np.repeat(1,self.N)
         
+        return
+    
     def eval(self, x):
         """
         method for evaluating f(x)
