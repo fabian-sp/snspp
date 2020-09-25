@@ -74,6 +74,15 @@ def compute_xi_inner(f, x):
         
     return vals
 
+#@njit()
+# def construct_gam_matrix(f,S):
+#     n = f.A.shape[1]
+#     Gam = np.zeros((n,n))
+#     for i in S:
+#         A_i = np.ascontiguousarray(f.A[i,:]).reshape(1,-1)
+#         Gam += .0001 * A_i.T@A_i 
+#     return Gam
+            
 def compute_full_gradient(f,x):
     """
     computes the full gradient 1/N * sum (A_i.T @ grad f_i(A_ix))
@@ -110,6 +119,8 @@ def compute_gradient_table(f, x):
     
     return gradients
 
+
+# needed for ADAGRAD
 @njit()
 def compute_batch_gradient(f, x, S):
     """

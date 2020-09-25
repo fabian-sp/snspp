@@ -28,11 +28,6 @@ def A_target_condition(N, n, smax = 100, smin = 1):
     
     d = np.linspace(np.sqrt(smax), np.sqrt(smin), min(n,N))
     
-    # if n > N:
-    #     D = np.hstack((np.diag(d), np.zeros((N,n-N))))  
-    # else:
-    #     D = np.vstack((np.diag(d), np.zeros((N-n,n)) ))
-    
     D = np.diag(d)
     A = U @ D @ V
     
@@ -95,8 +90,7 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
         A = (1/A.std(axis=0)) * A
         
         assert max(abs(A.mean(axis=0))) <= 1e-5
-        assert max(abs(A.std(axis=0) - 1)) <= 1e-5
-    
+        assert max(abs(A.std(axis=0) - 1)) <= 1e-5   
     else:
         assert kappa > 1
         A = A_target_condition(N, n, smax = kappa)
@@ -115,14 +109,11 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
     if noise > 0:
         assert noise <= 1
         f = np.random.binomial(n=1, p = noise, size = N)
-        f = (1 - f * 2)
-        
-        print((f==-1).sum())
-        
+        f = (1 - f * 2)      
+        print((f==-1).sum())      
         # flip signs (f in {-1,1})
         b = b * f
-    
-    
+     
     A = A.astype('float64')
     b = b.astype('float64')
     x = x.astype('float64')

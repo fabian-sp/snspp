@@ -4,7 +4,7 @@ author: Fabian Schaipp
 
 import numpy as np
 from ..helper.utils import block_diag, compute_x_mean, stop_optimal, stop_scikit_saga
-from ..helper.utils import compute_gradient_table, compute_full_xi, compute_x_mean_hist
+from ..helper.utils import compute_full_xi, compute_x_mean_hist
 from scipy.sparse.linalg import cg
 import time
 
@@ -111,8 +111,18 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     else:
         Lambda = 0.
     
+    # compute term coming from weak convexity
+    # start = time.time()
+    # if not f.convex:
+    #     gamma_i = np.stack([.001 for i in S])
+    #     gamma_i = np.repeat(gamma_i, m[S])
+    #     Gam = subA.T @ (gamma_i.reshape(-1,1) * subA)
+    #     Lambda += (alpha/sample_size) * (Gam@x) 
+    # end = time.time()
+    # print("Construct Gam: ", end-start)
+    
     while sub_iter < newton_params['max_iter']:
-
+        
     # step 1: construct Newton matrix and RHS
         if verbose:
             print("Construct")

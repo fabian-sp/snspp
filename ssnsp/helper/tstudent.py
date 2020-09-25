@@ -53,7 +53,10 @@ class tstudent_loss:
     def g(self, x, i):
         
         a = x-self.b[i]
-        return 2*a/(self.v+a**2) 
+        return 2*a/(self.v+a**2)
+    
+    def weak_conv(self, i):
+        return 1/(4*self.v)
     
     def fstar(self, X, i):
         Y = np.zeros_like(X)
@@ -102,21 +105,21 @@ class tstudent_loss:
 
 #%%    
 
-A= np.random.randn(50,100)
-b = np.random.randn(50)
-x = np.random.randn(100)
+# A= np.random.randn(50,100)
+# b = np.random.randn(50)
+# x = np.random.randn(100)
 
-t = tstudent_loss(A, b, v=1)
+# t = tstudent_loss(A, b, v=1)
 
-t.eval(x)
+# t.eval(x)
 
 
-z = np.random.rand(1)
-z = np.zeros(1)
+# z = np.random.rand(1)
+# z = np.zeros(1)
 
-t.fstar(z,1)
-t.gstar(z,1)
-t.Hstar(z,1)
+# t.fstar(z,1)
+# t.gstar(z,1)
+# t.Hstar(z,1)
 
 
 
