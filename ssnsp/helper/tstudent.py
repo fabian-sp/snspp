@@ -17,7 +17,7 @@ spec_tstud = [
     ('m', int64[:]),
 ]
 
-@jitclass(spec_tstud)
+#@jitclass(spec_tstud)
 class tstudent_loss:
     """ 
     f is the t-student loss function i.e. 1/N sum_i log(1+((a_i @ x)-b_i)^2/v)
@@ -62,9 +62,9 @@ class tstudent_loss:
         Y = np.zeros_like(X)
         for j in range(len(X)):
             x = X[j]
-            if abs(x) >= np.sqrt(self.v) :
+            if self.v*x**2 >= 1:
                 Y[j] = np.inf
-            elif x == 0:
+            elif np.abs(x) <= 1e-4:
                 Y[j] = 0
             else:
                 a = np.sqrt(1-self.v*x**2)
@@ -76,13 +76,13 @@ class tstudent_loss:
         Y = np.zeros_like(X)
         for j in range(len(X)):
             x = X[j]
-            if abs(x) >= np.sqrt(self.v):
+            if self.v*x**2 >= 1:
                 Y[j] = np.inf
-            elif x == 0 :
+            elif np.abs(x) <= 1e-4:
                 Y[j] = self.b[i]
             else:
                 a = np.sqrt(1-self.v*x**2)
-                nom = self.b[i]*x*a - self.b[i]*x + self.v*x**2+2*a-2
+                nom = self.b[i]*x*a - self.b[i]*x + self.v*x**2 + 2*a - 2
                 denom = x*(a-1)
                 Y[j] = nom/denom
         return Y
@@ -92,24 +92,23 @@ class tstudent_loss:
         Y = np.zeros_like(X)
         for j in range(len(X)):
             x = X[j]
-            if abs(x) >= np.sqrt(self.v) :
+            if self.v*x**2 >= 1-1e-4:
                 Y[j] = np.inf
-            elif x == 0:
+            elif np.abs(x) <= 1e-4:
                 Y[j] = self.v/2
             else:
                 a = np.sqrt(1-self.v*x**2)
-                nom = -self.v*x**2*a + 3*self.v*x**2 + 4*a - 4
+                nom = -self.v*x**2*a + 3*self.v*x**2 + 4*a -4
                 denom = x**2*(self.v*x**2*a - 2*self.v*x**2 - 2*a + 2)
                 Y[j] = nom/denom
         return Y
 
 #%%    
-
 # A= np.random.randn(50,100)
 # b = np.random.randn(50)
 # x = np.random.randn(100)
 
-# t = tstudent_loss(A, b, v=1)
+# f = tstudent_loss(A, b, v=1)
 
 # for i in range(1000):
     
@@ -130,6 +129,19 @@ class tstudent_loss:
 
 
 
+# all_x = np.linspace(-np.sqrt(1/f.v), +np.sqrt(1/f.v), 100)
+# all_y = np.zeros_like(all_x)
+
+# for j in range(len(all_x)):
+    
+#     xx = all_x[j]
+#     print(xx)
+#     all_y[j] = f.Hstar(np.array([xx]), 1)
+
+
+
+
+# f.Hstar(np.array([2*1e-6]), 1)
 
 
 

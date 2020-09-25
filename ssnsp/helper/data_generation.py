@@ -15,6 +15,7 @@ from sklearn.utils import check_random_state
 #from scipy.stats import ortho_group
 
 from .lasso import Norm1, lsq, block_lsq, logistic_loss
+from .tstudent import tstudent_loss
 
 ############################################################################################
 ### Synthetic data
@@ -120,6 +121,39 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
     
     phi = Norm1(lambda1) 
     f = logistic_loss(A,b)
+    
+    return x, A, b, f, phi
+
+def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 1):
+    """
+    creates A, b for logistic regression
+    b \in{-1,1}
+    noise = probability of flipping b after generation --> the closer noise is to 1, the nosier the problem becomes
+    """
+    #np.random.seed(1234)
+    
+    A = np.random.randn(N,n)
+        
+    # standardize
+    A = A - A.mean(axis=0)
+    A = (1/A.std(axis=0)) * A
+        
+    assert max(abs(A.mean(axis=0))) <= 1e-5
+    assert max(abs(A.std(axis=0) - 1)) <= 1e-5   
+        
+    # create true solution
+    x = np.random.randn(k) 
+    x = np.concatenate((x, np.zeros(n-k)))
+    np.random.shuffle(x)
+       
+    b = A@x
+     
+    A = A.astype('float64')
+    b = b.astype('float64')
+    x = x.astype('float64')
+    
+    phi = Norm1(lambda1) 
+    f = tstudent_loss(A,b,v=v)
     
     return x, A, b, f, phi
 

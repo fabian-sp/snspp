@@ -111,15 +111,16 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     else:
         Lambda = 0.
     
-    # compute term coming from weak convexity
-    # start = time.time()
-    # if not f.convex:
-    #     gamma_i = np.stack([.001 for i in S])
-    #     gamma_i = np.repeat(gamma_i, m[S])
-    #     Gam = subA.T @ (gamma_i.reshape(-1,1) * subA)
-    #     Lambda += (alpha/sample_size) * (Gam@x) 
-    # end = time.time()
-    # print("Construct Gam: ", end-start)
+    #compute term coming from weak convexity
+    #start = time.time()
+    if not f.convex:
+        gamma_i = np.stack([f.weak_conv(i) for i in S])
+        gamma_i = np.repeat(gamma_i, m[S])
+        Gam = subA.T @ (gamma_i.reshape(-1,1) * subA)
+        Lambda += (alpha/sample_size) * (Gam@x) 
+    #end = time.time()
+    #print("Construct Gam: ", end-start)
+    
     
     while sub_iter < newton_params['max_iter']:
         
@@ -148,7 +149,8 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
             tmp2 = (alpha/sample_size) * subA_d @ subA_d.T
         else:
             tmp2 = (alpha/sample_size) * subA @ U @ subA.T
-            
+        
+        
         if verbose:
             print("Construct3")
             
@@ -172,6 +174,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         
         if m.max() == 1:
             precond = np.diag(1/tmp_d)
+            #precond = None
         else:
             precond = None
         
@@ -310,6 +313,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     if xi is None:
         if f.name == 'logistic':
             xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(m[i]) for i in np.arange(f.N)]))
+        elif f.name == 'tstudent':
+            xi = dict(zip(np.arange(f.N), [ np.zeros(m[i]) for i in np.arange(f.N)]))
         else:
             xi = dict(zip(np.arange(f.N), [np.zeros(m[i]) for i in np.arange(f.N)]))
     
