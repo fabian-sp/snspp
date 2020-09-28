@@ -69,12 +69,12 @@ class tstudent_loss:
         return 1/(4*self.v) + self.eps
     
     #@staticmethod
-    def _zstar(self,x,v,b):
-    
-        c3 = 1
-        c2 = -4*v*x-2*b
-        c1 = 8*x*v*b +9*v+b**2
-        c0 = -4*v* (x*v+x*b**2+2*b)
+    def _zstar(self, x, b):
+        gamma = 1/(4*self.v) + self.eps
+        c3 = -gamma
+        c2 = x + 2*gamma*b
+        c1 = -2*b*x - 2 -gamma*self.v - gamma*b**2
+        c0 = x*self.v + x*b**2 + 2*b
         
         z = np.roots(np.array([c3,c2,c1,c0], dtype=np.complex64))  
         z = z[np.abs(np.imag(z)) <= 1e-3]
@@ -87,7 +87,7 @@ class tstudent_loss:
     
     def _fstar(self, x ,i):
         obj = lambda z: x*z - self.f(z,i) - 1/(8*self.v)*z**2
-        z = self._zstar(x, self.v, self.b[i])
+        z = self._zstar(x, self.b[i])
         if np.isnan(z):
             res = np.inf
         else:
@@ -109,7 +109,7 @@ class tstudent_loss:
             x = X[j]            
             #h = max(1e-3, 1e-2*x)
             #Y[j] = (self._fstar(x+h, i) - self._fstar(x, i) ) / h
-            Y[j] = self._zstar(x, self.v, self.b[i])
+            Y[j] = self._zstar(x, self.b[i])
         return Y
     
     def _h(self, x, b):
@@ -130,7 +130,7 @@ class tstudent_loss:
             #h = max(1e-3, 1e-2*x)
             #Y[j] = (self._fstar(x+h, i) - 2*self._fstar(x, i) + self._fstar(x-h, i) ) / h**2
             
-            g_i = self._zstar(x, self.v, self.b[i])
+            g_i = self._zstar(x, self.b[i])
             Y[j] = 1/(self._h(g_i, self.b[i]))
             
         return Y
@@ -152,19 +152,19 @@ class tstudent_loss:
 # test_fun2(x)
 
 #%%    
-A= np.random.randn(50,100)
-b = np.random.randn(50)
-x = np.random.randn(100)
+# A= np.random.randn(50,100)
+# b = np.random.randn(50)
+# x = np.random.randn(100)
 
-f = tstudent_loss(A, b, v=.25)
+# f = tstudent_loss(A, b, v=2)
 
-z = np.array([1.], dtype = np.float64)
+# z = np.array([1.], dtype = np.float64)
 
-f._zstar(1,1,1)
+# f._zstar(1,1)
 
-f.fstar(z,1)
-f.gstar(z,1)
-f.Hstar(z,1)
+# f.fstar(z,1)
+# f.gstar(z,1)
+# f.Hstar(z,1)
 
 
 # f.g(np.array([4]),4)
@@ -180,22 +180,22 @@ f.Hstar(z,1)
 
 
 
-all_x = np.linspace(-5, 5, 1000)
-all_f = np.zeros_like(all_x)
-all_g = np.zeros_like(all_x)
-all_h = np.zeros_like(all_x)
+# all_x = np.linspace(-5, 5, 1000)
+# all_f = np.zeros_like(all_x)
+# all_g = np.zeros_like(all_x)
+# all_h = np.zeros_like(all_x)
 
-for j in range(len(all_x)):
+# for j in range(len(all_x)):
     
-    xx = all_x[j]
-    print(xx)
-    all_f[j] = f.fstar(np.array([xx]), 1)
-    all_g[j] = f.gstar(np.array([xx]), 1)
-    all_h[j] = f.Hstar(np.array([xx]), 1)
+#     xx = all_x[j]
+#     print(xx)
+#     all_f[j] = f.fstar(np.array([xx]), 1)
+#     all_g[j] = f.gstar(np.array([xx]), 1)
+#     all_h[j] = f.Hstar(np.array([xx]), 1)
     
-plt.plot(all_x, all_f)
-plt.plot(all_x, all_g)
-plt.plot(all_x, all_h)
+# plt.plot(all_x, all_f)
+# plt.plot(all_x, all_g)
+# plt.plot(all_x, all_h)
 
 
 
