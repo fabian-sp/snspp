@@ -113,7 +113,7 @@ class tstudent_loss:
             x = X[j]            
             h = max(1e-3, 1e-2*x)
             Y[j] = (self._fstar(x+h, i) - self._fstar(x, i) ) / h
-            
+            #Y[j] = self._zstar(x, self.v, self.b[i])
         return Y
     
     
