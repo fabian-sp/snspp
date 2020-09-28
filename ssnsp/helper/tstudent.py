@@ -36,6 +36,7 @@ class tstudent_loss:
         self.N = len(self.b)
         self.m = np.repeat(1,self.N)
         
+        # Hstar is numerically instable close to 0, hence evaluate within tol-ball of 0
         self.tol = 1e-2
         
     def eval(self, x):
@@ -61,33 +62,48 @@ class tstudent_loss:
     def weak_conv(self, i):
         return 1/(4*self.v)
     
+    @staticmethod
+    def _zstar(x,v,b):
+    
+        c3 = 1
+        c2 = -4*v*x-2*b
+        c1 = 8*x*v*b +9*v+b**2
+        c0 = -4*v* (x*v+x*b**2+2*b)
+        
+        z = np.roots(np.array([c3,c2,c1,c0]))  
+        z = z[np.isreal(z)]
+        
+        if len(z) == 0 or len(z) > 1:
+            res = np.nan
+        else:
+            res = np.real(z)[0]
+        return res
+    
+    def _fstar(self, x ,i):
+        obj = lambda z: x*z - self.f(z,i) - 1/(8*self.v)*z**2
+        z = self._zstar(x, self.v, self.b[i])
+        if np.isnan(z):
+            res = np.inf
+        else:
+            res = obj(z)
+        return res
+
     def fstar(self, X, i):
         Y = np.zeros_like(X)
+        
         for j in range(len(X)):
             x = X[j]
-            if self.v*x**2 >= 1:
-                Y[j] = np.inf
-            elif np.abs(x) <= 1e-4:
-                Y[j] = 0
-            else:
-                a = np.sqrt(1-self.v*x**2)
-                Y[j] = self.b[i]*x -a-np.log(2*(1-a)/(self.v*x**2)) +1
+            Y[j] = self._fstar(x,i)
             
         return Y
     
     def gstar(self, X, i):
         Y = np.zeros_like(X)
         for j in range(len(X)):
-            x = X[j]
-            if self.v*x**2 >= 1:
-                Y[j] = np.inf
-            elif np.abs(x) <= 1e-4:
-                Y[j] = self.b[i]
-            else:
-                a = np.sqrt(1-self.v*x**2)
-                nom = self.b[i]*x*a - self.b[i]*x + self.v*x**2 + 2*a - 2
-                denom = x*(a-1)
-                Y[j] = nom/denom
+            x = X[j]            
+            h = 1e-2
+            Y[j] = (self._fstar(x+h, i) - self._fstar(x, i) ) / h
+            
         return Y
     
     
@@ -95,57 +111,45 @@ class tstudent_loss:
         Y = np.zeros_like(X)
         for j in range(len(X)):
             x = X[j]
-            if self.v*x**2 >= 1:
-                Y[j] = np.inf
-            elif np.abs(x) <= self.tol:
-                Y[j] = self.v/2
-            else:
-                a = np.sqrt(1-self.v*x**2)
-                nom = -self.v*x**2*a + 3*self.v*x**2 + 4*a -4
-                denom = x**2*(self.v*x**2*a - 2*self.v*x**2 - 2*a + 2)
-                Y[j] = nom/denom
+            h = 1e-2*x
+            Y[j] = (self._fstar(x+h, i) - 2*self._fstar(x, i) + self._fstar(x-h, i) ) / h**2
+            
         return Y
 
 #%%    
-# A= np.random.randn(50,100)
-# b = np.random.randn(50)
-# x = np.random.randn(100)
+A= np.random.randn(50,100)
+b = np.random.randn(50)
+x = np.random.randn(100)
 
-# f = tstudent_loss(A, b, v=1)
+f = tstudent_loss(A, b, v=.25)
 
 # for i in range(1000):
     
 #     x = np.random.randn(1)
 #     y = np.random.randn(1)
     
-#     print(t.f(x,3) + t.fstar(y,3) - x*y)
-
-# t.eval(x)
-
-
-# z = np.random.rand(1)
-# z = np.zeros(1)
-
-# t.fstar(z,1)
-# t.gstar(z,1)
-# t.Hstar(z,1)
+#     print(f.f(x,3) + 1/(8*f.v)*x**2 + f.fstar(y,3) - x*y)
+#     assert (f.f(x,3) + + 1/(8*f.v)*x**2 + f.fstar(y,3) - x*y) >= 0
 
 
 
-# all_x = np.linspace(-np.sqrt(1/f.v), +np.sqrt(1/f.v), 100)
-# all_y = np.zeros_like(all_x)
+
+# all_x = np.linspace(-5, 5, 100)
+# all_f = np.zeros_like(all_x)
+# all_g = np.zeros_like(all_x)
+# all_h = np.zeros_like(all_x)
 
 # for j in range(len(all_x)):
     
 #     xx = all_x[j]
 #     print(xx)
-#     all_y[j] = f.Hstar(np.array([xx]), 1)
-
-
-
-
-# f.Hstar(np.array([2*1e-6]), 1)
-
+#     all_f[j] = f.fstar(np.array([xx]), 1)
+#     all_g[j] = f.gstar(np.array([xx]), 1)
+#     all_h[j] = f.Hstar(np.array([xx]), 1)
+    
+# plt.plot(all_x, all_f)
+# plt.plot(all_x, all_g)
+# plt.plot(all_x, all_h)
 
 
 

@@ -73,15 +73,6 @@ def compute_xi_inner(f, x):
         vals.append(f.g(A_i @ x, i))
         
     return vals
-
-#@njit()
-# def construct_gam_matrix(f,S):
-#     n = f.A.shape[1]
-#     Gam = np.zeros((n,n))
-#     for i in S:
-#         A_i = np.ascontiguousarray(f.A[i,:]).reshape(1,-1)
-#         Gam += .0001 * A_i.T@A_i 
-#     return Gam
             
 def compute_full_gradient(f,x):
     """
