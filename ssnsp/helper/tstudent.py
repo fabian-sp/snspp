@@ -3,6 +3,7 @@
 """
 import numpy as np
 from numba.experimental import jitclass
+from numba import njit
 from numba import int64, float32, float64, typeof
 from numba.typed import List
 
@@ -18,7 +19,12 @@ spec_tstud = [
     ('tol', float64),
 ]
 
-#@jitclass(spec_tstud)
+# @njit
+# def _g(x,v,b):
+#     a = x-b
+#     return 2*a/(v+a**2)
+    
+@jitclass(spec_tstud)
 class tstudent_loss:
     """ 
     f is the t-student loss function i.e. 1/N sum_i log(1+((a_i @ x)-b_i)^2/v)
@@ -53,25 +59,29 @@ class tstudent_loss:
         evaluate f_i(x)
         """
         return np.log(1+(x-self.b[i])**2/self.v)
+
     
     def g(self, x, i):
         
         a = x-self.b[i]
-        return 2*a/(self.v+a**2)
+        res = 2*a/(self.v+a**2)
+        
+        #res = _g(x, self.v, self.b[i])
+        return res
     
     def weak_conv(self, i):
         return 1/(4*self.v)
     
-    @staticmethod
-    def _zstar(x,v,b):
+    #@staticmethod
+    def _zstar(self,x,v,b):
     
         c3 = 1
         c2 = -4*v*x-2*b
         c1 = 8*x*v*b +9*v+b**2
         c0 = -4*v* (x*v+x*b**2+2*b)
         
-        z = np.roots(np.array([c3,c2,c1,c0]))  
-        z = z[np.isreal(z)]
+        z = np.roots(np.array([c3,c2,c1,c0], dtype=np.complex64))  
+        z = z[np.abs(np.imag(z)) <= 1e-3]
         
         if len(z) == 0 or len(z) > 1:
             res = np.nan
@@ -101,7 +111,7 @@ class tstudent_loss:
         Y = np.zeros_like(X)
         for j in range(len(X)):
             x = X[j]            
-            h = 1e-2
+            h = max(1e-3, 1e-2*x)
             Y[j] = (self._fstar(x+h, i) - self._fstar(x, i) ) / h
             
         return Y
@@ -111,17 +121,44 @@ class tstudent_loss:
         Y = np.zeros_like(X)
         for j in range(len(X)):
             x = X[j]
-            h = 1e-2*x
+            h = max(1e-3, 1e-2*x)
             Y[j] = (self._fstar(x+h, i) - 2*self._fstar(x, i) + self._fstar(x-h, i) ) / h**2
             
         return Y
 
-#%%    
-A= np.random.randn(50,100)
-b = np.random.randn(50)
-x = np.random.randn(100)
+#%%
 
-f = tstudent_loss(A, b, v=.25)
+# @njit
+# def test_fun(x):
+    
+#     return np.real(x)
+
+# @njit
+# def test_fun2(x):
+    
+#     return np.imag(x)
+
+# x = np.ones(5, dtype = np.complex64)
+
+# test_fun2(x)
+
+#%%    
+# A= np.random.randn(50,100)
+# b = np.random.randn(50)
+# x = np.random.randn(100)
+
+# f = tstudent_loss(A, b, v=.25)
+
+# z = np.array([1.], dtype = np.float64)
+
+# f._zstar(1,1,1)
+
+# f.fstar(z,1)
+# f.gstar(z,1)
+# f.Hstar(z,1)
+
+
+# f.g(np.array([4]),4)
 
 # for i in range(1000):
     
