@@ -16,13 +16,9 @@ spec_tstud = [
     ('v', float64),
     ('N', int64), 
     ('m', int64[:]),
-    ('tol', float64),
+    ('eps', float64),
 ]
 
-# @njit
-# def _g(x,v,b):
-#     a = x-b
-#     return 2*a/(v+a**2)
     
 @jitclass(spec_tstud)
 class tstudent_loss:
@@ -42,8 +38,8 @@ class tstudent_loss:
         self.N = len(self.b)
         self.m = np.repeat(1,self.N)
         
-        # Hstar is numerically instable close to 0, hence evaluate within tol-ball of 0
-        self.tol = 1e-2
+        # epsilon for regularization
+        self.eps = 1e-3
         
     def eval(self, x):
         """
@@ -70,7 +66,7 @@ class tstudent_loss:
         return res
     
     def weak_conv(self, i):
-        return 1/(4*self.v)
+        return 1/(4*self.v) + self.eps
     
     #@staticmethod
     def _zstar(self,x,v,b):
@@ -111,18 +107,31 @@ class tstudent_loss:
         Y = np.zeros_like(X)
         for j in range(len(X)):
             x = X[j]            
-            h = max(1e-3, 1e-2*x)
-            Y[j] = (self._fstar(x+h, i) - self._fstar(x, i) ) / h
-            #Y[j] = self._zstar(x, self.v, self.b[i])
+            #h = max(1e-3, 1e-2*x)
+            #Y[j] = (self._fstar(x+h, i) - self._fstar(x, i) ) / h
+            Y[j] = self._zstar(x, self.v, self.b[i])
         return Y
     
+    def _h(self, x, b):
+        """
+        second derivative of f +gamma/2 \|.\|^2
+        """
+        nom = 2*(self.v-(b-x)**2)
+        denom = (self.v+(b-x)**2)**2
+        
+        res = nom/denom + 1/(4*self.v) + self.eps
+        return res
     
     def Hstar(self, X, i):
+        
         Y = np.zeros_like(X)
         for j in range(len(X)):
             x = X[j]
-            h = max(1e-3, 1e-2*x)
-            Y[j] = (self._fstar(x+h, i) - 2*self._fstar(x, i) + self._fstar(x-h, i) ) / h**2
+            #h = max(1e-3, 1e-2*x)
+            #Y[j] = (self._fstar(x+h, i) - 2*self._fstar(x, i) + self._fstar(x-h, i) ) / h**2
+            
+            g_i = self._zstar(x, self.v, self.b[i])
+            Y[j] = 1/(self._h(g_i, self.b[i]))
             
         return Y
 
@@ -143,19 +152,19 @@ class tstudent_loss:
 # test_fun2(x)
 
 #%%    
-# A= np.random.randn(50,100)
-# b = np.random.randn(50)
-# x = np.random.randn(100)
+A= np.random.randn(50,100)
+b = np.random.randn(50)
+x = np.random.randn(100)
 
-# f = tstudent_loss(A, b, v=.25)
+f = tstudent_loss(A, b, v=.25)
 
-# z = np.array([1.], dtype = np.float64)
+z = np.array([1.], dtype = np.float64)
 
-# f._zstar(1,1,1)
+f._zstar(1,1,1)
 
-# f.fstar(z,1)
-# f.gstar(z,1)
-# f.Hstar(z,1)
+f.fstar(z,1)
+f.gstar(z,1)
+f.Hstar(z,1)
 
 
 # f.g(np.array([4]),4)
@@ -171,22 +180,22 @@ class tstudent_loss:
 
 
 
-# all_x = np.linspace(-5, 5, 100)
-# all_f = np.zeros_like(all_x)
-# all_g = np.zeros_like(all_x)
-# all_h = np.zeros_like(all_x)
+all_x = np.linspace(-5, 5, 1000)
+all_f = np.zeros_like(all_x)
+all_g = np.zeros_like(all_x)
+all_h = np.zeros_like(all_x)
 
-# for j in range(len(all_x)):
+for j in range(len(all_x)):
     
-#     xx = all_x[j]
-#     print(xx)
-#     all_f[j] = f.fstar(np.array([xx]), 1)
-#     all_g[j] = f.gstar(np.array([xx]), 1)
-#     all_h[j] = f.Hstar(np.array([xx]), 1)
+    xx = all_x[j]
+    print(xx)
+    all_f[j] = f.fstar(np.array([xx]), 1)
+    all_g[j] = f.gstar(np.array([xx]), 1)
+    all_h[j] = f.Hstar(np.array([xx]), 1)
     
-# plt.plot(all_x, all_f)
-# plt.plot(all_x, all_g)
-# plt.plot(all_x, all_h)
+plt.plot(all_x, all_f)
+plt.plot(all_x, all_g)
+plt.plot(all_x, all_h)
 
 
 

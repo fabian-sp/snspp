@@ -1,3 +1,7 @@
+"""
+This file serves to derive the convex conjugate of the (regularized) likelihood of the t-student loss
+"""
+
 import sympy as sp
 import numpy as np
 import matplotlib.pyplot as plt
