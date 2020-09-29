@@ -130,21 +130,6 @@ class tstudent_loss:
             
         return Y
 
-#%%
-
-# @njit
-# def test_fun(x):
-    
-#     return np.real(x)
-
-# @njit
-# def test_fun2(x):
-    
-#     return np.imag(x)
-
-# x = np.ones(5, dtype = np.complex64)
-
-# test_fun2(x)
 
 #%%    
 # A= np.random.randn(50,100)
@@ -196,13 +181,3 @@ class tstudent_loss:
 # plt.plot(all_x, all_h)
 
 
-# all_y = np.zeros_like(all_x)
-# for j in range(len(all_x)):
-    
-#     xx = all_x[j]
-#     all_y[j] = f._h(xx,0)
-
-# plt.plot(all_x, all_y)
-    
-# y = np.array([np.sqrt(2-f.gamma*f.v)/np.sqrt(f.gamma)])
-# f.Hstar(y,0)
