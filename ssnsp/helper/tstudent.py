@@ -196,13 +196,13 @@ class tstudent_loss:
 # plt.plot(all_x, all_h)
 
 
-all_y = np.zeros_like(all_x)
-for j in range(len(all_x)):
+# all_y = np.zeros_like(all_x)
+# for j in range(len(all_x)):
     
-    xx = all_x[j]
-    all_y[j] = f._h(xx,0)
+#     xx = all_x[j]
+#     all_y[j] = f._h(xx,0)
 
-plt.plot(all_x, all_y)
+# plt.plot(all_x, all_y)
     
-y = np.array([np.sqrt(2-f.gamma*f.v)/np.sqrt(f.gamma)])
-f.Hstar(y,0)
+# y = np.array([np.sqrt(2-f.gamma*f.v)/np.sqrt(f.gamma)])
+# f.Hstar(y,0)
