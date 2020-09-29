@@ -17,6 +17,7 @@ spec_tstud = [
     ('N', int64), 
     ('m', int64[:]),
     ('eps', float64),
+    ('gamma', float64),
 ]
 
     
@@ -39,7 +40,8 @@ class tstudent_loss:
         self.m = np.repeat(1,self.N)
         
         # epsilon for regularization
-        self.eps = 1e-3
+        self.eps = 1e-1
+        self.gamma = 1/(4*self.v) + self.eps
         
     def eval(self, x):
         """
@@ -61,19 +63,17 @@ class tstudent_loss:
         
         a = x-self.b[i]
         res = 2*a/(self.v+a**2)
-        
-        #res = _g(x, self.v, self.b[i])
         return res
     
     def weak_conv(self, i):
-        return 1/(4*self.v) + self.eps
+        return self.gamma
     
     #@staticmethod
     def _zstar(self, x, b):
-        gamma = 1/(4*self.v) + self.eps
-        c3 = -gamma
-        c2 = x + 2*gamma*b
-        c1 = -2*b*x - 2 -gamma*self.v - gamma*b**2
+        
+        c3 = -self.gamma
+        c2 = x + 2*self.gamma*b
+        c1 = -2*b*x - 2 -self.gamma*self.v - self.gamma*(b**2)
         c0 = x*self.v + x*b**2 + 2*b
         
         z = np.roots(np.array([c3,c2,c1,c0], dtype=np.complex64))  
@@ -86,7 +86,7 @@ class tstudent_loss:
         return res
     
     def _fstar(self, x ,i):
-        obj = lambda z: x*z - self.f(z,i) - 1/(8*self.v)*z**2
+        obj = lambda z: x*z - self.f(z,i) - (self.gamma/2)*z**2
         z = self._zstar(x, self.b[i])
         if np.isnan(z):
             res = np.inf
@@ -107,8 +107,6 @@ class tstudent_loss:
         Y = np.zeros_like(X)
         for j in range(len(X)):
             x = X[j]            
-            #h = max(1e-3, 1e-2*x)
-            #Y[j] = (self._fstar(x+h, i) - self._fstar(x, i) ) / h
             Y[j] = self._zstar(x, self.b[i])
         return Y
     
@@ -119,7 +117,7 @@ class tstudent_loss:
         nom = 2*(self.v-(b-x)**2)
         denom = (self.v+(b-x)**2)**2
         
-        res = nom/denom + 1/(4*self.v) + self.eps
+        res = nom/denom + self.gamma
         return res
     
     def Hstar(self, X, i):
@@ -127,9 +125,6 @@ class tstudent_loss:
         Y = np.zeros_like(X)
         for j in range(len(X)):
             x = X[j]
-            #h = max(1e-3, 1e-2*x)
-            #Y[j] = (self._fstar(x+h, i) - 2*self._fstar(x, i) + self._fstar(x-h, i) ) / h**2
-            
             g_i = self._zstar(x, self.b[i])
             Y[j] = 1/(self._h(g_i, self.b[i]))
             
@@ -154,9 +149,10 @@ class tstudent_loss:
 #%%    
 # A= np.random.randn(50,100)
 # b = np.random.randn(50)
+# b[0] = 0.
 # x = np.random.randn(100)
 
-# f = tstudent_loss(A, b, v=2)
+# f = tstudent_loss(A, b, v=1.)
 
 # z = np.array([1.], dtype = np.float64)
 
@@ -174,13 +170,13 @@ class tstudent_loss:
 #     x = np.random.randn(1)
 #     y = np.random.randn(1)
     
-#     print(f.f(x,3) + 1/(8*f.v)*x**2 + f.fstar(y,3) - x*y)
-#     assert (f.f(x,3) + + 1/(8*f.v)*x**2 + f.fstar(y,3) - x*y) >= 0
+#     print(f.f(x,3) + f.gamma/2 * x**2 + f.fstar(y,3) - x*y)
+#     assert (f.f(x,3) + f.gamma/2*x**2 + f.fstar(y,3) - x*y) >= 0
 
 
 
 
-# all_x = np.linspace(-5, 5, 1000)
+# all_x = np.linspace(-5, 5, 2000)
 # all_f = np.zeros_like(all_x)
 # all_g = np.zeros_like(all_x)
 # all_h = np.zeros_like(all_x)
@@ -189,13 +185,24 @@ class tstudent_loss:
     
 #     xx = all_x[j]
 #     print(xx)
-#     all_f[j] = f.fstar(np.array([xx]), 1)
-#     all_g[j] = f.gstar(np.array([xx]), 1)
-#     all_h[j] = f.Hstar(np.array([xx]), 1)
+#     all_f[j] = f.fstar(np.array([xx]), 0)
+#     all_g[j] = f.gstar(np.array([xx]), 0)
+#     all_h[j] = f.Hstar(np.array([xx]), 0)
+
     
+# import matplotlib.pyplot as plt
 # plt.plot(all_x, all_f)
 # plt.plot(all_x, all_g)
 # plt.plot(all_x, all_h)
 
 
+all_y = np.zeros_like(all_x)
+for j in range(len(all_x)):
+    
+    xx = all_x[j]
+    all_y[j] = f._h(xx,0)
 
+plt.plot(all_x, all_y)
+    
+y = np.array([np.sqrt(2-f.gamma*f.v)/np.sqrt(f.gamma)])
+f.Hstar(y,0)
