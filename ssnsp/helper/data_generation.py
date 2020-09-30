@@ -34,7 +34,14 @@ def A_target_condition(N, n, smax = 100, smin = 1):
     
     return A
  
-def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, kappa = None):
+def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., kappa = None):
+    """
+    generates data for a LASSO problem with n variables and N samples, where solution has k non-zero entries
+    lambda1: regularization parameter of 1-norm
+    block: if True, the A_i have different dimensions (>1 rows)
+    noise: std. deviation of Gaussian noise added to measurements b
+    kappa: if not None, A is created such that is has condition kappa
+    """
     if block:
         m = np.random.randint(low = 3, high = 10, size = N)
     else:
@@ -60,7 +67,7 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, kappa = None)
     np.random.shuffle(x)
     
     # create measurements
-    b = A @ x
+    b = A @ x + noise*np.random.randn(N)
     
     A = A.astype('float64')
     b = b.astype('float64')
@@ -77,7 +84,8 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, kappa = None)
 
 def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
     """
-    creates A, b for logistic regression
+    creates data for l1-regularized logistic regression with n variables and N samples, where solution has k non-zero entries
+    lambda1: regularization parameter of 1-norm
     b \in{-1,1}
     noise = probability of flipping b after generation --> the closer noise is to 1, the nosier the problem becomes
     """
@@ -126,12 +134,7 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
 
 def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 1):
     """
-    creates A, b for logistic regression
-    b \in{-1,1}
-    noise = probability of flipping b after generation --> the closer noise is to 1, the nosier the problem becomes
-    """
-    #np.random.seed(1234)
-    
+    """ 
     A = np.random.randn(N,n)
         
     # standardize
@@ -146,7 +149,7 @@ def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 1):
     x = np.concatenate((x, np.zeros(n-k)))
     np.random.shuffle(x)
        
-    b = A@x
+    b = A@x + 0.1*np.random.standard_t(v, size = N)
      
     A = A.astype('float64')
     b = b.astype('float64')

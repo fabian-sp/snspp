@@ -15,19 +15,19 @@ from ssnsp.solver.opt_problem import problem
 from ssnal_elastic.ssnal_elastic_core import ssnal_elastic_core
 #%% generate data
 
-N = 200
+N = 2000
 n = 100
 k = 20
 l1 = .01
 
-xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = None)
+xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = None, noise = 0.1)
 
 xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .1)
 
 xsol, A, b, f, phi = tstudent_test(N, n, k, l1, v = 10)
 
 #%% solve with SPP
-params = {'max_iter' : 30, 'sample_size': 100, 'sample_style': 'fast_increasing', 'alpha_C' : 10.,\
+params = {'max_iter' : 30, 'sample_size': 1000, 'sample_style': 'fast_increasing', 'alpha_C' : 10.,\
           'reduce_variance': True}
 
 #params = {'n_epochs' : 50, 'reg': 0.01}
@@ -35,7 +35,7 @@ params = {'max_iter' : 30, 'sample_size': 100, 'sample_style': 'fast_increasing'
 P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
 start = time.time()
-P.solve(solver = 'saga')
+P.solve(solver = 'ssnsp')
 end = time.time()
 
 print(f"Computing time: {end-start} sec")
