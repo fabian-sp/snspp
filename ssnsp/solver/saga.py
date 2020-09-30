@@ -33,6 +33,9 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
     if 'n_epochs' not in params.keys():    
         params['n_epochs'] = 10
     
+    if 'reg' not in params.keys():    
+            params['reg'] = 0
+    
     if 'gamma' not in params.keys():
         if f.name == 'squared':
             L = 2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A)**2).max()
@@ -83,6 +86,11 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         old_g = (-1) * g_j + g_sum
         w_t = x_t - gamma * (g + old_g)
         
+        if params['reg'] > 0:
+            w_t = x_t - gamma*params['reg']*A_j.T@A_j@x_t - gamma * (g + old_g)
+        else:
+            w_t = x_t - gamma * (g + old_g)
+        
         # store new gradient
         gradients[j,:] = g.copy()
         g_sum = g_sum - (1/N)*g_j + (1/N)*g
@@ -92,16 +100,17 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         
         # stop criterion
         #eta = stop_optimal(x_t, f, phi)
-        eta = stop_scikit_saga(x_t, x_old)
-        
         if measure:
             end = time.time()
             runtime.append(end-start)
-            
+        
+        if iter_t % N == 1:
+            eta = stop_scikit_saga(x_t, x_old)
+        
         # store everything
         x_hist.append(x_t)
         step_sizes.append(gamma)
-        
+                  
         if measure and iter_t % N == 1:
             obj.append(f.eval(x_t.astype('float64')) + phi.eval(x_t))
         

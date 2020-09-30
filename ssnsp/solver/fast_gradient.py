@@ -145,13 +145,17 @@ def saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, reg = 0):
         # sample, result is ARRAY!
         j = np.random.randint(low = 0, high = N, size = 1)
         
-        # compute the gradient, A_j is array of shape (n,1)
+        # compute the gradient, A_j is array of shape (1,n)
         A_j = A[j,:]
         g = A_j.T @ f.g(A_j @ x_t, j)
             
         g_j = gradients[j,:].reshape(-1)
         old_g = (-1) * g_j + g_sum
-        w_t = (1-gamma*reg) * x_t - gamma * (g + old_g)
+        
+        if reg > 0:
+            w_t = x_t - gamma*reg*A_j.T@A_j@x_t - gamma * (g + old_g)
+        else:
+            w_t = x_t - gamma * (g + old_g)
         
         # store new gradient
         gradients[j,:] = g

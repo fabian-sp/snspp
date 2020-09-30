@@ -30,12 +30,12 @@ xsol, A, b, f, phi = tstudent_test(N, n, k, l1, v = 10)
 params = {'max_iter' : 30, 'sample_size': 100, 'sample_style': 'fast_increasing', 'alpha_C' : 10.,\
           'reduce_variance': True}
 
-#params = {'n_epochs' : 10}
+#params = {'n_epochs' : 50, 'reg': 0.01}
 
 P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
 start = time.time()
-P.solve(solver = 'ssnsp')
+P.solve(solver = 'saga')
 end = time.time()
 
 print(f"Computing time: {end-start} sec")

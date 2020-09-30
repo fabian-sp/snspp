@@ -45,7 +45,7 @@ class problem:
         if solver == 'ssnsp':
             self.x, self.xavg, self.info = stochastic_prox_point(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
                          verbose = self.verbose, measure = self.measure)
-        elif solver == 'saga_pure':
+        elif solver == 'saga slow':
             self.x, self.xavg, self.info =  saga(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
                                                  verbose = self.verbose, measure = self.measure)
         elif solver == 'saga' or solver == 'adagrad':
