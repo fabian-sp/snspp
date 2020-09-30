@@ -57,7 +57,7 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
     
     hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s"
     out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
-    if verbose:
+    if verbose and measure:
         print(hdr_fmt % ("iter", "obj (x_t)", "obj(x_mean)", "gamma", "eta"))
     
     
@@ -124,7 +124,3 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
             'gradient_table': gradients, 'runtime': np.array(runtime)}
     
     return x_t, x_mean, info
-
-#%%
-#x0 = np.zeros(n)
-#x_saga, x_mean_saga, info = saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = True, measure = False)

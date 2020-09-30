@@ -51,9 +51,6 @@ class problem:
         elif solver == 'saga' or solver == 'adagrad':
             self.x, self.xavg, self.info =  stochastic_gradient(self.f, self.phi, self.x0, solver = self.solver, tol = self.tol, params = self.params, \
                                                  verbose = self.verbose, measure = self.measure)        
-        elif solver == 'warm_ssnsp':
-            self.x, self.xavg, self.info = warm_spp(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
-                                                    verbose = self.verbose, measure = self.measure)
         else:
             raise ValueError("Not a known solver option")
             
