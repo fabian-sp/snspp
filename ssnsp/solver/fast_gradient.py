@@ -4,6 +4,7 @@ author: Fabian Schaipp
 import numpy as np
 from ..helper.utils import compute_gradient_table, compute_batch_gradient, compute_x_mean_hist, stop_scikit_saga
 import time
+import warnings
 
 from numba.typed import List
 from numba import njit
@@ -46,11 +47,12 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
             elif f.name == 'logistic':
                 L = .25 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
             else:
-                print("Determination of step size not possible! Probably get divergence..")
-                L = 1
+                warnings.warn("We could not determine the correct SAGA step size! The default step size is maybe too large (divergence) or too small (slow convergence).")
+                L = 100
             gamma = 1./(3*L)
         
         elif solver == 'adagrad':
+            warnings.warn("Using a default step size for AdaGrad. This will propbably lead to bad performance. A script for tuning the step size is contained in ssnsp/experiments/experimnet_utils. Provide a step size via params[\"gamma\"].")
             gamma = .05
     else:
         gamma = params['gamma']

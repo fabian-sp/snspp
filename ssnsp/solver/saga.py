@@ -5,6 +5,7 @@ author: Fabian Schaipp
 import numpy as np
 from ..helper.utils import compute_x_mean, compute_gradient_table, stop_optimal, stop_scikit_saga
 import time
+import warnings
 
 
 def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = False):
@@ -42,8 +43,8 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         elif f.name == 'logistic':
             L = .25 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A)**2).max()
         else:
-            print("Determination of step size not possible! Probably get divergence..")
-            L = 1
+            warnings.warn("We could not determine the correct SAGA step size! The default step size is maybe too large (divergence) or too small (slow convergence).")            
+            L = 100
         gamma = 1./(3*L) 
     else:
         gamma = params['gamma']
