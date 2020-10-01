@@ -18,6 +18,7 @@ spec_tstud = [
     ('m', int64[:]),
     ('eps', float64),
     ('gamma', float64),
+    ('z', float64[:]),
 ]
 
     
@@ -42,6 +43,9 @@ class tstudent_loss:
         # epsilon for regularization
         self.eps = 1e-1
         self.gamma = 1/(4*self.v) + self.eps
+        
+        # helper array to save yet computed results from self._zstar --> do not recompute in Hstar
+        self.z = np.zeros(self.N)
         
     def eval(self, x):
         """
@@ -106,8 +110,9 @@ class tstudent_loss:
     def gstar(self, X, i):
         Y = np.zeros_like(X)
         for j in range(len(X)):
-            x = X[j]            
-            Y[j] = self._zstar(x, self.b[i])
+            x = X[j]
+            self.z[i] = self._zstar(x, self.b[i])      
+            Y[j] = self.z[i]
         return Y
     
     def _h(self, x, b):
@@ -124,8 +129,13 @@ class tstudent_loss:
         
         Y = np.zeros_like(X)
         for j in range(len(X)):
-            x = X[j]
-            g_i = self._zstar(x, self.b[i])
+            ## without using the helper array 
+            #x = X[j]
+            #g_i = self._zstar(x, self.b[i])
+            
+            # use the precomputed results of zstar
+            # This only works as long as Hstar is evaluated after gstar in ssnsp/solver/spp_solver !!!!
+            g_i = self.z[i]
             Y[j] = 1/(self._h(g_i, self.b[i]))
             
         return Y

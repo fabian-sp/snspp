@@ -36,20 +36,24 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
 
     # initialize object for storing all gradients 
     gradients = compute_gradient_table(f, x_t).astype('float64')
-    #gradients = np.zeros((N,n)).astype('float64')
     assert gradients.shape == (N,n)
     
     # set step size
+    # see Defazio et al. 2014 for theoretical SAGA step size
     if 'gamma' not in params.keys():
         if solver == 'saga':
             if f.name == 'squared':
                 L = 2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
+                gamma = 1./(3*L)
             elif f.name == 'logistic':
                 L = .25 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
+                gamma = 1./(3*L)
+            elif f.name == 'tstudent':
+                L =  2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
+                gamma = 1./(3*L)
             else:
                 warnings.warn("We could not determine the correct SAGA step size! The default step size is maybe too large (divergence) or too small (slow convergence).")
-                L = 100
-            gamma = 1./(3*L)
+                gamma = 0.01
         
         elif solver == 'adagrad':
             warnings.warn("Using a default step size for AdaGrad. This will propbably lead to bad performance. A script for tuning the step size is contained in ssnsp/experiments/experimnet_utils. Provide a step size via params[\"gamma\"].")
@@ -57,6 +61,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     else:
         gamma = params['gamma']
     
+    print(gamma)
     gamma = np.float64(gamma)  
     
     if 'n_epochs' not in params.keys():    
@@ -123,7 +128,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     info = {'objective': np.array(obj), 'objective_mean': np.array(obj2), 'iterates': x_hist,\
             'mean_hist': xmean_hist, 'step_sizes': np.array(step_sizes), \
             'gradient_table': gradients, 'runtime': np.array(runtime)}
-    #info = None
+
     return x_t, x_mean, info
 
 
@@ -154,7 +159,7 @@ def saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, reg = 0):
         g_j = gradients[j,:].reshape(-1)
         old_g = (-1) * g_j + g_sum
         
-        if reg > 0:
+        if False:#reg > 0:
             w_t = x_t - gamma*reg*A_j.T@A_j@x_t - gamma * (g + old_g)
         else:
             w_t = x_t - gamma * (g + old_g)
@@ -231,7 +236,3 @@ def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
             step_sizes.append(gamma)
 
     return x_t, x_hist, step_sizes, eta
-
-
-# x_t = np.random.rand(100)
-# adagrad_loop(f, phi, x_t, f.A, f.N, tol = 1e-3, gamma = .1, delta = 0.1, n_epochs = 2, batch_size = 10)

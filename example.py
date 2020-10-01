@@ -26,11 +26,10 @@ xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .1)
 
 xsol, A, b, f, phi = tstudent_test(N, n, k, l1, v = 10)
 
-#%% solve with SPP
+#%% solve with SSNSP
 params = {'max_iter' : 30, 'sample_size': 1000, 'sample_style': 'fast_increasing', 'alpha_C' : 10.,\
           'reduce_variance': True}
 
-#params = {'n_epochs' : 50, 'reg': 0.01}
 
 P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -42,7 +41,6 @@ print(f"Computing time: {end-start} sec")
 
 P.plot_path()
 P.plot_objective()
-P.plot_samples()
 
 info = P.info.copy()
 
@@ -62,16 +60,28 @@ print(f"Computing time: {end-start} sec")
 x_sk = sk.coef_.copy().squeeze()
 
 #f.eval(x_sk) + phi.eval(x_sk)
+#%% compare to SAGA/ADAGRAD
 
+params = {'n_epochs' : 100, 'reg': 0}
 
-#%% compare to SSNAL
+Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
+start = time.time()
+Q.solve(solver = 'saga')
+end = time.time()
 
+print(f"Computing time: {end-start} sec")
 
+Q.plot_path()
+Q.plot_objective()
+
+info2 = Q.info.copy()
 
 #%% coeffcient frame
 
 all_x = pd.DataFrame(np.vstack((xsol, P.x, x_sk)).T, columns = ['true', 'spp', 'scikit'])
+
+all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x)).T, columns = ['true', 'spp', 'saga'])
 
 #%% plot error over iterations
 
