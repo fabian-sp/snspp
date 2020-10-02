@@ -145,7 +145,7 @@ fig.subplots_adjust(top=0.96,
                     wspace=0.2)
 
 if save:
-    fig.savefig(f'data/plots/exp_runtime/lasso_obj_{int(np.log10(kappa))}.pdf', dpi = 300)
+    fig.savefig(f'data/plots/exp_lasso/lasso_obj_{int(np.log10(kappa))}.pdf', dpi = 300)
 
 
 #%%
