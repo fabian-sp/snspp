@@ -2,7 +2,8 @@
 author: Fabian Schaipp
 """
 import numpy as np
-from ..helper.utils import compute_gradient_table, compute_batch_gradient, compute_x_mean_hist, stop_scikit_saga
+from ..helper.utils import compute_gradient_table, compute_batch_gradient, compute_batch_gradient_table, \
+                            compute_x_mean_hist, stop_scikit_saga
 import time
 import warnings
 
@@ -86,6 +87,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     
     if solver == 'saga':
         x_t, x_hist, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['reg'])
+        #x_t, x_hist, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], int(f.N**(2/3)))
     
     elif solver == 'adagrad':
         x_t, x_hist, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, gamma, params['delta'] , params['n_epochs'], params['batch_size'])
@@ -159,7 +161,7 @@ def saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, reg = 0):
         g_j = gradients[j,:].reshape(-1)
         old_g = (-1) * g_j + g_sum
         
-        if False:#reg > 0:
+        if False:#not f.convex:
             w_t = x_t - gamma*reg*A_j.T@A_j@x_t - gamma * (g + old_g)
         else:
             w_t = x_t - gamma * (g + old_g)
@@ -235,4 +237,59 @@ def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
             x_hist.append(x_t)
             step_sizes.append(gamma)
 
+    return x_t, x_hist, step_sizes, eta
+
+#%%
+@njit()
+def batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, batch_size):
+    
+    # initialize for diagnostics
+    x_hist = List()
+    step_sizes = List()
+    
+    eta = 1e10
+    x_old = x_t
+    g_sum = (1/N)*gradients.sum(axis = 0)
+    
+    max_iter = int(N * n_epochs/batch_size)
+    counter = np.arange(max_iter)*batch_size/N % 1
+    counter = np.append(counter,0)
+    
+    store = (counter[1:] <= counter[:-1])
+    
+    for iter_t in np.arange(max_iter):
+        
+        if eta <= tol:
+            break
+             
+        # sample
+        S = np.random.randint(low = 0, high = N, size = batch_size)
+        
+        # compute the gradient, A_j is array of shape (1,n)
+        batch_g = compute_batch_gradient_table(f, x_t, S)
+        batch_g_sum = batch_g.sum(axis=0)
+        
+        
+        g_j = gradients[S,:].sum(axis=0)
+        old_g = (-1/batch_size) * g_j + g_sum
+        
+        w_t = x_t - gamma * ((1/batch_size)*batch_g_sum + old_g)
+        
+        # store new gradient
+        gradients[S,:] = batch_g
+        g_sum = g_sum - (1/N)*g_j + (1/N)*batch_g_sum
+        
+        # compute prox step
+        x_t = phi.prox(w_t, gamma)
+        
+        # stop criterion
+        if store[iter_t]:
+            eta = stop_scikit_saga(x_t, x_old)
+            x_old = x_t
+            
+        # store everything (at end of each epoch)
+        if store[iter_t]:
+            x_hist.append(x_t)
+            step_sizes.append(gamma)
+        
     return x_t, x_hist, step_sizes, eta

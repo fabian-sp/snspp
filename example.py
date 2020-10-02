@@ -13,6 +13,10 @@ from ssnsp.helper.data_generation import lasso_test, logreg_test, tstudent_test
 from ssnsp.solver.opt_problem import problem
 
 from ssnal_elastic.ssnal_elastic_core import ssnal_elastic_core
+
+
+from ssnsp.helper.utils import compute_batch_gradient_table
+
 #%% generate data
 
 N = 2000

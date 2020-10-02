@@ -116,23 +116,41 @@ def compute_gradient_table(f, x):
 def compute_batch_gradient(f, x, S):
     """
     computes a table of gradients at point x with mini batch S
-    returns: array of shape n
+    returns: array of shape n, if as_raay=True returns gradient table of shape (len(S,n))
     """   
     #S = np.sort(S)    
     # initialize object for storing all gradients
     gradients = np.zeros_like(x)
-    
+        
     for i in S:
         # A_i needs shape (1,n)
         A_i =  np.ascontiguousarray(f.A[i,:]).reshape(1,-1)
         tmp_i = A_i.T @ f.g( A_i @ x, i)
         gradients += tmp_i
-        
+    
     g = (1/len(S))*gradients
     
     return g
 
-
+# needed for mini-batch SAGA
+@njit()
+def compute_batch_gradient_table(f, x, S):
+    """
+    computes a table of gradients at point x with mini batch S
+    returns: array of shape n, if as_raay=True returns gradient table of shape (len(S,n))
+    """   
+    #S = np.sort(S)    
+    # initialize object for storing all gradients
+    gradients = np.zeros((len(S), len(x)))
+        
+    for j in range(len(S)):
+        i = S[j]
+        # A_i needs shape (1,n)
+        A_i =  np.ascontiguousarray(f.A[i,:]).reshape(1,-1)
+        tmp_i = A_i.T @ f.g( A_i @ x, i)
+        gradients[j,:] = tmp_i
+    
+    return gradients
 
 def compute_x_mean(x_hist, step_sizes = None):
     """
@@ -178,7 +196,7 @@ def compute_x_mean_hist(iterates):
 
 def logreg_gradient(f, x):
     """
-    computes full gradient for fbeing the logistic loss
+    computes full gradient for f being the logistic loss
     """
     g_i = -1/( 1+ np.exp(f.A @ x) )[:,np.newaxis] * f.A 
     g = (1/f.N) * g_i.sum(axis=0)
