@@ -384,7 +384,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #stop criterion
         eta = stop_scikit_saga(x_t, x_old)
         
-        
+        # we only measure runtime of the iteration, excluding computation of the diagnostics
         end = time.time()
         runtime.append(end-start)
         
