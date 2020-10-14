@@ -280,7 +280,7 @@ def batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, batch_si
         # sample
         S = np.random.randint(low = 0, high = N, size = batch_size)
         
-        # compute the gradient, A_j is array of shape (1,n)
+        # compute the gradient
         batch_g = compute_batch_gradient_table(f, x_t, S)
         batch_g_sum = batch_g.sum(axis=0)
         

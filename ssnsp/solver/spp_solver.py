@@ -5,6 +5,7 @@ author: Fabian Schaipp
 import numpy as np
 from ..helper.utils import block_diag, compute_x_mean, stop_scikit_saga
 from ..helper.utils import compute_full_xi, compute_x_mean_hist
+from .spp_easy import solve_subproblem_easy
 from scipy.sparse.linalg import cg
 import time
 
@@ -271,7 +272,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     # boolean to check whether we are in a simple setting --> faster computations
     is_easy = (f.m.max() == 1) and callable(getattr(f, "fstar_vec", None))
-    is_easy = False
+    print("EASY PROBLEM???", is_easy)
     
     x_t = x0.copy()
     x_mean = x_t.copy()
@@ -376,7 +377,13 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         # variance reduction boolean
         reduce_variance = params['reduce_variance'] and (iter_t > vr_min_iter)
                 
-        x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, f.m, S, \
+        if not is_easy:
+            x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, f.m, S, \
+                                             newton_params = params['newton_params'],\
+                                             reduce_variance = reduce_variance, xi_tilde = xi_tilde,\
+                                             verbose = False)
+        else:
+            x_t, xi, this_ssn = solve_subproblem_easy(f, phi, x_t, xi, alpha_t, A, S, \
                                              newton_params = params['newton_params'],\
                                              reduce_variance = reduce_variance, xi_tilde = xi_tilde,\
                                              verbose = False)

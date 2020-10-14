@@ -57,6 +57,14 @@ class lsq:
     
     def Hstar(self, x, i):
         return .5
+    
+    # vectorized versions, they return a vector where each element is fstar/gstar/Hstar of one sample
+    def fstar_vec(self, x, S):
+        return .25 * x**2 + self.b[S] * x
+    def gstar_vec(self, x, S):
+        return .5 * x + self.b[S]
+    def Hstar_vec(self, x, S):
+        return .5*np.ones_like(x)
 
 #%%
 
@@ -107,7 +115,9 @@ class logistic_loss:
     def g(self, x, i):
         
         return -1/(1+np.exp(x)) 
-    
+    def g_vec(self, x, S):
+        return -1/(1+np.exp(x)) 
+        
     def fstar(self, X, i):
         Y = np.zeros_like(X)
         for j in range(len(X)):
@@ -145,7 +155,24 @@ class logistic_loss:
             else:
                 Y[j] = -1/(x**2+x)
         return Y
-
+    
+    def fstar_vec(self, x, S):
+        zz = np.logical_and(x < 0 , x > -1)
+        y = -x*np.log(-x) + (1+x) * np.log(1+x)
+        y[~zz] = np.inf
+        return y
+    
+    def gstar_vec(self, x, S):
+        zz = np.logical_and(x < 0 , x > -1)
+        y = np.log(-(1+x)/x) 
+        y[~zz] = np.inf
+        return y
+    
+    def Hstar_vec(self, x, S):
+        zz = np.logical_and(x < 0 , x > -1)
+        y = -1/(x**2+x)
+        y[~zz] = np.inf
+        return y
 ################
 # The above functions are explicitly written for numba usage
 # As xi variables are arrays (possibly of shape (1,)) we need functions that operate on arrays (and not scalars)
@@ -282,9 +309,3 @@ class block_lsq:
 
 
 #%%
-#template for eval method
-# y = 0
-# z = self.A@x
-# for i in np.arange(self.N):
-#     y += self.f(z[i], i)
-# return (1/self.N)*y

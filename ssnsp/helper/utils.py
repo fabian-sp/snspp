@@ -48,21 +48,20 @@ def stop_scikit_saga(x_t, x_old):
 
 def compute_full_xi(f, x, is_easy = False):
      
-    lazy = (f.m.max() == 1)
-    
-    if lazy:
-        vals = compute_xi_inner(f, x)
-    else:
-        dims = np.repeat(np.arange(f.N),f.m)
-        vals = list()
-        for i in np.arange(f.N):
-            A_i =  f.A[dims == i].copy()
-            vals.append(f.g(A_i @ x, i))
-                 
-    xi  = dict(zip(np.arange(f.N), vals))
-    
     if is_easy:
-        xi = np.hstack(list(xi.values()))
+        xi = np.hstack(compute_xi_inner(f, x))   
+    else:
+    
+        if (f.m.max() == 1):
+            vals = compute_xi_inner(f, x)
+        else:
+            dims = np.repeat(np.arange(f.N),f.m)
+            vals = list()
+            for i in np.arange(f.N):
+                A_i =  f.A[dims == i].copy()
+                vals.append(f.g(A_i @ x, i))
+                     
+        xi  = dict(zip(np.arange(f.N), vals))
     
     return xi 
 

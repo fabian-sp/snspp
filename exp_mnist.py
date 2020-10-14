@@ -5,7 +5,6 @@ import pandas as pd
 
 from ssnsp.solver.opt_problem import problem, color_dict
 from ssnsp.helper.data_generation import get_mnist
-from ssnsp.helper.utils import stop_optimal
 from ssnsp.experiments.experiment_utils import plot_multiple, adagrad_step_size_tuner, initialize_fast_gradient
 
 from sklearn.linear_model import LogisticRegression

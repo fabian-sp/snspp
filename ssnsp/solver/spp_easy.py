@@ -4,7 +4,6 @@ author: Fabian Schaipp
 
 import numpy as np
 from ..helper.utils import block_diag
-from .spp_solver import get_default_newton_params, check_newton_params
 from scipy.sparse.linalg import cg
 import time
 
@@ -29,10 +28,7 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
     m: vector with all dimensions m_i, i = 1,..,N
     
     """
-    if newton_params is None:
-        newton_params = get_default_newton_params()
     
-    check_newton_params(newton_params)
     assert alpha > 0 , "step sizes are not positive"
       
     sample_size = len(S)
