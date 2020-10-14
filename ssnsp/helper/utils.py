@@ -46,7 +46,7 @@ def stop_scikit_saga(x_t, x_old):
 ### Useful functions for algorithms
 ############################################################################################
 
-def compute_full_xi(f, x):
+def compute_full_xi(f, x, is_easy = False):
      
     lazy = (f.m.max() == 1)
     
@@ -60,6 +60,9 @@ def compute_full_xi(f, x):
             vals.append(f.g(A_i @ x, i))
                  
     xi  = dict(zip(np.arange(f.N), vals))
+    
+    if is_easy:
+        xi = np.hstack(list(xi.values()))
     
     return xi 
 

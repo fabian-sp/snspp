@@ -267,8 +267,11 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     A = f.A.copy()
     n = len(x0)
-    m = f.m.copy()
     assert n == A.shape[1], "wrong dimensions"
+    
+    # boolean to check whether we are in a simple setting --> faster computations
+    is_easy = (f.m.max() == 1) and callable(getattr(f, "fstar_vec", None))
+    is_easy = False
     
     x_t = x0.copy()
     x_mean = x_t.copy()
@@ -319,19 +322,21 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     #########################################################
     if xi is None:
         if f.name == 'logistic':
-            xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(m[i]) for i in np.arange(f.N)]))
+            xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(f.m[i]) for i in np.arange(f.N)]))
         elif f.name == 'tstudent':
-            xi = dict(zip(np.arange(f.N), [ np.ones(m[i]) for i in np.arange(f.N)]))
+            xi = dict(zip(np.arange(f.N), [ np.ones(f.m[i]) for i in np.arange(f.N)]))
         else:
-            xi = dict(zip(np.arange(f.N), [np.zeros(m[i]) for i in np.arange(f.N)]))
+            xi = dict(zip(np.arange(f.N), [np.zeros(f.m[i]) for i in np.arange(f.N)]))
     
-    x_hist = list()
+    # for easy problems, xi is an array (and not a dict), because we can index it faster
+    if is_easy:
+        xi = np.hstack(list(xi.values()))
+        assert xi.shape== (f.N,)
+    
+    x_hist = list(); xi_hist = list()
     step_sizes = list()
-    obj = list()
-    obj2 = list()
-    S_hist = list()
-    xi_hist = list()
-    ssn_info = list()
+    obj = list(); obj2 = list()
+    ssn_info = list(); S_hist = list()
     runtime = list()
     
     # variance reduction
@@ -343,8 +348,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     else:
         xi_tilde = None
     
-    #print(batch_size)
-    #print(xi_tilde_update)
             
     hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s\t%10s"
     out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
@@ -370,19 +373,18 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         
         params['newton_params']['eps'] =  min(1e-2, 1/(iter_t+1)**(1.1))
         
-        # variance reduction
+        # variance reduction boolean
         reduce_variance = params['reduce_variance'] and (iter_t > vr_min_iter)
                 
-        x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, m, S, \
+        x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, f.m, S, \
                                              newton_params = params['newton_params'],\
                                              reduce_variance = reduce_variance, xi_tilde = xi_tilde,\
                                              verbose = False)
                                              
-        # xi_tilde gets updated every epoch
+        # xi_tilde gets updated
         if params['reduce_variance']:
-            #if xi_tilde_update[iter_t]:
             if iter_t % 10 == 0 and iter_t >= vr_min_iter:
-                xi_tilde = compute_full_xi(f, x_t)
+                xi_tilde = compute_full_xi(f, x_t, is_easy)
                 xi = xi_tilde.copy()
                   
         #stop criterion
