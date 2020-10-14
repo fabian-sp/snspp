@@ -131,10 +131,10 @@ sns.distplot(np.hstack(info['xi_hist'][-1].values()))
 
 sub_rsd = P.info['ssn_info']
 
-fig, axs = plt.subplots(5,5)
+fig, axs = plt.subplots(8,5)
 fig.legend(['residual', 'step_size', 'direction'])
 
-for j in np.arange(25):
+for j in np.arange(40):
     ax = axs.ravel()[j]
     ax.plot(sub_rsd[j]['residual'], 'blue')
     ax2 = ax.twinx()
