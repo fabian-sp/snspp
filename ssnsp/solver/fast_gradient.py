@@ -40,6 +40,22 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     assert gradients.shape == (N,n)
     
     #########################################################
+    ## Solver dependent parameters
+    #########################################################
+    if 'n_epochs' not in params.keys():    
+        params['n_epochs'] = 5
+    
+    if solver == 'saga':
+        if 'reg' not in params.keys():    
+            params['reg'] = 0
+    
+    elif solver == 'adagrad':
+        if 'delta' not in params.keys():    
+                params['delta'] = 1e-6
+        if 'batch_size' not in params.keys():    
+            params['batch_size'] = max(int(f.N * 0.01), 1)
+            
+    #########################################################
     ## Step size
     #########################################################
     # see Defazio et al. 2014 for (convex) SAGA step size and Sra, Reddi et al 2016 for minibatch SAGA step size
@@ -57,9 +73,18 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
             
             if solver == 'saga':
                 assert f.convex, "SAGA with batch-size 1 is only guaranteed for f_i being convex, see Defazio et al. 2014"
-                gamma = 1./(3*L) 
+                
+                # if we regularize, f_i is strongly-convex and we can use a larger step size (see Defazio et al.)
+                if params['reg'] > 0:
+                    gamma1 = 1/(2*(f.N*params['reg'] + L))
+                    print("Step size with regularization: ", gamma1)
+                else:
+                    gamma1 = 0
+                    
+                gamma = max(gamma1, 1./(3*L))
             else:
-                gamma = 1/(5*L)
+                params['batch_size'] = int(f.N**(2/3))
+                gamma = 1./(5*L)
                 
         elif solver == 'adagrad':
             warnings.warn("Using a default step size for AdaGrad. This will propbably lead to bad performance. A script for tuning the step size is contained in ssnsp/experiments/experimnet_utils. Provide a step size via params[\"gamma\"].")
@@ -67,24 +92,10 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     else:
         gamma = params['gamma']
     
-    print(gamma)
+    print(f"Step size of {solver}: ", gamma)
     gamma = np.float64(gamma)  
     
-    if 'n_epochs' not in params.keys():    
-        params['n_epochs'] = 5
     
-    #########################################################
-    ## Solver dependent parameters
-    #########################################################
-    if solver == 'saga':
-        if 'reg' not in params.keys():    
-            params['reg'] = 0
-    
-    elif solver == 'adagrad':
-        if 'delta' not in params.keys():    
-                params['delta'] = 1e-6
-        if 'batch_size' not in params.keys():    
-            params['batch_size'] = max(int(f.N * 0.01), 1)
     #########################################################
     ## Main loop
     #########################################################
@@ -92,10 +103,10 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     
     if solver == 'saga':
         # run SAGA with batch size 1
-        x_t, x_hist, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'])     
+        x_t, x_hist, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['reg'])     
     elif solver == 'batch saga':
         # run SAGA with batch size n^(2/3)
-        x_t, x_hist, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], int(f.N**(2/3)))
+        x_t, x_hist, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['batch_size'])
     elif solver == 'adagrad':
         x_t, x_hist, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, gamma, params['delta'] , params['n_epochs'], params['batch_size'])
     end = time.time()
@@ -142,7 +153,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
 
 #%%
 @njit()
-def saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs):
+def saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, reg):
     
     # initialize for diagnostics
     x_hist = List()
@@ -168,8 +179,8 @@ def saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs):
         g_j = gradients[j,:].reshape(-1)
         old_g = (-1) * g_j + g_sum
         
-        ##w_t = x_t - gamma*reg*A_j.T@A_j@x_t - gamma * (g + old_g)
-        w_t = x_t - gamma * (g + old_g)
+        w_t = (1 -gamma*reg)*x_t - gamma * (g + old_g)
+        #w_t = x_t - gamma * (g + old_g)
         
         # store new gradient
         gradients[j,:] = g

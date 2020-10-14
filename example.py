@@ -66,7 +66,7 @@ x_sk = sk.coef_.copy().squeeze()
 #f.eval(x_sk) + phi.eval(x_sk)
 #%% compare to SAGA/ADAGRAD
 
-params = {'n_epochs' : 100, 'reg': 0}
+params = {'n_epochs' : 200, 'reg': 0}
 
 Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
