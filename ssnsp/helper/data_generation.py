@@ -132,7 +132,7 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
     
     return x, A, b, f, phi
 
-def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 1):
+def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 1, noise = 0.1):
     """
     """ 
     A = np.random.randn(N,n)
@@ -149,7 +149,7 @@ def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 1):
     x = np.concatenate((x, np.zeros(n-k)))
     np.random.shuffle(x)
        
-    b = A@x + 0.1*np.random.standard_t(v, size = N)
+    b = A@x + noise*np.random.standard_t(v, size = N)
      
     A = A.astype('float64')
     b = b.astype('float64')

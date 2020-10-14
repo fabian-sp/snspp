@@ -87,11 +87,6 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         old_g = (-1) * g_j + g_sum
         w_t = x_t - gamma * (g + old_g)
         
-        if params['reg'] > 0:
-            w_t = x_t - gamma*params['reg']*A_j.T@A_j@x_t - gamma * (g + old_g)
-        else:
-            w_t = x_t - gamma * (g + old_g)
-        
         # store new gradient
         gradients[j,:] = g.copy()
         g_sum = g_sum - (1/N)*g_j + (1/N)*g

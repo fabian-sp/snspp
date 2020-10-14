@@ -42,7 +42,7 @@ initialize_fast_gradient(f, phi)
 
 #%% solve with SAGA
 
-params = {'n_epochs' : 100, 'reg': 1e-4}
+params = {'n_epochs' : 100}
 
 Q = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -135,7 +135,6 @@ plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
 
 #ax.set_xlim(-.1,20)
 ax.legend(fontsize = 10)
-#ax.set_yscale('log')
 
 fig.subplots_adjust(top=0.96,
                     bottom=0.14,

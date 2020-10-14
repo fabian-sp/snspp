@@ -39,23 +39,28 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     gradients = compute_gradient_table(f, x_t).astype('float64')
     assert gradients.shape == (N,n)
     
-    # set step size
-    # see Defazio et al. 2014 for theoretical SAGA step size
+    #########################################################
+    ## Step size
+    #########################################################
+    # see Defazio et al. 2014 for (convex) SAGA step size and Sra, Reddi et al 2016 for minibatch SAGA step size
     if 'gamma' not in params.keys():
-        if solver == 'saga':
+        if solver in ['saga', 'batch saga']:
             if f.name == 'squared':
-                L = 2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
-                gamma = 1./(3*L)
+                L = 2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()    
             elif f.name == 'logistic':
                 L = .25 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
-                gamma = 1./(3*L)
             elif f.name == 'tstudent':
                 L =  2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
-                gamma = 1./(3*L)
             else:
                 warnings.warn("We could not determine the correct SAGA step size! The default step size is maybe too large (divergence) or too small (slow convergence).")
-                gamma = 0.01
-        
+                L = 1e2
+            
+            if solver == 'saga':
+                assert f.convex, "SAGA with batch-size 1 is only guaranteed for f_i being convex, see Defazio et al. 2014"
+                gamma = 1./(3*L) 
+            else:
+                gamma = 1/(5*L)
+                
         elif solver == 'adagrad':
             warnings.warn("Using a default step size for AdaGrad. This will propbably lead to bad performance. A script for tuning the step size is contained in ssnsp/experiments/experimnet_utils. Provide a step size via params[\"gamma\"].")
             gamma = .05
@@ -81,14 +86,16 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
         if 'batch_size' not in params.keys():    
             params['batch_size'] = max(int(f.N * 0.01), 1)
     #########################################################
-    # Main loop
+    ## Main loop
     #########################################################
     start = time.time()
     
     if solver == 'saga':
-        x_t, x_hist, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['reg'])
-        #x_t, x_hist, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], int(f.N**(2/3)))
-    
+        # run SAGA with batch size 1
+        x_t, x_hist, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'])     
+    elif solver == 'batch saga':
+        # run SAGA with batch size n^(2/3)
+        x_t, x_hist, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], int(f.N**(2/3)))
     elif solver == 'adagrad':
         x_t, x_hist, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, gamma, params['delta'] , params['n_epochs'], params['batch_size'])
     end = time.time()
@@ -133,9 +140,9 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
 
     return x_t, x_mean, info
 
-
+#%%
 @njit()
-def saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, reg = 0):
+def saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs):
     
     # initialize for diagnostics
     x_hist = List()
@@ -161,10 +168,8 @@ def saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, reg = 0):
         g_j = gradients[j,:].reshape(-1)
         old_g = (-1) * g_j + g_sum
         
-        if False:#not f.convex:
-            w_t = x_t - gamma*reg*A_j.T@A_j@x_t - gamma * (g + old_g)
-        else:
-            w_t = x_t - gamma * (g + old_g)
+        ##w_t = x_t - gamma*reg*A_j.T@A_j@x_t - gamma * (g + old_g)
+        w_t = x_t - gamma * (g + old_g)
         
         # store new gradient
         gradients[j,:] = g
