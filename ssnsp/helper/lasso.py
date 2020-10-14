@@ -115,8 +115,12 @@ class logistic_loss:
     def g(self, x, i):
         
         return -1/(1+np.exp(x)) 
+    
     def g_vec(self, x, S):
-        return -1/(1+np.exp(x)) 
+        A_S = self.A[S,:] 
+        z = -1/(1+np.exp(A_S@x)) 
+        
+        return  A_S * z.reshape(-1,1)
         
     def fstar(self, X, i):
         Y = np.zeros_like(X)
