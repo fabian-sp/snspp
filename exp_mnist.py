@@ -46,7 +46,7 @@ initialize_fast_gradient(f, phi)
 
 #%% solve with SAGA
 
-params = {'n_epochs' : 50}
+params = {'n_epochs' : 50, 'reg': 1e-2}
 
 Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 

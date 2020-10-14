@@ -47,7 +47,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     
     if solver == 'saga':
         if 'reg' not in params.keys():    
-            params['reg'] = 0
+            params['reg'] = 0.
     
     elif solver == 'adagrad':
         if 'delta' not in params.keys():    
@@ -77,7 +77,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
                 # if we regularize, f_i is strongly-convex and we can use a larger step size (see Defazio et al.)
                 if params['reg'] > 0:
                     gamma1 = 1/(2*(f.N*params['reg'] + L))
-                    print("Step size with regularization: ", gamma1)
+                    #print("Step size with regularization: ", gamma1)
                 else:
                     gamma1 = 0
                     
@@ -92,7 +92,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     else:
         gamma = params['gamma']
     
-    print(f"Step size of {solver}: ", gamma)
+    #print(f"Step size of {solver}: ", gamma)
     gamma = np.float64(gamma)  
     
     
