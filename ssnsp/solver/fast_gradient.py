@@ -72,12 +72,11 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
                 L = 1e2
             
             if solver == 'saga':
-                assert f.convex, "SAGA with batch-size 1 is only guaranteed for f_i being convex, see Defazio et al. 2014"
+                #assert f.convex, "SAGA with batch-size 1 is only guaranteed for f_i being convex, see Defazio et al. 2014"
                 
                 # if we regularize, f_i is strongly-convex and we can use a larger step size (see Defazio et al.)
                 if params['reg'] > 0:
                     gamma1 = 1/(2*(f.N*params['reg'] + L))
-                    #print("Step size with regularization: ", gamma1)
                 else:
                     gamma1 = 0
                     
@@ -92,7 +91,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     else:
         gamma = params['gamma']
     
-    #print(f"Step size of {solver}: ", gamma)
+    print(f"Step size of {solver}: ", gamma)
     gamma = np.float64(gamma)  
     
     

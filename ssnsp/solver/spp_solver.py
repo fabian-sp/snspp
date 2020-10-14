@@ -3,11 +3,12 @@ author: Fabian Schaipp
 """
 
 import numpy as np
-from ..helper.utils import block_diag, compute_x_mean, stop_optimal, stop_scikit_saga
+from ..helper.utils import block_diag, compute_x_mean, stop_scikit_saga
 from ..helper.utils import compute_full_xi, compute_x_mean_hist
 from scipy.sparse.linalg import cg
 import time
 
+#%% functions for creating the samples S_k
 def sampler(N, size):
     """
     samples a subset of {1,..,N} without replacement
@@ -22,27 +23,46 @@ def sampler(N, size):
     
     return S
 
-
-def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, Lambda):
-    
-    sample_size = len(S)
-    
-    z = x - (alpha/sample_size) * (subA.T @ xi_stack) + Lambda
-    term2 = .5 * np.linalg.norm(z)**2 - phi.moreau(z, alpha)
-    
-    if f.m.max() == 1:
-        term1 = sum([f.fstar(xi_stack[[l]], S[l]) for l in range(sample_size)])
+def batch_size_constructor(t, a, b, M, cutoff = 18):
+    """
+    a: batch size at t=0
+    b: batch size at t=M
+    """
+    if M > cutoff:
+        M1 = cutoff
+        c1 = np.log(b/a)/M1
     else:
-        term1 = sum([f.fstar(xi_stack[sub_dims == l], S[l]) for l in range(sample_size)])
+        c1 = np.log(b/a)/M
+        
+    c2 = np.log(a)   
+    y = np.exp(c1* np.minimum(t, cutoff) +c2).astype(int)
     
-    res = term1 + (sample_size/alpha) * term2
+    return y
+
+def cyclic_batch(N, batch_size, t):
+    """
+    returns array of samples for cyclic sampling at iteration t, with vector of target batch sizes batch_size
+    """
+    C = batch_size.cumsum() % N
+    if t > 0:
+        a = C[t-1]
+        b = C[t]
+        if a <= b:
+            S = np.arange(a,b)
+        else:
+            S = np.hstack((np.arange(0,b),  np.arange(a, N)))
+    else:
+        S = np.arange(0, C[t])
     
-    return res.squeeze()
+    np.sort(S)
+    return S
+
+#%% functions for parameter handling
 
 def get_default_newton_params():
     
     params = {'tau': .9, 'eta' : 1e-5, 'rho': .5, 'mu': .4, 'eps': 1e-3, \
-              'cg_max_iter': 12, 'max_iter': 50}
+              'cg_max_iter': 12, 'max_iter': 20}
     
     return params
 
@@ -57,6 +77,24 @@ def check_newton_params(newton_params):
     
     return
 
+
+#%% main functions
+
+def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, hat_d):
+    
+    sample_size = len(S)
+    
+    z = x - (alpha/sample_size) * (subA.T @ xi_stack) + hat_d
+    term2 = .5 * np.linalg.norm(z)**2 - phi.moreau(z, alpha)
+    
+    if f.m.max() == 1:
+        term1 = sum([f.fstar(xi_stack[[l]], S[l]) for l in range(sample_size)])
+    else:
+        term1 = sum([f.fstar(xi_stack[sub_dims == l], S[l]) for l in range(sample_size)])
+    
+    res = term1 + (sample_size/alpha) * term2
+    
+    return res.squeeze()
     
 def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce_variance = False, xi_tilde = None, verbose = False):
     """
@@ -107,9 +145,9 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     if reduce_variance:
         xi_stack_old = np.hstack([xi_tilde[i] for i in S])
         xi_full_old = np.hstack([xi_tilde[i] for i in range(f.N)])
-        Lambda =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)      
+        hat_d =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)      
     else:
-        Lambda = 0.
+        hat_d = 0.
     
     #compute term coming from weak convexity
     #start = time.time()
@@ -117,18 +155,17 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         gamma_i = np.stack([f.weak_conv(i) for i in S])
         gamma_i = np.repeat(gamma_i, m[S])
         Gam = subA.T @ (gamma_i.reshape(-1,1) * subA)
-        Lambda += (alpha/sample_size) * (Gam@x) 
+        hat_d += (alpha/sample_size) * (Gam@x) 
     #end = time.time()
     #print("Construct Gam: ", end-start)
-    
-    
+        
     while sub_iter < newton_params['max_iter']:
         
     # step 1: construct Newton matrix and RHS
         if verbose:
             print("Construct")
         
-        z = x - (alpha/sample_size) * (subA.T @ xi_stack)  + Lambda
+        z = x - (alpha/sample_size) * (subA.T @ xi_stack)  + hat_d
         rhs = -1. * (np.hstack([f.gstar(xi[i], i) for i in S]) - subA @ phi.prox(z, alpha))
         
         residual.append(np.linalg.norm(rhs))
@@ -162,9 +199,9 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         else:
             tmp = block_diag([f.Hstar(xi[i], i) for i in S])
             tmp += eps_reg * np.eye(tmp.shape[0])
-        
+
         W = tmp + tmp2
-        
+        assert not np.isnan(W).any(), "Something went wrong during construction of the Hessian"
     # step2: solve Newton system
         if verbose:
             print("Start CG method")
@@ -188,14 +225,13 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     # step 3: backtracking line search
         if verbose:
             print("Start Line search")
-        U_old = Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, Lambda)
+        U_old = Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, hat_d)
         beta = 1.
-        U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA, Lambda)
-        
-        
+        U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA, hat_d)
+           
         while U_new > U_old + newton_params['mu'] * beta * (d @ -rhs):
             beta *= newton_params['rho']
-            U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA, Lambda)
+            U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA, hat_d)
             
         step_sz.append(beta)
         
@@ -217,7 +253,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         print(f"WARNING: reached maximal iterations in semismooth Newton -- accuracy {residual[-1]}")
     
     # update primal iterate
-    z = x - (alpha/sample_size) * (subA.T @ xi_stack) + Lambda
+    z = x - (alpha/sample_size) * (subA.T @ xi_stack) + hat_d
     new_x = phi.prox(z, alpha)
     
     info = {'residual': np.array(residual), 'direction' : norm_dir, 'step_size': step_sz }
@@ -225,44 +261,10 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     
     return new_x, xi, info
 
-def batch_size_constructor(t, a, b, M, cutoff = 18):
-    """
-    a: batch size at t=0
-    b: batch size at t=M
-    """
-    if M > cutoff:
-        M1 = cutoff
-        c1 = np.log(b/a)/M1
-    else:
-        c1 = np.log(b/a)/M
-        
-    c2 = np.log(a)
-    
-    y = np.exp(c1* np.minimum(t, cutoff) +c2).astype(int)
-    
-    return y
 
-def cyclic_batch(N, batch_size, t):
-    """
-    returns array of samples for cyclic sampling at iteration t, with vector of target batch sizes batch_size
-    """
-    C = batch_size.cumsum() % N
-    if t > 0:
-        a = C[t-1]
-        b = C[t]
-        if a <= b:
-            S = np.arange(a,b)
-        else:
-            S = np.hstack((np.arange(0,b),  np.arange(a, N)))
-    else:
-        S = np.arange(0, C[t])
-    
-    np.sort(S)
-    return S
     
 def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
     
-    # initialize all variables
     A = f.A.copy()
     n = len(x0)
     m = f.m.copy()
@@ -271,19 +273,20 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     x_t = x0.copy()
     x_mean = x_t.copy()
     
-    # initialize for stopping criterion
     status = 'not optimal'
     eta = np.inf
     
+    #########################################################
+    ## Set parameters
+    #########################################################
     if 'alpha_C' not in params.keys():
         C = 1.
     else:
-        C = params['alpha_C']
-        
+        C = params['alpha_C']       
     alpha_t = C
     
     if 'max_iter' not in params.keys():    
-        params['max_iter'] = 70
+        params['max_iter'] = 100
     else:
         assert type(params['max_iter']) == int, "Max. iter needs to be integer"
         
@@ -299,6 +302,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     if 'newton_params' not in params.keys():
         params['newton_params'] = get_default_newton_params()
     
+    #########################################################
+    ## Sample style
+    #########################################################
     if params['sample_style'] == 'increasing':     
         batch_size = batch_size_constructor(np.arange(params['max_iter']), a = params['sample_size']/4, \
                                             b = params['sample_size'], M = params['max_iter']-1)
@@ -308,8 +314,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     else:
         batch_size = params['sample_size'] * np.ones(params['max_iter'], dtype = 'int64')
     
-    
-    # initialize variables + containers
+    #########################################################
+    ## Initialization
+    #########################################################
     if xi is None:
         if f.name == 'logistic':
             xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(m[i]) for i in np.arange(f.N)]))
@@ -344,6 +351,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     if verbose:
         print(hdr_fmt % ("iter", "obj (x_t)", "obj(x_mean)", "alpha_t", "batch size", "eta"))
     
+    #########################################################
+    ## Main loop
+    #########################################################
     for iter_t in np.arange(params['max_iter']):
         
         start = time.time()
@@ -358,7 +368,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         S = sampler(f.N, batch_size[iter_t])
         #S = cyclic_batch(f.N, batch_size, iter_t)
         
-        params['newton_params']['eps'] =  min(1e-2, 1e-1/(iter_t+1)**(1.5))
+        params['newton_params']['eps'] =  min(1e-2, 1/(iter_t+1)**(1.1))
         
         # variance reduction
         reduce_variance = params['reduce_variance'] and (iter_t > vr_min_iter)
@@ -374,12 +384,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
             if iter_t % 10 == 0 and iter_t >= vr_min_iter:
                 xi_tilde = compute_full_xi(f, x_t)
                 xi = xi_tilde.copy()
-        
-        # alternative: SAGA style, xi_tilde is the current xi and updated every epoch
-        # if params['reduce_variance']: 
-        #     if xi_tilde_update[iter_t]:#[0,20,30,40]:
-        #         xi = compute_full_xi(f, x_t)
-        #     xi_tilde = xi.copy()
                   
         #stop criterion
         eta = stop_scikit_saga(x_t, x_old)
@@ -387,6 +391,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         # we only measure runtime of the iteration, excluding computation of the diagnostics
         end = time.time()
         runtime.append(end-start)
+        
+        # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
+        alpha_t = C/(iter_t + 2)**(0.51)
         
         # save all diagnostics
         ssn_info.append(this_ssn)
@@ -406,16 +413,11 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
           
         if verbose and measure:
             print(out_fmt % (iter_t, obj[-1], obj2[-1] , alpha_t, len(S), eta))
-        
-        # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
-        alpha_t = C/(iter_t + 2)**(0.51)
-        
-        
+       
     if eta > tol:
         status = 'max iterations reached'    
     
-    
-    
+       
     print(f"Stochastic ProxPoint terminated after {iter_t} iterations with accuracy {eta}")
     print(f"Stochastic ProxPoint status: {status}")
     

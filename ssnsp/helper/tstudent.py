@@ -41,7 +41,7 @@ class tstudent_loss:
         self.m = np.repeat(1,self.N)
         
         # epsilon for regularization
-        self.eps = 1e-1
+        self.eps = 1e-2
         self.gamma = 1/(4*self.v) + self.eps
         
         # helper array to save yet computed results from self._zstar --> do not recompute in Hstar
@@ -72,7 +72,6 @@ class tstudent_loss:
     def weak_conv(self, i):
         return self.gamma
     
-    #@staticmethod
     def _zstar(self, x, b):
         
         c3 = -self.gamma
@@ -117,7 +116,7 @@ class tstudent_loss:
     
     def _h(self, x, b):
         """
-        second derivative of f +gamma/2 \|.\|^2
+        second derivative of f+gamma/2 \|.\|^2
         """
         nom = 2*(self.v-(b-x)**2)
         denom = (self.v+(b-x)**2)**2

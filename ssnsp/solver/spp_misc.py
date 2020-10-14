@@ -90,3 +90,22 @@ Miscallaneous snippets for SPP solver
 
 #new_z = new_x - (1/sample_size) * (subA.T @ xi_stack)
 #eta = np.linalg.norm(new_x - phi.prox(new_z, alpha = 1))
+
+
+
+### dict vs vector
+#xi = dict(zip(np.arange(f.N), [np.random.rand(f.m[i]) for i in np.arange(f.N)]))
+
+#xi_vec = np.hstack(xi.values())
+
+#S = np.arange(100, dtype = int)
+
+#%timeit np.hstack([xi[i] for i in S])
+#%timeit xi_vec[S]
+
+
+        # alternative: SAGA style, xi_tilde is the current xi and updated every epoch
+        # if params['reduce_variance']: 
+        #     if xi_tilde_update[iter_t]:#[0,20,30,40]:
+        #         xi = compute_full_xi(f, x_t)
+        #     xi_tilde = xi.copy()

@@ -16,30 +16,30 @@ def stop_scikit_saga(x_t, x_old):
     
     return nom/denom
 
-def stop_mean_objective(obj, cutoff = True):
-    """
-    obj: list of the objective function values of the "mean iterate"
-    """
-    if cutoff:
-        if len(obj) >= 6:
-            objs = obj[3:]
-        else:
-            objs = obj.copy()
-    else:
-        objs = obj.copy()
+# def stop_mean_objective(obj, cutoff = True):
+#     """
+#     obj: list of the objective function values of the "mean iterate"
+#     """
+#     if cutoff:
+#         if len(obj) >= 6:
+#             objs = obj[3:]
+#         else:
+#             objs = obj.copy()
+#     else:
+#         objs = obj.copy()
         
-    if len(objs) <= 3:
-        return np.inf
-    else:
-        return abs(objs[-1] - np.mean(objs))
+#     if len(objs) <= 3:
+#         return np.inf
+#     else:
+#         return abs(objs[-1] - np.mean(objs))
     
-def stop_optimal(x, f, phi):
-    """
-    Optimality residual using second prox theorem
-    Computationally expensive if N is large!!
-    """
-    gradf = compute_full_gradient(f,x) 
-    return np.linalg.norm(x - phi.prox( x - gradf, 1.))
+# def stop_optimal(x, f, phi):
+#     """
+#     Optimality residual using second prox theorem
+#     Computationally expensive if N is large!!
+#     """
+#     gradf = compute_full_gradient(f,x) 
+#     return np.linalg.norm(x - phi.prox( x - gradf, 1.))
 
 
 ############################################################################################
@@ -74,18 +74,18 @@ def compute_xi_inner(f, x):
         
     return vals
             
-def compute_full_gradient(f,x):
-    """
-    computes the full gradient 1/N * sum (A_i.T @ grad f_i(A_ix))
-    NOTE: not storage optimized (needs O(N*n) storage)
-    """
-    if f.name == 'logistic':
-        g = logreg_gradient(f, x)
-    else:
-        grads = compute_gradient_table(f, x)
-        g = (1/f.N)*grads.sum(axis = 0)
+# def compute_full_gradient(f,x):
+#     """
+#     computes the full gradient 1/N * sum (A_i.T @ grad f_i(A_ix))
+#     NOTE: not storage optimized (needs O(N*n) storage)
+#     """
+#     if f.name == 'logistic':
+#         g = logreg_gradient(f, x)
+#     else:
+#         grads = compute_gradient_table(f, x)
+#         g = (1/f.N)*grads.sum(axis = 0)
         
-    return g
+#     return g
 
 
 def compute_gradient_table(f, x):

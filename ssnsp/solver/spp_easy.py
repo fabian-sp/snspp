@@ -1,0 +1,150 @@
+"""
+author: Fabian Schaipp
+"""
+
+import numpy as np
+from ..helper.utils import block_diag
+from .spp_solver import get_default_newton_params, check_newton_params
+from scipy.sparse.linalg import cg
+import time
+
+
+
+def Ueval(xi_sub, f, phi, x, alpha, S, subA, hat_d):
+    
+    sample_size = len(S)
+    
+    z = x - (alpha/sample_size) * (subA.T @ xi_sub) + hat_d
+    term2 = .5 * np.linalg.norm(z)**2 - phi.moreau(z, alpha)
+    
+    term1 = f.fstar_vec(xi_sub, S).sum()
+    res = term1 + (sample_size/alpha) * term2
+    
+    return res.squeeze()
+
+
+    
+def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, reduce_variance = False, xi_tilde = None, verbose = False):
+    """
+    m: vector with all dimensions m_i, i = 1,..,N
+    
+    """
+    if newton_params is None:
+        newton_params = get_default_newton_params()
+    
+    check_newton_params(newton_params)
+    assert alpha > 0 , "step sizes are not positive"
+      
+    sample_size = len(S)
+    assert np.all(S == np.sort(S)), "S is not sorted!"
+    
+    # IMPORTANT: subA is ordered, i.e. it is in the order as np.arange(N) and NOT of S --> breaks if S not sorted 
+    subA = A[S,:]
+    xi_sub = xi[S]
+    
+    sub_iter = 0
+    converged = False
+    
+    residual = list()
+    norm_dir = list()
+    step_sz = list()
+    
+    # compute var. reduction term
+    if reduce_variance:
+        xi_sub_old = xi_tilde[S]
+        xi_old = xi_tilde
+        hat_d =  (alpha/sample_size) * (subA.T @ xi_sub_old) - (alpha/f.N) * (f.A.T @ xi_old)      
+    else:
+        hat_d = 0.
+    
+    #compute term coming from weak convexity
+    if not f.convex:
+        gamma_i = np.stack([f.weak_conv(i) for i in S])
+        Gam = subA.T @ (gamma_i.reshape(-1,1) * subA)
+        hat_d += (alpha/sample_size) * (Gam@x) 
+       
+    while sub_iter < newton_params['max_iter']:
+        
+    # step 1: construct Newton matrix and RHS
+        if verbose:
+            print("Construct")
+        
+        z = x - (alpha/sample_size) * (subA.T @ xi_sub) + hat_d
+        rhs = -1. * (f.gstar_vec(xi_sub, S) - subA @ phi.prox(z, alpha))
+        
+        residual.append(np.linalg.norm(rhs))
+        if np.linalg.norm(rhs) <= newton_params['eps']:
+            converged = True
+            break
+        
+        if verbose:
+            print("Construct2")
+        
+        U = phi.jacobian_prox(z, alpha)
+        
+        if phi.name == '1norm':
+            # U is 1d array with only 1 or 0 --> speedup by not constructing 2d diagonal array
+            bool_d = U.astype(bool)
+            
+            subA_d = subA[:, bool_d].astype('float32')
+            tmp2 = (alpha/sample_size) * subA_d @ subA_d.T
+        else:
+            tmp2 = (alpha/sample_size) * subA @ U @ subA.T
+               
+        if verbose:
+            print("Construct3")
+            
+        eps_reg = 1e-4
+        
+        tmp_d = f.Hstar_vec(xi_sub, S)
+        tmp = np.diag(tmp_d + eps_reg)           
+
+        W = tmp + tmp2
+        assert not np.isnan(W).any(), "Something went wrong during construction of the Hessian"
+    # step2: solve Newton system
+        if verbose:
+            print("Start CG method")
+            
+        #start = time.time()
+        cg_tol = min(newton_params['eta'], np.linalg.norm(rhs)**(1+ newton_params['tau']))
+        
+        precond = np.diag(1/tmp_d)
+        
+        d, cg_status = cg(W, rhs, tol = cg_tol, maxiter = newton_params['cg_max_iter'], M = precond)
+        #end = time.time(); print("CG", end-start)
+        
+        assert d@rhs > -1e-8 , f"No descent direction, {d@rhs}"
+        #assert cg_status == 0, f"CG method did not converge, exited with status {cg_status}"
+        norm_dir.append(np.linalg.norm(d))
+        
+    # step 3: backtracking line search
+        if verbose:
+            print("Start Line search")
+        U_old = Ueval(xi_sub, f, phi, x, alpha, S, subA, hat_d)
+        beta = 1.
+        U_new = Ueval(xi_sub + beta*d, f, phi, x, alpha, S, subA, hat_d)
+           
+        while U_new > U_old + newton_params['mu'] * beta * (d @ -rhs):
+            beta *= newton_params['rho']
+            U_new = Ueval(xi_sub + beta*d, f, phi, x, alpha, S, subA, hat_d)
+            
+        step_sz.append(beta)
+        
+    # step 4: update xi
+        if verbose:
+            print("Update xi variables")
+        xi_sub += beta * d
+                
+        sub_iter += 1
+        
+    if not converged:
+        print(f"WARNING: reached maximal iterations in semismooth Newton -- accuracy {residual[-1]}")
+    
+    # update primal iterate
+    z = x - (alpha/sample_size) * (subA.T @ xi_sub) + hat_d
+    new_x = phi.prox(z, alpha)
+    
+    info = {'residual': np.array(residual), 'direction' : norm_dir, 'step_size': step_sz }
+    
+    
+    return new_x, xi, info

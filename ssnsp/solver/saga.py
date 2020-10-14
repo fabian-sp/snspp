@@ -3,7 +3,7 @@ author: Fabian Schaipp
 """
 
 import numpy as np
-from ..helper.utils import compute_x_mean, compute_gradient_table, stop_optimal, stop_scikit_saga
+from ..helper.utils import compute_x_mean, compute_gradient_table, stop_scikit_saga
 import time
 import warnings
 
