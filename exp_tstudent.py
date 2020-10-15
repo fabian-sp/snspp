@@ -57,8 +57,8 @@ Q1.solve(solver = 'adagrad')
 print(f.eval(Q1.x) +phi.eval(Q1.x))
 #%% solve with SSNSP
 
-params = {'max_iter' : 100, 'sample_size': 70 ,'sample_style': 'fast_increasing',\
-          'alpha_C' : 5., 'reduce_variance': True}
+params = {'max_iter' : 100, 'sample_size': 150 ,'sample_style': 'constant',\
+          'alpha_C' : 6., 'reduce_variance': True}
 
 P = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -86,7 +86,7 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 kwargs = {"psi_star": psi_star, "log_scale": True}
 
 #Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-#Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 P.plot_objective(ax = ax, **kwargs)
 
 #plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)

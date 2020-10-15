@@ -117,13 +117,16 @@ plt.legend(labels = ['error xk (l2)', 'error xk(linf)', 'error xmean (l2)'])
 
 info = P.info.copy()
 xis = [np.hstack(list(i.values())) for i in info['xi_hist']]
+#xis = info['xi_hist']
+
 xis = np.vstack(xis)
 
 plt.figure()
-sns.heatmap(xis, cmap = 'coolwarm', vmin = -1, vmax = 0.)
+sns.heatmap(xis, cmap = 'coolwarm', vmin = -1, vmax = 1)
 
 plt.figure()
-sns.distplot(np.hstack(info['xi_hist'][-1].values()))
+#sns.distplot(np.hstack(info['xi_hist'][-1].values()))
+sns.distplot(xis[-1,:])
 
 
 

@@ -322,7 +322,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         if f.name == 'logistic':
             xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(f.m[i]) for i in np.arange(f.N)]))
         elif f.name == 'tstudent':
-            xi = dict(zip(np.arange(f.N), [ np.ones(f.m[i]) for i in np.arange(f.N)]))
+            xi = dict(zip(np.arange(f.N), [ np.zeros(f.m[i]) for i in np.arange(f.N)]))
         else:
             xi = dict(zip(np.arange(f.N), [np.zeros(f.m[i]) for i in np.arange(f.N)]))
     
@@ -389,7 +389,10 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         if params['reduce_variance']:
             if iter_t % 10 == 0 and iter_t >= vr_min_iter:
                 xi_tilde = compute_full_xi(f, x_t, is_easy)
-                xi = xi_tilde.copy()
+                
+                # when f convex, update xi
+                if f.convex:
+                    xi = xi_tilde.copy()
                   
         #stop criterion
         eta = stop_scikit_saga(x_t, x_old)

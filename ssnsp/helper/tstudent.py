@@ -82,7 +82,7 @@ class tstudent_loss:
         z = np.roots(np.array([c3,c2,c1,c0], dtype=np.complex64))  
         z = z[np.abs(np.imag(z)) <= 1e-3]
         
-        if len(z) == 0 or len(z) > 1:
+        if len(z) == 0:
             res = np.nan
         else:
             res = np.real(z)[0]
