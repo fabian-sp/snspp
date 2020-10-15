@@ -138,6 +138,25 @@ class tstudent_loss:
             Y[j] = 1/(self._h(g_i, self.b[i]))
             
         return Y
+    
+    # def fstar_vec(self, x, S):
+    #     Y = np.zeros_like(x)        
+    #     for j in range(len(x)):
+    #         Y[j] = self._fstar(x[j],S[j])
+            
+    #     return Y
+    
+    # def gstar_vec(self, x, S):
+    #     Y = np.zeros_like(x)
+    #     for j in range(len(x)):
+    #         self.z[S[j]] = self._zstar(x[j], self.b[S[j]])      
+    #         Y[j] = self.z[S[j]]
+    #     return Y
+    
+    # def Hstar_vec(self, x, S):
+    #     b_S = self.b[S]
+    #     g_S = self.z[S]
+    #     return 1/(self._h(g_S, b_S))
 
 
 #%%    

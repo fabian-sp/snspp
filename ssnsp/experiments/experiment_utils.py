@@ -88,6 +88,7 @@ def adagrad_step_size_tuner(f, phi, gamma_range = None, params = None):
         all_obj[k] = this_obj
         
         Q1.plot_objective(ax = axs.ravel()[k])
+        axs.ravel()[k].set_title(f"step size {gamma_range[k]}")
         
     opt_gamma = gamma_range[np.argmin(all_obj)]
     print("Optimal step size: ", opt_gamma)

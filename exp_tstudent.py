@@ -23,8 +23,9 @@ xsol, A, b, f, phi = tstudent_test(N, n, k, l1, v = 4)
 
 initialize_fast_gradient(f, phi)
 
+psi_star = 0.7387611791660234
 #%% solve with SAGA
-params = {'n_epochs' : 200}
+params = {'n_epochs' : 100}
 
 Q = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -34,17 +35,29 @@ print(f.eval(Q.x) +phi.eval(Q.x))
 
 #%% solve with BATCH-SAGA
 
-params = {'n_epochs' : 1000}
+params = {'n_epochs' : 100}
 
-Q1 = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
+Q2 = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
-Q1.solve(solver = 'batch saga')
+Q2.solve(solver = 'batch saga')
+
+print(f.eval(Q2.x) +phi.eval(Q2.x))
+
+#%% solve with ADAGRAD
+
+#opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = None)
+opt_gamma = 0.06579332246575682
+
+params = {'n_epochs' : 200, 'batch_size': int(f.N*0.05), 'gamma': opt_gamma}
+
+Q1 = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
+
+Q1.solve(solver = 'adagrad')
 
 print(f.eval(Q1.x) +phi.eval(Q1.x))
-
 #%% solve with SSNSP
 
-params = {'max_iter' : 100, 'sample_size': 100 ,'sample_style': 'fast_increasing',\
+params = {'max_iter' : 100, 'sample_size': 70 ,'sample_style': 'fast_increasing',\
           'alpha_C' : 5., 'reduce_variance': True}
 
 P = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
@@ -54,10 +67,10 @@ P.solve(solver = 'ssnsp')
 
 #%% solve with SSNSP (multiple times, VR)
 
-params = {'max_iter' : 30, 'sample_size': 200 ,'sample_style': 'fast_increasing',\
-          'alpha_C' : 10., 'reduce_variance': True}
+params = {'max_iter' : 100, 'sample_size': 100 ,'sample_style': 'fast_increasing',\
+          'alpha_C' : 5., 'reduce_variance': True}
     
-K = 10
+K = 20
 allP = list()
 for k in range(K):
     
@@ -70,10 +83,10 @@ save = False
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
-kwargs = {"psi_star": 0, "log_scale": False}
+kwargs = {"psi_star": psi_star, "log_scale": True}
 
-Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+#Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+#Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 P.plot_objective(ax = ax, **kwargs)
 
 #plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)

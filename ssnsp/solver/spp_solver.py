@@ -63,7 +63,7 @@ def cyclic_batch(N, batch_size, t):
 def get_default_newton_params():
     
     params = {'tau': .9, 'eta' : 1e-5, 'rho': .5, 'mu': .4, 'eps': 1e-3, \
-              'cg_max_iter': 12, 'max_iter': 20}
+              'cg_max_iter': 12, 'max_iter': 10}
     
     return params
 
@@ -151,15 +151,12 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         hat_d = 0.
     
     #compute term coming from weak convexity
-    #start = time.time()
     if not f.convex:
         gamma_i = np.stack([f.weak_conv(i) for i in S])
         gamma_i = np.repeat(gamma_i, m[S])
         Gam = subA.T @ (gamma_i.reshape(-1,1) * subA)
         hat_d += (alpha/sample_size) * (Gam@x) 
-    #end = time.time()
-    #print("Construct Gam: ", end-start)
-        
+    
     while sub_iter < newton_params['max_iter']:
         
     # step 1: construct Newton matrix and RHS

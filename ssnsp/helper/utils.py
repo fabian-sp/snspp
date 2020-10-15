@@ -47,11 +47,15 @@ def stop_scikit_saga(x_t, x_old):
 ############################################################################################
 
 def compute_full_xi(f, x, is_easy = False):
-     
-    if is_easy:
-        xi = np.hstack(compute_xi_inner(f, x))   
-    else:
+    """
+    needed for variance reduction
     
+    if is_easy: return an array of size (N,)
+    if not is_easy: return dictionary where each value is array of size (m_i,)
+    """
+    if is_easy:
+        xi = compute_xi_inner(f, x).squeeze() 
+    else:   
         if (f.m.max() == 1):
             vals = compute_xi_inner(f, x)
         else:
@@ -68,12 +72,14 @@ def compute_full_xi(f, x, is_easy = False):
 @njit()
 def compute_xi_inner(f, x):
     
-    vals = List()
+    #vals = List()
+    vals = np.zeros((f.N,1))
     
     for i in np.arange(f.N):
         A_i = np.ascontiguousarray(f.A[i,:]).reshape(1,-1)
-        vals.append(f.g(A_i @ x, i))
-        
+        #vals.append(f.g(A_i @ x, i))
+        vals[i,:] = f.g(A_i @ x, i)
+    
     return vals
             
 # def compute_full_gradient(f,x):
@@ -120,7 +126,7 @@ def compute_batch_gradient(f, x, S):
     computes a table of gradients at point x with mini batch S
     returns: array of shape n, if as_raay=True returns gradient table of shape (len(S,n))
     """   
-    #S = np.sort(S)    
+    
     # initialize object for storing all gradients
     gradients = np.zeros_like(x)
         
@@ -141,7 +147,7 @@ def compute_batch_gradient_table(f, x, S):
     computes a table of gradients at point x with mini batch S
     returns: array of shape n, if as_raay=True returns gradient table of shape (len(S,n))
     """   
-    #S = np.sort(S)    
+    
     # initialize object for storing all gradients
     gradients = np.zeros((len(S), len(x)))
         

@@ -136,6 +136,8 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
     if not converged:
         print(f"WARNING: reached maximal iterations in semismooth Newton -- accuracy {residual[-1]}")
     
+    # update xi variable
+    xi[S] = xi_sub
     # update primal iterate
     z = x - (alpha/sample_size) * (subA.T @ xi_sub) + hat_d
     new_x = phi.prox(z, alpha)
