@@ -66,7 +66,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
             elif f.name == 'logistic':
                 L = .25 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
             elif f.name == 'tstudent':
-                L =  2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
+                L =  (2/f.v) * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
             else:
                 warnings.warn("We could not determine the correct SAGA step size! The default step size is maybe too large (divergence) or too small (slow convergence).")
                 L = 1e2

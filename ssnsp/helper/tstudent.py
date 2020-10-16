@@ -41,7 +41,7 @@ class tstudent_loss:
         self.m = np.repeat(1,self.N)
         
         # epsilon for regularization
-        self.eps = 1e-2
+        self.eps = 2e-2
         self.gamma = 1/(4*self.v) + self.eps
         
         # helper array to save yet computed results from self._zstar --> do not recompute in Hstar
@@ -61,7 +61,6 @@ class tstudent_loss:
         evaluate f_i(x)
         """
         return np.log(1+(x-self.b[i])**2/self.v)
-
     
     def g(self, x, i):
         
@@ -76,7 +75,7 @@ class tstudent_loss:
         
         c3 = -self.gamma
         c2 = x + 2*self.gamma*b
-        c1 = -2*b*x - 2 -self.gamma*self.v - self.gamma*(b**2)
+        c1 = -2*b*x - 2 - self.gamma*self.v - self.gamma*(b**2)
         c0 = x*self.v + x*b**2 + 2*b
         
         z = np.roots(np.array([c3,c2,c1,c0], dtype=np.complex64))  
@@ -89,12 +88,11 @@ class tstudent_loss:
         return res
     
     def _fstar(self, x ,i):
-        obj = lambda z: x*z - self.f(z,i) - (self.gamma/2)*z**2
         z = self._zstar(x, self.b[i])
         if np.isnan(z):
             res = np.inf
         else:
-            res = obj(z)
+            res = x*z - self.f(z,i) - (self.gamma/2)*z**2
         return res
 
     def fstar(self, X, i):
@@ -139,24 +137,27 @@ class tstudent_loss:
             
         return Y
     
-    # def fstar_vec(self, x, S):
-    #     Y = np.zeros_like(x)        
-    #     for j in range(len(x)):
-    #         Y[j] = self._fstar(x[j],S[j])
+    def fstar_vec(self, x, S):
+        """
+        x = xi[S]
+        """
+        Y = np.zeros_like(x)        
+        for j in range(len(x)):
+            Y[j] = self._fstar(x[j],S[j])
             
-    #     return Y
+        return Y
     
-    # def gstar_vec(self, x, S):
-    #     Y = np.zeros_like(x)
-    #     for j in range(len(x)):
-    #         self.z[S[j]] = self._zstar(x[j], self.b[S[j]])      
-    #         Y[j] = self.z[S[j]]
-    #     return Y
+    def gstar_vec(self, x, S):
+        Y = np.zeros_like(x)
+        for j in range(len(x)):
+            self.z[S[j]] = self._zstar(x[j], self.b[S[j]])      
+            Y[j] = self.z[S[j]]
+        return Y
     
-    # def Hstar_vec(self, x, S):
-    #     b_S = self.b[S]
-    #     g_S = self.z[S]
-    #     return 1/(self._h(g_S, b_S))
+    def Hstar_vec(self, x, S):
+        b_S = self.b[S]
+        g_S = self.z[S]
+        return 1/(self._h(g_S, b_S))
 
 
 #%%    

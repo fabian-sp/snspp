@@ -14,18 +14,20 @@ from ssnsp.experiments.experiment_utils import plot_multiple, initialize_fast_gr
 
 #%% generate data
 
-N = 5000
-n = 1000
-k = 100
+N = 2000
+n = 3000
+k = 400
 l1 = .01
 
 xsol, A, b, f, phi = tstudent_test(N, n, k, l1, v = 4)
 
 initialize_fast_gradient(f, phi)
 
-psi_star = 0.7387611791660234
+print(f.eval(xsol) +phi.eval(xsol))
+
+psi_star = f.eval(xsol) +phi.eval(xsol)
 #%% solve with SAGA
-params = {'n_epochs' : 100}
+params = {'n_epochs' : 200}
 
 Q = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -35,7 +37,7 @@ print(f.eval(Q.x) +phi.eval(Q.x))
 
 #%% solve with BATCH-SAGA
 
-params = {'n_epochs' : 100}
+params = {'n_epochs' : 200}
 
 Q2 = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -57,8 +59,8 @@ Q1.solve(solver = 'adagrad')
 print(f.eval(Q1.x) +phi.eval(Q1.x))
 #%% solve with SSNSP
 
-params = {'max_iter' : 100, 'sample_size': 150 ,'sample_style': 'constant',\
-          'alpha_C' : 6., 'reduce_variance': True}
+params = {'max_iter' : 100, 'sample_size': 40 ,'sample_style': 'constant',\
+          'alpha_C' : 10., 'reduce_variance': True}
 
 P = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -67,7 +69,7 @@ P.solve(solver = 'ssnsp')
 
 #%% solve with SSNSP (multiple times, VR)
 
-params = {'max_iter' : 100, 'sample_size': 100 ,'sample_style': 'fast_increasing',\
+params = {'max_iter' : 10, 'sample_size': 1000 ,'sample_style': 'fast_increasing',\
           'alpha_C' : 5., 'reduce_variance': True}
     
 K = 20
@@ -77,15 +79,18 @@ for k in range(K):
     P_k = problem(f, phi, tol = 1e-9, params = params, verbose = False, measure = True)
     P_k.solve(solver = 'ssnsp')
     allP.append(P_k.info)
-  
+ 
+#%%
+all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x)).T, columns = ['true', 'spp', 'saga', 'adagrad'])
+
 #%%
 save = False
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
-kwargs = {"psi_star": psi_star, "log_scale": True}
+kwargs = {"psi_star": psi_star, "log_scale": False}
 
-#Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 P.plot_objective(ax = ax, **kwargs)
 

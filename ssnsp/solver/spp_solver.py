@@ -63,7 +63,7 @@ def cyclic_batch(N, batch_size, t):
 def get_default_newton_params():
     
     params = {'tau': .9, 'eta' : 1e-5, 'rho': .5, 'mu': .4, 'eps': 1e-3, \
-              'cg_max_iter': 12, 'max_iter': 10}
+              'cg_max_iter': 12, 'max_iter': 25}
     
     return params
 
@@ -369,7 +369,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         S = sampler(f.N, batch_size[iter_t])
         #S = cyclic_batch(f.N, batch_size, iter_t)
         
-        params['newton_params']['eps'] =  min(1e-2, 1/(iter_t+1)**(1.1))
+        params['newton_params']['eps'] =  min(1e-3, 1e-1/(iter_t+1)**(1.1))
         
         # variance reduction boolean
         reduce_variance = params['reduce_variance'] and (iter_t > vr_min_iter)
@@ -393,7 +393,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
                 # when f convex, update xi
                 if f.convex:
                     xi = xi_tilde.copy()
-                  
+        
         #stop criterion
         eta = stop_scikit_saga(x_t, x_old)
         

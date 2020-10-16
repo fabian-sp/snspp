@@ -5,7 +5,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
+
 import time
 from sklearn.linear_model import Lasso, LogisticRegression
 
@@ -114,10 +114,11 @@ plt.plot(err_l2_mean)
 plt.legend(labels = ['error xk (l2)', 'error xk(linf)', 'error xmean (l2)'])
 
 #%% convergence of the xi variables
+import seaborn as sns
 
 info = P.info.copy()
-xis = [np.hstack(list(i.values())) for i in info['xi_hist']]
-#xis = info['xi_hist']
+#xis = [np.hstack(list(i.values())) for i in info['xi_hist']]
+xis = info['xi_hist']
 
 xis = np.vstack(xis)
 
@@ -129,7 +130,6 @@ plt.figure()
 sns.distplot(xis[-1,:])
 
 
-
 #%% newton convergence
 
 sub_rsd = P.info['ssn_info']
@@ -138,12 +138,16 @@ fig, axs = plt.subplots(8,5)
 fig.legend(['residual', 'step_size', 'direction'])
 
 for j in np.arange(40):
+    
+    add = 0
     ax = axs.ravel()[j]
-    ax.plot(sub_rsd[j]['residual'], 'blue')
+    ax.plot(sub_rsd[j + add]['residual'], 'blue')
     ax2 = ax.twinx()
-    ax2.plot(sub_rsd[j]['step_size'], 'orange')
+    ax2.plot(sub_rsd[j + add]['step_size'], 'orange')
     #ax2.plot(sub_rsd[j]['direction'], 'green')
     
+    ax.set_title(f"iteration {j+add}")
     ax.set_yscale('log')
+    ax.set_ylim(1e-4,1e2)
     ax2.set_ylim(0,1.1)
     ax2.set_yticks([])
