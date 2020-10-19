@@ -20,6 +20,15 @@ from .tstudent import tstudent_loss
 ############################################################################################
 ### Synthetic data
 ############################################################################################
+def standardize(A):   
+    # standardize
+    M = A - A.mean(axis=0)
+    M = (1/M.std(axis=0)) * M
+        
+    assert max(abs(M.mean(axis=0))) <= 1e-5
+    assert max(abs(M.std(axis=0) - 1)) <= 1e-5
+    
+    return M
 
 def A_target_condition(N, n, smax = 100, smin = 1):
     
@@ -49,13 +58,7 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., k
     
     if kappa is None:     
         A = np.random.randn(m.sum(),n)
-        
-        # standardize
-        A = A - A.mean(axis=0)
-        A = (1/A.std(axis=0)) * A
-        
-        assert max(abs(A.mean(axis=0))) <= 1e-5
-        assert max(abs(A.std(axis=0) - 1)) <= 1e-5
+        A = standardize(A)
     
     else:
         assert kappa > 1
@@ -92,14 +95,8 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
     #np.random.seed(1234)
     
     if kappa is None:     
-        A = np.random.randn(N,n)
-        
-        # standardize
-        A = A - A.mean(axis=0)
-        A = (1/A.std(axis=0)) * A
-        
-        assert max(abs(A.mean(axis=0))) <= 1e-5
-        assert max(abs(A.std(axis=0) - 1)) <= 1e-5   
+        A = np.random.randn(N,n) 
+        A = standardize(A)
     else:
         assert kappa > 1
         A = A_target_condition(N, n, smax = kappa)
@@ -136,13 +133,7 @@ def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 1, noise = 0.1):
     """
     """ 
     A = np.random.randn(N,n)
-        
-    # standardize
-    A = A - A.mean(axis=0)
-    A = (1/A.std(axis=0)) * A
-        
-    assert max(abs(A.mean(axis=0))) <= 1e-5
-    assert max(abs(A.std(axis=0) - 1)) <= 1e-5   
+    A = standardize(A)
         
     # create true solution
     x = np.random.randn(k) 
@@ -158,7 +149,9 @@ def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 1, noise = 0.1):
     phi = Norm1(lambda1) 
     f = tstudent_loss(A,b,v=v)
     
-    return x, A, b, f, phi
+    A_test = standardize(np.random.randn(1000,n))
+    b_test = A_test@x + noise*np.random.standard_t(v, size = 1000)
+    return x, A, b, f, phi, A_test, b_test
 
 ############################################################################################
 ### Actual data

@@ -16,7 +16,7 @@ def sampler(N, size):
     """
     assert size <= N, "specified a bigger sample size than N"
     S = np.random.choice(a = np.arange(N).astype('int'), p = (1/N) * np.ones(N), \
-                         size = int(size), replace = False)
+                         size = int(size), replace = True)
     
     S = S.astype('int')
     # sort S in order to avoid problems with indexing later on
@@ -63,7 +63,7 @@ def cyclic_batch(N, batch_size, t):
 def get_default_newton_params():
     
     params = {'tau': .9, 'eta' : 1e-5, 'rho': .5, 'mu': .4, 'eps': 1e-3, \
-              'cg_max_iter': 12, 'max_iter': 25}
+              'cg_max_iter': 12, 'max_iter': 10}
     
     return params
 
@@ -342,7 +342,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #counter = batch_size.cumsum() % f.N
         #xi_tilde_update = (np.diff(counter, prepend = f.N) < 0)
         xi_tilde = xi.copy()
-        vr_min_iter = 10
+        vr_min_iter = 0
     else:
         xi_tilde = None
     

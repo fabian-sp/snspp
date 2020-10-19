@@ -12,16 +12,24 @@ from ssnsp.solver.opt_problem import problem
 from ssnsp.experiments.experiment_utils import plot_multiple, initialize_fast_gradient, adagrad_step_size_tuner
 
 
+def sample_loss(A_test, b_test, x, v):
+    z = A_test@x - b_test
+    return 1/A_test.shape[0] * np.log(1+ z**2/v).sum()
+    
+
 #%% generate data
 
 N = 2000
 n = 3000
-k = 400
-l1 = .01
+k = 100
+l1 = 1e-2
 
-xsol, A, b, f, phi = tstudent_test(N, n, k, l1, v = 4)
+xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4)
 
 initialize_fast_gradient(f, phi)
+
+#x0 = np.linalg.pinv(f.A)@b
+#x0[np.abs(x0) <= 0.1] = 0
 
 print(f.eval(xsol) +phi.eval(xsol))
 
@@ -50,7 +58,7 @@ print(f.eval(Q2.x) +phi.eval(Q2.x))
 #opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = None)
 opt_gamma = 0.06579332246575682
 
-params = {'n_epochs' : 200, 'batch_size': int(f.N*0.05), 'gamma': opt_gamma}
+params = {'n_epochs' : 350, 'batch_size': int(f.N*0.05), 'gamma': opt_gamma}
 
 Q1 = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -59,10 +67,10 @@ Q1.solve(solver = 'adagrad')
 print(f.eval(Q1.x) +phi.eval(Q1.x))
 #%% solve with SSNSP
 
-params = {'max_iter' : 100, 'sample_size': 40 ,'sample_style': 'constant',\
-          'alpha_C' : 10., 'reduce_variance': True}
+params = {'max_iter' : 200, 'sample_size': 100,'sample_style': 'constant',\
+          'alpha_C' : 1., 'reduce_variance': True}
 
-P = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
+P = problem(f, phi, x0 = xsol, tol = 1e-9, params = params, verbose = True, measure = True)
 
 P.solve(solver = 'ssnsp')
 
@@ -70,7 +78,7 @@ P.solve(solver = 'ssnsp')
 #%% solve with SSNSP (multiple times, VR)
 
 params = {'max_iter' : 10, 'sample_size': 1000 ,'sample_style': 'fast_increasing',\
-          'alpha_C' : 5., 'reduce_variance': True}
+          'alpha_C' : 10., 'reduce_variance': True}
     
 K = 20
 allP = list()
@@ -82,6 +90,8 @@ for k in range(K):
  
 #%%
 all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x)).T, columns = ['true', 'spp', 'saga', 'adagrad'])
+
+#all_x = pd.DataFrame(np.vstack((xsol, x0, P.x, Q.x, Q1.x)).T, columns = ['true', 'x0','spp', 'saga', 'adagrad'])
 
 #%%
 save = False
@@ -105,3 +115,26 @@ fig.subplots_adjust(top=0.96,
                     right=0.965,
                     hspace=0.2,
                     wspace=0.2)
+
+#%% coefficent plot
+
+fig,ax = plt.subplots(2, 2,  figsize = (7,5))
+Q.plot_path(ax = ax[0,0], xlabel = False)
+Q1.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
+P.plot_path(ax = ax[1,0])
+P.plot_path(ax = ax[1,1], mean = True, ylabel = False)
+
+for a in ax.ravel():
+    a.set_ylim(-2., 2.)
+    
+plt.subplots_adjust(hspace = 0.33)
+
+
+#%%
+sample_loss(A_test, b_test, xsol, f.v)
+
+sample_loss(A_test, b_test, Q.x, f.v)
+
+sample_loss(A_test, b_test, Q1.x, f.v)
+
+sample_loss(A_test, b_test, P.x, f.v)

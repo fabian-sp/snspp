@@ -47,9 +47,7 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
     
     # compute var. reduction term
     if reduce_variance:
-        xi_sub_old = xi_tilde[S]
-        xi_old = xi_tilde
-        hat_d =  (alpha/sample_size) * (subA.T @ xi_sub_old) - (alpha/f.N) * (f.A.T @ xi_old)      
+        hat_d =  (alpha/sample_size) * (subA.T @ xi_tilde[S]) - (alpha/f.N) * (f.A.T @ xi_tilde)      
     else:
         hat_d = 0.
     
@@ -137,7 +135,7 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
         print(f"WARNING: reached maximal iterations in semismooth Newton -- accuracy {residual[-1]}")
     
     # update xi variable
-    xi[S] = xi_sub
+    xi[S] = xi_sub.copy()
     # update primal iterate
     z = x - (alpha/sample_size) * (subA.T @ xi_sub) + hat_d
     new_x = phi.prox(z, alpha)

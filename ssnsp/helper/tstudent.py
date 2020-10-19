@@ -41,8 +41,8 @@ class tstudent_loss:
         self.m = np.repeat(1,self.N)
         
         # epsilon for regularization
-        self.eps = 2e-2
-        self.gamma = 1/(4*self.v) + self.eps
+        self.eps = 1e-2
+        self.gamma = 1/(4*self.v) *(1+self.eps)
         
         # helper array to save yet computed results from self._zstar --> do not recompute in Hstar
         self.z = np.zeros(self.N)
@@ -126,13 +126,8 @@ class tstudent_loss:
         
         Y = np.zeros_like(X)
         for j in range(len(X)):
-            ## without using the helper array 
-            #x = X[j]
-            #g_i = self._zstar(x, self.b[i])
-            
-            # use the precomputed results of zstar
-            # This only works as long as Hstar is evaluated after gstar in ssnsp/solver/spp_solver !!!!
-            g_i = self.z[i]
+            x = X[j]
+            g_i = self._zstar(x, self.b[i])
             Y[j] = 1/(self._h(g_i, self.b[i]))
             
         return Y
@@ -150,13 +145,19 @@ class tstudent_loss:
     def gstar_vec(self, x, S):
         Y = np.zeros_like(x)
         for j in range(len(x)):
-            self.z[S[j]] = self._zstar(x[j], self.b[S[j]])      
-            Y[j] = self.z[S[j]]
+            z_j =self._zstar(x[j], self.b[S[j]])      
+            #self.z[S[j]] = z_j
+            Y[j] = z_j
         return Y
     
     def Hstar_vec(self, x, S):
         b_S = self.b[S]
-        g_S = self.z[S]
+        #g_S = self.z[S]
+        g_S = np.zeros_like(x)
+        for j in range(len(x)):
+            z_j =self._zstar(x[j], self.b[S[j]])      
+            #self.z[S[j]] = z_j
+            g_S[j] = z_j
         return 1/(self._h(g_S, b_S))
 
 
