@@ -10,7 +10,6 @@ import warnings
 from numba.typed import List
 from numba import njit
 
-
 def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict(), verbose = False, measure = False):
     """
     fast implementation of the SAGA algorithm for problems of the form 
@@ -229,7 +228,8 @@ def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
             break
         
         # sample
-        S = np.random.randint(low = 0, high = N, size = batch_size)
+        #S = np.random.randint(low = 0, high = N, size = batch_size)
+        S = np.random.choice(a = np.arange(N), size = batch_size, replace = False)
         
         # mini-batch gradient step
         G_t = compute_batch_gradient(f, x_t, S)
@@ -278,7 +278,9 @@ def batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, batch_si
             break
              
         # sample
-        S = np.random.randint(low = 0, high = N, size = batch_size)
+        #S = np.random.randint(low = 0, high = N, size = batch_size)
+        S = np.random.choice(a = np.arange(N), size = batch_size, replace = False)
+        S = np.sort(S)
         
         # compute the gradient
         batch_g = compute_batch_gradient_table(f, x_t, S)
