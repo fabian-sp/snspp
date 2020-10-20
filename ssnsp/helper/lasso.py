@@ -24,7 +24,7 @@ class lsq:
     
     def __init__(self, A, b):
         self.name = 'squared'
-        self.convex = True
+        self.convex = False
         
         self.b = b
         self.A = A
@@ -32,7 +32,9 @@ class lsq:
         self.m = np.repeat(1,self.N)
         
         return
-         
+    def weak_conv(self,i):
+        return 1e-3
+     
     def eval(self, x):
         """
         method for evaluating f(x)

@@ -10,13 +10,13 @@ from scipy.sparse.linalg import cg
 import time
 
 #%% functions for creating the samples S_k
-def sampler(N, size):
+def sampler(N, size, replace = False):
     """
-    samples a subset of {1,..,N} without replacement
+    samples a subset of {1,..,N} with/without replacement
     """
     assert size <= N, "specified a bigger sample size than N"
     S = np.random.choice(a = np.arange(N).astype('int'), p = (1/N) * np.ones(N), \
-                         size = int(size), replace = True)
+                         size = int(size), replace = replace)
     
     S = S.astype('int')
     # sort S in order to avoid problems with indexing later on
@@ -322,7 +322,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         if f.name == 'logistic':
             xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(f.m[i]) for i in np.arange(f.N)]))
         elif f.name == 'tstudent':
-            xi = dict(zip(np.arange(f.N), [ np.zeros(f.m[i]) for i in np.arange(f.N)]))
+            xi = dict(zip(np.arange(f.N), [ 10*np.ones(f.m[i]) for i in np.arange(f.N)]))
         else:
             xi = dict(zip(np.arange(f.N), [np.zeros(f.m[i]) for i in np.arange(f.N)]))
     
@@ -341,8 +341,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     if params['reduce_variance']:
         #counter = batch_size.cumsum() % f.N
         #xi_tilde_update = (np.diff(counter, prepend = f.N) < 0)
-        xi_tilde = xi.copy()
-        vr_min_iter = 0
+        xi_tilde = None
+        vr_min_iter = 10
     else:
         xi_tilde = None
     
@@ -393,6 +393,10 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
                 # when f convex, update xi
                 if f.convex:
                     xi = xi_tilde.copy()
+                else:
+                    if is_easy:
+                        gammas = np.stack([f.weak_conv(i) for i in np.arange(f.N)]).reshape(-1,1)
+                        xi = xi_tilde + (gammas*A)@x_t
         
         #stop criterion
         eta = stop_scikit_saga(x_t, x_old)

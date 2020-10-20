@@ -20,8 +20,8 @@ from ssnsp.helper.utils import compute_batch_gradient_table
 #%% generate data
 
 N = 2000
-n = 100
-k = 20
+n = 3000
+k = 100
 l1 = .01
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = None, noise = 0.1)
@@ -31,9 +31,9 @@ xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .1)
 xsol, A, b, f, phi = tstudent_test(N, n, k, l1, v = 10)
 
 #%% solve with SSNSP
-params = {'max_iter' : 30, 'sample_size': 1000, 'sample_style': 'fast_increasing', 'alpha_C' : 10.,\
-          'reduce_variance': True}
 
+params = {'max_iter' : 50, 'sample_size': 1000, 'sample_style': 'fast_increasing', \
+          'alpha_C' : 10., 'reduce_variance': False}
 
 P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -63,7 +63,8 @@ print(f"Computing time: {end-start} sec")
 
 x_sk = sk.coef_.copy().squeeze()
 
-#f.eval(x_sk) + phi.eval(x_sk)
+f.eval(x_sk) + phi.eval(x_sk)
+
 #%% compare to SAGA/ADAGRAD
 
 params = {'n_epochs' : 200, 'reg': 0}

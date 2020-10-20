@@ -42,7 +42,7 @@ class tstudent_loss:
         
         # epsilon for regularization
         self.eps = 1e-2
-        self.gamma = 1/(4*self.v) *(1+self.eps)
+        self.gamma = 1/(4*self.v) + self.eps
         
         # helper array to save yet computed results from self._zstar --> do not recompute in Hstar
         self.z = np.zeros(self.N)
@@ -79,13 +79,14 @@ class tstudent_loss:
         c0 = x*self.v + x*b**2 + 2*b
         
         z = np.roots(np.array([c3,c2,c1,c0], dtype=np.complex64))  
-        z = z[np.abs(np.imag(z)) <= 1e-3]
-        
-        if len(z) == 0:
-            res = np.nan
-        else:
-            res = np.real(z)[0]
-        return res
+        #z = z[np.abs(np.imag(z)) <= 1e-3]
+ 
+        # if len(z) == 0:
+        #     res = np.nan
+        # else:
+        #     res = np.real(z)[0]
+        ixx = np.abs(np.imag(z)).argmin()
+        return np.real(z[ixx])
     
     def _fstar(self, x ,i):
         z = self._zstar(x, self.b[i])
@@ -191,7 +192,7 @@ class tstudent_loss:
 
 
 
-# all_x = np.linspace(-5, 5, 2000)
+# all_x = np.linspace(-100,100, 2000)
 # all_f = np.zeros_like(all_x)
 # all_g = np.zeros_like(all_x)
 # all_h = np.zeros_like(all_x)
@@ -199,10 +200,9 @@ class tstudent_loss:
 # for j in range(len(all_x)):
     
 #     xx = all_x[j]
-#     print(xx)
-#     all_f[j] = f.fstar(np.array([xx]), 0)
-#     all_g[j] = f.gstar(np.array([xx]), 0)
-#     all_h[j] = f.Hstar(np.array([xx]), 0)
+#     all_f[j] = f.fstar(np.array([xx]), 166)
+#     all_g[j] = f.gstar(np.array([xx]), 166)
+#     all_h[j] = f.Hstar(np.array([xx]), 166)
 
     
 # import matplotlib.pyplot as plt

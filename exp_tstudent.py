@@ -19,7 +19,7 @@ def sample_loss(A_test, b_test, x, v):
 
 #%% generate data
 
-N = 2000
+N = 5000
 n = 3000
 k = 100
 l1 = 1e-2
@@ -67,10 +67,10 @@ Q1.solve(solver = 'adagrad')
 print(f.eval(Q1.x) +phi.eval(Q1.x))
 #%% solve with SSNSP
 
-params = {'max_iter' : 200, 'sample_size': 100,'sample_style': 'constant',\
-          'alpha_C' : 1., 'reduce_variance': True}
+params = {'max_iter' : 10, 'sample_size': 100, 'sample_style': 'constant',\
+          'alpha_C' : 5., 'reduce_variance': True}
 
-P = problem(f, phi, x0 = xsol, tol = 1e-9, params = params, verbose = True, measure = True)
+P = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
 P.solve(solver = 'ssnsp')
 
@@ -98,9 +98,9 @@ save = False
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
-kwargs = {"psi_star": psi_star, "log_scale": False}
+kwargs = {"psi_star": 0, "log_scale": True}
 
-Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+#Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 P.plot_objective(ax = ax, **kwargs)
 
