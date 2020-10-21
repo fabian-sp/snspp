@@ -31,7 +31,8 @@ def standardize(A):
     return M
 
 def A_target_condition(N, n, smax = 100, smin = 1):
-    
+    """creates matrix with condition sqrt(kappa)
+    """
     A = np.random.randn(N,n)
     
     U,_,V = np.linalg.svd(A, full_matrices = False)
@@ -49,7 +50,7 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., k
     lambda1: regularization parameter of 1-norm
     block: if True, the A_i have different dimensions (>1 rows)
     noise: std. deviation of Gaussian noise added to measurements b
-    kappa: if not None, A is created such that is has condition kappa
+    kappa: if not None, A is created such that is has condition sqrt(kappa)
     """
     if block:
         m = np.random.randint(low = 3, high = 10, size = N)
@@ -134,7 +135,9 @@ def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 1, noise = 0.1):
     """ 
     A = np.random.randn(N,n)
     A = standardize(A)
-        
+    
+    #A = A_target_condition(N, n, smax = 1e6)
+    
     # create true solution
     x = np.random.randn(k) 
     x = np.concatenate((x, np.zeros(n-k)))

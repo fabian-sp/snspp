@@ -140,7 +140,7 @@ fig.legend(['residual', 'step_size', 'direction'])
 
 for j in np.arange(40):
     
-    add = 100
+    add = 40
     ax = axs.ravel()[j]
     ax.plot(sub_rsd[j + add]['residual'], 'blue')
     ax2 = ax.twinx()

@@ -342,7 +342,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #counter = batch_size.cumsum() % f.N
         #xi_tilde_update = (np.diff(counter, prepend = f.N) < 0)
         xi_tilde = None
-        vr_min_iter = 0
+        vr_min_iter = 10
     else:
         xi_tilde = None
     

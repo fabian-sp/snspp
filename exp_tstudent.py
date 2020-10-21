@@ -22,20 +22,19 @@ def sample_loss(A_test, b_test, x, v):
 N = 5000
 n = 3000
 k = 100
-l1 = 1e-2
+l1 = 2e-2
 
 xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4)
 
 initialize_fast_gradient(f, phi)
 
-#x0 = np.linalg.pinv(f.A)@b
-#x0[np.abs(x0) <= 0.1] = 0
+#x0 = xsol + 0.001*np.random.randn(n)
 
 print(f.eval(xsol) +phi.eval(xsol))
 
 psi_star = f.eval(xsol) +phi.eval(xsol)
 #%% solve with SAGA
-params = {'n_epochs' : 200}
+params = {'n_epochs' : 100}
 
 Q = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -58,7 +57,7 @@ print(f.eval(Q2.x) +phi.eval(Q2.x))
 #opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = None)
 opt_gamma = 0.06579332246575682
 
-params = {'n_epochs' : 350, 'batch_size': int(f.N*0.05), 'gamma': opt_gamma}
+params = {'n_epochs' : 200, 'batch_size': int(f.N*0.05), 'gamma': opt_gamma}
 
 Q1 = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -67,10 +66,10 @@ Q1.solve(solver = 'adagrad')
 print(f.eval(Q1.x) +phi.eval(Q1.x))
 #%% solve with SSNSP
 
-params = {'max_iter' : 120, 'sample_size': 70, 'sample_style': 'constant',\
-          'alpha_C' : 8., 'reduce_variance': True}
+params = {'max_iter' : 100, 'sample_size': 50, 'sample_style': 'constant',\
+          'alpha_C' : 5., 'reduce_variance': True}
 
-P = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
+P = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
 
 P.solve(solver = 'ssnsp')
 
@@ -96,11 +95,13 @@ all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x)).T, columns = ['true', 'sp
 #%%
 save = False
 
+psi_star = f.eval(P.x) +phi.eval(P.x)
+
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
-kwargs = {"psi_star": 0, "log_scale": True}
+kwargs = {"psi_star": psi_star, "log_scale": True}
 
-#Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 P.plot_objective(ax = ax, **kwargs)
 
