@@ -152,7 +152,6 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     
     #compute term coming from weak convexity
     if not f.convex:
-        #gamma_i = np.stack([f.weak_conv(i) for i in S])
         gamma_i = f.weak_conv(S)
         gamma_i = np.repeat(gamma_i, m[S])
         hat_d += (alpha/sample_size) * (gamma_i.reshape(1,-1) * subA.T @ (subA @ x))
