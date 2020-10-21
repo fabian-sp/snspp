@@ -68,8 +68,8 @@ class tstudent_loss:
         res = 2*a/(self.v+a**2)
         return res
     
-    def weak_conv(self, i):
-        return self.gamma
+    def weak_conv(self, S):
+        return self.gamma * np.ones(len(S))
     
     def _zstar(self, x, b):
         

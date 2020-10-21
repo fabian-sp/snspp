@@ -152,10 +152,10 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     
     #compute term coming from weak convexity
     if not f.convex:
-        gamma_i = np.stack([f.weak_conv(i) for i in S])
+        #gamma_i = np.stack([f.weak_conv(i) for i in S])
+        gamma_i = f.weak_conv(S)
         gamma_i = np.repeat(gamma_i, m[S])
-        Gam = subA.T @ (gamma_i.reshape(-1,1) * subA)
-        hat_d += (alpha/sample_size) * (Gam@x) 
+        hat_d += (alpha/sample_size) * (gamma_i.reshape(1,-1) * subA.T @ (subA @ x))
     
     while sub_iter < newton_params['max_iter']:
         
@@ -269,7 +269,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     # boolean to check whether we are in a simple setting --> faster computations
     is_easy = (f.m.max() == 1) and callable(getattr(f, "fstar_vec", None))
-    print("EASY PROBLEM???", is_easy)
+    if verbose:
+        print("EASY PROBLEM???", is_easy)
     
     x_t = x0.copy()
     x_mean = x_t.copy()
@@ -342,7 +343,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #counter = batch_size.cumsum() % f.N
         #xi_tilde_update = (np.diff(counter, prepend = f.N) < 0)
         xi_tilde = None
-        vr_min_iter = 10
+        vr_min_iter = 0
     else:
         xi_tilde = None
     
@@ -395,7 +396,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
                     xi = xi_tilde.copy()
                 else:
                     if is_easy:
-                        gammas = np.stack([f.weak_conv(i) for i in np.arange(f.N)]).reshape(-1,1)
+                        gammas = f.weak_conv(np.arange(f.N)).reshape(-1,1)
                         xi = xi_tilde + (gammas*A)@x_t
         
         #stop criterion
