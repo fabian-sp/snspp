@@ -147,18 +147,18 @@ class tstudent_loss:
         Y = np.zeros_like(x)
         for j in range(len(x)):
             z_j =self._zstar(x[j], self.b[S[j]])      
-            #self.z[S[j]] = z_j
+            self.z[S[j]] = z_j
             Y[j] = z_j
         return Y
     
     def Hstar_vec(self, x, S):
         b_S = self.b[S]
-        #g_S = self.z[S]
-        g_S = np.zeros_like(x)
-        for j in range(len(x)):
-            z_j =self._zstar(x[j], self.b[S[j]])      
-            #self.z[S[j]] = z_j
-            g_S[j] = z_j
+        g_S = self.z[S]
+        # g_S = np.zeros_like(x)
+        # for j in range(len(x)):
+        #     z_j =self._zstar(x[j], self.b[S[j]])      
+        #     #self.z[S[j]] = z_j
+        #     g_S[j] = z_j
         return 1/(self._h(g_S, b_S))
 
 

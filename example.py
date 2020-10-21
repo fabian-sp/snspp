@@ -144,11 +144,12 @@ for j in np.arange(40):
     ax = axs.ravel()[j]
     ax.plot(sub_rsd[j + add]['residual'], 'blue')
     ax2 = ax.twinx()
-    ax2.plot(sub_rsd[j + add]['step_size'], 'orange')
+    #ax2.plot(sub_rsd[j + add]['step_size'], 'orange')
     #ax2.plot(sub_rsd[j]['direction'], 'green')
+    ax2.plot(sub_rsd[j+add]['objective'], 'green')
     
     ax.set_title(f"iteration {j+add}")
     ax.set_yscale('log')
     ax.set_ylim(1e-4,1e2)
-    ax2.set_ylim(0,1.1)
-    ax2.set_yticks([])
+    #ax2.set_ylim(0,1.1)
+    #ax2.set_yticks([])

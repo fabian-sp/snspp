@@ -67,8 +67,8 @@ Q1.solve(solver = 'adagrad')
 print(f.eval(Q1.x) +phi.eval(Q1.x))
 #%% solve with SSNSP
 
-params = {'max_iter' : 10, 'sample_size': 100, 'sample_style': 'constant',\
-          'alpha_C' : 5., 'reduce_variance': True}
+params = {'max_iter' : 150, 'sample_size': 70, 'sample_style': 'constant',\
+          'alpha_C' : 6., 'reduce_variance': True}
 
 P = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 

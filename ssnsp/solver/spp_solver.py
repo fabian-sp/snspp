@@ -369,8 +369,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         S = sampler(f.N, batch_size[iter_t])
         #S = cyclic_batch(f.N, batch_size, iter_t)
         
-        params['newton_params']['eps'] =  min(1e-3, 1e-1/(iter_t+1)**(1.1))
-        
+        #params['newton_params']['eps'] =  min(1e-3, 1e-1/(iter_t+1)**(1.1))
+        params['newton_params']['eps'] =  5e-3
         # variance reduction boolean
         reduce_variance = params['reduce_variance'] and (iter_t > vr_min_iter)
                 
