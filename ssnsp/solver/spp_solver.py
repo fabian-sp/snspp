@@ -342,7 +342,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #counter = batch_size.cumsum() % f.N
         #xi_tilde_update = (np.diff(counter, prepend = f.N) < 0)
         xi_tilde = None
-        vr_min_iter = 10
+        vr_min_iter = 0
     else:
         xi_tilde = None
     
@@ -404,9 +404,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         # we only measure runtime of the iteration, excluding computation of the diagnostics
         end = time.time()
         runtime.append(end-start)
-        
-        # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
-        alpha_t = C/(iter_t + 2)**(0.51)
+
         
         # save all diagnostics
         ssn_info.append(this_ssn)
@@ -426,7 +424,10 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
           
         if verbose and measure:
             print(out_fmt % (iter_t, obj[-1], obj2[-1] , alpha_t, len(S), eta))
-       
+        
+        # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
+        alpha_t = C/(iter_t + 2)**(0.51)
+        
     if eta > tol:
         status = 'max iterations reached'    
     

@@ -73,7 +73,7 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., k
     # create measurements
     b = A @ x + noise*np.random.randn(N)
     
-    A = A.astype('float64')
+    A = np.ascontiguousarray(A.astype('float64'))
     b = b.astype('float64')
     x = x.astype('float64')
     
@@ -121,7 +121,7 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
         # flip signs (f in {-1,1})
         b = b * f
      
-    A = A.astype('float64')
+    A = np.ascontiguousarray(A.astype('float64'))
     b = b.astype('float64')
     x = x.astype('float64')
     
@@ -130,11 +130,12 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
     
     return x, A, b, f, phi
 
-def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 1, noise = 0.1):
+def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 1, noise = 0.1, scale = 1.):
     """
     """ 
     A = np.random.randn(N,n)
     A = standardize(A)
+    A = scale*A
     
     #A = A_target_condition(N, n, smax = 1e6)
     
@@ -145,7 +146,7 @@ def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 1, noise = 0.1):
        
     b = A@x + noise*np.random.standard_t(v, size = N)
      
-    A = A.astype('float64')
+    A = np.ascontiguousarray(A.astype('float64'))
     b = b.astype('float64')
     x = x.astype('float64')
     
