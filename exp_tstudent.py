@@ -70,7 +70,7 @@ print(f.eval(Q1.x) +phi.eval(Q1.x))
 #%% solve with SSNSP
 
 params = {'max_iter' : 200, 'sample_size': 20, 'sample_style': 'constant',\
-          'alpha_C' : 5., 'reduce_variance': True}
+          'alpha_C' : 2., 'reduce_variance': True}
 
 P = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
 

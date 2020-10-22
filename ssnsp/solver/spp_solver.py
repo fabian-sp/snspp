@@ -386,6 +386,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
                                              verbose = False)
                                              
         # xi_tilde gets updated
+        
         if params['reduce_variance']:
             if iter_t % 10 == 0 and iter_t >= vr_min_iter:
                 xi_tilde = compute_full_xi(f, x_t, is_easy)
@@ -395,9 +396,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
                     xi = xi_tilde.copy()
                 else:
                     if is_easy:
-                        gammas = f.weak_conv(np.arange(f.N)).reshape(-1,1)
-                        xi = xi_tilde + (gammas*A)@x_t
-        
+                        gammas = f.weak_conv(np.arange(f.N))
+                        xi = xi_tilde + gammas*(A@x_t)
+                   
         #stop criterion
         eta = stop_scikit_saga(x_t, x_old)
         
