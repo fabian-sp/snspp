@@ -2,7 +2,7 @@
 author: Fabian Schaipp
 """
 import numpy as np
-from ..helper.utils import compute_gradient_table, compute_batch_gradient, compute_batch_gradient_table, \
+from ..helper.utils import compute_gradient_table, compute_batch_gradient, compute_batch_gradient_table, compute_full_xi,\
                             compute_x_mean_hist, stop_scikit_saga
 import time
 import warnings
@@ -84,7 +84,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
                 gamma = 1./(5*L)
             
             elif solver == 'svrg':
-                params['batch_size'] = int(f.N**(2/3))
+                params['batch_size'] = 1#int( 0.1* f.N**(2/3))
                 gamma = 1./(3*L)
                
         elif solver == 'adagrad':
@@ -109,7 +109,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
         # run SAGA with batch size n^(2/3)
         x_t, x_hist, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['batch_size'])
     elif solver == 'svrg':
-        m_iter = int(N**(1/3))
+        m_iter = f.N#int(f.N**(1/3))
         x_t, x_hist, step_sizes, eta  = prox_svrg(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['batch_size'], m_iter)
     elif solver == 'adagrad':
         x_t, x_hist, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, gamma, params['delta'] , params['n_epochs'], params['batch_size'])
@@ -275,7 +275,8 @@ def prox_svrg(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, batch_size, m_
     
     for s in np.arange(S_iter):
         
-        full_g = compute_batch_gradient_table(f, x_t, np.arange(N))
+        #full_g = compute_batch_gradient_table(f, x_t, np.arange(N))
+        full_g = A * compute_full_xi(f, x_t , True).reshape(-1,1)
         g_tilde = (1/N) * full_g.sum(axis=0)
         
         for t in np.arange(m_iter):

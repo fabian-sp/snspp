@@ -56,7 +56,7 @@ params = {'n_epochs' : 100}
 
 Q2 = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
 
-Q2.solve(solver = 'batch saga')
+Q2.solve(solver = 'svrg')
 
 print(f.eval(Q2.x) +phi.eval(Q2.x))
 
