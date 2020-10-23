@@ -19,8 +19,8 @@ def sample_loss(x, A_test, b_test, v):
 
 #%% generate data
 
-N = 1000
-n = 10000
+N = 3000
+n = 5000
 k = 100
 
 scale = 0.2
@@ -30,24 +30,25 @@ xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4, scale = s
 
 initialize_fast_gradient(f, phi)
 
-x0 = xsol + 0.01*np.random.randn(n)
+#x0 = xsol + 0.01*np.random.randn(n)
+x0 = None
 
-print(f.eval(x0) +phi.eval(x0))
+
 print(f.eval(xsol) +phi.eval(xsol))
 
 psi_star = f.eval(xsol) +phi.eval(xsol)
 #%% solve with SAGA
-params = {'n_epochs' : 200}
+params = {'n_epochs' : 100}
 
 Q = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
 
-Q.solve(solver = 'saga')
+Q.solve(solver = 'prox_svrg')
 
 print(f.eval(Q.x) +phi.eval(Q.x))
 
 #%% solve with BATCH-SAGA
 
-params = {'n_epochs' : 200}
+params = {'n_epochs' : 100}
 
 Q2 = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -61,6 +62,8 @@ print(f.eval(Q2.x) +phi.eval(Q2.x))
 opt_gamma = 0.06579332246575682
 
 params = {'n_epochs' : 200, 'batch_size': int(f.N*0.05), 'gamma': opt_gamma}
+
+params = {'n_epochs' : 100, 'batch_size': int(f.N**(2/3)), 'gamma': opt_gamma}
 
 Q1 = problem(f, phi, x0 = x0, tol = 1e-5, params = params, verbose = True, measure = True)
 

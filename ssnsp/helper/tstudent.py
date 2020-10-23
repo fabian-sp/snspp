@@ -67,10 +67,11 @@ class tstudent_loss:
         a = x-self.b[i]
         res = 2*a/(self.v+a**2)
         return res
-    
+       
     def weak_conv(self, S):
         return self.gamma * np.ones(len(S))
     
+    # computes solution to cubic polynomial
     def _zstar(self, x, b):
         
         c3 = -self.gamma
@@ -95,7 +96,7 @@ class tstudent_loss:
         else:
             res = x*z - self.f(z,i) - (self.gamma/2)*z**2
         return res
-
+    # loop versions
     def fstar(self, X, i):
         Y = np.zeros_like(X)
         
@@ -132,7 +133,7 @@ class tstudent_loss:
             Y[j] = 1/(self._h(g_i, self.b[i]))
             
         return Y
-    
+    # vectorized versions
     def fstar_vec(self, x, S):
         """
         x = xi[S]
@@ -141,16 +142,14 @@ class tstudent_loss:
         for j in range(len(x)):
             Y[j] = self._fstar(x[j],S[j])
             
-        return Y
-    
+        return Y   
     def gstar_vec(self, x, S):
         Y = np.zeros_like(x)
         for j in range(len(x)):
             z_j =self._zstar(x[j], self.b[S[j]])      
             self.z[S[j]] = z_j
             Y[j] = z_j
-        return Y
-    
+        return Y    
     def Hstar_vec(self, x, S):
         b_S = self.b[S]
         g_S = self.z[S]
@@ -161,6 +160,10 @@ class tstudent_loss:
         #     g_S[j] = z_j
         return 1/(self._h(g_S, b_S))
 
+    # def g_vec(self, x, S):
+    #     z = self.A[S,:] @ x - self.b[S]
+    #     res = 2*z/(self.v+z**2)
+    #     return res
 
 #%%    
 # A= np.random.randn(50,100)

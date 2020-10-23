@@ -124,7 +124,7 @@ def compute_gradient_table(f, x):
 def compute_batch_gradient(f, x, S):
     """
     computes a table of gradients at point x with mini batch S
-    returns: array of shape n, if as_raay=True returns gradient table of shape (len(S,n))
+    returns: array of shape n
     """   
     
     # initialize object for storing all gradients
@@ -145,7 +145,7 @@ def compute_batch_gradient(f, x, S):
 def compute_batch_gradient_table(f, x, S):
     """
     computes a table of gradients at point x with mini batch S
-    returns: array of shape n, if as_raay=True returns gradient table of shape (len(S,n))
+    returns: array of shape (len(S),n)
     """   
     
     # initialize object for storing all gradients

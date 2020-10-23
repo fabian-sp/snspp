@@ -55,11 +55,11 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
             params['batch_size'] = max(int(f.N * 0.01), 1)
             
     #########################################################
-    ## Step size
+    ## Step size + batch size
     #########################################################
-    # see Defazio et al. 2014 for (convex) SAGA step size and Sra, Reddi et al 2016 for minibatch SAGA step size
+    # see Defazio et al. 2014 for (convex) SAGA step size and Sra, Reddi et al 2016 for minibatch SAGA and PROX-SVRG step size
     if 'gamma' not in params.keys():
-        if solver in ['saga', 'batch saga']:
+        if solver in ['saga', 'batch saga', 'prox_svrg']:
             if f.name == 'squared':
                 L = 2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()    
             elif f.name == 'logistic':
@@ -72,7 +72,6 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
             
             if solver == 'saga':
                 #assert f.convex, "SAGA with batch-size 1 is only guaranteed for f_i being convex, see Defazio et al. 2014"
-                
                 # if we regularize, f_i is strongly-convex and we can use a larger step size (see Defazio et al.)
                 if params['reg'] > 0:
                     gamma1 = 1/(2*(f.N*params['reg'] + L))
@@ -80,10 +79,14 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
                     gamma1 = 0
                     
                 gamma = max(gamma1, 1./(3*L))
-            else:
+            elif solver == 'batch saga':
                 params['batch_size'] = int(f.N**(2/3))
                 gamma = 1./(5*L)
-                
+            
+            elif solver == 'prox_svrg':
+                params['batch_size'] = int(f.N**(2/3))
+                gamma = 1./(3*L)
+               
         elif solver == 'adagrad':
             warnings.warn("Using a default step size for AdaGrad. This will propbably lead to bad performance. A script for tuning the step size is contained in ssnsp/experiments/experimnet_utils. Provide a step size via params[\"gamma\"].")
             gamma = .05
@@ -105,6 +108,9 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     elif solver == 'batch saga':
         # run SAGA with batch size n^(2/3)
         x_t, x_hist, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['batch_size'])
+    elif solver == 'prox_svrg':
+        m_iter = int(N**(1/3))
+        x_t, x_hist, step_sizes, eta  = prox_svrg(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['batch_size'], m_iter)
     elif solver == 'adagrad':
         x_t, x_hist, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, gamma, params['delta'] , params['n_epochs'], params['batch_size'])
     end = time.time()
@@ -256,6 +262,46 @@ def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
 
 #%%
 @njit()
+def prox_svrg(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, batch_size, m_iter):
+    
+    # initialize for diagnostics
+    x_hist = List()
+    step_sizes = List()
+    
+    eta = 1e10
+    x_old = x_t
+    
+    S_iter = int(n_epochs*N / (batch_size*m_iter))
+    
+    for s in np.arange(S_iter):
+        
+        full_g = compute_batch_gradient_table(f, x_t, np.arange(N))
+        g_tilde = (1/N) * full_g.sum(axis=0)
+        
+        for t in np.arange(m_iter):
+            
+            S = np.random.choice(a = np.arange(N), size = batch_size, replace = False)
+            S = np.sort(S)
+        
+            # compute the gradient
+            v_t = compute_batch_gradient(f, x_t, S)
+            g_t = v_t - (1/batch_size) * full_g[S,:].sum(axis=0) + g_tilde
+            
+            w_t = x_t - gamma*g_t
+            x_t = phi.prox(w_t, gamma)
+        
+        # stop criterion
+        eta = stop_scikit_saga(x_t, x_old)
+        x_old = x_t
+        # store in each outer iteration
+        x_hist.append(x_t)    
+        step_sizes.append(gamma)    
+    
+    return x_t, x_hist, step_sizes, eta
+
+
+#%%
+@njit()
 def batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, batch_size):
     
     # initialize for diagnostics
@@ -287,7 +333,11 @@ def batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, batch_si
         batch_g_sum = batch_g.sum(axis=0)
         
         
+        # np.sum does not copy the array --> 3x faster for large batches
         g_j = gradients[S,:].sum(axis=0)
+        #ixx= np.isin(np.arange(N), S)
+        #g_j = np.sum(gradients.T, axis = 1, where = ixx)
+        
         old_g = (-1/batch_size) * g_j + g_sum
         
         w_t = x_t - gamma * ((1/batch_size)*batch_g_sum + old_g)
