@@ -30,20 +30,23 @@ def standardize(A):
     
     return M
 
-def A_target_condition(N, n, smax = 100, smin = 1):
-    """creates matrix with condition sqrt(kappa)
-    """
+def create_A(N, n, kappa = None):
+    
     A = np.random.randn(N,n)
     
-    U,_,V = np.linalg.svd(A, full_matrices = False)
+    # create A with condition sqrt(kappa)
+    if kappa is not None:
+        U,_,V = np.linalg.svd(A, full_matrices = False)
+        d = np.linspace(np.sqrt(kappa), 1, min(n,N))
+        D = np.diag(d)
+        A = U @ D @ V
     
-    d = np.linspace(np.sqrt(smax), np.sqrt(smin), min(n,N))
-    
-    D = np.diag(d)
-    A = U @ D @ V
+    A_max = np.apply_along_axis(np.linalg.norm, axis = 1, arr = A).max() 
+    A *= (1/A_max)
     
     return A
- 
+    
+
 def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., kappa = None):
     """
     generates data for a LASSO problem with n variables and N samples, where solution has k non-zero entries
@@ -57,13 +60,7 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., k
     else:
         m = np.ones(N, dtype = 'int')
     
-    if kappa is None:     
-        A = np.random.randn(m.sum(),n)
-        A = standardize(A)
-    
-    else:
-        assert kappa > 1
-        A = A_target_condition(m.sum(), n, smax = kappa)
+    A = create_A(m.sum(), n, kappa)
     
     # create true solution
     x = np.random.randn(k) 
@@ -95,12 +92,7 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
     """
     #np.random.seed(1234)
     
-    if kappa is None:     
-        A = np.random.randn(N,n) 
-        A = standardize(A)
-    else:
-        assert kappa > 1
-        A = A_target_condition(N, n, smax = kappa)
+    A = create_A(N, n, kappa)
         
     # create true solution
     x = np.random.randn(k) 
@@ -117,7 +109,7 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
         assert noise <= 1
         f = np.random.binomial(n=1, p = noise, size = N)
         f = (1 - f * 2)      
-        print((f==-1).sum())      
+        print("Number of lables flipped: ", (f==-1).sum())      
         # flip signs (f in {-1,1})
         b = b * f
      
@@ -130,19 +122,18 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
     
     return x, A, b, f, phi
 
-def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 1, noise = 0.1, scale = 1.):
+def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 4., noise = 0.1, scale = 2.):
     """
     """ 
-    A = np.random.randn(N,n)
-    A = standardize(A)
-    A = scale*A
-    
-    #A = A_target_condition(N, n, smax = 1e6)
+    A = create_A(N, n)
+    A = scale * A
     
     # create true solution
-    x = np.random.randn(k) 
+    x = np.random.randn(k)
     x = np.concatenate((x, np.zeros(n-k)))
     np.random.shuffle(x)
+    
+    #x = x/np.linalg.norm(x)
        
     b = A@x + noise*np.random.standard_t(v, size = N)
      
@@ -153,8 +144,10 @@ def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 1, noise = 0.1, scale
     phi = Norm1(lambda1) 
     f = tstudent_loss(A,b,v=v)
     
-    A_test = standardize(np.random.randn(1000,n))
-    b_test = A_test@x + noise*np.random.standard_t(v, size = 1000)
+    N_test = 1000
+    A_test = create_A(N_test, n)
+    b_test = A_test@x + noise*np.random.standard_t(v, size = N_test)
+    
     return x, A, b, f, phi, A_test, b_test
 
 ############################################################################################

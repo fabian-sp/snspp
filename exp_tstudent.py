@@ -23,26 +23,30 @@ N = 3000
 n = 5000
 k = 100
 
-scale = 0.2
-l1 = 1e-2 * scale**2
+l1 = 5e-4 
 
-xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4, scale = scale)
+xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 1, scale = 10)
 
 initialize_fast_gradient(f, phi)
 
 #x0 = xsol + 0.01*np.random.randn(n)
-x0 = None
+#x0 = f.A.T @ b
+x0 = np.zeros(n)
 
+#sns.distplot(A@x0-b)
+#(np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)).max()
 
-print(f.eval(xsol) +phi.eval(xsol))
+print(f.eval(np.zeros(n)))
+print(f.eval(x0) + phi.eval(x0))
+print(f.eval(xsol) + phi.eval(xsol))
 
-psi_star = f.eval(xsol) +phi.eval(xsol)
+psi_star = f.eval(xsol)+phi.eval(xsol)
 #%% solve with SAGA
 params = {'n_epochs' : 100}
 
 Q = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
 
-Q.solve(solver = 'prox_svrg')
+Q.solve(solver = 'saga')
 
 print(f.eval(Q.x) +phi.eval(Q.x))
 
@@ -59,11 +63,9 @@ print(f.eval(Q2.x) +phi.eval(Q2.x))
 #%% solve with ADAGRAD
 
 #opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = None)
-opt_gamma = 0.06579332246575682
+opt_gamma = 0.06579332246575682 #0.02848035868435802
 
 params = {'n_epochs' : 200, 'batch_size': int(f.N*0.05), 'gamma': opt_gamma}
-
-params = {'n_epochs' : 100, 'batch_size': int(f.N**(2/3)), 'gamma': opt_gamma}
 
 Q1 = problem(f, phi, x0 = x0, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -72,8 +74,8 @@ Q1.solve(solver = 'adagrad')
 print(f.eval(Q1.x) +phi.eval(Q1.x))
 #%% solve with SSNSP
 
-params = {'max_iter' : 200, 'sample_size': 20, 'sample_style': 'constant',\
-          'alpha_C' : 2., 'reduce_variance': True}
+params = {'max_iter' : 250, 'sample_size': 20, 'sample_style': 'constant',\
+          'alpha_C' : 8., 'reduce_variance': True}
 
 P = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -96,7 +98,7 @@ for k in range(K):
 #%%
 all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x)).T, columns = ['true', 'spp', 'saga', 'adagrad'])
 
-all_x = pd.DataFrame(np.vstack((xsol, x0, P.x, Q.x, Q1.x)).T, columns = ['true', 'x0','spp', 'saga', 'adagrad'])
+all_x = pd.DataFrame(np.vstack((xsol,Q.x)).T, columns = ['true', 'saga'])
 
 #%%
 save = False

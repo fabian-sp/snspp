@@ -28,8 +28,10 @@ xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = None, noise 
 
 xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .1)
 
-xsol, A, b, f, phi = tstudent_test(N, n, k, l1, v = 10)
+x, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4)
 
+
+(np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()   
 #%% solve with SSNSP
 
 params = {'max_iter' : 50, 'sample_size': 1000, 'sample_style': 'fast_increasing', \

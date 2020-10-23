@@ -58,6 +58,40 @@ def cyclic_batch(N, batch_size, t):
     np.sort(S)
     return S
 
+def determine_alpha(f, batch_size, m_iter):
+    
+    v1 = 1
+    v2 = 1
+    v3 = 1
+    v4 = 1
+    v5 = 1e-2
+    theta = 1
+    
+    gbar = f.weak_conv(np.arange(f.N)).max()
+    normA = np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A)
+    
+    if f.name == 'squared':
+        L_i = 2.  
+    elif f.name == 'logistic':
+        L_i = .25 
+    elif f.name == 'tstudent':
+        L_i =  (2/f.v)
+    else:
+        raise ValueError("Unknown function, cannot determine Lipschitz constant!")
+    
+    L = (1/f.N) * np.sum(normA**2 * L_i)
+    Lb = (normA**2).max() * L_i
+    Cb = gbar*(normA**2).max()
+    
+    s1 = 2*(theta+L) + v3*Cb
+    s2 = v5*Lb**2*m_iter*(m_iter+1)/(2*batch_size) + v4*Lb + L
+    s3 = Lb/v4 + 1/v5 + Cb/v3 + 1/v1 + 1/v2
+    
+    print(s1,s2,s3)
+    
+    return 1/max(s1,s2,s3)
+    
+    
 #%% functions for parameter handling
 
 def get_default_newton_params():
@@ -343,6 +377,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #xi_tilde_update = (np.diff(counter, prepend = f.N) < 0)
         xi_tilde = None
         vr_min_iter = 0
+        m_iter = 10
     else:
         xi_tilde = None
     
@@ -388,7 +423,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         # xi_tilde gets updated
         
         if params['reduce_variance']:
-            if iter_t % 10 == 0 and iter_t >= vr_min_iter:
+            if iter_t % m_iter == 0 and iter_t >= vr_min_iter:
                 xi_tilde = compute_full_xi(f, x_t, is_easy)
                 
                 # when f convex, update xi
@@ -428,7 +463,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
         alpha_t = C/(iter_t + 2)**(0.51)
-        
+        #alpha_t = 1.
+    
     if eta > tol:
         status = 'max iterations reached'    
     

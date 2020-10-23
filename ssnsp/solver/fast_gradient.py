@@ -59,7 +59,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     #########################################################
     # see Defazio et al. 2014 for (convex) SAGA step size and Sra, Reddi et al 2016 for minibatch SAGA and PROX-SVRG step size
     if 'gamma' not in params.keys():
-        if solver in ['saga', 'batch saga', 'prox_svrg']:
+        if solver in ['saga', 'batch saga', 'svrg']:
             if f.name == 'squared':
                 L = 2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()    
             elif f.name == 'logistic':
@@ -83,7 +83,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
                 params['batch_size'] = int(f.N**(2/3))
                 gamma = 1./(5*L)
             
-            elif solver == 'prox_svrg':
+            elif solver == 'svrg':
                 params['batch_size'] = int(f.N**(2/3))
                 gamma = 1./(3*L)
                
@@ -108,7 +108,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     elif solver == 'batch saga':
         # run SAGA with batch size n^(2/3)
         x_t, x_hist, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['batch_size'])
-    elif solver == 'prox_svrg':
+    elif solver == 'svrg':
         m_iter = int(N**(1/3))
         x_t, x_hist, step_sizes, eta  = prox_svrg(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['batch_size'], m_iter)
     elif solver == 'adagrad':
@@ -256,7 +256,7 @@ def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
         # store everything (at end of each epoch)
         if store[iter_t]:
             x_hist.append(x_t)
-            step_sizes.append(gamma)
+            step_sizes.append(np.linalg.norm(1/L_t))
 
     return x_t, x_hist, step_sizes, eta
 
