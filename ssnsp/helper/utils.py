@@ -116,7 +116,7 @@ def compute_gradient_table(f, x):
         
     gradients = np.vstack(gradients)
     
-    return gradients
+    return np.ascontiguousarray(gradients)
 
 
 # needed for ADAGRAD
@@ -155,8 +155,7 @@ def compute_batch_gradient_table(f, x, S):
         i = S[j]
         # A_i needs shape (1,n)
         A_i =  np.ascontiguousarray(f.A[i,:]).reshape(1,-1)
-        tmp_i = A_i.T @ f.g( A_i @ x, i)
-        gradients[j,:] = tmp_i
+        gradients[j,:] = A_i.T @ f.g( A_i @ x, i)
     
     return gradients
 
