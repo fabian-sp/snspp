@@ -11,6 +11,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils import check_random_state
 
+import scipy.special as sp
+from sklearn.preprocessing import PolynomialFeatures
+
 #from sklearn.datasets import load_digits
 #from scipy.stats import ortho_group
 
@@ -30,8 +33,13 @@ def standardize(A):
     
     return M
 
-def create_A(N, n, kappa = None):
+def create_A(N, n, scale = 1.0, kappa = None):
+    """
+    creates a coefficient matrix of shape (N,n) such that
+    max_i=1,..,N \|a_i\| = scale
     
+    if kappa not None: create A with condition sqrt(kappa)
+    """
     A = np.random.randn(N,n)
     
     # create A with condition sqrt(kappa)
@@ -42,7 +50,7 @@ def create_A(N, n, kappa = None):
         A = U @ D @ V
     
     A_max = np.apply_along_axis(np.linalg.norm, axis = 1, arr = A).max() 
-    A *= (1/A_max)
+    A *= (scale/A_max)
     
     return A
     
@@ -60,7 +68,7 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., k
     else:
         m = np.ones(N, dtype = 'int')
     
-    A = create_A(m.sum(), n, kappa)
+    A = create_A(m.sum(), n, kappa=kappa)
     
     # create true solution
     x = np.random.randn(k) 
@@ -92,7 +100,7 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
     """
     #np.random.seed(1234)
     
-    A = create_A(N, n, kappa)
+    A = create_A(N, n, kappa=kappa)
         
     # create true solution
     x = np.random.randn(k) 
@@ -122,11 +130,15 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
     
     return x, A, b, f, phi
 
-def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 4., noise = 0.1, scale = 2.):
+def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 4., noise = 0.1, scale = 2., poly = 0, kappa = None):
     """
     """ 
-    A = create_A(N, n)
-    A = scale * A
+    A = create_A(N, n, scale = scale, kappa = kappa)
+    
+    if poly > 0:
+        A = poly_expand(A, d=poly)
+        k = int(A.shape[1]*k/n)
+        n = A.shape[1]
     
     # create true solution
     x = np.random.randn(k)
@@ -149,6 +161,15 @@ def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 4., noise = 0.1, scal
     b_test = A_test@x + noise*np.random.standard_t(v, size = N_test)
     
     return x, A, b, f, phi, A_test, b_test
+
+def poly_expand(A, d = 5):
+
+    n = 20
+    print("Number of features after polynomial expansion: ", sp.comb(n+d, d, True))
+    
+    poly = PolynomialFeatures(d)
+    return poly.fit_transform(A)
+
 
 ############################################################################################
 ### Actual data

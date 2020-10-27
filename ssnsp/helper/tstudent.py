@@ -35,7 +35,7 @@ class tstudent_loss:
         self.convex = False
         
         self.b = b
-        self.A = A
+        self.A = np.ascontiguousarray(A)
         self.v = v
         self.N = len(self.b)
         self.m = np.repeat(1,self.N)

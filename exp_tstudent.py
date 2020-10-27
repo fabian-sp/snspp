@@ -4,6 +4,7 @@
 
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 import time
 
@@ -19,39 +20,49 @@ def sample_loss(x, A_test, b_test, v):
 
 #%% generate data
 
-N = 3000
-n = 5000
+N = 1000
+n = 10000
 k = 100
+kappa = 1e6
 
-l1 = 5e-4 
+l1 = 1e-3
 
-xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 1, scale = 10)
+xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 2, noise = 0., scale = 20, kappa = kappa)
+
+#xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n = 20, k = 2, lambda1=l1, v = 2, noise = 0., scale = 10, poly = 5)
+
+
+# l1 <= lambda_max, if not 0 is a solution
+#lambda_max = np.abs(1/f.N * A.T @ (2*b/(f.v+b**2))).max()
+#phi.lambda1 = .2 *lambda_max
 
 initialize_fast_gradient(f, phi)
 
 #x0 = xsol + 0.01*np.random.randn(n)
 #x0 = f.A.T @ b
-x0 = np.zeros(n)
+x0 = np.zeros(A.shape[1])
 
-#sns.distplot(A@x0-b)
+sns.distplot(A@x0-b)
 #(np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)).max()
 
-print(f.eval(np.zeros(n)))
-print(f.eval(x0) + phi.eval(x0))
-print(f.eval(xsol) + phi.eval(xsol))
+print("psi(0) = ", f.eval(np.zeros(A.shape[1])))
+#print(f.eval(x0) + phi.eval(x0))
+print("f(x*) = ", f.eval(xsol))
+print("phi(x*) = ", phi.eval(xsol))
+print("psi(x*) = ", f.eval(xsol) + phi.eval(xsol))
 
-psi_star = f.eval(xsol)+phi.eval(xsol)
 #%% solve with SAGA
-params = {'n_epochs' : 100}
+params = {'n_epochs' : 200}
 
 Q = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
 
 Q.solve(solver = 'saga')
 
-print(f.eval(Q.x) +phi.eval(Q.x))
+print("f(x_t) = ", f.eval(Q.x))
+print("phi(x_t) = ", phi.eval(Q.x))
+print("psi(x_t) = ", f.eval(Q.x) + phi.eval(Q.x))
 
-#%% solve with BATCH-SAGA
-
+#%% solve with SVRG/ BATCH-SAGA
 params = {'n_epochs' : 100}
 
 Q2 = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
@@ -71,11 +82,15 @@ Q1 = problem(f, phi, x0 = x0, tol = 1e-5, params = params, verbose = True, measu
 
 Q1.solve(solver = 'adagrad')
 
-print(f.eval(Q1.x) +phi.eval(Q1.x))
+#Q1.plot_objective()
+
+print("f(x_t) = ", f.eval(Q1.x))
+print("phi(x_t) = ", phi.eval(Q1.x))
+print("psi(x_t) = ", f.eval(Q1.x) + phi.eval(Q1.x))
 #%% solve with SSNSP
 
-params = {'max_iter' : 250, 'sample_size': 20, 'sample_style': 'constant',\
-          'alpha_C' : 8., 'reduce_variance': True}
+params = {'max_iter' : 400, 'sample_size': 10, 'sample_style': 'constant',\
+          'alpha_C' : .5, 'reduce_variance': True}
 
 P = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -103,14 +118,14 @@ all_x = pd.DataFrame(np.vstack((xsol,Q.x)).T, columns = ['true', 'saga'])
 #%%
 save = False
 
-#psi_star = f.eval(Q.x) +phi.eval(Q.x)
+psi_star = f.eval(Q1.x)+phi.eval(Q1.x)
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
-kwargs = {"psi_star": 0, "log_scale": False}
+kwargs = {"psi_star": psi_star, "log_scale": True}
 
 Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 P.plot_objective(ax = ax, **kwargs)
 
 #plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
@@ -134,13 +149,15 @@ P.plot_path(ax = ax[1,0])
 P.plot_path(ax = ax[1,1], mean = True, ylabel = False)
 
 for a in ax.ravel():
-    a.set_ylim(-2., 2.)
+    a.set_ylim(-2.,2.)
     
 plt.subplots_adjust(hspace = 0.33)
 
 
 #%%
 sample_loss(xsol, A_test, b_test, f.v)
+
+sample_loss(x0, A_test, b_test, f.v)
 
 sample_loss(Q.x, A_test, b_test, f.v)
 

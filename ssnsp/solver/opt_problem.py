@@ -63,7 +63,12 @@ class problem:
         
         if ax is None:
             fig, ax = plt.subplots()
-            
+        
+        if self.info['iterates'].shape[1] >= 10000:
+            lazy = True
+        else:
+            lazy = False
+        
         coeffs = self.info['iterates'][-1,:]
         c = plt.cm.Blues(abs(coeffs)/max(abs(coeffs)))
         
@@ -75,6 +80,10 @@ class problem:
             title_suffix = ' (mean iterate)'
             
         for j in range(len(coeffs)):
+            # for large problems only draw important coefficients
+            if lazy and abs(coeffs[j]) <= 5e-2:
+                continue
+            
             if runtime:
                 ax.plot(self.info['runtime'].cumsum(), self.info[to_plot][:,j], color = c[j])
                 if xlabel:
