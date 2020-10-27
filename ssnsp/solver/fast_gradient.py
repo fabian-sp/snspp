@@ -79,6 +79,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
                     gamma1 = 0
                     
                 gamma = max(gamma1, 1./(3*L))
+                
             elif solver == 'batch saga':
                 params['batch_size'] = int(f.N**(2/3))
                 gamma = 1./(5*L)
@@ -86,6 +87,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
             elif solver == 'svrg':
                 params['batch_size'] = 1#int( 0.1* f.N**(2/3))
                 gamma = 1./(3*L)
+                m_iter = N#int(f.N**(1/3))
                
         elif solver == 'adagrad':
             warnings.warn("Using a default step size for AdaGrad. This will propbably lead to bad performance. A script for tuning the step size is contained in ssnsp/experiments/experimnet_utils. Provide a step size via params[\"gamma\"].")
@@ -110,7 +112,6 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
         # run SAGA with batch size n^(2/3)
         x_t, x_hist, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['batch_size'])
     elif solver == 'svrg':
-        m_iter = N#int(f.N**(1/3))
         x_t, x_hist, step_sizes, eta  = prox_svrg(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['batch_size'], m_iter)
     elif solver == 'adagrad':
         x_t, x_hist, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, gamma, params['delta'] , params['n_epochs'], params['batch_size'])
@@ -235,8 +236,8 @@ def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
             break
         
         # sample
-        #S = np.random.randint(low = 0, high = N, size = batch_size)
-        S = np.random.choice(a = np.arange(N), size = batch_size, replace = False)
+        S = np.random.randint(low = 0, high = N, size = batch_size)
+        #S = np.random.choice(a = np.arange(N), size = batch_size, replace = False)
         
         # mini-batch gradient step
         G_t = compute_batch_gradient(f, x_t, S)
@@ -276,29 +277,35 @@ def prox_svrg(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, batch_size, m_
     
     for s in np.arange(S_iter):
         
-        #full_g = compute_batch_gradient_table(f, x_t, np.arange(N))
+        #full_g = compute_batch_gradient_table(f, x_t, np.arange(N))  
         full_g = A * compute_xi_inner(f, x_t)
         g_tilde = (1/N) * full_g.sum(axis=0)
+
         
         for t in np.arange(m_iter):
             
-            S = np.random.choice(a = np.arange(N), size = batch_size, replace = False)
-            #S = np.sort(S)
+            # np.random.choice is around 30mu-sec slower than np.random.randint --> if we do many iterations this becomes critical
+            if batch_size == 1:
+                S = np.random.randint(low = 0, high = N, size = 1)
+            else:
+                S = np.random.choice(a = np.arange(N), size = batch_size, replace = False)
         
             # compute the gradient
             v_t = compute_batch_gradient(f, x_t, S)
             g_t = v_t - (1/batch_size) * full_g[S,:].sum(axis=0) + g_tilde
-            
+
             w_t = x_t - gamma*g_t
             x_t = phi.prox(w_t, gamma)
         
+   
         # stop criterion
         eta = stop_scikit_saga(x_t, x_old)
         x_old = x_t
         # store in each outer iteration
         x_hist.append(x_t)    
         step_sizes.append(gamma)    
-    
+
+
     return x_t, x_hist, step_sizes, eta
 
 
