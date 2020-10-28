@@ -34,7 +34,7 @@ f, phi, A, b, A_test, b_test = get_triazines(lambda1 = l1, train_size = .8, v = 
 
 #xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n = 20, k = 2, lambda1=l1, v = 2, noise = 0., scale = 10, poly = 5)
 
-xsol = None
+
 
 # l1 <= lambda_max, if not 0 is a solution
 #lambda_max = np.abs(1/f.N * A.T @ (2*b/(f.v+b**2))).max()
@@ -42,7 +42,6 @@ xsol = None
 
 initialize_fast_gradient(f, phi)
 
-#x0 = xsol + 0.01*np.random.randn(n)
 #x0 = f.A.T @ b
 x0 = np.zeros(A.shape[1])
 
@@ -50,10 +49,12 @@ sns.distplot(A@x0-b)
 #(np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)).max()
 
 print("psi(0) = ", f.eval(np.zeros(A.shape[1])))
-print(f.eval(x0) + phi.eval(x0))
-print("f(x*) = ", f.eval(xsol))
-print("phi(x*) = ", phi.eval(xsol))
-print("psi(x*) = ", f.eval(xsol) + phi.eval(xsol))
+
+xsol = None
+
+#print("f(x*) = ", f.eval(xsol))
+#print("phi(x*) = ", phi.eval(xsol))
+#print("psi(x*) = ", f.eval(xsol) + phi.eval(xsol))
 
 #%% solve with SAGA
 params = {'n_epochs' : 200}
@@ -78,7 +79,8 @@ print(f.eval(Q2.x) +phi.eval(Q2.x))
 #%% solve with ADAGRAD
 
 #opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = None)
-opt_gamma = 0.06579332246575682 #0.02848035868435802
+opt_gamma = 0.005 #0.02848035868435802
+
 
 params = {'n_epochs' : 200, 'batch_size': int(f.N*0.05), 'gamma': opt_gamma}
 
@@ -91,8 +93,8 @@ print("phi(x_t) = ", phi.eval(Q1.x))
 print("psi(x_t) = ", f.eval(Q1.x) + phi.eval(Q1.x))
 #%% solve with SSNSP
 
-params = {'max_iter' : 100, 'sample_size': 50, 'sample_style': 'constant',\
-          'alpha_C' : .1, 'reduce_variance': True}
+params = {'max_iter' : 400, 'sample_size': 15, 'sample_style': 'constant',\
+          'alpha_C' : .05, 'reduce_variance': True}
 
 P = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -129,7 +131,7 @@ kwargs = {"psi_star": psi_star, "log_scale": True}
 
 Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-P.plot_objective(ax = ax, **kwargs)
+P.plot_objective(ax = ax, markersize = 2, **kwargs)
 
 #plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
 
@@ -152,7 +154,7 @@ P.plot_path(ax = ax[1,0])
 P.plot_path(ax = ax[1,1], mean = True, ylabel = False)
 
 for a in ax.ravel():
-    a.set_ylim(-2.,2.)
+    a.set_ylim(-.2, .5)
     
 plt.subplots_adjust(hspace = 0.33)
 

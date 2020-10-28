@@ -101,7 +101,7 @@ class problem:
         
         return
     
-    def plot_objective(self, ax = None, runtime = True, mean_obj = False, label = None, marker = 'o', ls = '-', psi_star = 0, log_scale = False):
+    def plot_objective(self, ax = None, runtime = True, mean_obj = False, label = None, marker = 'o', markersize = None, ls = '-', psi_star = 0, log_scale = False):
         """
         
         Parameters
@@ -132,11 +132,13 @@ class problem:
         plt.rcParams['font.size'] = 12
         plt.rcParams['axes.linewidth'] = 1
         plt.rc('text', usetex=True)
-        if self.solver in ['saga', 'adagrad']:
-            markersize = 3
-        else:
-            markersize = 4
-            
+        
+        if markersize is None:
+            if self.solver in ['saga', 'adagrad']:
+                markersize = 3
+            else:
+                markersize = 4
+                
         #plt.rc('xtick', labelsize=12)
         #plt.rc('ytick', labelsize=12)
         
