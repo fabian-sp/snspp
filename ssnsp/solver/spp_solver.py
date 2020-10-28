@@ -376,7 +376,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #counter = batch_size.cumsum() % f.N
         #xi_tilde_update = (np.diff(counter, prepend = f.N) < 0)
         xi_tilde = None
-        vr_min_iter = 10
+        vr_min_iter = 0
         m_iter = 10
     else:
         xi_tilde = None
@@ -462,8 +462,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
             print(out_fmt % (iter_t, obj[-1], obj2[-1] , alpha_t, len(S), eta))
         
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
-        #if f.convex:
-        if True:
+        if f.convex:
+        #if True:
             alpha_t = C/(iter_t + 2)**(0.51)
         
     if eta > tol:

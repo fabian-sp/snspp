@@ -8,7 +8,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import time
 
-from ssnsp.helper.data_generation import tstudent_test
+from ssnsp.helper.data_generation import tstudent_test, get_triazines
 from ssnsp.solver.opt_problem import problem
 from ssnsp.experiments.experiment_utils import plot_multiple, initialize_fast_gradient, adagrad_step_size_tuner
 
@@ -27,10 +27,14 @@ kappa = 1e6
 
 l1 = 1e-3
 
-xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 2, noise = 0., scale = 20, kappa = kappa)
+
+f, phi, A, b, A_test, b_test = get_triazines(lambda1 = l1, train_size = .8, v = 2, poly = 4)
+
+#xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 20, noise = 0., scale = 20, kappa = kappa)
 
 #xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n = 20, k = 2, lambda1=l1, v = 2, noise = 0., scale = 10, poly = 5)
 
+xsol = None
 
 # l1 <= lambda_max, if not 0 is a solution
 #lambda_max = np.abs(1/f.N * A.T @ (2*b/(f.v+b**2))).max()
@@ -46,7 +50,7 @@ sns.distplot(A@x0-b)
 #(np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)).max()
 
 print("psi(0) = ", f.eval(np.zeros(A.shape[1])))
-#print(f.eval(x0) + phi.eval(x0))
+print(f.eval(x0) + phi.eval(x0))
 print("f(x*) = ", f.eval(xsol))
 print("phi(x*) = ", phi.eval(xsol))
 print("psi(x*) = ", f.eval(xsol) + phi.eval(xsol))
@@ -82,15 +86,13 @@ Q1 = problem(f, phi, x0 = x0, tol = 1e-5, params = params, verbose = True, measu
 
 Q1.solve(solver = 'adagrad')
 
-#Q1.plot_objective()
-
 print("f(x_t) = ", f.eval(Q1.x))
 print("phi(x_t) = ", phi.eval(Q1.x))
 print("psi(x_t) = ", f.eval(Q1.x) + phi.eval(Q1.x))
 #%% solve with SSNSP
 
-params = {'max_iter' : 400, 'sample_size': 10, 'sample_style': 'constant',\
-          'alpha_C' : .5, 'reduce_variance': True}
+params = {'max_iter' : 100, 'sample_size': 50, 'sample_style': 'constant',\
+          'alpha_C' : .1, 'reduce_variance': True}
 
 P = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -115,10 +117,11 @@ all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x)).T, columns = ['true', 'sp
 
 all_x = pd.DataFrame(np.vstack((xsol,Q.x)).T, columns = ['true', 'saga'])
 
+all_x = pd.DataFrame(np.vstack((P.x, Q.x, Q1.x)).T, columns = ['spp', 'saga', 'adagrad'])
 #%%
 save = False
 
-psi_star = f.eval(Q1.x)+phi.eval(Q1.x)
+psi_star = f.eval(Q.x)+phi.eval(Q.x)
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 

@@ -41,7 +41,7 @@ class tstudent_loss:
         self.m = np.repeat(1,self.N)
         
         # epsilon for regularization
-        self.eps = 1e-2
+        self.eps = 1e-3
         self.gamma = 1/(4*self.v) + self.eps
         
         # helper array to save yet computed results from self._zstar --> do not recompute in Hstar

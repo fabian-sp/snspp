@@ -3,7 +3,7 @@
 """
 
 import numpy as np
-
+import pandas as pd
 
 from sklearn.datasets import fetch_openml
 from sklearn.datasets import fetch_rcv1
@@ -164,7 +164,7 @@ def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 4., noise = 0.1, scal
 
 def poly_expand(A, d = 5):
 
-    n = 20
+    n = A.shape[1]
     print("Number of features after polynomial expansion: ", sp.comb(n+d, d, True))
     
     poly = PolynomialFeatures(d)
@@ -228,38 +228,61 @@ def get_gisette(lambda1 = 0.02, train_size = .8):
         
     return f, phi, X_train, y_train, X_test, y_test
 
+def get_triazines(lambda1 = 0.01, train_size = .8, v = 1, poly = 0):
+    
+    assert v > 0
+    
+    X,y = load_from_txt('triazines')
+    
+    X = X.astype('float64')
+    y = y.astype('float64')
+    
+    if poly > 0:
+        X = poly_expand(X, d=poly)
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+                                                        random_state = 1234)
+    
+    phi = Norm1(lambda1) 
+    f = tstudent_loss(X_train, y_train, v=v)
+    
+    return f, phi, X_train, y_train, X_test, y_test
+    
+# for loading libsvm data from .txt
+def load_from_txt(name):
+    with open(f'data/{name}.txt', 'r') as f:
+            
+        data = []
+        labels = []
+        for line in f:
+            
+            tmp = line.split(' ')
+            label = float(tmp[0])# use int() for classification datasets
+            feat = tmp[1:]
+            
+            keys = []
+            vals = []
+            for f in feat:
+                if f == '\n':
+                    continue
+                f.split(':')
+                keys.append(f.split(':')[0])
+                vals.append(float(f.split(':')[1]))
+            
+            d = dict(zip(keys,vals))
+            data.append(d)
+            labels.append(label)
+        
+    print("Done reading")
+                
+    y = np.array(labels)
+    X = pd.DataFrame(data).values.astype('float64')
+
+    return X,y
+        
+
 #%% misc snippets
 
-# for loading gisette from .txt
-
-# with open('data/gisette_scale', 'r') as f:
-        
-#         data = []
-#         labels = []
-#         for line in f:
-            
-#             tmp = line.split(' ')
-#             label = int(tmp[0])
-#             feat = tmp[1:]
-            
-#             keys = []
-#             vals = []
-#             for f in feat:
-#                 if f == '\n':
-#                     continue
-#                 f.split(':')
-#                 keys.append(f.split(':')[0])
-#                 vals.append(float(f.split(':')[1]))
-            
-#             d = dict(zip(keys,vals))
-#             data.append(d)
-#             labels.append(label)
-    
-#     print("Done reading")
-            
-#     y = np.array(labels)
-#     X = pd.DataFrame(data).values.astype('float64')
-    
 # def get_rcv1(lambda1 = 0.02, train_size = .8, scale = True):
     
 #     rcv1 = fetch_rcv1()
