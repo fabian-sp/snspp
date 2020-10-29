@@ -17,24 +17,36 @@ def sample_loss(x, A_test, b_test, v):
     z = A_test@x - b_test
     return 1/A_test.shape[0] * np.log(1+ z**2/v).sum()
     
+def lipschitz_bound(f, x, b = 15):
+    L=np.zeros(100)
+    for i in range(100):
+        S = np.random.randint(low = 0, high = f.N, size = b)
+        b_S = f.b[S]
+        z_S = f.A[S,:] @ x
+        h_S = f._h(z_S, b_S) - f.gamma
+        
+        L[i] = 1/len(S) * np.sum( abs(h_S) * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A[S,:]))**2)
+        
+    return L
+
 
 #%% generate data
 
-N = 1000
-n = 10000
-k = 100
-kappa = 1e6
+# N = 1000
+# n = 10000
+# k = 100
+# kappa = 1e6
 
 l1 = 1e-3
 
 
-f, phi, A, b, A_test, b_test = get_triazines(lambda1 = l1, train_size = .8, v = 2, poly = 4)
+f, phi, A, b, A_test, b_test = get_triazines(lambda1 = l1, train_size = .8, v = .25, poly = 4)
 
 #xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 20, noise = 0., scale = 20, kappa = kappa)
 
 #xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n = 20, k = 2, lambda1=l1, v = 2, noise = 0., scale = 10, poly = 5)
 
-
+n = A.shape[1]
 
 # l1 <= lambda_max, if not 0 is a solution
 #lambda_max = np.abs(1/f.N * A.T @ (2*b/(f.v+b**2))).max()
@@ -43,14 +55,14 @@ f, phi, A, b, A_test, b_test = get_triazines(lambda1 = l1, train_size = .8, v = 
 initialize_fast_gradient(f, phi)
 
 #x0 = f.A.T @ b
-x0 = np.zeros(A.shape[1])
+x0 = np.zeros(n)
 
 sns.distplot(A@x0-b)
 #(np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)).max()
 
-print("psi(0) = ", f.eval(np.zeros(A.shape[1])))
+print("psi(0) = ", f.eval(np.zeros(n)))
 
-xsol = None
+#xsol = None
 
 #print("f(x*) = ", f.eval(xsol))
 #print("phi(x*) = ", phi.eval(xsol))
@@ -78,7 +90,8 @@ print(f.eval(Q2.x) +phi.eval(Q2.x))
 
 #%% solve with ADAGRAD
 
-#opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = None)
+tune_params = {'n_epochs' : 200, 'batch_size': 15}
+#opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = tune_params)
 opt_gamma = 0.005 #0.02848035868435802
 
 
@@ -93,8 +106,8 @@ print("phi(x_t) = ", phi.eval(Q1.x))
 print("psi(x_t) = ", f.eval(Q1.x) + phi.eval(Q1.x))
 #%% solve with SSNSP
 
-params = {'max_iter' : 400, 'sample_size': 15, 'sample_style': 'constant',\
-          'alpha_C' : .05, 'reduce_variance': True}
+params = {'max_iter' : 600, 'sample_size': 15, 'sample_style': 'constant',\
+          'alpha_C' : .008, 'reduce_variance': True}
 
 P = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -115,15 +128,15 @@ for k in range(K):
     allP.append(P_k.info)
  
 #%%
-all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x)).T, columns = ['true', 'spp', 'saga', 'adagrad'])
-
-all_x = pd.DataFrame(np.vstack((xsol,Q.x)).T, columns = ['true', 'saga'])
+#all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x)).T, columns = ['true', 'spp', 'saga', 'adagrad'])
+#all_x = pd.DataFrame(np.vstack((xsol,Q.x)).T, columns = ['true', 'saga'])
 
 all_x = pd.DataFrame(np.vstack((P.x, Q.x, Q1.x)).T, columns = ['spp', 'saga', 'adagrad'])
 #%%
 save = False
 
 psi_star = f.eval(Q.x)+phi.eval(Q.x)
+psi_star = 0
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
@@ -169,3 +182,15 @@ sample_loss(Q.x, A_test, b_test, f.v)
 sample_loss(Q1.x, A_test, b_test, f.v)
 
 sample_loss(P.x, A_test, b_test, f.v)
+
+
+#%%
+v = 1.
+if v == 0.25:
+    saga_params = {'n_epochs' : 200}
+    adagrad_params = {'n_epochs' : 300, 'batch_size': 15, 'gamma': 0.002}
+    ssnsp_params = {'max_iter' : 600, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : .008, 'reduce_variance': True}
+elif v == 1.:
+    saga_params = {'n_epochs' : 200}
+    adagrad_params = {'n_epochs' : 300, 'batch_size': 15, 'gamma': opt_gamma}
+    ssnsp_params = {'max_iter' : 600, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : .01, 'reduce_variance': True}

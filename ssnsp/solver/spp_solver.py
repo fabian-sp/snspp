@@ -64,7 +64,7 @@ def determine_alpha(f, batch_size, m_iter):
     v2 = 1
     v3 = 1
     v4 = 1
-    v5 = 1e-2
+    v5 = 1e-4
     theta = 1
     
     gbar = f.weak_conv(np.arange(f.N)).max()
