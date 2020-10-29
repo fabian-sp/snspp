@@ -7,6 +7,24 @@ from numba import njit
 from numba import int64, float32, float64, typeof
 from numba.typed import List
 
+def lipschitz_bound(f, x, b = 15):
+    """
+    estimate Lipschitz constant of nabla f_S by sampling at point x
+    """
+    L=np.zeros(100)
+    for i in range(100):
+        S = np.random.randint(low = 0, high = f.N, size = b)
+        b_S = f.b[S]
+        z_S = f.A[S,:] @ x
+        h_S = f._h(z_S, b_S) - f.gamma
+        
+        L[i] = 1/len(S) * np.sum( abs(h_S) * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A[S,:]))**2)
+        
+    return L
+
+################################################################
+# MAIN
+################################################################
 
 spec_tstud = [
     ('name', typeof('abc')),

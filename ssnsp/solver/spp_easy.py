@@ -90,18 +90,14 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
         W = tmp + tmp2
         assert not np.isnan(W).any(), "Something went wrong during construction of the Hessian"
     # step2: solve Newton system
-        
-        #start = time.time()
         cg_tol = min(newton_params['eta'], np.linalg.norm(rhs)**(1+ newton_params['tau']))
         
-        precond = np.diag(1/tmp_d)
-        #precond = None
+        #precond = np.diag(1/tmp_d)
+        precond = None
         
         d, cg_status = cg(W, rhs, tol = cg_tol, maxiter = 12, M = precond)
-        #end = time.time(); print("CG", end-start)
         
         assert d@rhs > -1e-8 , f"No descent direction, {d@rhs}"
-        #assert cg_status == 0, f"CG method did not converge, exited with status {cg_status}"
         norm_dir.append(np.linalg.norm(d))
         
     # step 3: backtracking line search

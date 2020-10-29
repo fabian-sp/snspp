@@ -17,18 +17,6 @@ def sample_loss(x, A_test, b_test, v):
     z = A_test@x - b_test
     return 1/A_test.shape[0] * np.log(1+ z**2/v).sum()
     
-def lipschitz_bound(f, x, b = 15):
-    L=np.zeros(100)
-    for i in range(100):
-        S = np.random.randint(low = 0, high = f.N, size = b)
-        b_S = f.b[S]
-        z_S = f.A[S,:] @ x
-        h_S = f._h(z_S, b_S) - f.gamma
-        
-        L[i] = 1/len(S) * np.sum( abs(h_S) * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A[S,:]))**2)
-        
-    return L
-
 
 #%% generate data
 
@@ -92,13 +80,11 @@ print(f.eval(Q2.x) +phi.eval(Q2.x))
 
 tune_params = {'n_epochs' : 200, 'batch_size': 15}
 #opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = tune_params)
-opt_gamma = 0.005 #0.02848035868435802
+opt_gamma = 0.002 #0.02848035868435802
 
-
-params = {'n_epochs' : 200, 'batch_size': int(f.N*0.05), 'gamma': opt_gamma}
+params = {'n_epochs' : 200, 'batch_size': 15, 'gamma': opt_gamma}
 
 Q1 = problem(f, phi, x0 = x0, tol = 1e-5, params = params, verbose = True, measure = True)
-
 Q1.solve(solver = 'adagrad')
 
 print("f(x_t) = ", f.eval(Q1.x))
@@ -173,7 +159,7 @@ plt.subplots_adjust(hspace = 0.33)
 
 
 #%%
-sample_loss(xsol, A_test, b_test, f.v)
+#sample_loss(xsol, A_test, b_test, f.v)
 
 sample_loss(x0, A_test, b_test, f.v)
 

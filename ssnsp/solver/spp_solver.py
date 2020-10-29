@@ -6,6 +6,8 @@ import numpy as np
 from ..helper.utils import block_diag, compute_x_mean, stop_scikit_saga
 from ..helper.utils import compute_full_xi, compute_x_mean_hist
 from .spp_easy import solve_subproblem_easy
+from ..helper.tstudent import lipschitz_bound
+
 from scipy.sparse.linalg import cg
 import time
 
@@ -58,8 +60,14 @@ def cyclic_batch(N, batch_size, t):
     np.sort(S)
     return S
 
-def determine_alpha(f, batch_size, m_iter):
+def determine_alpha(f, batch_size, m_iter, Lb = None):
+    """
+    calculates the step size given by the theory.
     
+    v1-v5: free positive parameters
+    m_iter: number of iter after which we compute full gradient
+    Lb: can be given as a (lower bound) estimate from sampling
+    """
     v1 = 1
     v2 = 1
     v3 = 1
@@ -80,12 +88,15 @@ def determine_alpha(f, batch_size, m_iter):
         raise ValueError("Unknown function, cannot determine Lipschitz constant!")
     
     L = (1/f.N) * np.sum(normA**2 * L_i)
-    Lb = (normA**2).max() * L_i
+    if Lb is None:
+        Lb = (normA**2).max() * L_i
+        
     Cb = gbar*(normA**2).max()
     
     s1 = 2*(theta+L) + v3*Cb
     s2 = v5*Lb**2*m_iter*(m_iter+1)/(2*batch_size) + v4*Lb + L
     s3 = Lb/v4 + 1/v5 + Cb/v3 + 1/v1 + 1/v2
+        
     
     print(s1,s2,s3)
     
@@ -300,10 +311,10 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     n = len(x0)
     assert n == A.shape[1], "wrong dimensions"
     
-    # boolean to check whether we are in a simple setting --> faster computations
+    # boolean to check whether we are in a simple setting --> faster computations (see file spp_easy.py)
     is_easy = (f.m.max() == 1) and callable(getattr(f, "fstar_vec", None))
     if verbose:
-        print("EASY PROBLEM???", is_easy)
+        print("Use vectorized impl. of conjugates?", is_easy)
     
     x_t = x0.copy()
     x_mean = x_t.copy()

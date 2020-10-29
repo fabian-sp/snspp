@@ -234,6 +234,8 @@ def get_triazines(lambda1 = 0.01, train_size = .8, v = 1, poly = 0):
     
     X,y = load_from_txt('triazines')
     
+    #y += 0.01*np.random.standard_t(1, size = len(y))
+    
     X = X.astype('float64')
     y = y.astype('float64')
     
