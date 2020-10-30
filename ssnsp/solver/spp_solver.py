@@ -72,7 +72,7 @@ def determine_alpha(f, batch_size, m_iter, Lb = None):
     v2 = 1
     v3 = 1
     v4 = 1
-    v5 = 1e-4
+    v5 = 1e-3
     theta = 1
     
     gbar = f.weak_conv(np.arange(f.N)).max()
@@ -141,7 +141,192 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, hat_d):
     res = term1 + (sample_size/alpha) * term2
     
     return res.squeeze()
+
+def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
     
+    A = f.A.copy()
+    n = len(x0)
+    assert n == A.shape[1], "wrong dimensions"
+    
+    # boolean to check whether we are in a simple setting --> faster computations (see file spp_easy.py)
+    is_easy = (f.m.max() == 1) and callable(getattr(f, "fstar_vec", None))
+    if verbose:
+        print("Use vectorized impl. of conjugates?", is_easy)
+    
+    x_t = x0.copy()
+    x_mean = x_t.copy()
+    
+    status = 'not optimal'
+    eta = np.inf
+    
+    #########################################################
+    ## Set parameters
+    #########################################################
+    if 'alpha_C' not in params.keys():
+        C = 1.
+    else:
+        C = params['alpha_C']       
+    alpha_t = C
+    
+    if 'max_iter' not in params.keys():    
+        params['max_iter'] = 100
+    else:
+        assert type(params['max_iter']) == int, "Max. iter needs to be integer"
+        
+    if 'sample_size' not in params.keys():    
+        params['sample_size'] = max(int(f.N/4), 1)
+    
+    if 'sample_style' not in params.keys():    
+        params['sample_style'] = 'constant'
+    
+    if 'reduce_variance' not in params.keys():    
+        params['reduce_variance'] = False
+        
+    if 'newton_params' not in params.keys():
+        params['newton_params'] = get_default_newton_params()
+    
+    #########################################################
+    ## Sample style
+    #########################################################
+    if params['sample_style'] == 'increasing':     
+        batch_size = batch_size_constructor(np.arange(params['max_iter']), a = params['sample_size']/4, \
+                                            b = params['sample_size'], M = params['max_iter']-1)
+    elif params['sample_style'] == 'fast_increasing': 
+        batch_size = batch_size_constructor(np.arange(params['max_iter']), a = params['sample_size']/4, \
+                                            b = params['sample_size'], M = params['max_iter']-1, cutoff = 10)
+    else:
+        batch_size = params['sample_size'] * np.ones(params['max_iter'], dtype = 'int64')
+    
+    #########################################################
+    ## Initialization
+    #########################################################
+    if xi is None:
+        if f.name == 'logistic':
+            xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(f.m[i]) for i in np.arange(f.N)]))
+        elif f.name == 'tstudent':
+            xi = dict(zip(np.arange(f.N), [ 10*np.ones(f.m[i]) for i in np.arange(f.N)]))
+        else:
+            xi = dict(zip(np.arange(f.N), [np.zeros(f.m[i]) for i in np.arange(f.N)]))
+    
+    # for easy problems, xi is an array (and not a dict), because we can index it faster
+    if is_easy:
+        xi = np.hstack(list(xi.values()))
+        assert xi.shape== (f.N,)
+    
+    x_hist = list(); xi_hist = list()
+    step_sizes = list()
+    obj = list()
+    ssn_info = list(); S_hist = list()
+    runtime = list()
+    
+    # variance reduction
+    if params['reduce_variance']:
+        #counter = batch_size.cumsum() % f.N
+        #xi_tilde_update = (np.diff(counter, prepend = f.N) < 0)
+        xi_tilde = None
+        vr_min_iter = 0
+        m_iter = 10
+    else:
+        xi_tilde = None
+    
+            
+    hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s"
+    out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
+    if verbose:
+        print(hdr_fmt % ("iter", "obj (x_t)", "alpha_t", "batch size", "eta"))
+    
+    #########################################################
+    ## Main loop
+    #########################################################
+    for iter_t in np.arange(params['max_iter']):
+        
+        start = time.time()
+            
+        if eta <= tol:
+            status = 'optimal'
+            break
+                
+        x_old = x_t.copy()
+        
+        # sample and update
+        S = sampler(f.N, batch_size[iter_t])
+        #S = cyclic_batch(f.N, batch_size, iter_t)
+        
+        #params['newton_params']['eps'] =  min(1e-3, 1e-1/(iter_t+1)**(1.1))
+        params['newton_params']['eps'] =  5e-3
+        # variance reduction boolean
+        reduce_variance = params['reduce_variance'] and (iter_t > vr_min_iter)
+                
+        if not is_easy:
+            x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, f.m, S, \
+                                             newton_params = params['newton_params'],\
+                                             reduce_variance = reduce_variance, xi_tilde = xi_tilde,\
+                                             verbose = False)
+        else:
+            x_t, xi, this_ssn = solve_subproblem_easy(f, phi, x_t, xi, alpha_t, A, S, \
+                                             newton_params = params['newton_params'],\
+                                             reduce_variance = reduce_variance, xi_tilde = xi_tilde,\
+                                             verbose = False)
+                                             
+        #########################################################
+        ## Variance reduction
+        #########################################################
+        if params['reduce_variance']:
+            if iter_t % m_iter == 0 and iter_t >= vr_min_iter:
+                xi_tilde = compute_full_xi(f, x_t, is_easy)
+                
+                # update xi
+                if f.convex:
+                    xi = xi_tilde.copy()
+                else:
+                    if is_easy:
+                        gammas = f.weak_conv(np.arange(f.N))
+                        xi = xi_tilde + gammas*(A@x_t)
+                  
+                #print("Estimation of L_b at x_t: ", lipschitz_bound(f, x_t).max())
+        
+        #stop criterion
+        eta = stop_scikit_saga(x_t, x_old)
+        
+        # we only measure runtime of the iteration, excluding computation of the diagnostics
+        # save all diagnostics
+        ssn_info.append(this_ssn)
+        x_hist.append(x_t)
+        
+        
+        end = time.time()
+        runtime.append(end-start)
+
+        if measure:
+            obj.append(f.eval(x_t.astype('float64')) + phi.eval(x_t))
+        
+        step_sizes.append(alpha_t)
+        S_hist.append(S)
+        xi_hist.append(xi.copy())
+        
+          
+        if verbose and measure:
+            print(out_fmt % (iter_t, obj[-1], alpha_t, len(S), eta))
+        
+        # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
+        if f.convex:
+            alpha_t = C/(iter_t + 2)**(0.51)
+
+    if eta > tol:
+        status = 'max iterations reached'    
+    
+       
+    print(f"Stochastic ProxPoint terminated after {iter_t} iterations with accuracy {eta}")
+    print(f"Stochastic ProxPoint status: {status}")
+    
+    info = {'objective': np.array(obj), 'iterates': np.vstack(x_hist), \
+            'mean_hist': compute_x_mean_hist(np.vstack(x_hist)), 'xi_hist': xi_hist,\
+            'step_sizes': np.array(step_sizes), 'samples' : S_hist, \
+            'ssn_info': ssn_info, 'runtime': np.array(runtime)}
+    
+    return x_t, x_mean, info
+
+
 def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce_variance = False, xi_tilde = None, verbose = False):
     """
     m: vector with all dimensions m_i, i = 1,..,N
@@ -305,188 +490,3 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
 
 
     
-def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
-    
-    A = f.A.copy()
-    n = len(x0)
-    assert n == A.shape[1], "wrong dimensions"
-    
-    # boolean to check whether we are in a simple setting --> faster computations (see file spp_easy.py)
-    is_easy = (f.m.max() == 1) and callable(getattr(f, "fstar_vec", None))
-    if verbose:
-        print("Use vectorized impl. of conjugates?", is_easy)
-    
-    x_t = x0.copy()
-    x_mean = x_t.copy()
-    
-    status = 'not optimal'
-    eta = np.inf
-    
-    #########################################################
-    ## Set parameters
-    #########################################################
-    if 'alpha_C' not in params.keys():
-        C = 1.
-    else:
-        C = params['alpha_C']       
-    alpha_t = C
-    
-    if 'max_iter' not in params.keys():    
-        params['max_iter'] = 100
-    else:
-        assert type(params['max_iter']) == int, "Max. iter needs to be integer"
-        
-    if 'sample_size' not in params.keys():    
-        params['sample_size'] = max(int(f.N/4), 1)
-    
-    if 'sample_style' not in params.keys():    
-        params['sample_style'] = 'constant'
-    
-    if 'reduce_variance' not in params.keys():    
-        params['reduce_variance'] = False
-        
-    if 'newton_params' not in params.keys():
-        params['newton_params'] = get_default_newton_params()
-    
-    #########################################################
-    ## Sample style
-    #########################################################
-    if params['sample_style'] == 'increasing':     
-        batch_size = batch_size_constructor(np.arange(params['max_iter']), a = params['sample_size']/4, \
-                                            b = params['sample_size'], M = params['max_iter']-1)
-    elif params['sample_style'] == 'fast_increasing': 
-        batch_size = batch_size_constructor(np.arange(params['max_iter']), a = params['sample_size']/4, \
-                                            b = params['sample_size'], M = params['max_iter']-1, cutoff = 10)
-    else:
-        batch_size = params['sample_size'] * np.ones(params['max_iter'], dtype = 'int64')
-    
-    #########################################################
-    ## Initialization
-    #########################################################
-    if xi is None:
-        if f.name == 'logistic':
-            xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(f.m[i]) for i in np.arange(f.N)]))
-        elif f.name == 'tstudent':
-            xi = dict(zip(np.arange(f.N), [ 10*np.ones(f.m[i]) for i in np.arange(f.N)]))
-        else:
-            xi = dict(zip(np.arange(f.N), [np.zeros(f.m[i]) for i in np.arange(f.N)]))
-    
-    # for easy problems, xi is an array (and not a dict), because we can index it faster
-    if is_easy:
-        xi = np.hstack(list(xi.values()))
-        assert xi.shape== (f.N,)
-    
-    x_hist = list(); xi_hist = list()
-    step_sizes = list()
-    obj = list(); obj2 = list()
-    ssn_info = list(); S_hist = list()
-    runtime = list()
-    
-    # variance reduction
-    if params['reduce_variance']:
-        #counter = batch_size.cumsum() % f.N
-        #xi_tilde_update = (np.diff(counter, prepend = f.N) < 0)
-        xi_tilde = None
-        vr_min_iter = 0
-        m_iter = 10
-    else:
-        xi_tilde = None
-    
-            
-    hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s\t%10s"
-    out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
-    if verbose:
-        print(hdr_fmt % ("iter", "obj (x_t)", "obj(x_mean)", "alpha_t", "batch size", "eta"))
-    
-    #########################################################
-    ## Main loop
-    #########################################################
-    for iter_t in np.arange(params['max_iter']):
-        
-        start = time.time()
-            
-        if eta <= tol:
-            status = 'optimal'
-            break
-                
-        x_old = x_t.copy()
-        
-        # sample and update
-        S = sampler(f.N, batch_size[iter_t])
-        #S = cyclic_batch(f.N, batch_size, iter_t)
-        
-        #params['newton_params']['eps'] =  min(1e-3, 1e-1/(iter_t+1)**(1.1))
-        params['newton_params']['eps'] =  5e-3
-        # variance reduction boolean
-        reduce_variance = params['reduce_variance'] and (iter_t > vr_min_iter)
-                
-        if not is_easy:
-            x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, f.m, S, \
-                                             newton_params = params['newton_params'],\
-                                             reduce_variance = reduce_variance, xi_tilde = xi_tilde,\
-                                             verbose = False)
-        else:
-            x_t, xi, this_ssn = solve_subproblem_easy(f, phi, x_t, xi, alpha_t, A, S, \
-                                             newton_params = params['newton_params'],\
-                                             reduce_variance = reduce_variance, xi_tilde = xi_tilde,\
-                                             verbose = False)
-                                             
-        # xi_tilde gets updated
-        
-        if params['reduce_variance']:
-            if iter_t % m_iter == 0 and iter_t >= vr_min_iter:
-                xi_tilde = compute_full_xi(f, x_t, is_easy)
-                
-                # when f convex, update xi
-                if f.convex:
-                    xi = xi_tilde.copy()
-                else:
-                    if is_easy:
-                        gammas = f.weak_conv(np.arange(f.N))
-                        xi = xi_tilde + gammas*(A@x_t)
-                   
-        #stop criterion
-        eta = stop_scikit_saga(x_t, x_old)
-        
-        # we only measure runtime of the iteration, excluding computation of the diagnostics
-        end = time.time()
-        runtime.append(end-start)
-
-        
-        # save all diagnostics
-        ssn_info.append(this_ssn)
-        x_hist.append(x_t)
-        
-        if measure:
-            obj.append(f.eval(x_t.astype('float64')) + phi.eval(x_t))
-        
-        step_sizes.append(alpha_t)
-        S_hist.append(S)
-        xi_hist.append(xi.copy())
-        
-        #calc x_mean 
-        x_mean = compute_x_mean(x_hist, step_sizes = None)
-        if measure:
-            obj2.append(f.eval(x_mean.astype('float64')) + phi.eval(x_mean))
-          
-        if verbose and measure:
-            print(out_fmt % (iter_t, obj[-1], obj2[-1] , alpha_t, len(S), eta))
-        
-        # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
-        if f.convex:
-        #if True:
-            alpha_t = C/(iter_t + 2)**(0.51)
-        
-    if eta > tol:
-        status = 'max iterations reached'    
-    
-       
-    print(f"Stochastic ProxPoint terminated after {iter_t} iterations with accuracy {eta}")
-    print(f"Stochastic ProxPoint status: {status}")
-    
-    info = {'objective': np.array(obj), 'objective_mean': np.array(obj2), 'iterates': np.vstack(x_hist), \
-            'mean_hist': compute_x_mean_hist(np.vstack(x_hist)), 'xi_hist': xi_hist,\
-            'step_sizes': np.array(step_sizes), 'samples' : S_hist, \
-            'ssn_info': ssn_info, 'runtime': np.array(runtime)}
-    
-    return x_t, x_mean, info

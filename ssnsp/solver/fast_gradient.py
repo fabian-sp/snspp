@@ -125,7 +125,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     n_iter = x_hist.shape[0]
     
     # compute x_mean retrospectivly and evaluate objective
-    obj = list(); obj2= list()
+    obj = list()
     xmean_hist = compute_x_mean_hist(x_hist)
     x_mean = xmean_hist[-1,:].copy()
     
@@ -151,7 +151,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
         print(f"{name} terminated during epoch {n_iter} with tolerance {eta}")
         print(f"{name} status: {status}")
     
-    info = {'objective': np.array(obj), 'objective_mean': np.array(obj2), 'iterates': x_hist,\
+    info = {'objective': np.array(obj), 'iterates': x_hist,\
             'mean_hist': xmean_hist, 'step_sizes': np.array(step_sizes), \
             'gradient_table': gradients, 'runtime': np.array(runtime)}
 
