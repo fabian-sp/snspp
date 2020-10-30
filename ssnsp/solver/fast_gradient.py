@@ -59,41 +59,49 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     #########################################################
     # see Defazio et al. 2014 for (convex) SAGA step size and Sra, Reddi et al 2016 for minibatch SAGA and PROX-SVRG step size
     if 'gamma' not in params.keys():
-        if solver in ['saga', 'batch saga', 'svrg']:
-            if f.name == 'squared':
-                L = 2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()    
-            elif f.name == 'logistic':
-                L = .25 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
-            elif f.name == 'tstudent':
-                L =  (2/f.v) * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
-            else:
-                warnings.warn("We could not determine the correct SAGA step size! The default step size is maybe too large (divergence) or too small (slow convergence).")
-                L = 1e2
-            
-            if solver == 'saga':
-                #assert f.convex, "SAGA with batch-size 1 is only guaranteed for f_i being convex, see Defazio et al. 2014"
-                # if we regularize, f_i is strongly-convex and we can use a larger step size (see Defazio et al.)
-                if params['reg'] > 0:
-                    gamma1 = 1/(2*(f.N*params['reg'] + L))
-                else:
-                    gamma1 = 0
-                    
-                gamma = max(gamma1, 1./(3*L))
-                
-            elif solver == 'batch saga':
-                params['batch_size'] = int(f.N**(2/3))
-                gamma = 1./(5*L)
-            
-            elif solver == 'svrg':
-                params['batch_size'] = 1#int( 0.1* f.N**(2/3))
-                gamma = 1./(3*L)
-                m_iter = N#int(f.N**(1/3))
-               
-        elif solver == 'adagrad':
-            warnings.warn("Using a default step size for AdaGrad. This will propbably lead to bad performance. A script for tuning the step size is contained in ssnsp/experiments/experimnet_utils. Provide a step size via params[\"gamma\"].")
-            gamma = .05
+        if solver == 'adagrad':
+            gamma = 0.001
+            warnings.warn("Using a default step size for AdaGrad. This may lead to bad performance. A script for tuning the step size is contained in ssnsp/experiments/experimnet_utils. Provide a step size via params[\"gamma\"].")
+        else:
+            gamma_0 = 1.
     else:
-        gamma = params['gamma']
+        gamma_0 = params['gamma']
+    
+    # for SAGA/SVRG we use the theoretical step size * gamma_0
+    if solver in ['saga', 'batch saga', 'svrg']:
+        if f.name == 'squared':
+            L = 2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()    
+        elif f.name == 'logistic':
+            L = .25 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
+        elif f.name == 'tstudent':
+            L =  (2/f.v) * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
+        else:
+            warnings.warn("We could not determine the correct SAGA step size! The default step size is maybe too large (divergence) or too small (slow convergence).")
+            L = 1e2
+        
+        if solver == 'saga':
+            #assert f.convex, "SAGA with batch-size 1 is only guaranteed for f_i being convex, see Defazio et al. 2014"
+            # if we regularize, f_i is strongly-convex and we can use a larger step size (see Defazio et al.)
+            if params['reg'] > 0:
+                gamma1 = 1/(2*(f.N*params['reg'] + L))
+            else:
+                gamma1 = 0
+                
+            gamma = gamma_0 * max(gamma1, 1./(3*L))
+            
+        elif solver == 'batch saga':
+            params['batch_size'] = int(f.N**(2/3))
+            gamma = gamma_0 * 1./(5*L)
+        
+        elif solver == 'svrg':
+            params['batch_size'] = 1 #int( 0.1* f.N**(2/3))
+            gamma = gamma_0 * 1./(3*L)
+            m_iter = N #int(f.N**(1/3))
+           
+    elif solver == 'adagrad':
+        # for ADAGRAD we use the step size gamma_0
+        gamma = gamma_0
+    
     
     if verbose :
         print(f"Step size of {solver}: ", gamma)

@@ -57,7 +57,7 @@ print("psi(0) = ", f.eval(np.zeros(n)))
 #print("psi(x*) = ", f.eval(xsol) + phi.eval(xsol))
 
 #%% solve with SAGA
-params = {'n_epochs' : 200}
+params = {'n_epochs' : 100, 'gamma' : 4.}
 
 Q = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -68,7 +68,7 @@ print("phi(x_t) = ", phi.eval(Q.x))
 print("psi(x_t) = ", f.eval(Q.x) + phi.eval(Q.x))
 
 #%% solve with SVRG/ BATCH-SAGA
-params = {'n_epochs' : 100}
+params = {'n_epochs' : 100, 'gamma' : 3.}
 
 Q2 = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -78,11 +78,11 @@ print(f.eval(Q2.x) +phi.eval(Q2.x))
 
 #%% solve with ADAGRAD
 
-tune_params = {'n_epochs' : 200, 'batch_size': 15}
+tune_params = {'n_epochs' : 300, 'batch_size': 15}
 #opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = tune_params)
 opt_gamma = 0.002 #0.02848035868435802
 
-params = {'n_epochs' : 200, 'batch_size': 15, 'gamma': opt_gamma}
+params = {'n_epochs' : 300, 'batch_size': 15, 'gamma': opt_gamma}
 
 Q1 = problem(f, phi, x0 = x0, tol = 1e-5, params = params, verbose = True, measure = True)
 Q1.solve(solver = 'adagrad')
@@ -92,8 +92,8 @@ print("phi(x_t) = ", phi.eval(Q1.x))
 print("psi(x_t) = ", f.eval(Q1.x) + phi.eval(Q1.x))
 #%% solve with SSNSP
 
-params = {'max_iter' : 600, 'sample_size': 15, 'sample_style': 'constant',\
-          'alpha_C' : .008, 'reduce_variance': True}
+params = {'max_iter' : 500, 'sample_size': 15, 'sample_style': 'constant',\
+          'alpha_C' : 0.008, 'reduce_variance': True}
 
 P = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -121,7 +121,7 @@ all_x = pd.DataFrame(np.vstack((P.x, Q.x, Q1.x)).T, columns = ['spp', 'saga', 'a
 #%%
 save = False
 
-psi_star = f.eval(Q.x)+phi.eval(Q.x)
+#psi_star = f.eval(Q.x)+phi.eval(Q.x)
 psi_star = 0
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
