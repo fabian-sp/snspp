@@ -57,7 +57,7 @@ print("psi(0) = ", f.eval(np.zeros(n)))
 #print("psi(x*) = ", f.eval(xsol) + phi.eval(xsol))
 
 #%% solve with SAGA
-params = {'n_epochs' : 100, 'gamma' : 4.}
+params = {'n_epochs' : 200, 'gamma' : 4.}
 
 Q = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
 
@@ -92,7 +92,7 @@ print("phi(x_t) = ", phi.eval(Q1.x))
 print("psi(x_t) = ", f.eval(Q1.x) + phi.eval(Q1.x))
 #%% solve with SSNSP
 
-params = {'max_iter' : 500, 'sample_size': 15, 'sample_style': 'constant',\
+params = {'max_iter' : 650, 'sample_size': 15, 'sample_style': 'constant',\
           'alpha_C' : 0.008, 'reduce_variance': True}
 
 P = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)

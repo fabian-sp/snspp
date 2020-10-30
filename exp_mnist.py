@@ -37,9 +37,9 @@ initialize_fast_gradient(f, phi)
 
 #%% solve with SAGA
 
-params = {'n_epochs' : 50, 'reg': 1e-2}
+params = {'n_epochs' : 50, 'gamma': 20}
 
-Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
+Q = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
 Q.solve(solver = 'saga')
 
@@ -62,7 +62,7 @@ print(f.eval(Q1.x) +phi.eval(Q1.x))
 #%% solve with SSNSP
 
 params = {'max_iter' : 70, 'sample_size': 1000, 'sample_style': 'fast_increasing', \
-          'alpha_C' : 10., 'reduce_variance': True}
+          'alpha_C' : 15., 'reduce_variance': True}
 
 P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 P.solve(solver = 'ssnsp')
@@ -117,10 +117,10 @@ Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
 
 
-plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
-plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **kwargs)
+#plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
+#plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **kwargs)
 
-#P.plot_objective(ax = ax, **kwargs)
+P.plot_objective(ax = ax, **kwargs)
 #P1.plot_objective(ax = ax, label = "_constant", marker = "x")
 
 
