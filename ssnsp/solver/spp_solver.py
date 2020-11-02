@@ -108,7 +108,7 @@ def determine_alpha(f, batch_size, m_iter, Lb = None):
 def get_default_newton_params():
     
     params = {'tau': .9, 'eta' : 1e-5, 'rho': .5, 'mu': .4, 'eps': 1e-3, \
-              'cg_max_iter': 12, 'max_iter': 15}
+              'cg_max_iter': 12, 'max_iter': 20}
     
     return params
 
@@ -125,22 +125,6 @@ def check_newton_params(newton_params):
 
 
 #%% main functions
-
-def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, hat_d):
-    
-    sample_size = len(S)
-    
-    z = x - (alpha/sample_size) * (subA.T @ xi_stack) + hat_d
-    term2 = .5 * np.linalg.norm(z)**2 - phi.moreau(z, alpha)
-    
-    if f.m.max() == 1:
-        term1 = sum([f.fstar(xi_stack[[l]], S[l]) for l in range(sample_size)])
-    else:
-        term1 = sum([f.fstar(xi_stack[sub_dims == l], S[l]) for l in range(sample_size)])
-    
-    res = term1 + (sample_size/alpha) * term2
-    
-    return res.squeeze()
 
 def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
     
@@ -253,7 +237,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #S = cyclic_batch(f.N, batch_size, iter_t)
         
         #params['newton_params']['eps'] =  min(1e-3, 1e-1/(iter_t+1)**(1.1))
-        params['newton_params']['eps'] =  5e-3
+        params['newton_params']['eps'] =  1e-3
         # variance reduction boolean
         reduce_variance = params['reduce_variance'] and (iter_t > vr_min_iter)
                 
@@ -283,8 +267,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
                         gammas = f.weak_conv(np.arange(f.N))
                         xi = xi_tilde + gammas*(A@x_t)
                   
-                #print("Estimation of L_b at x_t: ", lipschitz_bound(f, x_t).max())
-        
+                
         #stop criterion
         eta = stop_scikit_saga(x_t, x_old)
         
@@ -309,8 +292,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
             print(out_fmt % (iter_t, obj[-1], alpha_t, len(S), eta))
         
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
-        if f.convex:
-            alpha_t = C/(iter_t + 2)**(0.51)
+        if f.convex and not params['reduce_variance']:
+             alpha_t = C/(iter_t + 2)**(0.51)
 
     if eta > tol:
         status = 'max iterations reached'    
@@ -325,6 +308,24 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
             'ssn_info': ssn_info, 'runtime': np.array(runtime)}
     
     return x_t, x_mean, info
+
+#%% solve subproblem (an alternative version (vectorized but less general) is in spp_easy.py)
+
+def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, hat_d):
+    
+    sample_size = len(S)
+    
+    z = x - (alpha/sample_size) * (subA.T @ xi_stack) + hat_d
+    term2 = .5 * np.linalg.norm(z)**2 - phi.moreau(z, alpha)
+    
+    if f.m.max() == 1:
+        term1 = sum([f.fstar(xi_stack[[l]], S[l]) for l in range(sample_size)])
+    else:
+        term1 = sum([f.fstar(xi_stack[sub_dims == l], S[l]) for l in range(sample_size)])
+    
+    res = term1 + (sample_size/alpha) * term2
+    
+    return res.squeeze()
 
 
 def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce_variance = False, xi_tilde = None, verbose = False):

@@ -88,7 +88,7 @@ for k in range(K):
     
     P_k = problem(f, phi, tol = 1e-12, params = params, verbose = False, measure = True)
     P_k.solve(solver = 'ssnsp')
-    allP.append(P_k.info)
+    allP.append(P_k)
     
 #%% solve with SSNSP (multiple times, no VR)
 
@@ -100,7 +100,7 @@ for k in range(K):
     
     P_k = problem(f, phi, tol = 1e-12, params = params1, verbose = False, measure = True)
     P_k.solve(solver = 'ssnsp')
-    allP1.append(P_k.info)
+    allP1.append(P_k)
     
 #%% solve with CONSTANT SSNSP
 

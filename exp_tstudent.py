@@ -111,7 +111,7 @@ for k in range(K):
     
     P_k = problem(f, phi, tol = 1e-9, params = params, verbose = False, measure = True)
     P_k.solve(solver = 'ssnsp')
-    allP.append(P_k.info)
+    allP.append(P_k)
  
 #%%
 #all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x)).T, columns = ['true', 'spp', 'saga', 'adagrad'])

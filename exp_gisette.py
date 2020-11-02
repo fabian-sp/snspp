@@ -41,14 +41,14 @@ x_sk = sk.coef_.copy().squeeze()
 #(np.sign(predict(X_test, x_sk)) == np.sign(y_test)).sum() / len(y_test)
 
 psi_star = f.eval(x_sk) + phi.eval(x_sk)
-print(psi_star)
+print("psi(x*) = ", psi_star)
 initialize_fast_gradient(f, phi)
 
 #%% solve with SAGA
 
-params = {'n_epochs' : 100}
+params = {'n_epochs' : 50, 'gamma': 6.}
 
-Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
+Q = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
 Q.solve(solver = 'saga')
 
@@ -57,11 +57,11 @@ print(f.eval(Q.x) +phi.eval(Q.x))
 #%% solve with ADAGRAD
 
 #opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = None)
-opt_gamma = 0.02#0.043
+opt_gamma = 0.02
 
 params = {'n_epochs' : 200, 'batch_size': 240, 'gamma': opt_gamma}
 
-Q1 = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
+Q1 = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
 Q1.solve(solver = 'adagrad')
 
@@ -69,26 +69,28 @@ print(f.eval(Q1.x)+phi.eval(Q1.x))
 
 #%% solve with SSNSP
 
-# params = {'max_iter' : 25, 'sample_size': 0.2*f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 30.,\
+# params setup for decreasing step size
+# params = {'max_iter' : 50, 'sample_size': 500, 'sample_style': 'fast_increasing', 'alpha_C' : 30.,\
 #           "reduce_variance": True}
-params = {'max_iter' : 50, 'sample_size': 1000, 'sample_style': 'fast_increasing', 'alpha_C' : 30.,\
+params = {'max_iter' : 50, 'sample_size': 500, 'sample_style': 'fast_increasing', 'alpha_C' : 5.,\
           "reduce_variance": True}
 
-P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
+P = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
 
 P.solve(solver = 'ssnsp')
 
 #%% solve with SSNSP (multiple times, VR)
 
-params = {'max_iter' : 50, 'sample_size': 1000, 'sample_style': 'fast_increasing', 'alpha_C' : 30.,\
+params = {'max_iter' : 50, 'sample_size': 500, 'sample_style': 'fast_increasing', 'alpha_C' : 5.,\
           "reduce_variance": True}
-K = 10
+
+K = 20
 allP = list()
 for k in range(K):
     
-    P_k = problem(f, phi, tol = 1e-7, params = params, verbose = False, measure = True)
+    P_k = problem(f, phi, tol = 1e-9, params = params, verbose = False, measure = True)
     P_k.solve(solver = 'ssnsp')
-    allP.append(P_k.info)
+    allP.append(P_k)
 
 #%% solve with SSNSP (multiple times, no VR)
 
@@ -98,19 +100,9 @@ params1["reduce_variance"] = False
 allP1 = list()
 for k in range(K):
     
-    P_k = problem(f, phi, tol = 1e-7, params = params1, verbose = False, measure = True)
+    P_k = problem(f, phi, tol = 1e-9, params = params1, verbose = False, measure = True)
     P_k.solve(solver = 'ssnsp')
-    allP1.append(P_k.info)
-    
-#%% solve with CONSTANT SSNSP
-
-params = {'max_iter' : 20, 'sample_size': f.N, 'sample_style': 'constant', 'alpha_C' : 30.,\
-          "reduce_variance": True}
-
-P1 = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
-
-P1.solve(solver = 'ssnsp')
-
+    allP1.append(P_k)
 
 #%% coeffcient frame
 
@@ -128,10 +120,10 @@ Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
 
 
-plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
-plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **kwargs)
+#plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
+#plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **kwargs)
 
-#P.plot_objective(ax = ax, **kwargs)
+P.plot_objective(ax = ax, **kwargs)
 #P1.plot_objective(ax = ax, label = " constant", marker = "x")
 
 ax.set_xlim(-.1,6)
