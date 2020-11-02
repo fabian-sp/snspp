@@ -207,11 +207,11 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     if params['reduce_variance']:
         #counter = batch_size.cumsum() % f.N
         #xi_tilde_update = (np.diff(counter, prepend = f.N) < 0)
-        xi_tilde = None
+        xi_tilde = None; full_g = None
         vr_min_iter = 0
         m_iter = 10
     else:
-        xi_tilde = None
+        xi_tilde = None; full_g = None
     
             
     hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s"
@@ -249,7 +249,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         else:
             x_t, xi, this_ssn = solve_subproblem_easy(f, phi, x_t, xi, alpha_t, A, S, \
                                              newton_params = params['newton_params'],\
-                                             reduce_variance = reduce_variance, xi_tilde = xi_tilde,\
+                                             reduce_variance = reduce_variance, xi_tilde = xi_tilde, full_g = full_g,\
                                              verbose = False)
                                              
         #########################################################
@@ -258,6 +258,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         if params['reduce_variance']:
             if iter_t % m_iter == 0 and iter_t >= vr_min_iter:
                 xi_tilde = compute_full_xi(f, x_t, is_easy)
+                full_g = (1/f.N) * (f.A.T @ xi_tilde)
                 
                 # update xi
                 if f.convex:
@@ -336,6 +337,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     """
     if newton_params is None:
         newton_params = get_default_newton_params()
+
     
     check_newton_params(newton_params)
     assert alpha > 0 , "step sizes are not positive"

@@ -24,12 +24,14 @@ def Ueval(xi_sub, f, phi, x, alpha, S, subA, hat_d):
 
 
     
-def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, reduce_variance = False, xi_tilde = None, verbose = False):
+def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, reduce_variance = False, xi_tilde = None, full_g = None, verbose = False):
     """
     m: vector with all dimensions m_i, i = 1,..,N
     
     """
-    
+    if xi_tilde is None or full_g is None:
+        assert not reduce_variance
+        
     assert alpha > 0 , "step sizes are not positive"
       
     sample_size = len(S)
@@ -48,7 +50,7 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
     
     # compute var. reduction term
     if reduce_variance:
-        hat_d =  (alpha/sample_size) * (subA.T @ xi_tilde[S]) - (alpha/f.N) * (f.A.T @ xi_tilde)      
+        hat_d =  (alpha/sample_size) * (subA.T @ xi_tilde[S]) - alpha * full_g    
     else:
         hat_d = 0.
         
@@ -56,10 +58,9 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
     if not f.convex: 
         gamma_i = f.weak_conv(S)
         hat_d += (alpha/sample_size) * (gamma_i.reshape(1,-1) * subA.T @ (subA @ x))
-
     while sub_iter < newton_params['max_iter']:
         
-    # step 1: construct Newton matrix and RHS
+    # step 1: construct Newton matrix and RHS 
         
         z = x - (alpha/sample_size) * (subA.T @ xi_sub) + hat_d
         rhs = -1. * (f.gstar_vec(xi_sub, S) - subA @ phi.prox(z, alpha))
@@ -79,7 +80,8 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
             tmp2 = (alpha/sample_size) * subA_d @ subA_d.T
         else:
             tmp2 = (alpha/sample_size) * subA @ U @ subA.T
-
+        
+        
         eps_reg = 1e-4
         tmp_d = f.Hstar_vec(xi_sub, S)
         
@@ -89,6 +91,7 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
         tmp = np.diag(tmp_d + eps_reg)           
         W = tmp + tmp2
         assert not np.isnan(W).any(), "Something went wrong during construction of the Hessian"
+        
     # step2: solve Newton system
         cg_tol = min(newton_params['eta'], np.linalg.norm(rhs)**(1+ newton_params['tau']))
         
@@ -99,7 +102,7 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
         
         assert d@rhs > -1e-8 , f"No descent direction, {d@rhs}"
         norm_dir.append(np.linalg.norm(d))
-        
+
     # step 3: backtracking line search
         
         U_old = Ueval(xi_sub, f, phi, x, alpha, S, subA, hat_d)

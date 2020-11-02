@@ -57,9 +57,9 @@ print("psi(0) = ", f.eval(np.zeros(n)))
 #print("psi(x*) = ", f.eval(xsol) + phi.eval(xsol))
 
 #%% solve with SAGA
-params = {'n_epochs' : 200, 'gamma' : 4.}
+params_saga = {'n_epochs' : 200, 'gamma' : 4.}
 
-Q = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
+Q = problem(f, phi, x0 = x0, tol = 1e-9, params = params_saga, verbose = True, measure = True)
 
 Q.solve(solver = 'saga')
 
@@ -68,9 +68,9 @@ print("phi(x_t) = ", phi.eval(Q.x))
 print("psi(x_t) = ", f.eval(Q.x) + phi.eval(Q.x))
 
 #%% solve with SVRG/ BATCH-SAGA
-params = {'n_epochs' : 100, 'gamma' : 3.}
+params_svrg = {'n_epochs' : 100, 'gamma' : 3.}
 
-Q2 = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
+Q2 = problem(f, phi, x0 = x0, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
 
 Q2.solve(solver = 'svrg')
 
@@ -82,9 +82,9 @@ tune_params = {'n_epochs' : 300, 'batch_size': 15}
 #opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = tune_params)
 opt_gamma = 0.002 #0.02848035868435802
 
-params = {'n_epochs' : 300, 'batch_size': 15, 'gamma': opt_gamma}
+params_adagrad = {'n_epochs' : 300, 'batch_size': 15, 'gamma': opt_gamma}
 
-Q1 = problem(f, phi, x0 = x0, tol = 1e-5, params = params, verbose = True, measure = True)
+Q1 = problem(f, phi, x0 = x0, tol = 1e-5, params = params_adagrad, verbose = True, measure = True)
 Q1.solve(solver = 'adagrad')
 
 print("f(x_t) = ", f.eval(Q1.x))
@@ -93,24 +93,21 @@ print("psi(x_t) = ", f.eval(Q1.x) + phi.eval(Q1.x))
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 650, 'sample_size': 15, 'sample_style': 'constant',\
+params_ssnsp = {'max_iter' : 800, 'sample_size': 15, 'sample_style': 'constant',\
           'alpha_C' : 0.008, 'reduce_variance': True}
 
-P = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measure = True)
+P = problem(f, phi, x0 = x0, tol = 1e-9, params = params_ssnsp, verbose = True, measure = True)
 
 P.solve(solver = 'ssnsp')
 
 
 #%% solve with SSNSP (multiple times, VR)
-
-params = {'max_iter' : 10, 'sample_size': 1000 ,'sample_style': 'fast_increasing',\
-          'alpha_C' : 10., 'reduce_variance': True}
-    
+   
 K = 20
 allP = list()
 for k in range(K):
     
-    P_k = problem(f, phi, tol = 1e-9, params = params, verbose = False, measure = True)
+    P_k = problem(f, phi, tol = 1e-9, params = params_ssnsp, verbose = False, measure = True)
     P_k.solve(solver = 'ssnsp')
     allP.append(P_k)
  
@@ -131,6 +128,7 @@ kwargs = {"psi_star": psi_star, "log_scale": True}
 
 Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+#Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 P.plot_objective(ax = ax, markersize = 2, **kwargs)
 
 #plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
