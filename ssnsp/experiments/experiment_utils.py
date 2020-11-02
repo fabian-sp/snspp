@@ -72,7 +72,7 @@ def initialize_fast_gradient(f, phi):
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)
     tmpP.solve(solver = 'svrg')
     
-    params = {'n_epochs' : 10, 'batch_size': int(f.N*0.05), 'gamma': 0.01}  
+    params = {'n_epochs' : 10, 'batch_size': 10, 'gamma': 0.01}  
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)   
     tmpP.solve(solver = 'adagrad')
     

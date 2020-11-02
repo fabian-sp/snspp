@@ -74,7 +74,7 @@ Q2 = problem(f, phi, x0 = x0, tol = 1e-9, params = params, verbose = True, measu
 
 Q2.solve(solver = 'svrg')
 
-print(f.eval(Q2.x) +phi.eval(Q2.x))
+print(f.eval(Q2.x)+phi.eval(Q2.x))
 
 #%% solve with ADAGRAD
 
@@ -90,6 +90,7 @@ Q1.solve(solver = 'adagrad')
 print("f(x_t) = ", f.eval(Q1.x))
 print("phi(x_t) = ", phi.eval(Q1.x))
 print("psi(x_t) = ", f.eval(Q1.x) + phi.eval(Q1.x))
+
 #%% solve with SSNSP
 
 params = {'max_iter' : 650, 'sample_size': 15, 'sample_style': 'constant',\

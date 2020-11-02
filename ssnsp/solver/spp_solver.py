@@ -291,6 +291,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         if verbose and measure:
             print(out_fmt % (iter_t, obj[-1], alpha_t, len(S), eta))
         
+        # if reduce_varaince, use constant step size, else use decreasing step size
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
         if f.convex and not params['reduce_variance']:
              alpha_t = C/(iter_t + 2)**(0.51)

@@ -37,9 +37,9 @@ initialize_fast_gradient(f, phi)
 
 #%% solve with SAGA
 
-params = {'n_epochs' : 20, 'gamma': 40.}
+params_saga = {'n_epochs' : 20, 'gamma': 40.}
 
-Q = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
+Q = problem(f, phi, tol = 1e-9, params = params_saga, verbose = True, measure = True)
 
 Q.solve(solver = 'saga')
 
@@ -50,9 +50,9 @@ print(f.eval(Q.x)+phi.eval(Q.x))
 #opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = None)
 opt_gamma = 0.0123 #0.01873
 
-params = {'n_epochs' : 200, 'batch_size': int(f.N*0.05), 'gamma': opt_gamma}
+params_adagrad = {'n_epochs' : 200, 'batch_size': int(f.N*0.05), 'gamma': opt_gamma}
 
-Q1 = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
+Q1 = problem(f, phi, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
 
 Q1.solve(solver = 'adagrad')
 
@@ -63,10 +63,10 @@ print(f.eval(Q1.x)+phi.eval(Q1.x))
 # params setup for decreasing step size
 # params = {'max_iter' : 70, 'sample_size': 1000, 'sample_style': 'fast_increasing', \
 #           'alpha_C' : 15., 'reduce_variance': True}
-params = {'max_iter' : 70, 'sample_size': 700, 'sample_style': 'fast_increasing', \
+params_ssnsp = {'max_iter' : 70, 'sample_size': 700, 'sample_style': 'fast_increasing', \
           'alpha_C' : 10., 'reduce_variance': True}
 
-P = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
+P = problem(f, phi, tol = 1e-9, params = params_ssnsp, verbose = True, measure = True)
 P.solve(solver = 'ssnsp')
 
 
@@ -78,44 +78,37 @@ P.solve(solver = 'ssnsp')
 
 #%% solve with SAGA (multiple times)
 
-params = {'n_epochs' : 20, 'gamma': 40.}
-
 K = 20
 allQ = list()
 for k in range(K):
     
-    Q_k = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
+    Q_k = problem(f, phi, tol = 1e-9, params = params_saga, verbose = True, measure = True)
     Q_k.solve(solver = 'saga')
     allQ.append(Q_k)
 
 #%% solve with ADAGRAD (multiple times)
 
-params = {'n_epochs' : 200, 'batch_size': int(f.N*0.05), 'gamma': 0.0123}
-
 K = 20
 allQ1 = list()
 for k in range(K):
     
-    Q1_k = problem(f, phi, tol = 1e-9, params = params, verbose = True, measure = True)
+    Q1_k = problem(f, phi, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
     Q1_k.solve(solver = 'adagrad')
     allQ1.append(Q1_k)
     
 #%% solve with SSNSP (multiple times, VR)
 
-params = {'max_iter' : 70, 'sample_size': 1000, 'sample_style': 'fast_increasing', \
-          'alpha_C' : 10., 'reduce_variance': True}
-
 K = 20
 allP = list()
 for k in range(K):
     
-    P_k = problem(f, phi, tol = 1e-7, params = params, verbose = False, measure = True)
+    P_k = problem(f, phi, tol = 1e-9, params = params_ssnsp, verbose = False, measure = True)
     P_k.solve(solver = 'ssnsp')
     allP.append(P_k)
 
 #%% solve with SSNSP (multiple times, no VR)
 
-# params1 = params.copy()
+# params1 = params_ssnsp.copy()
 # params1["reduce_variance"] = False
 
 # allP1 = list()
@@ -140,17 +133,17 @@ kwargs = {"psi_star": psi_star, "log_scale": True}
 
 #Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 #Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
+#P.plot_objective(ax = ax, **kwargs)
+
 
 plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
 plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
 plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
-#plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **kwargs)
 
-#P.plot_objective(ax = ax, **kwargs)
+#plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **kwargs)
 
 ax.set_xlim(-1,16)
 ax.legend()
-#ax.set_yscale('log')
 
 fig.subplots_adjust(top=0.96,
                     bottom=0.14,
@@ -163,6 +156,8 @@ if save:
     fig.savefig(f'data/plots/exp_mnist/obj.pdf', dpi = 300)
 
 #%% coefficent plot
+
+P = allP[-1]
 
 fig,ax = plt.subplots(2, 2,  figsize = (7,5))
 Q.plot_path(ax = ax[0,0], xlabel = False)
@@ -180,7 +175,6 @@ if save:
 
 
 #%%
-#(np.sign(predict(X_train, x_sk)) == np.sign(y_train)).sum() / len(y_train)
 def predict(A,x):
     
     h = np.exp(A@x)
