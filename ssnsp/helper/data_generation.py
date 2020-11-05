@@ -76,7 +76,7 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., k
     np.random.shuffle(x)
     
     # create measurements
-    b = A @ x + noise*np.random.randn(N)
+    b = A @ x + noise*np.random.randn(m.sum())
     
     A = np.ascontiguousarray(A.astype('float64'))
     b = b.astype('float64')
@@ -228,13 +228,14 @@ def get_gisette(lambda1 = 0.02, train_size = .8):
         
     return f, phi, X_train, y_train, X_test, y_test
 
-def get_triazines(lambda1 = 0.01, train_size = .8, v = 1, poly = 0):
+def get_triazines(lambda1 = 0.01, train_size = .8, v = 1, poly = 0, noise = 0):
     
     assert v > 0
     
     X,y = load_from_txt('triazines')
+    #X,y = load_from_txt('abalone')
     
-    y += 0.01*np.random.standard_t(1, size = len(y))
+    y += noise*np.random.standard_t(v, size = len(y))
     
     X = X.astype('float64')
     y = y.astype('float64')

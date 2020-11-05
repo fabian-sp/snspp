@@ -22,7 +22,7 @@ from ssnsp.helper.utils import compute_batch_gradient_table
 N = 2000
 n = 3000
 k = 100
-l1 = .01
+l1 = .001
 
 xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = None, noise = 0.1)
 

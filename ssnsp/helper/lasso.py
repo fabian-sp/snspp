@@ -287,7 +287,8 @@ class block_lsq:
         self.N = len(m)
         self.m = m
         self.ixx = np.repeat(np.arange(self.N), self.m)
-
+        self.convex = True
+        
     def eval(self, x):
         y = 0
         for i in np.arange(self.N):
