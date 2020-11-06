@@ -40,7 +40,8 @@ def create_A(N, n, scale = 1.0, kappa = None):
     
     if kappa not None: create A with condition sqrt(kappa)
     """
-    A = np.random.randn(N,n)
+    #A = np.random.randn(N,n)
+    A = np.random.rand(N,n)*2 - 1
     
     # create A with condition sqrt(kappa)
     if kappa is not None:

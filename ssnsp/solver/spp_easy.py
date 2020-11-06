@@ -24,7 +24,7 @@ def Ueval(xi_sub, f, phi, x, alpha, S, subA, hat_d):
 
 
     
-def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, reduce_variance = False, xi_tilde = None, full_g = None, verbose = False):
+def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, reduce_variance = False, xi_tilde = None, full_g = None, verbose = True):
     """
     m: vector with all dimensions m_i, i = 1,..,N
     
@@ -120,8 +120,9 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
         xi_sub += beta * d         
         sub_iter += 1
         
-    if not converged:
-        print(f"WARNING: reached maximal iterations in semismooth Newton -- accuracy {residual[-1]}")
+    if not converged and verbose:
+        print(f"WARNING: reached max. iter in semismooth Newton with residual {residual[-1]}")
+    
     
     # update xi variable
     xi[S] = xi_sub.copy()

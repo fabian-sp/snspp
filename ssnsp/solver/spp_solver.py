@@ -214,10 +214,10 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         xi_tilde = None; full_g = None
     
             
-    hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s"
-    out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
+    hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s\t%10s\t%10s"
+    out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
     if verbose:
-        print(hdr_fmt % ("iter", "obj (x_t)", "alpha_t", "batch size", "eta"))
+        print(hdr_fmt % ("iter", "obj (x_t)", "f(x_t)", "phi(x_t)", "alpha_t", "batch size", "eta"))
     
     #########################################################
     ## Main loop
@@ -245,12 +245,12 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
             x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, f.m, S, \
                                              newton_params = params['newton_params'],\
                                              reduce_variance = reduce_variance, xi_tilde = xi_tilde,\
-                                             verbose = False)
+                                             verbose = verbose)
         else:
             x_t, xi, this_ssn = solve_subproblem_easy(f, phi, x_t, xi, alpha_t, A, S, \
                                              newton_params = params['newton_params'],\
                                              reduce_variance = reduce_variance, xi_tilde = xi_tilde, full_g = full_g,\
-                                             verbose = False)
+                                             verbose = verbose)
                                              
         #########################################################
         ## Variance reduction
@@ -282,7 +282,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         runtime.append(end-start)
 
         if measure:
-            obj.append(f.eval(x_t.astype('float64')) + phi.eval(x_t))
+            f_t = f.eval(x_t.astype('float64')) 
+            phi_t = phi.eval(x_t)
+            obj.append(f_t+phi_t)
         
         step_sizes.append(alpha_t)
         S_hist.append(S)
@@ -290,7 +292,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         
           
         if verbose and measure:
-            print(out_fmt % (iter_t, obj[-1], alpha_t, len(S), eta))
+            print(out_fmt % (iter_t, obj[-1], f_t, phi_t, alpha_t, len(S), eta))
         
         # if reduce_varaince, use constant step size, else use decreasing step size
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
@@ -330,7 +332,7 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, hat_d):
     return res.squeeze()
 
 
-def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce_variance = False, xi_tilde = None, verbose = False):
+def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce_variance = False, xi_tilde = None, verbose = True):
     """
     m: vector with all dimensions m_i, i = 1,..,N
     
@@ -393,8 +395,6 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     while sub_iter < newton_params['max_iter']:
         
     # step 1: construct Newton matrix and RHS
-        if verbose:
-            print("Construct")
         
         z = x - (alpha/sample_size) * (subA.T @ xi_stack)  + hat_d
         rhs = -1. * (np.hstack([f.gstar(xi[i], i) for i in S]) - subA @ phi.prox(z, alpha))
@@ -403,9 +403,6 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         if np.linalg.norm(rhs) <= newton_params['eps']:
             converged = True
             break
-        
-        if verbose:
-            print("Construct2")
         
         U = phi.jacobian_prox(z, alpha)
         
@@ -418,9 +415,6 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         else:
             tmp2 = (alpha/sample_size) * subA @ U @ subA.T
         
-        
-        if verbose:
-            print("Construct3")
             
         eps_reg = 1e-4
         
@@ -434,8 +428,6 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         W = tmp + tmp2
         assert not np.isnan(W).any(), "Something went wrong during construction of the Hessian"
     # step2: solve Newton system
-        if verbose:
-            print("Start CG method")
             
         #start = time.time()
         cg_tol = min(newton_params['eta'], np.linalg.norm(rhs)**(1+ newton_params['tau']))
@@ -454,8 +446,6 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         norm_dir.append(np.linalg.norm(d))
         
     # step 3: backtracking line search
-        if verbose:
-            print("Start Line search")
         U_old = Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, hat_d)
         beta = 1.
         U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA, hat_d)
@@ -467,8 +457,6 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         step_sz.append(beta)
         
     # step 4: update xi
-        if verbose:
-            print("Update xi variables")
         xi_stack += beta * d
         
         if m.max() == 1:
@@ -480,8 +468,8 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
                 
         sub_iter += 1
         
-    if not converged:
-        print(f"WARNING: reached maximal iterations in semismooth Newton -- accuracy {residual[-1]}")
+    if not converged and verbose:
+        print(f"WARNING: reached max. iter in semismooth Newton with residual {residual[-1]}")
     
     # update primal iterate
     z = x - (alpha/sample_size) * (subA.T @ xi_stack) + hat_d
