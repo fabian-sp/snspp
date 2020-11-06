@@ -43,13 +43,13 @@ A, B = np.meshgrid(alpha_0, batch_size)
 K,L = A.shape
 
 
-f_tol = 1e-3 
-err = lambda x: np.linalg.norm(x-xsol)
-
+psi_tol = 1e-3*psi_star 
+EPOCHS = 20
 
 TIME = np.zeros_like(A)
 OBJ = np.zeros_like(A)
 CONVERGED = np.zeros_like(A)
+COST = np.zeros_like(A)
 
 for l in np.arange(L):
     for k in np.arange(K):
@@ -59,7 +59,7 @@ for l in np.arange(L):
         params = {'sample_style': 'constant', 'reduce_variance': True}
         
         # target M epochs 
-        params["max_iter"] = int(15 *  1/B[k,l])
+        params["max_iter"] = int(EPOCHS *  1/B[k,l])
         params['sample_size'] = max(1, int(B[k,l] * f.N))
         params['alpha_C'] = A[k,l]
         
@@ -75,8 +75,8 @@ for l in np.arange(L):
         
         print(f"OBJECTIVE = {obj[-1]}")
         
-        if np.any(obj <= psi_star + f_tol):
-            stop = np.where(obj <= psi_star + f_tol)[0][0]
+        if np.any(obj <= psi_star + psi_tol):
+            stop = np.where(obj <= psi_star + psi_tol)[0][0]
             this_time = P.info['runtime'].cumsum()[stop]
             
             CONVERGED[k,l] = 1
@@ -86,6 +86,7 @@ for l in np.arange(L):
             
         OBJ[k,l] = obj[-1]
         TIME[k,l] = this_time
+        COST[k,l] = P.info['runtime'].sum()/ len(P.info['runtime'])
 
 OBJ_ERR = (OBJ - psi_star)/psi_star
 OBJ_ERR[OBJ_ERR >= 10] = np.nan
@@ -119,19 +120,24 @@ ax.set_yscale('log')
 ax.set_ylim(1e-12,1)
 ax.legend()
 
-#%% plot runtime (jntil convergence) vs step size
+
+
+#%% plot runtime (until convergence) vs step size
 
 fig, ax = plt.subplots()
 
 for k in np.arange(K):
     
-    ax.plot(alpha_0, TIME[k,:], c = colors[k], label = rf"$b =  N \cdot$ {batch_size[k]} ")
+    RT = TIME[k,:]
+    RT[~CONVERGED[k,:]] = 10
     
-    nc = ~CONVERGED[k,:]
+    ax.plot(alpha_0, TIME[k,:], c = colors[k], linestyle = '--', marker = 'o', label = rf"$b =  N \cdot$ {batch_size[k]} ")
     
-    c_arr = np.array(colors[k]).reshape(1,-1)
-    ax.scatter(alpha_0[nc], TIME[k,:][nc], marker = 'x', c = c_arr)
-    ax.scatter(alpha_0[~nc], TIME[k,:][~nc], marker = 'o', c = c_arr, s = 5)
+    #nc = ~CONVERGED[k,:]
+    
+    #c_arr = np.array(colors[k]).reshape(1,-1)
+    #ax.scatter(alpha_0[nc], TIME[k,:][nc], marker = 'x', c = c_arr)
+    #ax.scatter(alpha_0[~nc], TIME[k,:][~nc], marker = 'o', c = c_arr, s = 5)
 
 
 ax.set_xlabel(r"Initial step size $\alpha_0$")    
