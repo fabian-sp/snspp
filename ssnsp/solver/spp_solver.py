@@ -306,8 +306,13 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     print(f"Stochastic ProxPoint terminated after {iter_t} iterations with accuracy {eta}")
     print(f"Stochastic ProxPoint status: {status}")
     
+    if n <= 1e4:
+        mean_hist = compute_x_mean_hist(np.vstack(x_hist))
+    else:
+        mean_hist = None
+        
     info = {'objective': np.array(obj), 'iterates': np.vstack(x_hist), \
-            'mean_hist': compute_x_mean_hist(np.vstack(x_hist)), 'xi_hist': xi_hist,\
+            'mean_hist': mean_hist, 'xi_hist': xi_hist,\
             'step_sizes': np.array(step_sizes), 'samples' : S_hist, \
             'ssn_info': ssn_info, 'runtime': np.array(runtime)}
     

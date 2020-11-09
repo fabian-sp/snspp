@@ -29,6 +29,16 @@ l1 = 1e-3
 
 v = 1.
 
+if v == 0.25:
+    params_saga = {'n_epochs' : 300, 'gamma' : 4.}
+    params_adagrad = {'n_epochs' : 300, 'batch_size': 15, 'gamma': 0.002}
+    params_ssnsp = {'max_iter' : 800, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : 0.008, 'reduce_variance': True}
+elif v == 1.:
+    params_saga = {'n_epochs' : 500, 'gamma' : 4.5}
+    params_adagrad = {'n_epochs' : 300, 'batch_size': 15, 'gamma': 0.005}
+    params_ssnsp = {'max_iter' : 1000, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : .032, 'reduce_variance': True}
+
+
 f, phi, A, b, A_test, b_test = get_triazines(lambda1 = l1, train_size = .8, v = v, poly = 4, noise = 0.)
 
 #xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 20, noise = 0., scale = 20, kappa = kappa)
@@ -57,9 +67,9 @@ print("psi(0) = ", f.eval(np.zeros(n)))
 #print("psi(x*) = ", f.eval(xsol) + phi.eval(xsol))
 
 #%% solve with SAGA
-params_saga = {'n_epochs' : 150, 'gamma' : 4.}
+#params_saga = {'n_epochs' : 150, 'gamma' : 4.}
 
-Q = problem(f, phi, x0 = x0, tol = 1e-9, params = params_saga, verbose = True, measure = True)
+Q = problem(f, phi, x0 = x0, tol = 1e-6, params = params_saga, verbose = True, measure = True)
 
 Q.solve(solver = 'saga')
 
@@ -69,13 +79,13 @@ print("psi(x_t) = ", f.eval(Q.x) + phi.eval(Q.x))
 
 
 #%% solve with SVRG/ BATCH-SAGA
-params_svrg = {'n_epochs' : 100, 'gamma' : 3.}
+# params_svrg = {'n_epochs' : 100, 'gamma' : 4.}
 
-Q2 = problem(f, phi, x0 = x0, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
+# Q2 = problem(f, phi, x0 = x0, tol = 1e-6, params = params_svrg, verbose = True, measure = True)
 
-Q2.solve(solver = 'svrg')
+# Q2.solve(solver = 'svrg')
 
-print(f.eval(Q2.x)+phi.eval(Q2.x))
+# print(f.eval(Q2.x)+phi.eval(Q2.x))
 
 #%% solve with ADAGRAD
 
@@ -83,9 +93,9 @@ tune_params = {'n_epochs' : 300, 'batch_size': 15}
 #opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = tune_params)
 opt_gamma = 0.005 
 
-params_adagrad = {'n_epochs' : 300, 'batch_size': 15, 'gamma': opt_gamma}
+#params_adagrad = {'n_epochs' : 300, 'batch_size': 15, 'gamma': opt_gamma}
 
-Q1 = problem(f, phi, x0 = x0, tol = 1e-5, params = params_adagrad, verbose = True, measure = True)
+Q1 = problem(f, phi, x0 = x0, tol = 1e-6, params = params_adagrad, verbose = True, measure = True)
 Q1.solve(solver = 'adagrad')
 
 print("f(x_t) = ", f.eval(Q1.x))
@@ -94,10 +104,10 @@ print("psi(x_t) = ", f.eval(Q1.x) + phi.eval(Q1.x))
 
 #%% solve with SSNSP
 
-params_ssnsp = {'max_iter' : 700, 'sample_size': 15, 'sample_style': 'constant',\
-          'alpha_C' : 0.032, 'reduce_variance': True}
+# params_ssnsp = {'max_iter' : 700, 'sample_size': 15, 'sample_style': 'constant',\
+#           'alpha_C' : 0.032, 'reduce_variance': True}
 
-P = problem(f, phi, x0 = x0, tol = 1e-9, params = params_ssnsp, verbose = True, measure = True)
+P = problem(f, phi, x0 = x0, tol = 1e-6, params = params_ssnsp, verbose = True, measure = True)
 
 P.solve(solver = 'ssnsp')
 
@@ -108,7 +118,7 @@ K = 20
 allP = list()
 for k in range(K):
     
-    P_k = problem(f, phi, tol = 1e-9, params = params_ssnsp, verbose = False, measure = True)
+    P_k = problem(f, phi, tol = 1e-6, params = params_ssnsp, verbose = False, measure = True)
     P_k.solve(solver = 'ssnsp')
     allP.append(P_k)
  
@@ -120,8 +130,9 @@ all_x = pd.DataFrame(np.vstack((P.x, Q.x, Q1.x)).T, columns = ['spp', 'saga', 'a
 #%%
 save = False
 
-#psi_star = f.eval(Q.x)+phi.eval(Q.x)
-psi_star = 0
+# use the last objective of SAGA as surrogate optimal value
+psi_star = f.eval(Q.x)+phi.eval(Q.x)
+#psi_star = 0
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
@@ -150,7 +161,7 @@ fig,ax = plt.subplots(2, 2,  figsize = (7,5))
 Q.plot_path(ax = ax[0,0], xlabel = False)
 Q1.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
 P.plot_path(ax = ax[1,0])
-P.plot_path(ax = ax[1,1], mean = True, ylabel = False)
+#P.plot_path(ax = ax[1,1], mean = True, ylabel = False)
 
 for a in ax.ravel():
     a.set_ylim(-.2, .5)
@@ -172,11 +183,3 @@ sample_loss(P.x, A_test, b_test, f.v)
 
 #%%
   
-if v == 0.25:
-    params_saga = {'n_epochs' : 200, 'gamma' : 4.}
-    params_adagrad = {'n_epochs' : 300, 'batch_size': 15, 'gamma': 0.002}
-    params_ssnsp = {'max_iter' : 800, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : 0.008, 'reduce_variance': True}
-elif v == 1.:
-    params_saga = {'n_epochs' : 200, 'gamma' : 4.}
-    params_adagrad = {'n_epochs' : 300, 'batch_size': 15, 'gamma': 0.005}
-    params_ssnsp = {'max_iter' : 600, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : .032, 'reduce_variance': True}
