@@ -50,6 +50,7 @@ def create_A(N, n, scale = 1.0, kappa = None):
         D = np.diag(d)
         A = U @ D @ V
     
+    # scale max norm of rows, does not change condition
     A_max = np.apply_along_axis(np.linalg.norm, axis = 1, arr = A).max() 
     A *= (scale/A_max)
     

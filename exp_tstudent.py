@@ -31,12 +31,12 @@ v = 1.
 
 if v == 0.25:
     params_saga = {'n_epochs' : 300, 'gamma' : 4.}
-    params_adagrad = {'n_epochs' : 300, 'batch_size': 15, 'gamma': 0.002}
+    params_adagrad = {'n_epochs' : 500, 'batch_size': 15, 'gamma': 0.002}
     params_ssnsp = {'max_iter' : 800, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : 0.008, 'reduce_variance': True}
 elif v == 1.:
-    params_saga = {'n_epochs' : 500, 'gamma' : 4.5}
-    params_adagrad = {'n_epochs' : 300, 'batch_size': 15, 'gamma': 0.005}
-    params_ssnsp = {'max_iter' : 1000, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : .032, 'reduce_variance': True}
+    params_saga = {'n_epochs' : 300, 'gamma' : 4.5}
+    params_adagrad = {'n_epochs' : 500, 'batch_size': 15, 'gamma': 0.005}
+    params_ssnsp = {'max_iter' : 1000, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : .04, 'reduce_variance': True}
 
 
 f, phi, A, b, A_test, b_test = get_triazines(lambda1 = l1, train_size = .8, v = v, poly = 4, noise = 0.)
@@ -66,13 +66,20 @@ print("psi(0) = ", f.eval(np.zeros(n)))
 #print("phi(x*) = ", phi.eval(xsol))
 #print("psi(x*) = ", f.eval(xsol) + phi.eval(xsol))
 
+#%% determine psi_star
+
+#x0 = P.x
+params_ref = {'max_iter' : 500, 'sample_size': f.N, 'sample_style': 'constant', 'alpha_C' : 10., 'reduce_variance': True}
+ref = problem(f, phi, x0 = x0, tol = 1e-6, params = params_ref, verbose = True, measure = True)
+ref.solve(solver = 'ssnsp')
+
+
 #%% solve with SAGA
 #params_saga = {'n_epochs' : 150, 'gamma' : 4.}
 
 Q = problem(f, phi, x0 = x0, tol = 1e-6, params = params_saga, verbose = True, measure = True)
 
 Q.solve(solver = 'saga')
-
 print("f(x_t) = ", f.eval(Q.x))
 print("phi(x_t) = ", phi.eval(Q.x))
 print("psi(x_t) = ", f.eval(Q.x) + phi.eval(Q.x))
@@ -132,14 +139,14 @@ save = False
 
 # use the last objective of SAGA as surrogate optimal value
 psi_star = f.eval(Q.x)+phi.eval(Q.x)
-#psi_star = 0
+psi_star = 0#0.0143
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
 kwargs = {"psi_star": psi_star, "log_scale": True}
 
 Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+#Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 #Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 P.plot_objective(ax = ax, markersize = 2, **kwargs)
 
@@ -159,7 +166,7 @@ fig.subplots_adjust(top=0.96,
 
 fig,ax = plt.subplots(2, 2,  figsize = (7,5))
 Q.plot_path(ax = ax[0,0], xlabel = False)
-Q1.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
+#Q1.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
 P.plot_path(ax = ax[1,0])
 #P.plot_path(ax = ax[1,1], mean = True, ylabel = False)
 
