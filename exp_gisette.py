@@ -28,7 +28,7 @@ def predict(A,x):
 #%% solve with scikit (SAGA)
 
 sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-8, \
-                        solver = 'saga', max_iter = 200, verbose = 1)
+                        solver = 'saga', max_iter = 200, verbose = 0)
 
 start = time.time()
 sk.fit(X_train, y_train)
