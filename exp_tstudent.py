@@ -137,10 +137,10 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
 kwargs = {"psi_star": psi_star, "log_scale": True}
 
-Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-#Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-P.plot_objective(ax = ax, markersize = 2, **kwargs)
+Q.plot_objective(ax = ax, ls = '--', marker = '<', markersize = 1., **kwargs)
+Q1.plot_objective(ax = ax, ls = '--', marker = '<', markersize = 1., **kwargs)
+#Q2.plot_objective(ax = ax, ls = '--', marker = '<', markersize = 1., **kwargs)
+P.plot_objective(ax = ax, markersize = 1., **kwargs)
 
 #plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
 

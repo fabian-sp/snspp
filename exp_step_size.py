@@ -6,16 +6,16 @@ import time
 from sklearn.linear_model import Lasso
 
 
-from ssnsp.helper.data_generation import lasso_test
+from ssnsp.helper.data_generation import lasso_test, tstudent_test
 from ssnsp.solver.opt_problem import problem
 
-N = 2000
-n = 300
+N = 1000
+n = 1000
 k = 20
-l1 = .001
+l1 = 1e-3
 
-xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, noise = 0.01)
-
+xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, noise = 0.1)
+#xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4, noise = 0.01, scale = 10)
 
 #%% solve with scikt to get true solution
 sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-8, selection = 'cyclic', max_iter = 1e6)
@@ -33,25 +33,26 @@ print("Optimal value: ", psi_star)
 
 #%%
 
-alpha_0 = np.logspace(-1,2,50)
+ALPHA = np.logspace(-1,3,50)
 
 batch_size = np.array([0.01, 0.05, 0.1])
 
-A, B = np.meshgrid(alpha_0, batch_size)
+GRID_A, GRID_B = np.meshgrid(ALPHA, batch_size)
 
-# K ~ len(batch_size), L ~ len(alpha_0)
-K,L = A.shape
+# K ~ len(batch_size), L ~ len(ALPHA)
+K,L = GRID_A.shape
 
 
 psi_tol = 1e-3*psi_star 
-EPOCHS = 20
+EPOCHS = 30
 
-TIME = np.zeros_like(A)
-OBJ = np.zeros_like(A)
-CONVERGED = np.zeros_like(A)
-COST = np.zeros_like(A)
+TIME = np.zeros_like(GRID_A)
+OBJ = np.zeros_like(GRID_A)
+CONVERGED = np.zeros_like(GRID_A)
+
 
 for l in np.arange(L):
+    
     for k in np.arange(K):
         
         print("######################################")
@@ -59,39 +60,81 @@ for l in np.arange(L):
         params = {'sample_style': 'constant', 'reduce_variance': True}
         
         # target M epochs 
-        params["max_iter"] = int(EPOCHS *  1/B[k,l])
-        params['sample_size'] = max(1, int(B[k,l] * f.N))
-        params['alpha_C'] = A[k,l]
+        params["max_iter"] = int(EPOCHS *  1/GRID_B[k,l])
+        params['sample_size'] = max(1, int(GRID_B[k,l] * f.N))
+        params['alpha_C'] = GRID_A[k,l]
         
         print(f"ALPHA = {params['alpha_C']}")
         print(f"BATCH = {params['sample_size']}")
         
-        P = problem(f, phi, tol = 1e-6, params = params, verbose = False, measure = True)
-        P.solve(solver = 'ssnsp')
-        
-        
-        xhist = P.info['iterates'].copy()
-        obj = P.info['objective'].copy()
-        
-        print(f"OBJECTIVE = {obj[-1]}")
-        
-        if np.any(obj <= psi_star + psi_tol):
-            stop = np.where(obj <= psi_star + psi_tol)[0][0]
-            this_time = P.info['runtime'].cumsum()[stop]
+        try:
+            P = problem(f, phi, tol = 1e-6, params = params, verbose = False, measure = True)
+            P.solve(solver = 'ssnsp')
             
-            CONVERGED[k,l] = 1
-        else:
-            this_time = P.info['runtime'].sum()
-            print("NO CONVERGENCE!")
+            
+            xhist = P.info['iterates'].copy()
+            obj = P.info['objective'].copy()
+            
+            print(f"OBJECTIVE = {obj[-1]}")
+            
+            if np.any(obj <= psi_star + psi_tol):
+                stop = np.where(obj <= psi_star + psi_tol)[0][0]
+                this_time = P.info['runtime'].cumsum()[stop]
+                
+                CONVERGED[k,l] = 1
+            else:
+                this_time = P.info['runtime'].sum()
+                print("NO CONVERGENCE!")
+        except:
+            obj=[np.inf]
+            this_time = np.inf
+            
+            
             
         OBJ[k,l] = obj[-1]
         TIME[k,l] = this_time
-        COST[k,l] = P.info['runtime'].sum()/ len(P.info['runtime'])
+     
 
 OBJ_ERR = (OBJ - psi_star)/psi_star
 OBJ_ERR[OBJ_ERR >= 10] = np.nan
 
-CONVERGED = CONVERGED.astype(bool)       
+CONVERGED = CONVERGED.astype(bool)     
+
+#%%
+
+GAMMA = np.logspace(-1, 2, 10)
+
+TIME_Q = np.zeros_like(GAMMA)
+OBJ_Q = np.zeros_like(GAMMA)
+CONVERGED_Q = np.zeros_like(GAMMA)
+ALPHA_Q = np.zeros_like(GAMMA)
+
+
+for l in np.arange(len(GAMMA)):
+  print("######################################")
+  params_saga = {'n_epochs': EPOCHS, 'gamma': GAMMA[l]}
+  
+  Q = problem(f, phi, tol = 1e-6, params = params_saga, verbose = False, measure = True)
+  Q.solve(solver = 'saga')
+  
+  obj = Q.info['objective'].copy()
+  
+  if np.any(obj <= psi_star + psi_tol):
+      stop = np.where(obj <= psi_star + psi_tol)[0][0]
+      this_time = Q.info['runtime'].cumsum()[stop]
+            
+      CONVERGED_Q[l] = 1
+  else:
+      this_time = Q.info['runtime'].sum()
+      print("NO CONVERGENCE!")
+            
+  OBJ_Q[l] = obj[-1]
+  TIME_Q[l] = this_time
+  ALPHA_Q[l] = Q.info["step_sizes"][-1]
+
+
+CONVERGED_Q = CONVERGED_Q.astype(bool)   
+TIME_Q[~CONVERGED_Q] = 10 
 
 #%% 
 plt.rcParams["font.family"] = "serif"
@@ -109,7 +152,7 @@ fig, ax = plt.subplots()
 for k in np.arange(K):
     c_arr = np.array(colors[k]).reshape(1,-1)
     #ax.scatter(A[k,:], OBJ_ERR[k,:], c = c_arr, edgecolors = 'k', label = rf"$b =  N \cdot$ {batch_size[k]} ")
-    ax.plot(A[k,:], OBJ_ERR[k,:], c = colors[k], linestyle = '--', marker = 'o', label = rf"$b =  N \cdot$ {batch_size[k]} ")
+    ax.plot(ALPHA, OBJ_ERR[k,:], c = colors[k], linestyle = '--', marker = 'o', label = rf"$b =  N \cdot$ {batch_size[k]} ")
 
 ax.set_xlabel(r"Step size $\alpha$")    
 ax.set_ylabel(r"$(\psi(x^k)-\psi^\star)/\psi^\star$")   
@@ -123,27 +166,28 @@ ax.legend()
 
 
 #%% plot runtime (until convergence) vs step size
+save = False
 
-fig, ax = plt.subplots()
+Y_MAX = TIME.max()*2
+
+fig, ax = plt.subplots(figsize = (7,5))
 
 for k in np.arange(K):
     
-    RT = TIME[k,:]
-    RT[~CONVERGED[k,:]] = 10
+    TIME[k,:][~CONVERGED[k,:]] = Y_MAX
     
-    ax.plot(alpha_0, TIME[k,:], c = colors[k], linestyle = '--', marker = 'o', label = rf"$b =  N \cdot$ {batch_size[k]} ")
+    ax.plot(ALPHA, TIME[k,:], c = colors[k], linestyle = '--', marker = 'o', markersize = 4,  label = rf"$b =  N \cdot$ {batch_size[k]} ")
     
-    #nc = ~CONVERGED[k,:]
+#ax.plot(ALPHA_Q, TIME_Q, c = "#FFB03B", linestyle = '--', marker = 'o', markersize = 4,  label = rf"SAGA")
     
-    #c_arr = np.array(colors[k]).reshape(1,-1)
-    #ax.scatter(alpha_0[nc], TIME[k,:][nc], marker = 'x', c = c_arr)
-    #ax.scatter(alpha_0[~nc], TIME[k,:][~nc], marker = 'o', c = c_arr, s = 5)
 
-
-ax.set_xlabel(r"Initial step size $\alpha_0$")    
+ax.set_xlabel(r"Step size $\alpha$")    
 ax.set_ylabel(r"Runtime until convergence [sec]")    
 
 ax.set_xscale('log')
-ax.set_yscale('log')
+#ax.set_yscale('log')
 
 ax.legend()
+
+if save:
+    fig.savefig(f'data/plots/exp_other/step_size_tuning.pdf', dpi = 300)
