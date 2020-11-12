@@ -27,15 +27,15 @@ def sample_loss(x, A_test, b_test, v):
 
 l1 = 1e-3
 
-v = 1.
+v = .25
 
 if v == 0.25:
     params_saga = {'n_epochs' : 300, 'gamma' : 4.}
     params_adagrad = {'n_epochs' : 500, 'batch_size': 15, 'gamma': 0.002}
-    params_ssnsp = {'max_iter' : 800, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : 0.008, 'reduce_variance': True}
+    params_ssnsp = {'max_iter' : 1000, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : 0.008, 'reduce_variance': True}
 elif v == 1.:
     params_saga = {'n_epochs' : 300, 'gamma' : 4.5}
-    params_adagrad = {'n_epochs' : 500, 'batch_size': 15, 'gamma': 0.005}
+    params_adagrad = {'n_epochs' : 500, 'batch_size': 15, 'gamma': 0.002}
     params_ssnsp = {'max_iter' : 1000, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : .04, 'reduce_variance': True}
 
 
@@ -75,8 +75,6 @@ ref.solve(solver = 'ssnsp')
 
 
 #%% solve with SAGA
-#params_saga = {'n_epochs' : 150, 'gamma' : 4.}
-
 Q = problem(f, phi, x0 = x0, tol = 1e-6, params = params_saga, verbose = True, measure = True)
 
 Q.solve(solver = 'saga')
@@ -96,11 +94,8 @@ print("psi(x_t) = ", f.eval(Q.x) + phi.eval(Q.x))
 
 #%% solve with ADAGRAD
 
-tune_params = {'n_epochs' : 300, 'batch_size': 15}
+#tune_params = {'n_epochs' : 300, 'batch_size': 15}
 #opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = tune_params)
-opt_gamma = 0.005 
-
-#params_adagrad = {'n_epochs' : 300, 'batch_size': 15, 'gamma': opt_gamma}
 
 Q1 = problem(f, phi, x0 = x0, tol = 1e-6, params = params_adagrad, verbose = True, measure = True)
 Q1.solve(solver = 'adagrad')
@@ -110,9 +105,6 @@ print("phi(x_t) = ", phi.eval(Q1.x))
 print("psi(x_t) = ", f.eval(Q1.x) + phi.eval(Q1.x))
 
 #%% solve with SSNSP
-
-# params_ssnsp = {'max_iter' : 700, 'sample_size': 15, 'sample_style': 'constant',\
-#           'alpha_C' : 0.032, 'reduce_variance': True}
 
 P = problem(f, phi, x0 = x0, tol = 1e-6, params = params_ssnsp, verbose = True, measure = True)
 
@@ -146,13 +138,13 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 kwargs = {"psi_star": psi_star, "log_scale": True}
 
 Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-#Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 #Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 P.plot_objective(ax = ax, markersize = 2, **kwargs)
 
 #plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
 
-#ax.set_xlim(-.1,20)
+ax.set_xlim(-.1,200)
 ax.legend(fontsize = 10)
 
 fig.subplots_adjust(top=0.96,
@@ -162,6 +154,8 @@ fig.subplots_adjust(top=0.96,
                     hspace=0.2,
                     wspace=0.2)
 
+if save:
+    fig.savefig(f'data/plots/exp_triazine/obj_{round(v,2)}.pdf', dpi = 300)
 #%% coefficent plot
 
 fig,ax = plt.subplots(2, 2,  figsize = (7,5))
@@ -175,7 +169,8 @@ for a in ax.ravel():
     
 plt.subplots_adjust(hspace = 0.33)
 
-
+if save:
+    fig.savefig(f'data/plots/exp_triazine/coeff_{round(v,2)}.pdf', dpi = 300)
 #%%
 #sample_loss(xsol, A_test, b_test, f.v)
 

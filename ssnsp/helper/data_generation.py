@@ -57,7 +57,7 @@ def create_A(N, n, scale = 1.0, kappa = None):
     return A
     
 
-def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., kappa = None):
+def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., kappa = None, scale = 1.0):
     """
     generates data for a LASSO problem with n variables and N samples, where solution has k non-zero entries
     lambda1: regularization parameter of 1-norm
@@ -70,7 +70,7 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., k
     else:
         m = np.ones(N, dtype = 'int')
     
-    A = create_A(m.sum(), n, kappa=kappa)
+    A = create_A(m.sum(), n, kappa=kappa, scale = scale)
     
     # create true solution
     x = np.random.randn(k) 
