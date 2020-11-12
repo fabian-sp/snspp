@@ -168,7 +168,7 @@ ax.legend()
 #%% plot runtime (until convergence) vs step size
 save = False
 
-Y_MAX = TIME.max()*2
+Y_MAX = 3.#TIME.max()*2 +1
 
 fig, ax = plt.subplots(figsize = (7,5))
 
@@ -180,6 +180,9 @@ for k in np.arange(K):
     
 #ax.plot(ALPHA_Q, TIME_Q, c = "#FFB03B", linestyle = '--', marker = 'o', markersize = 4,  label = rf"SAGA")
     
+
+ax.hlines( Y_MAX-1 , ALPHA[0], ALPHA[-1], 'grey', ls = '-')
+ax.annotate("no convergence", (ALPHA[0], Y_MAX-.9 ), color = "grey", fontsize = 14)
 
 ax.set_xlabel(r"Step size $\alpha$")    
 ax.set_ylabel(r"Runtime until convergence [sec]")    
