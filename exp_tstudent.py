@@ -27,7 +27,7 @@ if v == 0.25:
     params_adagrad = {'n_epochs' : 500, 'batch_size': 15, 'gamma': 0.002}
     params_ssnsp = {'max_iter' : 1000, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : 0.008, 'reduce_variance': True}
 elif v == 1.:
-    params_saga = {'n_epochs' : 200, 'gamma' : 4.5}
+    params_saga = {'n_epochs' : 200, 'gamma' : 5.}
     params_adagrad = {'n_epochs' : 500, 'batch_size': 15, 'gamma': 0.002}
     params_ssnsp = {'max_iter' : 1200, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : .032, 'reduce_variance': True}
 
