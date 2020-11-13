@@ -6,7 +6,7 @@ import seaborn as sns
 
 from ssnsp.solver.opt_problem import problem
 from ssnsp.helper.data_generation import get_gisette
-from ssnsp.experiments.experiment_utils import plot_multiple, adagrad_step_size_tuner, initialize_fast_gradient
+from ssnsp.experiments.experiment_utils import plot_multiple, adagrad_step_size_tuner, initialize_solvers
 
 
 from sklearn.linear_model import LogisticRegression
@@ -42,7 +42,7 @@ x_sk = sk.coef_.copy().squeeze()
 
 psi_star = f.eval(x_sk) + phi.eval(x_sk)
 print("psi(x*) = ", psi_star)
-initialize_fast_gradient(f, phi)
+initialize_solvers(f, phi)
 
 #%% solve with SAGA
 

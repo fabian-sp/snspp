@@ -164,7 +164,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         params['sample_style'] = 'constant'
     
     if 'reduce_variance' not in params.keys():    
-        params['reduce_variance'] = False
+        params['reduce_variance'] = True
         
     if 'newton_params' not in params.keys():
         params['newton_params'] = get_default_newton_params()
@@ -267,13 +267,11 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
                     if is_easy:
                         gammas = f.weak_conv(np.arange(f.N))
                         xi = xi_tilde + gammas*(A@x_t)
-                  
-                
+               
         #stop criterion
         eta = stop_scikit_saga(x_t, x_old)
         
         # we only measure runtime of the iteration, excluding computation of the objective
-        # save all diagnostics
         ssn_info.append(this_ssn)
         
         if n >= 1e4 and params['max_iter'] >= 2000:

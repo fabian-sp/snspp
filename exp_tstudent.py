@@ -10,7 +10,7 @@ import time
 
 from ssnsp.helper.data_generation import tstudent_test, get_triazines
 from ssnsp.solver.opt_problem import problem
-from ssnsp.experiments.experiment_utils import plot_multiple, initialize_fast_gradient, adagrad_step_size_tuner, eval_test_set, plot_test_error
+from ssnsp.experiments.experiment_utils import plot_multiple, initialize_solvers, adagrad_step_size_tuner, eval_test_set, plot_test_error
 
 #%% generate data
 
@@ -43,7 +43,7 @@ n = A.shape[1]
 #lambda_max = np.abs(1/f.N * A.T @ (2*b/(f.v+b**2))).max()
 #phi.lambda1 = .2 *lambda_max
 
-initialize_fast_gradient(f, phi)
+initialize_solvers(f, phi)
 
 #x0 = f.A.T @ b
 x0 = np.zeros(n)

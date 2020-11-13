@@ -111,21 +111,25 @@ def eval_test_set(X, loss, **kwargs):
 ## Fast gradient methods utils
 ##########################################################################
 
-def initialize_fast_gradient(f, phi):
+def initialize_solvers(f, phi):
     """
-    initializes SAGA and Adagrad jitiing
+    initializes jitiing
     """
-    params = {'n_epochs' : 10}
+    params = {'n_epochs' : 2}
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)
     tmpP.solve(solver = 'saga')
     
-    params = {'n_epochs' : 10}
+    params = {'n_epochs' : 2}
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)
     tmpP.solve(solver = 'svrg')
     
-    params = {'n_epochs' : 10, 'batch_size': 10, 'gamma': 0.01}  
+    params = {'n_epochs' : 2, 'batch_size': 10, 'gamma': 0.01}  
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)   
     tmpP.solve(solver = 'adagrad')
+    
+    params = {'max_iter' : 5, 'sample_size': 10, 'alpha_C': 0.01}  
+    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)   
+    tmpP.solve(solver = 'ssnsp')
     
     return
 
