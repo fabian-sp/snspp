@@ -84,6 +84,11 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., k
     b = b.astype('float64')
     x = x.astype('float64')
     
+    N_test = 100
+    A_test = create_A(N_test, n, kappa=kappa, scale = scale)
+    b_test = A_test @ x + noise*np.random.randn(N_test)
+    
+    
     phi = Norm1(lambda1)    
     if block:
         f = block_lsq(A, b, m)
@@ -91,7 +96,7 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., k
         f = lsq(A, b)
         
 
-    return x, A, b, f, phi
+    return x, A, b, f, phi, A_test, b_test
 
 def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
     """
@@ -235,7 +240,6 @@ def get_triazines(lambda1 = 0.01, train_size = .8, v = 1, poly = 0, noise = 0):
     assert v > 0
     
     X,y = load_from_txt('triazines')
-    #X,y = load_from_txt('abalone')
     
     y += noise*np.random.standard_t(v, size = len(y))
     

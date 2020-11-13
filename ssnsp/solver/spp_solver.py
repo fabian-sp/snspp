@@ -272,11 +272,11 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #stop criterion
         eta = stop_scikit_saga(x_t, x_old)
         
-        # we only measure runtime of the iteration, excluding computation of the diagnostics
+        # we only measure runtime of the iteration, excluding computation of the objective
         # save all diagnostics
         ssn_info.append(this_ssn)
         
-        if n >= 1e4:
+        if n >= 1e4 and params['max_iter'] >= 2000:
             if iter_t % 100 == 0 or iter_t == params['max_iter']-1:
                 x_hist.append(x_t)
         else:

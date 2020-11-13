@@ -22,7 +22,7 @@ l1 = .2
 
 kappa = 1e6
 
-xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = kappa, scale = 10.)
+xsol, A, b, f, phi, A_test, b_test = lasso_test(N, n, k, l1, block = False, kappa = kappa, scale = 10.)
 
 sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-9, max_iter = 20000, selection = 'cyclic')
 
@@ -39,12 +39,6 @@ print(psi_star)
 initialize_fast_gradient(f, phi)
 
 
-#%%
-
-
-
-
-    
 #%% solve with SAGA
 params_saga = {'n_epochs' : 200, 'gamma' : 4.}
 Q = problem(f, phi, tol = 1e-9, params = params_saga, verbose = True, measure = True)

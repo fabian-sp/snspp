@@ -14,7 +14,7 @@ n = 1000
 k = 20
 l1 = 1e-3
 
-xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, noise = 0.1)
+xsol, A, b, f, phi,_,_ = lasso_test(N, n, k, l1, block = False, noise = 0.1)
 #xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4, noise = 0.01, scale = 10)
 
 #%% solve with scikt to get true solution

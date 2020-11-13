@@ -6,15 +6,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ..solver.opt_problem import problem, color_dict
 
-def plot_multiple(allP, ax = None, label = "ssnsp", name = None, marker = 'o', markersize = None, ls = '-', psi_star = 0, log_scale = False, sigma = 0):
+plt.rcParams["font.family"] = "serif"
+plt.rcParams['font.size'] = 12
+plt.rcParams['axes.linewidth'] = 1
+plt.rc('text', usetex=True)
+
+##########################################################################
+## Plotting
+##########################################################################
+
+def plot_multiple(allP, ax = None, label = "ssnsp", name = None, marker = 'o', markersize = 3, ls = '-', psi_star = 0, log_scale = False, sigma = 0):
  
-    plt.rcParams["font.family"] = "serif"
-    plt.rcParams['font.size'] = 12
-    plt.rcParams['axes.linewidth'] = 1
-    plt.rc('text', usetex=True)
-    
-    if markersize is None:
-        markersize = 3
+   
     
     if name is None:
         name = label
@@ -46,8 +49,7 @@ def plot_multiple(allP, ax = None, label = "ssnsp", name = None, marker = 'o', m
     if sigma > 0:
         ax.fill_between(all_rt, all_mean - sigma*all_std, all_mean+sigma*all_std, color = c, alpha = .5)
     
-    ax.grid(ls = '-', lw = .5)
-    
+    ax.grid(ls = '-', lw = .5) 
     ax.set_xlabel("Runtime [sec]", fontsize = 12)
     
     if psi_star == 0:
@@ -59,6 +61,55 @@ def plot_multiple(allP, ax = None, label = "ssnsp", name = None, marker = 'o', m
         ax.set_yscale('log')
             
     return
+
+
+def plot_test_error(P, L,  ax = None, name = None, marker = 'o', markersize = 2., ls = '-', lw = 0.2, log_scale = True):
+    
+    assert len(P.info["iterates"]) == len(L), "the vector of losses has a different length than the stored iterates"
+    
+    x = P.info["runtime"].cumsum()
+    y = L.copy()
+    
+    if name is None:
+        name = P.solver
+        
+    try:
+        c = color_dict[P.solver]
+    except:
+        c = color_dict["default"]
+        
+    if ax is None:
+        fig, ax = plt.subplots()
+    
+    ax.plot(x, y, marker = marker, lw = lw, markersize = markersize, color = c, label = name)
+    
+    ax.grid(ls = '-', lw = .5) 
+    ax.set_xlabel("Runtime [sec]", fontsize = 12)
+    ax.set_ylabel("Test error", fontsize = 12)
+    
+    if log_scale:
+        ax.set_yscale('log')
+    
+    ax.legend(fontsize = 10)
+    
+    return
+
+def eval_test_set(X, loss, **kwargs):
+    """
+    evaluates a given loss function on each row of X
+    """
+    L = np.zeros(len(X))
+    
+    for j in range(len(X)):
+        L[j] = loss(x=X[j,:], **kwargs)
+ 
+    return L
+
+
+
+##########################################################################
+## Fast gradient methods utils
+##########################################################################
 
 def initialize_fast_gradient(f, phi):
     """
