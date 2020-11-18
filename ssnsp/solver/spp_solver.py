@@ -10,6 +10,7 @@ from ..helper.tstudent import lipschitz_bound
 
 from scipy.sparse.linalg import cg
 import time
+import warnings
 
 #%% functions for creating the samples S_k
 def sampler(N, size, replace = False):
@@ -165,6 +166,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     if 'reduce_variance' not in params.keys():    
         params['reduce_variance'] = True
+    elif params['reduce_variance'] == False:
+        warnings.warn("Variance reduction is deactivated. This leads to suboptimal performance. Consider setting the parameter 'reduce_variance' to True.")
         
     if 'newton_params' not in params.keys():
         params['newton_params'] = get_default_newton_params()
@@ -377,7 +380,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     sub_dims = np.repeat(range(sample_size), m[S])
     xi_stack = np.hstack([xi[i] for i in S])
     
-    #assert np.all([np.all(xi[S[l]] == xi_stack[sub_dims == l]) for l in range(sample_size)]), "Something went wrong in the sorting/stacking of xi"
+    assert np.all([np.all(xi[S[l]] == xi_stack[sub_dims == l]) for l in range(sample_size)]), "Something went wrong in the sorting/stacking of xi"
     assert len(xi_stack) == M
     
     sub_iter = 0
@@ -438,19 +441,17 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         assert not np.isnan(W).any(), "Something went wrong during construction of the Hessian"
     # step2: solve Newton system
             
-        #start = time.time()
         cg_tol = min(newton_params['eta'], np.linalg.norm(rhs)**(1+ newton_params['tau']))
         
         if m.max() == 1:
             precond = np.diag(1/tmp_d)
-            #precond = None
         else:
             precond = None
         
         d, cg_status = cg(W, rhs, tol = cg_tol, maxiter = newton_params['cg_max_iter'], M = precond)
-        #end = time.time(); print("CG", end-start)
         
-        assert d@rhs > -1e-8 , f"No descent direction, {d@rhs}"
+        if not d@rhs > -1e-8:
+            warnings.warn(f"No descent direction, {d@rhs}")
         #assert cg_status == 0, f"CG method did not converge, exited with status {cg_status}"
         norm_dir.append(np.linalg.norm(d))
         

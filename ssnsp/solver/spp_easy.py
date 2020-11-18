@@ -4,10 +4,11 @@ author: Fabian Schaipp
 
 import numpy as np
 from ..helper.utils import block_diag
+
 from scipy.sparse.linalg import cg
 import time
+import warnings
 from numba import njit
-
 
 
 def Ueval(xi_sub, f, phi, x, alpha, S, subA, hat_d):
@@ -95,12 +96,12 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
     # step2: solve Newton system
         cg_tol = min(newton_params['eta'], np.linalg.norm(rhs)**(1+ newton_params['tau']))
         
-        #precond = np.diag(1/tmp_d)
         precond = None
         
         d, cg_status = cg(W, rhs, tol = cg_tol, maxiter = 12, M = precond)
         
-        assert d@rhs > -1e-8 , f"No descent direction, {d@rhs}"
+        if not d@rhs > -1e-8:
+            warnings.warn(f"No descent direction, {d@rhs}")
         norm_dir.append(np.linalg.norm(d))
 
     # step 3: backtracking line search
