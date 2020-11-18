@@ -237,6 +237,7 @@ def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
     
     store = (counter[1:] <= counter[:-1])
     assert len(store) == max_iter
+    assert store[-1]
     
     for iter_t in np.arange(max_iter):
         
@@ -334,6 +335,7 @@ def batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, batch_si
     counter = np.append(counter,0)
     
     store = (counter[1:] <= counter[:-1])
+    assert store[-1]
     
     for iter_t in np.arange(max_iter):
         
