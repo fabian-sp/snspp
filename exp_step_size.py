@@ -14,24 +14,39 @@ n = 1000
 k = 20
 l1 = 1e-3
 
-xsol, A, b, f, phi,_,_ = lasso_test(N, n, k, l1, block = False, noise = 0.1)
-#xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4, noise = 0.01, scale = 10)
+problem_type = "lasso"
 
-#%% solve with scikt to get true solution
-sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-8, selection = 'cyclic', max_iter = 1e6)
+if problem_type == "lasso":
+    xsol, A, b, f, phi,_,_ = lasso_test(N, n, k, l1, block = False, noise = 0.1)
+elif problem_type == "tstudent":
+    xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4, noise = 0.01, scale = 10)
 
-start = time.time()
-sk.fit(f.A,b)
-end = time.time()
+#%% solve with scikt or large max_iter to get psi_star
 
-print(end-start)
+if problem_type == "lasso":
+    sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-8, selection = 'cyclic', max_iter = 1e6)
 
-xsol = sk.coef_.copy()
+    start = time.time()
+    sk.fit(f.A,b)
+    end = time.time()
 
-psi_star = f.eval(xsol) + phi.eval(xsol)
-print("Optimal value: ", psi_star)
+    print(end-start)
+    xsol = sk.coef_.copy()
+    psi_star = f.eval(xsol) + phi.eval(xsol)
+    print("Optimal value: ", psi_star)
 
-#%%
+elif problem_type == "tstudent":
+    
+    ref_params = {'max_iter': 2000, 'alpha_C': 0.1, 'sample_size': 50, 'sample_style': 'constant', 'reduce_variance': True}
+    ref_P = problem(f, phi, tol = 1e-6, params = ref_params, verbose = True, measure = True)
+    ref_P.solve(solver = 'ssnsp')
+    
+    ref_P.plot_objective()
+    
+    psi_star = ref_P.info["objective"][-1]
+    
+    
+#%% do grid testing
 
 ALPHA = np.logspace(-1,3,50)
 
@@ -43,11 +58,11 @@ GRID_A, GRID_B = np.meshgrid(ALPHA, batch_size)
 K,L = GRID_A.shape
 
 
-psi_tol = 1e-3*psi_star 
+psi_tol = 1e-2*psi_star 
 EPOCHS = 30
 
 TIME = np.zeros_like(GRID_A)
-OBJ = np.zeros_like(GRID_A)
+OBJ = np.ones_like(GRID_A) * 100
 CONVERGED = np.zeros_like(GRID_A)
 
 
@@ -100,9 +115,9 @@ OBJ_ERR[OBJ_ERR >= 10] = np.nan
 
 CONVERGED = CONVERGED.astype(bool)     
 
-#%%
+#%% stability test for SAGA / SVRG
 
-GAMMA = np.logspace(-1, 2, 10)
+GAMMA = np.logspace(-1, 3, 20)
 
 TIME_Q = np.zeros_like(GAMMA)
 OBJ_Q = np.zeros_like(GAMMA)
@@ -112,10 +127,10 @@ ALPHA_Q = np.zeros_like(GAMMA)
 
 for l in np.arange(len(GAMMA)):
   print("######################################")
-  params_saga = {'n_epochs': EPOCHS, 'gamma': GAMMA[l]}
+  params_saga = {'n_epochs': EPOCHS, 'batch_size': int(0.01*N), 'gamma': GAMMA[l]}
   
   Q = problem(f, phi, tol = 1e-6, params = params_saga, verbose = False, measure = True)
-  Q.solve(solver = 'saga')
+  Q.solve(solver = 'svrg')
   
   obj = Q.info['objective'].copy()
   
@@ -134,7 +149,6 @@ for l in np.arange(len(GAMMA)):
 
 
 CONVERGED_Q = CONVERGED_Q.astype(bool)   
-TIME_Q[~CONVERGED_Q] = 10 
 
 #%% 
 plt.rcParams["font.family"] = "serif"
@@ -143,7 +157,7 @@ plt.rcParams['axes.linewidth'] = 1
 plt.rc('text', usetex=True)
 
 colors = sns.color_palette("GnBu_d", K)
-colors = sns.color_palette("viridis", K)
+colors = sns.color_palette("viridis_r", K)
 
 #%% plot objective of last iterate vs step size
 
@@ -172,13 +186,13 @@ Y_MAX = 3.#TIME.max()*2 +1
 
 fig, ax = plt.subplots(figsize = (7,5))
 
-for k in np.arange(K):
-    
-    TIME[k,:][~CONVERGED[k,:]] = Y_MAX
+for k in np.arange(K):    
+    TIME[k,:][~CONVERGED[k,:]] = Y_MAX    
     
     ax.plot(ALPHA, TIME[k,:], c = colors[k], linestyle = '--', marker = 'o', markersize = 4,  label = rf"$b =  N \cdot$ {batch_size[k]} ")
-    
-#ax.plot(ALPHA_Q, TIME_Q, c = "#FFB03B", linestyle = '--', marker = 'o', markersize = 4,  label = rf"SAGA")
+
+TIME_Q[~CONVERGED_Q] =  Y_MAX    
+ax.plot(ALPHA_Q, TIME_Q, c = "#FFB03B", linestyle = '--', marker = 'o', markersize = 4,  label = Q.solver)
     
 
 ax.hlines( Y_MAX-1 , ALPHA[0], ALPHA[-1], 'grey', ls = '-')

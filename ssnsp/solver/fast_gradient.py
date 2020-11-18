@@ -90,13 +90,15 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
             gamma = gamma_0 * max(gamma1, 1./(3*L))
             
         elif solver == 'batch saga':
-            params['batch_size'] = int(f.N**(2/3))
+            if 'batch_size' not in params.keys():    
+                params['batch_size'] = int(f.N**(2/3))
             gamma = gamma_0 * 1./(5*L)
         
         elif solver == 'svrg':
-            params['batch_size'] = 1 #int( 0.1* f.N**(2/3))
+            if 'batch_size' not in params.keys():    
+                params['batch_size'] = 1
             gamma = gamma_0 * 1./(3*L)
-            m_iter = N #int(f.N**(1/3))
+            m_iter = int(N/params['batch_size']) 
            
     elif solver == 'adagrad':
         # for ADAGRAD we use the step size gamma_0
