@@ -50,7 +50,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     
     elif solver == 'adagrad':
         if 'delta' not in params.keys():    
-                params['delta'] = 1e-6
+                params['delta'] = 1e-12
         if 'batch_size' not in params.keys():    
             params['batch_size'] = max(int(f.N * 0.01), 1)
             
