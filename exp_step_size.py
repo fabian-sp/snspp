@@ -59,7 +59,7 @@ K,L = GRID_A.shape
 
 
 psi_tol = 1e-2*psi_star 
-EPOCHS = 30
+EPOCHS = 50
 
 TIME = np.zeros_like(GRID_A)
 OBJ = np.ones_like(GRID_A) * 100
@@ -72,16 +72,18 @@ for l in np.arange(L):
         
         print("######################################")
         
-        params = {'sample_style': 'constant', 'reduce_variance': True}
+        params = {'sample_style': 'constant', 'reduce_variance': True, 'm_iter':10}
         
         # target M epochs 
         params["max_iter"] = int(EPOCHS *  1/GRID_B[k,l])
+        # m = 10 in SSNSP
+        params["max_iter"] = int( EPOCHS * (GRID_B[k,l] + 1/params['m_iter'])**(-1)  )
         params['sample_size'] = max(1, int(GRID_B[k,l] * f.N))
         params['alpha_C'] = GRID_A[k,l]
         
         print(f"ALPHA = {params['alpha_C']}")
         print(f"BATCH = {params['sample_size']}")
-        
+        print(f"MAX_ITER = {params['max_iter']}")
         try:
             P = problem(f, phi, tol = 1e-6, params = params, verbose = False, measure = True)
             P.solve(solver = 'ssnsp')
@@ -117,7 +119,7 @@ CONVERGED = CONVERGED.astype(bool)
 
 #%% stability test for SAGA / SVRG
 
-GAMMA = np.logspace(-1, 3, 20)
+GAMMA = np.logspace(-1, 4, 20)
 
 TIME_Q = np.zeros_like(GAMMA)
 OBJ_Q = np.zeros_like(GAMMA)
@@ -127,10 +129,10 @@ ALPHA_Q = np.zeros_like(GAMMA)
 
 for l in np.arange(len(GAMMA)):
   print("######################################")
-  params_saga = {'n_epochs': EPOCHS, 'batch_size': int(0.01*N), 'gamma': GAMMA[l]}
+  params_saga = {'n_epochs': EPOCHS, 'batch_size': int(0.05*N), 'gamma': GAMMA[l]}
   
   Q = problem(f, phi, tol = 1e-6, params = params_saga, verbose = False, measure = True)
-  Q.solve(solver = 'svrg')
+  Q.solve(solver = 'batch saga')
   
   obj = Q.info['objective'].copy()
   

@@ -168,7 +168,11 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         params['reduce_variance'] = True
     elif params['reduce_variance'] == False:
         warnings.warn("Variance reduction is deactivated. This leads to suboptimal performance. Consider setting the parameter 'reduce_variance' to True.")
-        
+    
+    # length of inner loop
+    if 'm_iter' not in params.keys():    
+        params['m_iter'] = 10
+     
     if 'newton_params' not in params.keys():
         params['newton_params'] = get_default_newton_params()
     
@@ -212,7 +216,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #xi_tilde_update = (np.diff(counter, prepend = f.N) < 0)
         xi_tilde = None; full_g = None
         vr_min_iter = 0
-        m_iter = 10
     else:
         xi_tilde = None; full_g = None
     
@@ -259,7 +262,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         ## Variance reduction
         #########################################################
         if params['reduce_variance']:
-            if iter_t % m_iter == 0 and iter_t >= vr_min_iter:
+            if iter_t % params['m_iter'] == 0 and iter_t >= vr_min_iter:
                 xi_tilde = compute_full_xi(f, x_t, is_easy)
                 full_g = (1/f.N) * (f.A.T @ xi_tilde)
                 
