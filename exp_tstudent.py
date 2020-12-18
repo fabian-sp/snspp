@@ -151,7 +151,7 @@ fig.subplots_adjust(top=0.96,
                     wspace=0.2)
 
 if save:
-    fig.savefig(f'data/plots/exp_triazine/obj_{round(v,2)}.pdf', dpi = 300)
+    fig.savefig(f'data/plots/exp_triazine/obj.pdf', dpi = 300)
     
 #%% coefficent plot
 
@@ -167,7 +167,7 @@ for a in ax.ravel():
 plt.subplots_adjust(hspace = 0.33)
 
 if save:
-    fig.savefig(f'data/plots/exp_triazine/coeff_{round(v,2)}.pdf', dpi = 300)
+    fig.savefig(f'data/plots/exp_triazine/coeff.pdf', dpi = 300)
     
 #%%
 
@@ -210,5 +210,5 @@ fig.subplots_adjust(top=0.96,
                     wspace=0.2)
 
 if save:
-    fig.savefig(f'data/plots/exp_triazine/error_{round(v,2)}.pdf', dpi = 300)
+    fig.savefig(f'data/plots/exp_triazine/error.pdf', dpi = 300)
     
