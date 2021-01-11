@@ -130,7 +130,7 @@ psi_star = 0
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
-kwargs = {"psi_star": psi_star, "log_scale": True}
+kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 3}
 
 Q.plot_objective(ax = ax, ls = '--', marker = '<', markersize = 2., **kwargs)
 Q1.plot_objective(ax = ax, ls = '--', marker = '<', markersize = 1.5, **kwargs)
@@ -171,9 +171,9 @@ if save:
     
 #%%
 
-def tstudent_loss(x, A_test, b_test, v):
-    z = A_test@x - b_test
-    return 1/A_test.shape[0] * np.log(1+ z**2/v).sum()
+def tstudent_loss(x, A, b, v):
+    z = A@x - b
+    return 1/A.shape[0] * np.log(1+ z**2/v).sum()
 
 tstudent_loss(x0, A_test, b_test, f.v)
 tstudent_loss(Q.x, A_test, b_test, f.v)
@@ -184,7 +184,7 @@ all_b = pd.DataFrame(np.vstack((b_test, A_test@P.x, A_test@Q.x, A_test@Q1.x)).T,
 
 #%%
 
-kwargs2 = {"A_test": A_test, "b_test": b_test, "v": f.v}
+kwargs2 = {"A": A_test, "b": b_test, "v": f.v}
 
 L_P = eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2)
 L_Q = eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2)

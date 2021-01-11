@@ -15,10 +15,9 @@ plt.rc('text', usetex=True)
 ## Plotting
 ##########################################################################
 
-def plot_multiple(allP, ax = None, label = "ssnsp", name = None, marker = 'o', markersize = 3, ls = '-', psi_star = 0, log_scale = False, sigma = 0):
+def plot_multiple(allP, ax = None, label = "ssnsp", name = None, marker = 'o', markersize = 3, ls = '-', lw = 0.4, psi_star = 0, log_scale = False, sigma = 0):
  
-   
-    
+  
     if name is None:
         name = label
     
@@ -63,7 +62,7 @@ def plot_multiple(allP, ax = None, label = "ssnsp", name = None, marker = 'o', m
     return
 
 
-def plot_test_error(P, L,  ax = None, name = None, marker = 'o', markersize = 2., ls = '-', lw = 0.2, log_scale = True):
+def plot_test_error(P, L,  ax = None, name = None, marker = 'o', markersize = 3, ls = '-', lw = 0.4, log_scale = True):
     
     assert len(P.info["iterates"]) == len(L), "the vector of losses has a different length than the stored iterates"
     
@@ -92,6 +91,44 @@ def plot_test_error(P, L,  ax = None, name = None, marker = 'o', markersize = 2.
     
     ax.legend(fontsize = 10)
     
+    return
+
+def plot_multiple_error(all_loss, allP, ax = None, label = "ssnsp", name = None, marker = 'o', markersize = 3, ls = '-', lw = 0.4, log_scale = False, sigma = 0):
+    
+    if name is None:
+        name = label
+
+    if ax is None:
+        fig, ax = plt.subplots()
+            
+    K = len(allP)
+    
+    for k in range(K):
+        assert allP[k].solver == label, "solver attribute and label are not matching!"
+    
+    y = all_loss.mean(axis=0)
+    all_std = all_loss.std(axis=0)
+    all_rt = np.vstack([allP[k].info["runtime"] for k in range(K)]).mean(axis=0).cumsum()
+    
+    try:
+        c = color_dict[label]
+    except:
+        c = color_dict["default"]
+    
+    ax.plot(all_rt, y, marker = marker, ls = ls, lw = lw, markersize = markersize, color = c, label = name)
+    
+    # plot band of standard deviation
+    if sigma > 0:
+        ax.fill_between(all_rt, all_mean - sigma*all_std, all_mean+sigma*all_std, color = c, alpha = .5)
+    
+    ax.grid(ls = '-', lw = .5) 
+    ax.set_xlabel("Runtime [sec]", fontsize = 12)
+    
+    ax.set_ylabel(r"Test error", fontsize = 12)
+    
+    if log_scale:
+        ax.set_yscale('log')
+            
     return
 
 def eval_test_set(X, loss, **kwargs):
