@@ -38,8 +38,6 @@ x0 = np.zeros(n)
 sns.distplot(A@x0-b)
 
 print("psi(0) = ", f.eval(np.zeros(n)))
-
-
 #%% determine psi_star
 
 #x0 = P.x
@@ -192,17 +190,29 @@ all_b = pd.DataFrame(np.vstack((b_test, A_test@P.x, A_test@Q.x, A_test@Q1.x)).T,
 
 kwargs2 = {"A": A_test, "b": b_test, "v": f.v}
 
-L_P = eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2)
-L_Q = eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2)
-L_Q1 = eval_test_set(X = Q1.info["iterates"], loss = tstudent_loss, **kwargs2)
+# L_P = eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2)
+# L_Q = eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2)
+# L_Q1 = eval_test_set(X = Q1.info["iterates"], loss = tstudent_loss, **kwargs2)
+
+all_loss_P = np.vstack([eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2) for P in allP])
+all_loss_Q = np.vstack([eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2) for Q in allQ])
+all_loss_Q1 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2) for Q in allQ1])
+
 
 #%%
     
 fig, ax = plt.subplots(1,1,  figsize = (4.5, 3.5))
 
-plot_test_error(Q, L_Q,  ax = ax,  marker = '<', markersize = 2.)
-plot_test_error(Q1, L_Q1,  ax = ax,  marker = '<', markersize = 2.)
-plot_test_error(P, L_P,  ax = ax,  marker = 'o', markersize = 1.5)
+kwargs = {"log_scale": False, "lw": 0.4, "markersize": 3}
+
+#plot_test_error(Q, L_Q,  ax = ax,  marker = '<', markersize = 2.)
+#plot_test_error(Q1, L_Q1,  ax = ax,  marker = '<', markersize = 2.)
+#plot_test_error(P, L_P,  ax = ax,  marker = 'o', markersize = 1.5)
+
+plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
+plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
+plot_multiple_error(all_loss_P, allP, ax = ax , label = "ssnsp", **kwargs)
+
 
 ax.set_yscale('log')
 ax.set_xlim(0,140)
@@ -217,4 +227,3 @@ fig.subplots_adjust(top=0.96,
 
 if save:
     fig.savefig(f'data/plots/exp_triazine/error.pdf', dpi = 300)
-    
