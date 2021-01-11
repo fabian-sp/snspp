@@ -5,7 +5,7 @@ import pandas as pd
 
 from ssnsp.solver.opt_problem import problem, color_dict
 from ssnsp.helper.data_generation import get_mnist
-from ssnsp.experiments.experiment_utils import plot_multiple, adagrad_step_size_tuner, initialize_solvers
+from ssnsp.experiments.experiment_utils import plot_multiple, plot_multiple_error, adagrad_step_size_tuner, initialize_solvers
 
 from sklearn.linear_model import LogisticRegression
 
@@ -48,7 +48,7 @@ print(f.eval(Q.x)+phi.eval(Q.x))
 #%% solve with ADAGRAD
 
 #opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = None)
-opt_gamma = 0.0123 #0.01873
+opt_gamma = 0.0123 
 
 params_adagrad = {'n_epochs' : 200, 'batch_size': int(f.N*0.05), 'gamma': opt_gamma}
 
@@ -174,6 +174,44 @@ if save:
     fig.savefig(f'data/plots/exp_mnist/coeff.pdf', dpi = 300)
 
 
+
+#%% eval test set loss
+
+def logreg_loss(x, A, b):
+    z = A@x
+    return np.log(1 + np.exp(-b*z)).mean()
+
+kwargs2 = {"A": X_test, "b": y_test}
+
+all_loss_P = np.vstack([eval_test_set(X = P.info["iterates"], loss = logreg_loss, **kwargs2) for P in allP])
+all_loss_Q = np.vstack([eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2) for Q in allQ])
+all_loss_Q1 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2) for Q in allQ1])
+
+
+#%%
+fig,ax = plt.subplots(figsize = (4.5, 3.5))
+
+kwargs = {"lw": 0.4, "markersize": 3}
+
+plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
+plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
+plot_multiple_error(all_loss_P, allP, ax = ax , label = "ssnsp", **kwargs)
+
+ax.set_xlim(-.1, 6)
+ax.set_ylim(all_loss_P.min()*0.99, all_loss_P.max()*1.01)
+ax.legend(fontsize = 10)
+
+fig.subplots_adjust(top=0.96,
+                    bottom=0.14,
+                    left=0.165,
+                    right=0.965,
+                    hspace=0.2,
+                    wspace=0.2)
+
+
+if save:
+    fig.savefig(f'data/plots/exp_mnist/error.pdf', dpi = 300)
+    
 #%%
 def predict(A,x):
     
@@ -190,11 +228,8 @@ def sample_error(A, b, x):
 
 
 sample_error(X_test, y_test, x_sk)
-
 sample_error(X_test, y_test, Q.x)
-
 sample_error(X_test, y_test, Q1.x)
-
 sample_error(X_test, y_test, P.x)
 
 
