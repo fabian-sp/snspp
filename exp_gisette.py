@@ -199,7 +199,7 @@ all_loss_Q1 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = logreg_los
 #%%
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
-kwargs = {"lw": 0.4, "markersize": 3}
+kwargs = {"log_scale": False, "lw": 0.4, "markersize": 3}
 
 plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
 plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
@@ -215,7 +215,6 @@ fig.subplots_adjust(top=0.96,
                     right=0.965,
                     hspace=0.2,
                     wspace=0.2)
-
 
 if save:
     fig.savefig(f'data/plots/exp_gisette/error.pdf', dpi = 300)
