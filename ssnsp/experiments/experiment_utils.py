@@ -153,19 +153,19 @@ def initialize_solvers(f, phi):
     initializes jitiing
     """
     params = {'n_epochs' : 2}
-    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)
+    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = False)
     tmpP.solve(solver = 'saga')
     
     params = {'n_epochs' : 2}
-    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)
+    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = False)
     tmpP.solve(solver = 'svrg')
     
     params = {'n_epochs' : 2, 'batch_size': 10, 'gamma': 0.01}  
-    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)   
+    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = False)   
     tmpP.solve(solver = 'adagrad')
     
-    params = {'max_iter' : 5, 'sample_size': 10, 'alpha_C': 0.01}  
-    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)   
+    params = {'max_iter' : 3, 'sample_size': 10, 'alpha_C': 0.01}  
+    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = False)   
     tmpP.solve(solver = 'ssnsp')
     
     return

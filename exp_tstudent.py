@@ -14,11 +14,6 @@ from ssnsp.experiments.experiment_utils import plot_multiple, initialize_solvers
 
 #%% generate data
 
-# N = 1000
-# n = 10000
-# k = 100
-# kappa = 1e6
-
 l1 = 1e-3
 v = 1.
 
@@ -34,30 +29,16 @@ elif v == 1.:
 
 f, phi, A, b, A_test, b_test = get_triazines(lambda1 = l1, train_size = .8, v = v, poly = 4, noise = 0.)
 
-#xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 20, noise = 0., scale = 20, kappa = kappa)
-#xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n = 20, k = 2, lambda1=l1, v = 2, noise = 0., scale = 10, poly = 5)
-
 n = A.shape[1]
-
-# l1 <= lambda_max, if not 0 is a solution
-#lambda_max = np.abs(1/f.N * A.T @ (2*b/(f.v+b**2))).max()
-#phi.lambda1 = .2 *lambda_max
 
 initialize_solvers(f, phi)
 
-#x0 = f.A.T @ b
 x0 = np.zeros(n)
 
 sns.distplot(A@x0-b)
-#(np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)).max()
 
 print("psi(0) = ", f.eval(np.zeros(n)))
 
-#xsol = None
-
-#print("f(x*) = ", f.eval(xsol))
-#print("phi(x*) = ", phi.eval(xsol))
-#print("psi(x*) = ", f.eval(xsol) + phi.eval(xsol))
 
 #%% determine psi_star
 
@@ -99,32 +80,56 @@ print("psi(x_t) = ", f.eval(Q1.x) + phi.eval(Q1.x))
 
 #%% solve with SSNSP
 
-for k in range(2):
-    P = problem(f, phi, x0 = x0, tol = 1e-6, params = params_ssnsp, verbose = True, measure = True)
-    P.solve(solver = 'ssnsp')
+P = problem(f, phi, x0 = x0, tol = 1e-6, params = params_ssnsp, verbose = True, measure = True)
+P.solve(solver = 'ssnsp')
 
+print("f(x_t) = ", f.eval(P.x))
+print("phi(x_t) = ", phi.eval(P.x))
+print("psi(x_t) = ", f.eval(P.x) + phi.eval(P.x))
 
-#%% solve with SSNSP (multiple times, VR)
-   
-# K = 20
-# allP = list()
-# for k in range(K):
-    
-#     P_k = problem(f, phi, tol = 1e-6, params = params_ssnsp, verbose = False, measure = True)
-#     P_k.solve(solver = 'ssnsp')
-#     allP.append(P_k)
- 
 #%%
-#all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x)).T, columns = ['true', 'spp', 'saga', 'adagrad'])
-#all_x = pd.DataFrame(np.vstack((xsol,Q.x)).T, columns = ['true', 'saga'])
 
 all_x = pd.DataFrame(np.vstack((P.x, Q.x, Q1.x)).T, columns = ['spp', 'saga', 'adagrad'])
 
 #%%
+
+###########################################################################
+# multiple execution and plotting
+############################################################################
+
+#%% solve with SAGA (multiple times)
+
+K = 20
+allQ = list()
+for k in range(K):
+    
+    Q_k = problem(f, phi, tol = 1e-9, params = params_saga, verbose = True, measure = True)
+    Q_k.solve(solver = 'saga')
+    allQ.append(Q_k)
+
+#%% solve with ADAGRAD (multiple times)
+
+allQ1 = list()
+for k in range(K):
+    
+    Q1_k = problem(f, phi, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
+    Q1_k.solve(solver = 'adagrad')
+    allQ1.append(Q1_k)
+    
+#%% solve with SSNSP (multiple times, VR)
+
+allP = list()
+for k in range(K):
+    
+    P_k = problem(f, phi, tol = 1e-9, params = params_ssnsp, verbose = False, measure = True)
+    P_k.solve(solver = 'ssnsp')
+    allP.append(P_k)
+    
+#%%
 save = False
 
 # use the last objective of SAGA as surrogate optimal value
-psi_star = f.eval(Q.x)+phi.eval(Q.x)
+#psi_star = f.eval(Q.x)+phi.eval(Q.x)
 psi_star = 0
 
 
@@ -134,9 +139,10 @@ kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 3}
 
 Q.plot_objective(ax = ax, ls = '--', marker = '<', markersize = 2., **kwargs)
 Q1.plot_objective(ax = ax, ls = '--', marker = '<', markersize = 1.5, **kwargs)
-#Q2.plot_objective(ax = ax, ls = '--', marker = '<', markersize = 1., **kwargs)
 P.plot_objective(ax = ax, markersize = 1.5, **kwargs)
 
+#plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
+#plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
 #plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
 
 ax.set_xlim(0,140)
@@ -159,7 +165,7 @@ fig,ax = plt.subplots(2, 2,  figsize = (7,5))
 Q.plot_path(ax = ax[0,0], xlabel = False)
 Q1.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
 P.plot_path(ax = ax[1,0])
-ax[1,1].axis('off')#P.plot_path(ax = ax[1,1], mean = True, ylabel = False)
+ax[1,1].axis('off')
 
 for a in ax.ravel():
     a.set_ylim(-.2, .5)
