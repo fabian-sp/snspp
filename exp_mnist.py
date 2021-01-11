@@ -5,7 +5,7 @@ import pandas as pd
 
 from ssnsp.solver.opt_problem import problem, color_dict
 from ssnsp.helper.data_generation import get_mnist
-from ssnsp.experiments.experiment_utils import plot_multiple, plot_multiple_error, adagrad_step_size_tuner, initialize_solvers
+from ssnsp.experiments.experiment_utils import plot_multiple, plot_multiple_error, eval_test_set, adagrad_step_size_tuner, initialize_solvers
 
 from sklearn.linear_model import LogisticRegression
 
@@ -142,7 +142,7 @@ plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
 
 #plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **kwargs)
 
-ax.set_xlim(-1,16)
+ax.set_xlim(-.1,16)
 ax.legend()
 
 fig.subplots_adjust(top=0.96,
@@ -197,7 +197,7 @@ plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marke
 plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
 plot_multiple_error(all_loss_P, allP, ax = ax , label = "ssnsp", **kwargs)
 
-ax.set_xlim(-.1, 6)
+ax.set_xlim(-.1,6)
 ax.set_ylim(all_loss_P.min()*0.99, all_loss_P.max()*1.01)
 ax.legend(fontsize = 10)
 
