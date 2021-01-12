@@ -23,7 +23,8 @@ Methods:
 * `g(self, x, i)`: evaluates the gradient of `f_i` at `x`.
 * `fstar(self, x, i)`, `gstar(self, x, i)` and `Hstar(self, x, i)`: evaluates the Fenchel conjugate (its gradient/ its Hessian) of `f_i` at `x`.
 
-Note that `fstar` (and `gstar`, `Hstar`) evaluate each sample `i` individually. In many applications, `f_i` is identical for every `i` (up to data input). In this case, the performance is improved if vectorized methods are implemented, i.e. `fstar_vec(self, x, S)` which computes the conjugate at x for a batch of indices `S`. See `ssnsp/helper/lasso` for an example. The algorithm detects automatically if such a method is implemented, hence the function called for solving is the same in both cases.
+Note that `fstar` (and `gstar`, `Hstar`) evaluate each sample `i` individually. In many applications, `f_i` is identical for every `i` (up to data input). In this case, the performance is improved if vectorized methods are implemented, i.e. `fstar_vec(self, x, S)` which computes the conjugate at x for a batch of indices `S`. See `ssnsp/helper/lasso` for an example. 
+The algorithm detects automatically if vectorized methods are implemented, hence the function called for solving is the same in both cases.
 
 
 Attributes:
@@ -54,7 +55,7 @@ The definitions for these classes can be found in `ssnsp/helper/lasso` and `ssns
 
 
 ## First-order methods
-The package also contains fast implementations of and AdaGrad [1], SVRG [2] and SAGA [3]. These algorithms do not need all of the methods listed above. In general, only `eval` for evaluation and `g` for computing gradients is needed for `f`. For `phi` we only need the `prox` method (and for AdaGrad a `adagrad_prox` method which computes the proximal operator wrt a custom norm).
+The package also contains fast implementations of AdaGrad [1], SVRG [2] and SAGA [3]. These algorithms do not need all of the methods listed above. In general, only `eval` for evaluation and `g` for computing gradients is needed for `f`. For `phi` we only need the `prox` method (and for AdaGrad a `adagrad_prox` method which computes the proximal operator wrt a custom norm).
 The implementation of these algorithms is optimized for Numba-jitted function classes.
 
 
@@ -64,6 +65,6 @@ The implementation of these algorithms is optimized for Numba-jitted function cl
 
 * [1] Duchi, J., Hazan, E., and Singer, Y. (2011).  [Adaptive subgradient methods for online learning and stochastic optimization.](https://www.jmlr.org/papers/volume12/duchi11a/duchi11a.pdf)J. Mach. Learn.Res., 12(null):2121–2159.
 
-* [2] J.  Reddi,  S.,  Sra,  S.,  Poczos,  B.,  and  Smola,  A.  J.  (2016).[Proximal stochastic methods for nonsmooth nonconvex finite-sum optimization.](https://papers.nips.cc/paper/2016/hash/291597a100aadd814d197af4f4bab3a7-Abstract.html)In Lee, D. D., Sugiyama, M., Luxburg, U. V., Guyon, I., and Garnett, R., editors,Advances in Neural Information Processing Systems 29, pages 1145–1153. CurranAssociates, Inc.
+* [2] J.  Reddi,  S.,  Sra,  S.,  Poczos,  B.,  and  Smola,  A.  J.  (2016).[Proximal stochastic methods for nonsmooth nonconvex finite-sum optimization.](https://papers.nips.cc/paper/2016/hash/291597a100aadd814d197af4f4bab3a7-Abstract.html)In Lee, D. D., Sugiyama, M., Luxburg, U. V., Guyon, I., and Garnett, R., editors, Advances in Neural Information Processing Systems 29, pages 1145–1153. Curran Associates, Inc.
 
-* [3] Defazio, A., Bach, F., and Lacoste-Julien, S. (2014).  [Saga:  A fast incremental gradient method with support for non-strongly convex composite objectives.](https://papers.nips.cc/paper/2014/file/ede7e2b6d13a41ddf9f4bdef84fdc737-Paper.pdf) In  Ghahramani,  Z.,  Welling,  M.,  Cortes,  C.,  Lawrence,  N.,  andWeinberger, K. Q., editors,Advances in Neural Information Processing Systems,volume 27, pages 1646–1654. Curran Associates, Inc.
+* [3] Defazio, A., Bach, F., and Lacoste-Julien, S. (2014).  [Saga:  A fast incremental gradient method with support for non-strongly convex composite objectives.](https://papers.nips.cc/paper/2014/file/ede7e2b6d13a41ddf9f4bdef84fdc737-Paper.pdf) In  Ghahramani,  Z.,  Welling,  M.,  Cortes,  C.,  Lawrence,  N.,  and Weinberger, K. Q., editors, Advances in Neural Information Processing Systems,volume 27, pages 1646–1654. Curran Associates, Inc.
