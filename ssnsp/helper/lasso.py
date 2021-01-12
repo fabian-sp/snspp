@@ -296,9 +296,9 @@ class Ridge:
         L is the diagonal(!) of Lambda_t (in the notation of Milzarek et al.)
         """
              
-        l = np.divide(self.lambda1 * np.ones_like(L), L) 
+        #TBD
         
-        return np.sign(x) * np.maximum( np.abs(x) - l, 0.)
+        return 0
     
     def jacobian_prox(self, x, alpha):
         assert alpha > 0
