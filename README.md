@@ -40,12 +40,19 @@ Methods:
 
 Note that many common regularizer, e.g the l1/l2-norm or combinations of it, the proximal operator as well as its subdifferential can be computed in closed form.
 
-The package already contains the classes `logistic_loss`, the loss for logistic regression, the squared loss `lsq` and the Student-t loss `tstudent_loss`. As a regularizer, it contains `Norm1` the l1-norm. The definitions for these classes is in `ssnsp/helper/lasso` and `ssnsp/helper/tstudent`.
-Note that for optimal performance `f` and `phi` should be Numba jitted classes (see an example how this is done in the files mentioned above).
+The package already contains the following losses:
+* `logistic_loss`: the loss for logistic regression
+* `lsq`: the squared loss
+* `tstudent_loss`: loss for regression with Student-t residuals.
+
+and regularizers
+* `L1Norm`: the l1-norm. 
+
+The definitions for these classes can be found in `ssnsp/helper/lasso` and `ssnsp/helper/tstudent`. Note that for optimal performance `f` and `phi` should be [Numba jitted classes](https://numba.pydata.org/numba-doc/dev/user/jitclass.html).
 
 
 ## First-order methods
-The package also contains fast implementations of SAGA [3], SVRG [2] and AdaGrad [1]. These algorithms do not need all of the methods listed above. In general, only `eval` for evaluation and `g` for computing gradients is needed for `f`. For `phi` we only need the `prox` method (and for AdaGrad a `adagrad_prox` method which computes the proximal operator wrt a custom norm).
+The package also contains fast implementations of and AdaGrad [1], SVRG [2] and SAGA [3]. These algorithms do not need all of the methods listed above. In general, only `eval` for evaluation and `g` for computing gradients is needed for `f`. For `phi` we only need the `prox` method (and for AdaGrad a `adagrad_prox` method which computes the proximal operator wrt a custom norm).
 The implementation of these algorithms is optimized for Numba-jitted function classes.
 
 
