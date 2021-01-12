@@ -251,9 +251,6 @@ class L1Norm:
         assert alpha > 0
         l = alpha * self.lambda1
         
-        # if numba is deactivated, use the next line instead of for loop
-        #d = (abs(x) > l).astype(int)
-        
         d = np.ones_like(x)
         d[np.abs(x) <= l] = 0.
         
@@ -264,6 +261,56 @@ class L1Norm:
         assert alpha > 0
         z = self.prox(x, alpha)
         return alpha*self.eval(z) + .5 * np.linalg.norm(z-x)**2
+
+#%%
+
+spec_ridge = [
+    ('name', typeof('abc')),
+    ('lambda1', float64)
+]
+
+@jitclass(spec_ridge)
+class Ridge:
+    """
+    class for the ridge regularizer x --> lambda1 ||x||_2^2
+    """
+    def __init__(self, lambda1):
+        assert lambda1 > 0 
+        self.name = 'ridge'
+        self.lambda1 = lambda1
+        
+    def eval(self, x):
+        return self.lambda1 * np.linalg.norm(x, 2)**2
+    
+    def prox(self, x, alpha):
+        """
+        calculates prox_{alpha*phi}(x)
+        """
+        assert alpha > 0
+        l = alpha * self.lambda1
+        return x/(1-2*l)
+    
+    def adagrad_prox(self, x, L):
+        """
+        calculates prox_{phi}^L (x)
+        L is the diagonal(!) of Lambda_t (in the notation of Milzarek et al.)
+        """
+             
+        l = np.divide(self.lambda1 * np.ones_like(L), L) 
+        
+        return np.sign(x) * np.maximum( np.abs(x) - l, 0.)
+    
+    def jacobian_prox(self, x, alpha):
+        assert alpha > 0
+        l = alpha * self.lambda1
+        
+        return 1-2*l
+    
+    def moreau(self, x, alpha):
+        assert alpha > 0
+        z = self.prox(x, alpha)
+        return alpha*self.eval(z) + .5 * np.linalg.norm(z-x)**2
+    
     
 #%% only needed for testing
 
