@@ -136,17 +136,18 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     
     # compute x_mean retrospectivly and evaluate objective
     obj = list()
-    xmean_hist = compute_x_mean_hist(x_hist)
-    x_mean = xmean_hist[-1,:].copy()
     
+    if n <= 1e4:
+        xmean_hist = compute_x_mean_hist(np.vstack(x_hist))
+        x_mean = xmean_hist[-1,:].copy()
+    else:
+        xmean_hist = None; x_mean = None
+        
+  
     if measure:
         # evaluate objective at x_t after every epoch
         for j in np.arange(n_iter):
             obj.append(f.eval(x_hist[j,:]) + phi.eval(x_hist[j,:]))
-        
-        # evaluate objective at x_mean after every epoch
-        #for j in np.arange(n_iter):
-        #    obj2.append(f.eval(xmean_hist[j,:]) + phi.eval(xmean_hist[j,:]))
         
         
     # distribute runtime uniformly on all iterations
@@ -161,9 +162,9 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
         print(f"{name} terminated during epoch {n_iter} with tolerance {eta}")
         print(f"{name} status: {status}")
     
-    info = {'objective': np.array(obj), 'iterates': x_hist,\
+    info = {'objective': np.array(obj), 'iterates': x_hist, \
             'mean_hist': xmean_hist, 'step_sizes': np.array(step_sizes), \
-            'gradient_table': gradients, 'runtime': np.array(runtime)}
+            'runtime': np.array(runtime)}
 
     return x_t, x_mean, info
 

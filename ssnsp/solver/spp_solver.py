@@ -139,7 +139,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         print("Use vectorized impl. of conjugates?", is_easy)
     
     x_t = x0.copy()
-    x_mean = x_t.copy()
     
     status = 'not optimal'
     eta = np.inf
@@ -313,17 +312,18 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     if eta > tol:
         status = 'max iterations reached'    
     
-       
-    print(f"Stochastic ProxPoint terminated after {iter_t} iterations with accuracy {eta}")
-    print(f"Stochastic ProxPoint status: {status}")
+    if verbose:   
+        print(f"Stochastic ProxPoint terminated after {iter_t} iterations with accuracy {eta}")
+        print(f"Stochastic ProxPoint status: {status}")
     
     if n <= 1e4:
-        mean_hist = compute_x_mean_hist(np.vstack(x_hist))
+        xmean_hist = compute_x_mean_hist(np.vstack(x_hist))
+        x_mean = xmean_hist[-1,:].copy()
     else:
-        mean_hist = None
+        xmean_hist = None; x_mean = None
         
     info = {'objective': np.array(obj), 'iterates': np.vstack(x_hist), \
-            'mean_hist': mean_hist, 'xi_hist': xi_hist,\
+            'mean_hist': xmean_hist, 'xi_hist': xi_hist,\
             'step_sizes': np.array(step_sizes), 'samples' : S_hist, \
             'ssn_info': ssn_info, 'runtime': np.array(runtime)}
     

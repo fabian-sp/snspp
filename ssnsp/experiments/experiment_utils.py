@@ -119,7 +119,7 @@ def plot_multiple_error(all_loss, allP, ax = None, label = "ssnsp", name = None,
     
     # plot band of standard deviation
     if sigma > 0:
-        ax.fill_between(all_rt, all_mean - sigma*all_std, all_mean+sigma*all_std, color = c, alpha = .5)
+        ax.fill_between(all_rt, y - sigma*all_std, y+sigma*all_std, color = c, alpha = .5)
     
     ax.grid(ls = '-', lw = .5) 
     ax.set_xlabel("Runtime [sec]", fontsize = 12)
