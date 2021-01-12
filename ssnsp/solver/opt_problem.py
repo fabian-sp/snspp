@@ -23,7 +23,7 @@ color_dict = {"default": "#002A4A", "saga": "#FFB03B", "batch saga": "#BF842C", 
 
 class problem:
     
-    def __init__(self, f, phi, x0 = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
+    def __init__(self, f, phi, x0 = None, tol = 1e-3, params = dict(), verbose = True, measure = True):
         self.f = f
         self.phi = phi
         #self.A = f.A.copy()
@@ -57,14 +57,13 @@ class problem:
         return
     
     def plot_path(self, ax = None, runtime = True, mean = False, xlabel = True, ylabel = True):
-        # sns.heatmap(self.info['iterates'], cmap = 'coolwarm', vmin = -1, vmax = 1, ax = ax)
         plt.rcParams["font.family"] = "serif"
         plt.rcParams['font.size'] = 10
         
         if ax is None:
             fig, ax = plt.subplots()
         
-        if self.info['iterates'].shape[1] >= 10000:
+        if self.info['iterates'].shape[1] >= 1e4:
             lazy = True
         else:
             lazy = False

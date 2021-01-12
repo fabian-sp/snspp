@@ -10,7 +10,7 @@ import time
 
 from ssnsp.helper.data_generation import tstudent_test, get_triazines
 from ssnsp.solver.opt_problem import problem
-from ssnsp.experiments.experiment_utils import plot_multiple, initialize_solvers, adagrad_step_size_tuner, eval_test_set, plot_test_error
+from ssnsp.experiments.experiment_utils import plot_multiple, initialize_solvers, adagrad_step_size_tuner, eval_test_set, plot_test_error, plot_multiple_error
 
 #%% generate data
 
@@ -35,9 +35,10 @@ initialize_solvers(f, phi)
 
 x0 = np.zeros(n)
 
-sns.distplot(A@x0-b)
+#sns.distplot(A@x0-b)
 
 print("psi(0) = ", f.eval(np.zeros(n)))
+
 #%% determine psi_star
 
 #x0 = P.x
@@ -88,45 +89,91 @@ print("psi(x_t) = ", f.eval(P.x) + phi.eval(P.x))
 #%%
 
 all_x = pd.DataFrame(np.vstack((P.x, Q.x, Q1.x)).T, columns = ['spp', 'saga', 'adagrad'])
+#all_b = pd.DataFrame(np.vstack((b_test, A_test@P.x, A_test@Q.x, A_test@Q1.x)).T, columns = ['true', 'spp', 'saga', 'adagrad'])
+
+#%% Test set evaluation
+
+def tstudent_loss(x, A, b, v):
+    z = A@x - b
+    return 1/A.shape[0] * np.log(1+ z**2/v).sum()
+
+kwargs2 = {"A": A_test, "b": b_test, "v": f.v}
+
+#%%
+tstudent_loss(x0, A_test, b_test, f.v)
+tstudent_loss(Q.x, A_test, b_test, f.v)
+tstudent_loss(Q1.x, A_test, b_test, f.v)
+tstudent_loss(P.x, A_test, b_test, f.v)
+
+
+# L_P = eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2)
+# L_Q = eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2)
+# L_Q1 = eval_test_set(X = Q1.info["iterates"], loss = tstudent_loss, **kwargs2)
+
+#all_loss_P = np.vstack([eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2) for P in allP])
+#all_loss_Q = np.vstack([eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2) for Q in allQ])
+#all_loss_Q1 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2) for Q in allQ1])
 
 #%%
 
 ###########################################################################
 # multiple execution and plotting
+# As n is very large, we can not store all iterates for all runs and hence evaluate directly after solving and delete
 ############################################################################
 
 #%% solve with SAGA (multiple times)
 
 K = 20
 allQ = list()
+all_loss_Q = list()
 for k in range(K):
     
-    Q_k = problem(f, phi, tol = 1e-9, params = params_saga, verbose = True, measure = True)
+    Q_k = problem(f, phi, tol = 1e-6, params = params_saga, verbose = True, measure = True)
     Q_k.solve(solver = 'saga')
+    
+    all_loss_Q.append(eval_test_set(X = Q_k.info["iterates"], loss = tstudent_loss, **kwargs2))
+    Q_k.info.pop('iterates')
+    
     allQ.append(Q_k)
+
+all_loss_Q = np.vstack(all_loss_Q)
 
 #%% solve with ADAGRAD (multiple times)
 
 allQ1 = list()
+all_loss_Q1 = list()
 for k in range(K):
     
-    Q1_k = problem(f, phi, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
+    Q1_k = problem(f, phi, tol = 1e-6, params = params_adagrad, verbose = True, measure = True)
     Q1_k.solve(solver = 'adagrad')
+    
+    all_loss_Q1.append(eval_test_set(X = Q1_k.info["iterates"], loss = tstudent_loss, **kwargs2))
+    Q1_k.info.pop('iterates')
+    
     allQ1.append(Q1_k)
+
+all_loss_Q1 = np.vstack(all_loss_Q1)
     
 #%% solve with SSNSP (multiple times, VR)
 
 allP = list()
+all_loss_P = list()
 for k in range(K):
     
-    P_k = problem(f, phi, tol = 1e-9, params = params_ssnsp, verbose = False, measure = True)
+    P_k = problem(f, phi, tol = 1e-6, params = params_ssnsp, verbose = False, measure = True)
     P_k.solve(solver = 'ssnsp')
-    allP.append(P_k)
     
+    all_loss_P.append(eval_test_set(X = P_k.info["iterates"], loss = tstudent_loss, **kwargs2))
+    P_k.info.pop('iterates')
+    
+    allP.append(P_k)
+
+all_loss_P = np.vstack(all_loss_P)
+
 #%%
 save = False
 
-# use the last objective of SAGA as surrogate optimal value
+# use the last objective of SAGA as surrogate optimal value / plot only psi(x^k)
 #psi_star = f.eval(Q.x)+phi.eval(Q.x)
 psi_star = 0
 
@@ -173,30 +220,6 @@ plt.subplots_adjust(hspace = 0.33)
 if save:
     fig.savefig(f'data/plots/exp_triazine/coeff.pdf', dpi = 300)
     
-#%%
-
-def tstudent_loss(x, A, b, v):
-    z = A@x - b
-    return 1/A.shape[0] * np.log(1+ z**2/v).sum()
-
-tstudent_loss(x0, A_test, b_test, f.v)
-tstudent_loss(Q.x, A_test, b_test, f.v)
-tstudent_loss(Q1.x, A_test, b_test, f.v)
-tstudent_loss(P.x, A_test, b_test, f.v)
-
-all_b = pd.DataFrame(np.vstack((b_test, A_test@P.x, A_test@Q.x, A_test@Q1.x)).T, columns = ['true', 'spp', 'saga', 'adagrad'])
-
-#%%
-
-kwargs2 = {"A": A_test, "b": b_test, "v": f.v}
-
-# L_P = eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2)
-# L_Q = eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2)
-# L_Q1 = eval_test_set(X = Q1.info["iterates"], loss = tstudent_loss, **kwargs2)
-
-all_loss_P = np.vstack([eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2) for P in allP])
-all_loss_Q = np.vstack([eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2) for Q in allQ])
-all_loss_Q1 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2) for Q in allQ1])
 
 
 #%%
