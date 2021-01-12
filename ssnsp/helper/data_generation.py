@@ -17,7 +17,7 @@ from sklearn.preprocessing import PolynomialFeatures
 #from sklearn.datasets import load_digits
 #from scipy.stats import ortho_group
 
-from .lasso import Norm1, lsq, block_lsq, logistic_loss
+from .lasso import L1Norm, lsq, block_lsq, logistic_loss
 from .tstudent import tstudent_loss
 
 ############################################################################################
@@ -89,7 +89,7 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., k
     b_test = A_test @ x + noise*np.random.randn(N_test)
     
     
-    phi = Norm1(lambda1)    
+    phi = L1Norm(lambda1)    
     if block:
         f = block_lsq(A, b, m)
     else:
@@ -132,7 +132,7 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
     b = b.astype('float64')
     x = x.astype('float64')
     
-    phi = Norm1(lambda1) 
+    phi = L1Norm(lambda1) 
     f = logistic_loss(A,b)
     
     return x, A, b, f, phi
@@ -160,7 +160,7 @@ def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 4., noise = 0.1, scal
     b = b.astype('float64')
     x = x.astype('float64')
     
-    phi = Norm1(lambda1) 
+    phi = L1Norm(lambda1) 
     f = tstudent_loss(A,b,v=v)
     
     N_test = 1000
@@ -211,7 +211,7 @@ def get_mnist(lambda1 = 0.02, train_size = .8, scale = True):
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.transform(X_test)
     
-    phi = Norm1(lambda1) 
+    phi = L1Norm(lambda1) 
     f = logistic_loss(X_train, y_train)
 
     return f, phi, X_train, y_train, X_test, y_test
@@ -230,7 +230,7 @@ def get_gisette(lambda1 = 0.02, train_size = .8):
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
                                                         random_state = 1234)
     
-    phi = Norm1(lambda1) 
+    phi = L1Norm(lambda1) 
     f = logistic_loss(X_train, y_train)
         
     return f, phi, X_train, y_train, X_test, y_test
@@ -252,7 +252,7 @@ def get_triazines(lambda1 = 0.01, train_size = .8, v = 1, poly = 0, noise = 0):
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
                                                         random_state = 1234)
     
-    phi = Norm1(lambda1) 
+    phi = L1Norm(lambda1) 
     f = tstudent_loss(X_train, y_train, v=v)
     
     return f, phi, X_train, y_train, X_test, y_test
@@ -306,7 +306,7 @@ def load_from_txt(name):
 #         X_train = scaler.fit_transform(X_train)
 #         X_test = scaler.transform(X_test)
     
-#     phi = Norm1(lambda1) 
+#     phi = L1Norm(lambda1) 
 #     f = logistic_loss(X_train, y_train)
     
 #     return f, phi, X_train, y_train, X_test, y_test

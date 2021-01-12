@@ -217,7 +217,7 @@ spec_l1 = [
 ]
 
 @jitclass(spec_l1)
-class Norm1:
+class L1Norm:
     """
     class for the regularizer x --> lambda1 ||x||_1
     """
