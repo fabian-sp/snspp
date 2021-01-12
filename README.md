@@ -11,7 +11,7 @@ where the first part of the objective has the special form
 
 This problem structure is common in statistical learning problems: each summand of `f` is the loss at one data sample and `phi` is a regularizer.
 
-## Functions as objects
+## Functions as classes
 For all solvers of this packages, `f` and `phi` have to be instances of a class. As the solvers need certain information on the involved functions `f` and `phi`, these classes need to have several methods and attributes implemented.
 
 We list the methods and attributes that these objects need to have for the algorithms. This is relevant only if you want to solve problems which functions that are not yet implemented. For a list of implemented functions, see below.
@@ -40,10 +40,12 @@ Methods:
 
 Note that many common regularizer, e.g the l1/l2-norm or combinations of it, the proximal operator as well as its subdifferential can be computed in closed form.
 
-The package already contains the following losses:
+### Examples
+
+The package already contains the following losses
 * `logistic_loss`: the loss for logistic regression
 * `lsq`: the squared loss
-* `tstudent_loss`: loss for regression with Student-t residuals.
+* `tstudent_loss`: loss for regression with Student-t residuals
 
 and regularizers
 * `L1Norm`: the l1-norm. 
