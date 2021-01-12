@@ -104,8 +104,8 @@ Miscallaneous snippets for SPP solver
 #%timeit xi_vec[S]
 
 
-        # alternative: SAGA style, xi_tilde is the current xi and updated every epoch
-        # if params['reduce_variance']: 
-        #     if xi_tilde_update[iter_t]:#[0,20,30,40]:
-        #         xi = compute_full_xi(f, x_t)
-        #     xi_tilde = xi.copy()
+# ALTERNATIVE: SAGA STYLE        
+        # if params['reduce_variance']:
+        #     if f.convex:
+        #         xi_tilde = xi.copy()
+        #         full_g = (1/f.N) * (f.A.T @ xi_tilde)

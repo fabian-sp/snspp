@@ -273,7 +273,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
                     if is_easy:
                         gammas = f.weak_conv(np.arange(f.N))
                         xi = xi_tilde + gammas*(A@x_t)
-               
+       
+                    
         #stop criterion
         eta = stop_scikit_saga(x_t, x_old)
         

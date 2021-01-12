@@ -48,6 +48,7 @@ initialize_solvers(f, phi)
 
 params_saga = {'n_epochs' : 50, 'gamma': 4.}
 
+
 #tune_params = {'n_epochs' : 200, 'batch_size': 240}
 #opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = tune_params)
 opt_gamma = 0.02
