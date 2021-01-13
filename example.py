@@ -10,12 +10,12 @@ import time
 from sklearn.linear_model import Lasso, LogisticRegression
 
 from ssnsp.helper.data_generation import lasso_test, logreg_test, tstudent_test
+from ssnsp.helper.lasso import Ridge
 from ssnsp.solver.opt_problem import problem
 
-from ssnal_elastic.ssnal_elastic_core import ssnal_elastic_core
-
-
 from ssnsp.helper.utils import compute_batch_gradient_table
+
+from ssnal_elastic.ssnal_elastic_core import ssnal_elastic_core
 
 #%% generate data
 
@@ -24,14 +24,15 @@ n = 3000
 k = 100
 l1 = .001
 
-xsol, A, b, f, phi = lasso_test(N, n, k, l1, block = False, kappa = None, noise = 0.1)
+xsol, A, b, f, phi, A_test, b_test = lasso_test(N, n, k, l1, block = False, kappa = None, noise = 0.1)
 
 xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .1)
 
 x, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4)
 
 
-(np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()   
+#phi = Ridge(0.1)
+
 #%% solve with SSNSP
 
 params = {'max_iter' : 50, 'sample_size': 1000, 'sample_style': 'fast_increasing', \
@@ -69,7 +70,7 @@ f.eval(x_sk) + phi.eval(x_sk)
 
 #%% compare to SAGA/ADAGRAD
 
-params = {'n_epochs' : 200, 'reg': 0}
+params = {'n_epochs' : 200, 'gamma': 0.001}
 
 Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 

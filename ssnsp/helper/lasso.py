@@ -239,7 +239,7 @@ class L1Norm:
     
     def adagrad_prox(self, x, L):
         """
-        calculates prox_{phi}^L (x)
+        calculates prox_{phi}^Lambda_t (x)
         L is the diagonal(!) of Lambda_t (in the notation of Milzarek et al.)
         """
              
@@ -288,23 +288,22 @@ class Ridge:
         """
         assert alpha > 0
         l = alpha * self.lambda1
-        return x/(1-2*l)
+        return x/(1+2*l)
     
     def adagrad_prox(self, x, L):
         """
-        calculates prox_{phi}^L (x)
+        calculates prox_{phi}^Lambda_t (x)
         L is the diagonal(!) of Lambda_t (in the notation of Milzarek et al.)
         """
              
-        #TBD
+        return 1/(L+2*self.lambda1)*L*x
         
-        return 0
     
     def jacobian_prox(self, x, alpha):
         assert alpha > 0
         l = alpha * self.lambda1
         
-        return 1-2*l
+        return 1/(1+2*l)
     
     def moreau(self, x, alpha):
         assert alpha > 0
