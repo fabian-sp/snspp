@@ -27,7 +27,7 @@ elif v == 1.:
     params_ssnsp = {'max_iter' : 1200, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : .032, 'reduce_variance': True}
 
 
-f, phi, A, b, A_test, b_test = get_triazines(lambda1 = l1, train_size = .8, v = v, poly = 4, noise = 0.)
+f, phi, A, b, A_test, b_test = get_triazines(lambda1 = l1, train_size = .8, v = v, poly = 3, noise = 0.)
 
 n = A.shape[1]
 
@@ -46,7 +46,10 @@ print("psi(0) = ", f.eval(np.zeros(n)))
 # ref = problem(f, phi, x0 = x0, tol = 1e-6, params = params_ref, verbose = True, measure = True)
 # ref.solve(solver = 'ssnsp')
 
-
+# if poly = 3
+#params_saga = {'n_epochs' : 200, 'gamma' : 3.}
+#params_ssnsp = {'max_iter' : 1000, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : .06, 'reduce_variance': True}
+    
 #%% solve with SAGA
 Q = problem(f, phi, x0 = x0, tol = 1e-6, params = params_saga, verbose = True, measure = True)
 
@@ -106,9 +109,9 @@ tstudent_loss(Q1.x, A_test, b_test, f.v)
 tstudent_loss(P.x, A_test, b_test, f.v)
 
 
-# L_P = eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2)
-# L_Q = eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2)
-# L_Q1 = eval_test_set(X = Q1.info["iterates"], loss = tstudent_loss, **kwargs2)
+L_P = eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2)
+L_Q = eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2)
+L_Q1 = eval_test_set(X = Q1.info["iterates"], loss = tstudent_loss, **kwargs2)
 
 #all_loss_P = np.vstack([eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2) for P in allP])
 #all_loss_Q = np.vstack([eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2) for Q in allQ])
@@ -182,10 +185,9 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 3}
 
-Q.plot_objective(ax = ax, ls = '--', marker = '<', markersize = 2., **kwargs)
-Q1.plot_objective(ax = ax, ls = '--', marker = '<', markersize = 1.5, **kwargs)
-P.plot_objective(ax = ax, markersize = 1.5, **kwargs)
-
+Q.plot_objective(ax = ax, ls = '--', marker = '<',  **kwargs)
+Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+P.plot_objective(ax = ax, **kwargs)
 #plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
 #plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
 #plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
@@ -228,13 +230,13 @@ fig, ax = plt.subplots(1,1,  figsize = (4.5, 3.5))
 
 kwargs = {"log_scale": False, "lw": 0.4, "markersize": 3}
 
-#plot_test_error(Q, L_Q,  ax = ax,  marker = '<', markersize = 2.)
-#plot_test_error(Q1, L_Q1,  ax = ax,  marker = '<', markersize = 2.)
-#plot_test_error(P, L_P,  ax = ax,  marker = 'o', markersize = 1.5)
+plot_test_error(Q, L_Q,  ax = ax,  marker = '<', **kwargs)
+plot_test_error(Q1, L_Q1,  ax = ax,  marker = '<', **kwargs)
+plot_test_error(P, L_P,  ax = ax,  marker = 'o', **kwargs)
 
-plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
-plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
-plot_multiple_error(all_loss_P, allP, ax = ax , label = "ssnsp", **kwargs)
+#plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
+#plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
+#plot_multiple_error(all_loss_P, allP, ax = ax , label = "ssnsp", **kwargs)
 
 
 ax.set_yscale('log')
