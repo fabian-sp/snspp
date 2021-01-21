@@ -3,12 +3,9 @@ author: Fabian Schaipp
 """
 
 import numpy as np
-from ..helper.utils import block_diag
 
 from scipy.sparse.linalg import cg
-import time
 import warnings
-from numba import njit
 
 
 def Ueval(xi_sub, f, phi, x, alpha, S, subA, hat_d):

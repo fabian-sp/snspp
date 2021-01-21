@@ -1,6 +1,5 @@
 import numpy as np
 from numba import njit
-from numba.typed import List
 
 ############################################################################################
 ### Stopping criteria
@@ -16,22 +15,6 @@ def stop_scikit_saga(x_t, x_old):
     
     return nom/denom
 
-# def stop_mean_objective(obj, cutoff = True):
-#     """
-#     obj: list of the objective function values of the "mean iterate"
-#     """
-#     if cutoff:
-#         if len(obj) >= 6:
-#             objs = obj[3:]
-#         else:
-#             objs = obj.copy()
-#     else:
-#         objs = obj.copy()
-        
-#     if len(objs) <= 3:
-#         return np.inf
-#     else:
-#         return abs(objs[-1] - np.mean(objs))
     
 # def stop_optimal(x, f, phi):
 #     """
@@ -95,7 +78,7 @@ def compute_xi_inner(f, x):
         
 #     return g
 
-
+# needed for initializing in SAGA (only used once)
 def compute_gradient_table(f, x):
     """
     computes a table of gradients at point x
@@ -119,7 +102,7 @@ def compute_gradient_table(f, x):
     return np.ascontiguousarray(gradients)
 
 
-# needed for ADAGRAD
+# needed for ADAGRAD + SVRG
 @njit()
 def compute_batch_gradient(f, x, S):
     """
@@ -210,10 +193,6 @@ def logreg_gradient(f, x):
     
     return g
 
-
-# FOR TESTING
-#x_hist = [np.random.rand(20) for i in range(10)]
-#step_sizes = [.3]*10
 
 
 ############################################################################################
