@@ -55,7 +55,6 @@ def compute_full_xi(f, x, is_easy = False):
 @njit()
 def compute_xi_inner(f, x):
     
-    #vals = List()
     vals = np.zeros((f.N,1))
     
     for i in np.arange(f.N):
