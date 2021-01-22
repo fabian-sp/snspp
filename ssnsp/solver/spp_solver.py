@@ -6,7 +6,6 @@ import numpy as np
 from ..helper.utils import block_diag, compute_x_mean, stop_scikit_saga
 from ..helper.utils import compute_full_xi, compute_x_mean_hist
 from .spp_easy import solve_subproblem_easy
-from ..helper.tstudent import lipschitz_bound
 
 from scipy.sparse.linalg import cg
 import time
