@@ -5,7 +5,7 @@ import pandas as pd
 
 from ssnsp.solver.opt_problem import problem, color_dict
 from ssnsp.helper.data_generation import get_mnist
-from ssnsp.experiments.experiment_utils import plot_multiple, plot_multiple_error, eval_test_set, adagrad_step_size_tuner, initialize_solvers
+from ssnsp.experiments.experiment_utils import params_tuner, plot_multiple, plot_multiple_error, eval_test_set, initialize_solvers
 
 from sklearn.linear_model import LogisticRegression
 
@@ -37,12 +37,19 @@ initialize_solvers(f, phi)
 
 #%% params
 
-params_saga = {'n_epochs' : 20, 'gamma': 40.}
+params_saga = {'n_epochs' : 20, 'gamma': 70.}
+
+params_svrg = {'n_epochs' : 20, 'batch_size': 1, 'gamma': 60. }
 
 params_adagrad = {'n_epochs' : 200, 'batch_size': int(f.N*0.05), 'gamma': 0.0123 }
 
 params_ssnsp = {'max_iter' : 70, 'batch_size': 700, 'sample_style': 'fast_increasing', \
           'alpha_C' : 10., 'reduce_variance': True}
+    
+    
+#params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(1,50, 10), batch_range = np.array([1, 10]))
+#params_tuner(f, phi, solver = "saga", gamma_range = np.linspace(50, 120, 8))
+
 
 #%% solve with SAGA
 
@@ -54,8 +61,6 @@ Q.solve(solver = 'saga')
 print(f.eval(Q.x)+phi.eval(Q.x))
 
 #%% solve with ADAGRAD
-
-#opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = None)
 
 Q1 = problem(f, phi, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
 

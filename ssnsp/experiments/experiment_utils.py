@@ -273,7 +273,7 @@ def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = N
     return res, current_best, gamma_range
 
          
-            
+# deprecated, use params_tuner with solver = adagrad!        
 def adagrad_step_size_tuner(f, phi, gamma_range = None, params = None):
     """
     performs step size tuning for ADAGRAD
@@ -296,7 +296,7 @@ def adagrad_step_size_tuner(f, phi, gamma_range = None, params = None):
         
         print("Step size: ", gamma_range[k])
         
-        Q1 = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)
+        Q1 = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
         Q1.solve(solver = 'adagrad')
 
         this_obj = f.eval(Q1.x) +phi.eval(Q1.x)

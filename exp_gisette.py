@@ -6,7 +6,7 @@ import seaborn as sns
 
 from ssnsp.solver.opt_problem import problem
 from ssnsp.helper.data_generation import get_gisette
-from ssnsp.experiments.experiment_utils import plot_multiple, plot_multiple_error, adagrad_step_size_tuner, initialize_solvers, eval_test_set
+from ssnsp.experiments.experiment_utils import params_tuner, plot_multiple, plot_multiple_error, initialize_solvers, eval_test_set
 
 
 from sklearn.linear_model import LogisticRegression
@@ -46,18 +46,20 @@ initialize_solvers(f, phi)
 
 #%% params
 
-params_saga = {'n_epochs' : 50, 'gamma': 4.}
+params_saga = {'n_epochs' : 50, 'gamma': 5.}
 
+params_svrg = {'n_epochs' : 50, 'batch_size': 1, 'gamma': 11.}
 
-#tune_params = {'n_epochs' : 200, 'batch_size': 240}
-#opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = tune_params)
-opt_gamma = 0.02
-params_adagrad = {'n_epochs' : 200, 'batch_size': 240, 'gamma': opt_gamma}
+#params_tuner(f, phi, solver = "adagrad")
+params_adagrad = {'n_epochs' : 200, 'batch_size': 240, 'gamma': 0.03}
 
 
 params_ssnsp = {'max_iter' : 60, 'batch_size': 500, 'sample_style': 'fast_increasing', 'alpha_C' : 5.,\
           "reduce_variance": True}
 
+
+params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(1,50, 10), batch_range = np.array([1, 10]))
+params_tuner(f, phi, solver = "saga", gamma_range = np.linspace(1,20, 10))
 
 #%% solve with SAGA
 
@@ -76,6 +78,14 @@ Q1 = problem(f, phi, tol = 1e-9, params = params_adagrad, verbose = True, measur
 Q1.solve(solver = 'adagrad')
 
 print(f.eval(Q1.x)+phi.eval(Q1.x))
+
+#%% solve with SVRG
+
+Q2 = problem(f, phi, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
+
+Q2.solve(solver = 'svrg')
+
+print(f.eval(Q2.x) +phi.eval(Q2.x))
 
 #%% solve with SSNSP
 
@@ -141,8 +151,9 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 3}
 
-#Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 #Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
+Q2.plot_objective(ax = ax, ls = '-.', marker = '<', **kwargs)
 #P.plot_objective(ax = ax, **kwargs)
 
 
