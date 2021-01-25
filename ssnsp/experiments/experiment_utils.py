@@ -4,6 +4,9 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import matplotlib.lines as mlines
+
 from ..solver.opt_problem import problem, color_dict
 
 plt.rcParams["font.family"] = "serif"
@@ -186,7 +189,7 @@ def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = N
     
         else:
             batches = np.array([0.01, 0.03, 0.05])
-            batch_range = max(1, (f.N*batches).astype(int))
+            batch_range = np.maximum(1, (f.N*batches).astype(int))
             
     all_time_min = np.inf
     current_best = ()
@@ -227,8 +230,8 @@ def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = N
     # plotting
     fig, ax = plt.subplots(1,1)
     
-    markers = ['o', 'x', 'h']
-    lstyles = ["-", "--", "."]
+    markers = ['x', 'o', '^']
+    lstyles = ["-", "--", ":"]
     cmap = plt.cm.YlGnBu
     colors = cmap(np.linspace(0,1,len(gamma_range)))
 
@@ -239,13 +242,27 @@ def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = N
             gamma = gamma_range[i]
             x = res[b][gamma]["runtime"].cumsum()
             y = res[b][gamma]["objective"] - all_time_min
-            p1 = ax.plot(x, y, color = colors[i], marker = markers[j], ls = lstyles[j], markersize = 3)
-        
-
-    # handles, labels = ax.get_legend_handles_labels()
-    # by_label = dict(zip(labels, handles))
-    # ax.legend(by_label.values(), by_label.keys())
+            ax.plot(x, y, color = colors[i], marker = markers[j], ls = lstyles[j], markersize = 6)
     
+    
+    # legend for batch sizes
+    if solver != 'saga':
+        b_leg = list()
+        for j in range(len(batch_range)):
+            b_leg.append(mlines.Line2D([], [], color=colors[-1], marker=markers[j], ls = lstyles[j], markersize=10, \
+                                       label= f"b = {batch_range[j]}"))
+        
+        b_leg = plt.legend(handles = b_leg, title = "batch size", loc = 'upper left')
+        ax.add_artist(b_leg)
+    
+    # legend for step sizes 
+    g_leg = list()
+    for i in range(len(gamma_range)):
+        g_leg.append(mpatches.Patch(color = colors[i], label = np.round(gamma_range[i], 3)))
+        
+    plt.legend(handles = g_leg, title = "step size (gamma)", loc = 'upper right')
+        
+    # other stuff    
     ax.grid(ls = '-', lw = .5)
     ax.set_yscale('log')
     
