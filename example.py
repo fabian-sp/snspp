@@ -35,7 +35,7 @@ x, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4)
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 50, 'sample_size': 1000, 'sample_style': 'fast_increasing', \
+params = {'max_iter' : 50, 'batch_size': 1000, 'sample_style': 'fast_increasing', \
           'alpha_C' : 10., 'reduce_variance': False}
 
 P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)

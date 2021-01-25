@@ -20,11 +20,11 @@ v = 1.
 if v == 0.25:
     params_saga = {'n_epochs' : 200, 'gamma' : 4.}
     params_adagrad = {'n_epochs' : 500, 'batch_size': 15, 'gamma': 0.002}
-    params_ssnsp = {'max_iter' : 1000, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : 0.008, 'reduce_variance': True}
+    params_ssnsp = {'max_iter' : 1000, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : 0.008, 'reduce_variance': True}
 elif v == 1.:
     params_saga = {'n_epochs' : 200, 'gamma' : 5.}
     params_adagrad = {'n_epochs' : 500, 'batch_size': 15, 'gamma': 0.002}
-    params_ssnsp = {'max_iter' : 1200, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : .032, 'reduce_variance': True}
+    params_ssnsp = {'max_iter' : 1200, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : .032, 'reduce_variance': True}
 
 
 f, phi, A, b, A_test, b_test = get_triazines(lambda1 = l1, train_size = .8, v = v, poly = 3, noise = 0.)
@@ -42,13 +42,13 @@ print("psi(0) = ", f.eval(np.zeros(n)))
 #%% determine psi_star
 
 #x0 = P.x
-# params_ref = {'max_iter' : 500, 'sample_size': f.N, 'sample_style': 'constant', 'alpha_C' : 10., 'reduce_variance': True}
+# params_ref = {'max_iter' : 500, 'batch_size': f.N, 'sample_style': 'constant', 'alpha_C' : 10., 'reduce_variance': True}
 # ref = problem(f, phi, x0 = x0, tol = 1e-6, params = params_ref, verbose = True, measure = True)
 # ref.solve(solver = 'ssnsp')
 
 # if poly = 3
 #params_saga = {'n_epochs' : 200, 'gamma' : 3.}
-#params_ssnsp = {'max_iter' : 1000, 'sample_size': 15, 'sample_style': 'constant', 'alpha_C' : .06, 'reduce_variance': True}
+#params_ssnsp = {'max_iter' : 1000, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : .06, 'reduce_variance': True}
     
 #%% solve with SAGA
 Q = problem(f, phi, x0 = x0, tol = 1e-6, params = params_saga, verbose = True, measure = True)

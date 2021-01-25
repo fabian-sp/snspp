@@ -164,12 +164,99 @@ def initialize_solvers(f, phi):
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = False)   
     tmpP.solve(solver = 'adagrad')
     
-    params = {'max_iter' : 3, 'sample_size': 10, 'alpha_C': 0.01}  
+    params = {'max_iter' : 3, 'batch_size': 10, 'alpha_C': 0.01}  
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = False)   
     tmpP.solve(solver = 'ssnsp')
     
     return
 
+def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = None):
+    
+    if gamma_range is None:
+        if solver in ['saga', 'batch saga', 'svrg']:
+            # for SAGA/SVRG, input for gamma is multiplied with theoretical stepsize --> choose larger than 1
+            gamma_range = np.logspace(0, 2, 10)
+    
+        else:
+            gamma_range = np.logspace(-3, -1, 10)
+    
+    if batch_range is None:
+        if solver == 'saga':
+            batch_range = np.array([1])
+    
+        else:
+            batches = np.array([0.01, 0.03, 0.05])
+            batch_range = max(1, (f.N*batches).astype(int))
+            
+    all_time_min = np.inf
+    current_best = ()
+    current_best_val = np.inf    
+    
+    params =  {'n_epochs' : 50}  
+    res = dict()
+    
+    
+    for b in batch_range:
+        res[b] = dict()
+        for gamma in gamma_range:
+            
+            params["gamma"] = gamma
+            if solver != 'saga':
+                params["batch_size"] = b
+            print(params)
+            
+            Q = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)
+            
+            try: 
+                Q.solve(solver = solver)
+            except:
+                Q.info = dict()
+                Q.info["runtime"] = np.nan*np.zeros(params["n_epochs"])
+                Q.info["objective"] = np.nan*np.zeros(params["n_epochs"])
+                
+            # store
+            res[b][gamma] = {'runtime': Q.info["runtime"], 'objective': Q.info["objective"]}
+            all_time_min = min(all_time_min, Q.info["objective"].min())
+            
+            # update current best params if necessary
+            this_val = Q.info["objective"][-5:].mean()
+            if this_val <= current_best_val:
+                current_best = (b, gamma)
+                current_best_val = this_val
+            
+    # plotting
+    fig, ax = plt.subplots(1,1)
+    
+    markers = ['o', 'x', 'h']
+    lstyles = ["-", "--", "."]
+    cmap = plt.cm.YlGnBu
+    colors = cmap(np.linspace(0,1,len(gamma_range)))
+
+    for j in range(len(batch_range)):
+        b = batch_range[j]
+        for i in range(len(gamma_range)):  
+            
+            gamma = gamma_range[i]
+            x = res[b][gamma]["runtime"].cumsum()
+            y = res[b][gamma]["objective"] - all_time_min
+            p1 = ax.plot(x, y, color = colors[i], marker = markers[j], ls = lstyles[j], markersize = 3)
+        
+
+    # handles, labels = ax.get_legend_handles_labels()
+    # by_label = dict(zip(labels, handles))
+    # ax.legend(by_label.values(), by_label.keys())
+    
+    ax.grid(ls = '-', lw = .5)
+    ax.set_yscale('log')
+    
+    ax.set_xlabel('Runtime [sec]')
+    ax.set_ylabel('Objective - cst.')
+        
+            
+    return res, current_best, gamma_range
+
+         
+            
 def adagrad_step_size_tuner(f, phi, gamma_range = None, params = None):
     """
     performs step size tuning for ADAGRAD

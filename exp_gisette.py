@@ -55,7 +55,7 @@ opt_gamma = 0.02
 params_adagrad = {'n_epochs' : 200, 'batch_size': 240, 'gamma': opt_gamma}
 
 
-params_ssnsp = {'max_iter' : 60, 'sample_size': 500, 'sample_style': 'fast_increasing', 'alpha_C' : 5.,\
+params_ssnsp = {'max_iter' : 60, 'batch_size': 500, 'sample_style': 'fast_increasing', 'alpha_C' : 5.,\
           "reduce_variance": True}
 
 

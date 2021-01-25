@@ -35,9 +35,17 @@ print("psi(x*) = ", psi_star)
 
 initialize_solvers(f, phi)
 
-#%% solve with SAGA
+#%% params
 
 params_saga = {'n_epochs' : 20, 'gamma': 40.}
+
+params_adagrad = {'n_epochs' : 200, 'batch_size': int(f.N*0.05), 'gamma': 0.0123 }
+
+params_ssnsp = {'max_iter' : 70, 'batch_size': 700, 'sample_style': 'fast_increasing', \
+          'alpha_C' : 10., 'reduce_variance': True}
+
+#%% solve with SAGA
+
 
 Q = problem(f, phi, tol = 1e-9, params = params_saga, verbose = True, measure = True)
 
@@ -48,9 +56,6 @@ print(f.eval(Q.x)+phi.eval(Q.x))
 #%% solve with ADAGRAD
 
 #opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = None)
-opt_gamma = 0.0123 
-
-params_adagrad = {'n_epochs' : 200, 'batch_size': int(f.N*0.05), 'gamma': opt_gamma}
 
 Q1 = problem(f, phi, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
 
@@ -59,12 +64,6 @@ Q1.solve(solver = 'adagrad')
 print(f.eval(Q1.x)+phi.eval(Q1.x))
 
 #%% solve with SSNSP
-
-# params setup for decreasing step size
-# params = {'max_iter' : 70, 'sample_size': 1000, 'sample_style': 'fast_increasing', \
-#           'alpha_C' : 15., 'reduce_variance': True}
-params_ssnsp = {'max_iter' : 70, 'sample_size': 700, 'sample_style': 'fast_increasing', \
-          'alpha_C' : 10., 'reduce_variance': True}
 
 P = problem(f, phi, tol = 1e-9, params = params_ssnsp, verbose = True, measure = True)
 P.solve(solver = 'ssnsp')

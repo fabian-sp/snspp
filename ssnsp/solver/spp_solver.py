@@ -156,8 +156,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     else:
         assert type(params['max_iter']) == int, "Max. iter needs to be integer"
         
-    if 'sample_size' not in params.keys():    
-        params['sample_size'] = max(int(f.N/4), 1)
+    if 'batch_size' not in params.keys():    
+        params['batch_size'] = max(int(f.N/4), 1)
     
     if 'sample_style' not in params.keys():    
         params['sample_style'] = 'constant'
@@ -178,13 +178,13 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     ## Sample style
     #########################################################
     if params['sample_style'] == 'increasing':     
-        batch_size = batch_size_constructor(np.arange(params['max_iter']), a = params['sample_size']/4, \
-                                            b = params['sample_size'], M = params['max_iter']-1)
+        batch_size = batch_size_constructor(np.arange(params['max_iter']), a = params['batch_size']/4, \
+                                            b = params['batch_size'], M = params['max_iter']-1)
     elif params['sample_style'] == 'fast_increasing': 
-        batch_size = batch_size_constructor(np.arange(params['max_iter']), a = params['sample_size']/4, \
-                                            b = params['sample_size'], M = params['max_iter']-1, cutoff = 10)
+        batch_size = batch_size_constructor(np.arange(params['max_iter']), a = params['batch_size']/4, \
+                                            b = params['batch_size'], M = params['max_iter']-1, cutoff = 10)
     else:
-        batch_size = params['sample_size'] * np.ones(params['max_iter'], dtype = 'int64')
+        batch_size = params['batch_size'] * np.ones(params['max_iter'], dtype = 'int64')
     
     #########################################################
     ## Initialization

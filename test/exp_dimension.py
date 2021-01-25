@@ -55,7 +55,7 @@ for g in gammas:
 
 #%% solve with SSNSP
 
-    params = {'max_iter' : 15, 'sample_size': f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 10., 'n_epochs': 5}
+    params = {'max_iter' : 15, 'batch_size': f.N, 'sample_style': 'fast_increasing', 'alpha_C' : 10., 'n_epochs': 5}
     
     P = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
     

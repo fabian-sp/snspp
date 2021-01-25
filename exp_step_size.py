@@ -37,7 +37,7 @@ if problem_type == "lasso":
 
 elif problem_type == "tstudent":
     
-    ref_params = {'max_iter': 2000, 'alpha_C': 0.1, 'sample_size': 50, 'sample_style': 'constant', 'reduce_variance': True}
+    ref_params = {'max_iter': 2000, 'alpha_C': 0.1, 'batch_size': 50, 'sample_style': 'constant', 'reduce_variance': True}
     ref_P = problem(f, phi, tol = 1e-6, params = ref_params, verbose = True, measure = True)
     ref_P.solve(solver = 'ssnsp')
     
@@ -78,11 +78,11 @@ for l in np.arange(L):
         params["max_iter"] = int(EPOCHS *  1/GRID_B[k,l])
         # m = 10 in SSNSP
         params["max_iter"] = int( EPOCHS * (GRID_B[k,l] + 1/params['m_iter'])**(-1)  )
-        params['sample_size'] = max(1, int(GRID_B[k,l] * f.N))
+        params['batch_size'] = max(1, int(GRID_B[k,l] * f.N))
         params['alpha_C'] = GRID_A[k,l]
         
         print(f"ALPHA = {params['alpha_C']}")
-        print(f"BATCH = {params['sample_size']}")
+        print(f"BATCH = {params['batch_size']}")
         print(f"MAX_ITER = {params['max_iter']}")
         try:
             P = problem(f, phi, tol = 1e-6, params = params, verbose = False, measure = True)
