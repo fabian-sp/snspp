@@ -46,20 +46,20 @@ initialize_solvers(f, phi)
 
 #%% params
 
-params_saga = {'n_epochs' : 50, 'gamma': 5.}
+params_saga = {'n_epochs' : 50, 'gamma': 6.}
 
 params_svrg = {'n_epochs' : 50, 'batch_size': 1, 'gamma': 11.}
 
-#params_tuner(f, phi, solver = "adagrad")
+
 params_adagrad = {'n_epochs' : 200, 'batch_size': 240, 'gamma': 0.03}
 
 
 params_ssnsp = {'max_iter' : 60, 'batch_size': 500, 'sample_style': 'fast_increasing', 'alpha_C' : 5.,\
           "reduce_variance": True}
 
-
-params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(1,50, 10), batch_range = np.array([1, 10]))
-params_tuner(f, phi, solver = "saga", gamma_range = np.linspace(1,20, 10))
+#params_tuner(f, phi, solver = "adagrad", batch_range = np.array([100, 250, 500]))
+#params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(1,50, 10), batch_range = np.array([1, 10]))
+#params_tuner(f, phi, solver = "saga", gamma_range = np.linspace(5,7, 10))
 
 #%% solve with SAGA
 
@@ -152,9 +152,9 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 3}
 
 Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-#Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
-Q2.plot_objective(ax = ax, ls = '-.', marker = '<', **kwargs)
-#P.plot_objective(ax = ax, **kwargs)
+Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
+#Q2.plot_objective(ax = ax, ls = '-.', marker = '<', **kwargs)
+P.plot_objective(ax = ax, **kwargs)
 
 
 plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
