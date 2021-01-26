@@ -41,15 +41,15 @@ params_saga = {'n_epochs' : 20, 'gamma': 70.}
 
 params_svrg = {'n_epochs' : 20, 'batch_size': 1, 'gamma': 60. }
 
-params_adagrad = {'n_epochs' : 120, 'batch_size': int(f.N*0.05), 'gamma': 0.0123 }
+params_adagrad = {'n_epochs' : 120, 'batch_size': int(f.N*0.05), 'gamma': 0.03}
 
-params_ssnsp = {'max_iter' : 70, 'batch_size': 700, 'sample_style': 'fast_increasing', \
+params_ssnsp = {'max_iter' : 70, 'batch_size': 650, 'sample_style': 'fast_increasing', \
           'alpha_C' : 10., 'reduce_variance': True}
     
     
 #params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(1,50, 10), batch_range = np.array([1, 10]))
 #params_tuner(f, phi, solver = "saga", gamma_range = np.linspace(50, 120, 8))
-
+#params_tuner(f, phi, solver = "adagrad", batch_range = np.array([100, 1000, 3000]))
 
 #%% solve with SAGA
 
@@ -161,7 +161,7 @@ if save:
 
 #%% coefficent plot
 
-P = allP[-1]
+#P = allP[-1]
 
 fig,ax = plt.subplots(2, 2,  figsize = (7,5))
 Q.plot_path(ax = ax[0,0], xlabel = False)
