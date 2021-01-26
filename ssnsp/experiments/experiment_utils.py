@@ -268,7 +268,8 @@ def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = N
     
     ax.set_xlabel('Runtime [sec]')
     ax.set_ylabel('Objective - cst.')
-        
+    
+    ax.set_title(f'Parameter tuning for {solver}')
             
     return res, current_best, gamma_range
 
