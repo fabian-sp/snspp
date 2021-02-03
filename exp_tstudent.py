@@ -10,48 +10,52 @@ import time
 
 from ssnsp.helper.data_generation import tstudent_test, get_triazines
 from ssnsp.solver.opt_problem import problem
-from ssnsp.experiments.experiment_utils import plot_multiple, initialize_solvers, adagrad_step_size_tuner, eval_test_set, plot_test_error, plot_multiple_error
+from ssnsp.experiments.experiment_utils import params_tuner, plot_multiple, initialize_solvers, adagrad_step_size_tuner, eval_test_set, plot_test_error, plot_multiple_error
 
-#%% generate data
+#%% load data
 
 l1 = 1e-3
 v = 1.
+poly = 4
 
-if v == 0.25:
-    params_saga = {'n_epochs' : 200, 'gamma' : 4.}
-    params_adagrad = {'n_epochs' : 500, 'batch_size': 15, 'gamma': 0.002}
-    params_ssnsp = {'max_iter' : 1000, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : 0.008, 'reduce_variance': True}
-elif v == 1.:
-    params_saga = {'n_epochs' : 200, 'gamma' : 5.}
-    params_adagrad = {'n_epochs' : 500, 'batch_size': 15, 'gamma': 0.002}
-    params_ssnsp = {'max_iter' : 1200, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : .032, 'reduce_variance': True}
-
-
-f, phi, A, b, A_test, b_test = get_triazines(lambda1 = l1, train_size = .8, v = v, poly = 3, noise = 0.)
-
+f, phi, A, b, A_test, b_test = get_triazines(lambda1 = l1, train_size = .8, v = v, poly = poly, noise = 0.)
 n = A.shape[1]
 
 initialize_solvers(f, phi)
 
-x0 = np.zeros(n)
-
-#sns.distplot(A@x0-b)
-
 print("psi(0) = ", f.eval(np.zeros(n)))
+
+#%% old param setup for v=0.25
+# params_saga = {'n_epochs' : 200, 'gamma' : 4.}
+# params_svrg = {'n_epochs' : 200, 'batch_size': 1, 'gamma': 8.}
+# params_adagrad = {'n_epochs' : 500, 'batch_size': 15, 'gamma': 0.002}
+# params_ssnsp = {'max_iter' : 1000, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : 0.008, 'reduce_variance': True}
+
+#%% parameter setup
+
+params_saga = {'n_epochs' : 200, 'gamma' : 5.}
+params_svrg = {'n_epochs' : 200, 'batch_size': 1, 'gamma': 8.}
+params_adagrad = {'n_epochs' : 500, 'batch_size': 30, 'gamma': 0.004}
+params_ssnsp = {'max_iter' : 1200, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : .032, 'reduce_variance': True}
+
+#params_tuner(f, phi, solver = "saga", gamma_range = np.linspace(4,8, 10))
+#params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(2, 20, 10), batch_range = np.array([1, 10]))
+#params_tuner(f, phi, solver = "adagrad", gamma_range = np.logspace(-3,-2, 6), batch_range = np.array([30, 50]))
+#params_tuner(f, phi, solver = "ssnsp", gamma_range = np.linspace(0.02,0.05,10), batch_range = np.array([15,30]))
 
 #%% determine psi_star
 
-#x0 = P.x
 # params_ref = {'max_iter' : 500, 'batch_size': f.N, 'sample_style': 'constant', 'alpha_C' : 10., 'reduce_variance': True}
-# ref = problem(f, phi, x0 = x0, tol = 1e-6, params = params_ref, verbose = True, measure = True)
+# ref = problem(f, phi, tol = 1e-6, params = params_ref, verbose = True, measure = True)
 # ref.solve(solver = 'ssnsp')
 
 # if poly = 3
 #params_saga = {'n_epochs' : 200, 'gamma' : 3.}
 #params_ssnsp = {'max_iter' : 1000, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : .06, 'reduce_variance': True}
     
+
 #%% solve with SAGA
-Q = problem(f, phi, x0 = x0, tol = 1e-6, params = params_saga, verbose = True, measure = True)
+Q = problem(f, phi, tol = 1e-6, params = params_saga, verbose = True, measure = True)
 
 Q.solve(solver = 'saga')
 print("f(x_t) = ", f.eval(Q.x))
@@ -62,7 +66,7 @@ print("psi(x_t) = ", f.eval(Q.x) + phi.eval(Q.x))
 #%% solve with SVRG/ BATCH-SAGA
 # params_svrg = {'n_epochs' : 100, 'gamma' : 4.}
 
-# Q2 = problem(f, phi, x0 = x0, tol = 1e-6, params = params_svrg, verbose = True, measure = True)
+# Q2 = problem(f, phi, tol = 1e-6, params = params_svrg, verbose = True, measure = True)
 
 # Q2.solve(solver = 'svrg')
 
@@ -73,7 +77,7 @@ print("psi(x_t) = ", f.eval(Q.x) + phi.eval(Q.x))
 #tune_params = {'n_epochs' : 300, 'batch_size': 15}
 #opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = tune_params)
 
-Q1 = problem(f, phi, x0 = x0, tol = 1e-6, params = params_adagrad, verbose = True, measure = True)
+Q1 = problem(f, phi, tol = 1e-6, params = params_adagrad, verbose = True, measure = True)
 Q1.solve(solver = 'adagrad')
 
 print("f(x_t) = ", f.eval(Q1.x))
@@ -82,7 +86,7 @@ print("psi(x_t) = ", f.eval(Q1.x) + phi.eval(Q1.x))
 
 #%% solve with SSNSP
 
-P = problem(f, phi, x0 = x0, tol = 1e-6, params = params_ssnsp, verbose = True, measure = True)
+P = problem(f, phi, tol = 1e-6, params = params_ssnsp, verbose = True, measure = True)
 P.solve(solver = 'ssnsp')
 
 print("f(x_t) = ", f.eval(P.x))
@@ -103,7 +107,6 @@ def tstudent_loss(x, A, b, v):
 kwargs2 = {"A": A_test, "b": b_test, "v": f.v}
 
 #%%
-tstudent_loss(x0, A_test, b_test, f.v)
 tstudent_loss(Q.x, A_test, b_test, f.v)
 tstudent_loss(Q1.x, A_test, b_test, f.v)
 tstudent_loss(P.x, A_test, b_test, f.v)
@@ -188,6 +191,7 @@ kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 3}
 Q.plot_objective(ax = ax, ls = '--', marker = '<',  **kwargs)
 Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 P.plot_objective(ax = ax, **kwargs)
+
 #plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
 #plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
 #plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)

@@ -173,7 +173,7 @@ def initialize_solvers(f, phi):
     
     return
 
-def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = None):
+def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = None, n_iter = 50):
     
     if gamma_range is None:
         if solver in ['saga', 'batch saga', 'svrg']:
@@ -186,7 +186,6 @@ def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = N
     if batch_range is None:
         if solver == 'saga':
             batch_range = np.array([1])
-    
         else:
             batches = np.array([0.01, 0.03, 0.05])
             batch_range = np.maximum(1, (f.N*batches).astype(int))
@@ -195,10 +194,12 @@ def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = N
     current_best = ()
     current_best_val = np.inf    
     
+    # initial parameter setup
     if solver == 'ssnsp':
-        params = {'max_iter' : 50, 'reduce_variance': True}
+        params = {'max_iter' : n_iter, 'reduce_variance': True}
     else:
-        params =  {'n_epochs' : 50}  
+        params =  {'n_epochs' : n_iter}  
+        
     res = dict()
     
     
@@ -206,6 +207,7 @@ def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = N
         res[b] = dict()
         for gamma in gamma_range:
             
+            # update step size and batch size
             if solver == 'ssnsp':
                 params["alpha_C"] = gamma
             else:
