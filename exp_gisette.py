@@ -48,18 +48,19 @@ initialize_solvers(f, phi)
 
 params_saga = {'n_epochs' : 50, 'gamma': 6.}
 
-params_svrg = {'n_epochs' : 50, 'batch_size': 1, 'gamma': 9.4}
+params_svrg = {'n_epochs' : 50, 'batch_size': 1, 'gamma': 12.}
 
 
-params_adagrad = {'n_epochs' : 200, 'batch_size': 240, 'gamma': 0.03}
+params_adagrad = {'n_epochs' : 200, 'batch_size': 240, 'gamma': 0.028}
 
 
-params_ssnsp = {'max_iter' : 60, 'batch_size': 500, 'sample_style': 'fast_increasing', 'alpha_C' : 5.,\
+params_ssnsp = {'max_iter' : 60, 'batch_size': 400, 'sample_style': 'fast_increasing', 'alpha_C' : 7.,\
           "reduce_variance": True}
 
-#params_tuner(f, phi, solver = "adagrad", batch_range = np.array([100, 250, 500]))
-#params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(1, 20, 10), batch_range = np.array([1, 10]))
-#params_tuner(f, phi, solver = "saga", gamma_range = np.linspace(5,7, 10))
+#params_tuner(f, phi, solver = "saga", gamma_range = np.linspace(4,8, 10))
+#params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(1, 20, 10), batch_range = np.array([1, 10, 100]))
+#params_tuner(f, phi, solver = "adagrad", batch_range = np.array([50, 250, 500]))
+#params_tuner(f, phi, solver = "ssnsp", gamma_range = np.linspace(5,10, 10), batch_range = np.array([200, 400]))
 
 #%% solve with SAGA
 
@@ -153,13 +154,13 @@ kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 3}
 
 Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
-#Q2.plot_objective(ax = ax, ls = '-.', marker = '<', **kwargs)
+Q2.plot_objective(ax = ax, ls = '-.', marker = '<', **kwargs)
 P.plot_objective(ax = ax, **kwargs)
 
 
-plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
-plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
-plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
+#plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
+#plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
+#plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
 #plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **kwargs)
 
 

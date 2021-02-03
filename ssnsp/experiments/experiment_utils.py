@@ -195,7 +195,10 @@ def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = N
     current_best = ()
     current_best_val = np.inf    
     
-    params =  {'n_epochs' : 50}  
+    if solver == 'ssnsp':
+        params = {'max_iter' : 50, 'reduce_variance': True}
+    else:
+        params =  {'n_epochs' : 50}  
     res = dict()
     
     
@@ -203,7 +206,11 @@ def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = N
         res[b] = dict()
         for gamma in gamma_range:
             
-            params["gamma"] = gamma
+            if solver == 'ssnsp':
+                params["alpha_C"] = gamma
+            else:
+                params["gamma"] = gamma
+            
             if solver != 'saga':
                 params["batch_size"] = b
             print(params)
