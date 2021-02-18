@@ -46,7 +46,7 @@ initialize_solvers(f, phi)
 
 #%% params
 
-params_saga = {'n_epochs' : 50, 'gamma': 6.}
+params_saga = {'n_epochs' : 50, 'gamma': 5.5}
 
 params_svrg = {'n_epochs' : 50, 'batch_size': 1, 'gamma': 12.}
 
@@ -212,14 +212,14 @@ all_loss_Q1 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = logreg_los
 #%%
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
-kwargs = {"log_scale": False, "lw": 0.4, "markersize": 3}
+kwargs = {"log_scale": False, "lw": 1, "markersize": 3}
 
 plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
 plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
 plot_multiple_error(all_loss_P, allP, ax = ax , label = "ssnsp", **kwargs)
 
 ax.set_xlim(-.1, 6)
-ax.set_ylim(all_loss_P.min()*0.99, all_loss_P.max()*1.01)
+ax.set_ylim(all_loss_P.min()-1e-3, all_loss_P.min()+1e-1)
 ax.legend(fontsize = 10)
 
 fig.subplots_adjust(top=0.96,
