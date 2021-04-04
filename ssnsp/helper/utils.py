@@ -59,7 +59,6 @@ def compute_xi_inner(f, x):
     
     for i in np.arange(f.N):
         A_i = np.ascontiguousarray(f.A[i,:]).reshape(1,-1)
-        #vals.append(f.g(A_i @ x, i))
         vals[i,:] = f.g(A_i @ x, i)
     
     return vals
@@ -121,6 +120,7 @@ def compute_batch_gradient(f, x, S):
     g = (1/len(S))*gradients
     
     return g
+
 
 # needed for mini-batch SAGA
 @njit()

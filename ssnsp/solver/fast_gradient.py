@@ -122,7 +122,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
         # run SAGA with batch size n^(2/3)
         x_t, x_hist, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['batch_size'])
     elif solver == 'svrg':
-        x_t, x_hist, step_sizes, eta  = prox_svrg(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['batch_size'], m_iter)
+        x_t, x_hist, step_sizes, eta  = prox_svrg(f, phi, x_t, A, N, tol, gamma, params['n_epochs'], params['batch_size'], m_iter)
     elif solver == 'adagrad':
         x_t, x_hist, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, gamma, params['delta'] , params['n_epochs'], params['batch_size'])
     end = time.time()
@@ -276,7 +276,7 @@ def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
 
 #%%
 @njit()
-def prox_svrg(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, batch_size, m_iter):
+def prox_svrg(f, phi, x_t, A, N, tol, gamma, n_epochs, batch_size, m_iter):
     
     # initialize for diagnostics
     x_hist = List()
@@ -320,7 +320,61 @@ def prox_svrg(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, batch_size, m_
 
     return x_t, x_hist, step_sizes, eta
 
+#%%
+# @njit()
+# def prox_svrg2(f, phi, x_t, A, N, tol, gamma, n_epochs, batch_size, m_iter):
+    
+#     # initialize for diagnostics
+#     x_hist = List()
+#     step_sizes = List()
+    
+#     eta = 1e10
+#     x_old = x_t
+    
+#     S_iter = int(n_epochs*N / (batch_size*m_iter))
+    
+#     for s in np.arange(S_iter):
+          
+#         gradient_store = compute_xi_inner(f, x_t)
+#         g_tilde = (1/N) * (A*gradient_store).sum(axis=0)
 
+        
+#         for t in np.arange(m_iter):
+            
+#             if batch_size == 1:
+#                 S = np.random.randint(low = 0, high = N, size = 1)
+#             else:
+#                 S = np.random.choice(a = np.arange(N), size = batch_size, replace = False)
+        
+#             # compute the gradient
+#             v_t = compute_svrg_grad(f, x_t, S)
+#             A_t = A[S,:]
+#             g_t = (1/batch_size) * (A_t*(v_t - gradient_store[S,:])).sum(axis=0) + g_tilde
+
+#             w_t = x_t - gamma*g_t
+#             x_t = phi.prox(w_t, gamma)
+        
+   
+#         # stop criterion
+#         eta = stop_scikit_saga(x_t, x_old)
+#         x_old = x_t
+#         # store in each outer iteration
+#         x_hist.append(x_t)    
+#         step_sizes.append(gamma)    
+
+
+#     return x_t, x_hist, step_sizes, eta
+
+# @njit()
+# def compute_svrg_grad(f, x, S):
+    
+#     vals = np.zeros((len(S),1))
+    
+#     for i in np.arange(len(S)):
+#         A_i = np.ascontiguousarray(f.A[S[i],:]).reshape(1,-1)
+#         vals[i,:] = f.g(A_i @ x, S[i])
+    
+#     return vals
 #%%
 @njit()
 def batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, batch_size):

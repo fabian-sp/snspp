@@ -47,7 +47,7 @@ params_ssnsp = {'max_iter' : 70, 'batch_size': 650, 'sample_style': 'fast_increa
           'alpha_C' : 10., 'reduce_variance': True}
     
     
-#params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(1,50, 10), batch_range = np.array([1, 10]))
+#params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(1,50, 3), batch_range = np.array([1, 10, 100]))
 #params_tuner(f, phi, solver = "saga", gamma_range = np.linspace(50, 120, 8))
 #params_tuner(f, phi, solver = "adagrad", batch_range = np.array([100, 1000, 3000]))
 

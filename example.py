@@ -15,7 +15,7 @@ from ssnsp.solver.opt_problem import problem
 
 from ssnsp.helper.utils import compute_batch_gradient_table
 
-from ssnal_elastic.ssnal_elastic_core import ssnal_elastic_core
+#from ssnal_elastic.ssnal_elastic_core import ssnal_elastic_core
 
 #%% generate data
 
@@ -70,12 +70,12 @@ f.eval(x_sk) + phi.eval(x_sk)
 
 #%% compare to SAGA/ADAGRAD
 
-params = {'n_epochs' : 200, 'gamma': 0.001}
+params = {'n_epochs' : 200, 'gamma': 1}
 
 Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
 start = time.time()
-Q.solve(solver = 'saga')
+Q.solve(solver = 'svrg')
 end = time.time()
 
 print(f"Computing time: {end-start} sec")
