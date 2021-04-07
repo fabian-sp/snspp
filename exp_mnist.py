@@ -37,9 +37,9 @@ initialize_solvers(f, phi)
 
 #%% params
 
-params_saga = {'n_epochs' : 20, 'gamma': 65.}
+params_saga = {'n_epochs': 20, 'gamma': 65.}
 
-params_svrg = {'n_epochs' : 20, 'batch_size': 1, 'gamma': 60. }
+params_svrg = {'n_epochs': 20, 'batch_size': 650, 'gamma': 45000}
 
 params_adagrad = {'n_epochs' : 120, 'batch_size': int(f.N*0.05), 'gamma': 0.03}
 
@@ -47,12 +47,11 @@ params_ssnsp = {'max_iter' : 70, 'batch_size': 650, 'sample_style': 'fast_increa
           'alpha_C' : 10., 'reduce_variance': True}
     
     
-#params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(1,50, 3), batch_range = np.array([1, 10, 100]))
+#params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(2e4, 6e4, 7), batch_range = np.array([100, 650]))
 #params_tuner(f, phi, solver = "saga", gamma_range = np.linspace(50, 120, 8))
 #params_tuner(f, phi, solver = "adagrad", batch_range = np.array([100, 1000, 3000]))
 
 #%% solve with SAGA
-
 
 Q = problem(f, phi, tol = 1e-9, params = params_saga, verbose = True, measure = True)
 
@@ -67,6 +66,14 @@ Q1 = problem(f, phi, tol = 1e-9, params = params_adagrad, verbose = True, measur
 Q1.solve(solver = 'adagrad')
 
 print(f.eval(Q1.x)+phi.eval(Q1.x))
+
+#%% solve with SVRG
+
+Q2 = problem(f, phi, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
+
+Q2.solve(solver = 'svrg')
+
+print(f.eval(Q2.x)+phi.eval(Q2.x))
 
 #%% solve with SSNSP
 
@@ -99,6 +106,16 @@ for k in range(K):
     Q1_k = problem(f, phi, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
     Q1_k.solve(solver = 'adagrad')
     allQ1.append(Q1_k)
+
+#%% solve with SVRG (multiple times)
+
+K = 20
+allQ2 = list()
+for k in range(K):
+    
+    Q2_k = problem(f, phi, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
+    Q2_k.solve(solver = 'svrg')
+    allQ2.append(Q2_k)
     
 #%% solve with SSNSP (multiple times, VR)
 
@@ -137,11 +154,13 @@ kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 3}
 
 #Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 #Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
+#Q2.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
 #P.plot_objective(ax = ax, **kwargs)
 
 
 plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
 plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
+plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
 plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
 
 #plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **kwargs)
@@ -190,6 +209,7 @@ kwargs2 = {"A": X_test, "b": y_test}
 all_loss_P = np.vstack([eval_test_set(X = P.info["iterates"], loss = logreg_loss, **kwargs2) for P in allP])
 all_loss_Q = np.vstack([eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2) for Q in allQ])
 all_loss_Q1 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2) for Q in allQ1])
+all_loss_Q2 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2) for Q in allQ2])
 
 
 #%%
@@ -199,10 +219,11 @@ kwargs = {"lw": 1, "markersize": 3}
 
 plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
 plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
+plot_multiple_error(all_loss_Q2, allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
 plot_multiple_error(all_loss_P, allP, ax = ax , label = "ssnsp", **kwargs)
 
 ax.set_xlim(-.1,4)
-ax.set_ylim(all_loss_P.min()-1e-3, all_loss_P.min()+3e-2)
+ax.set_ylim(0.46, 0.48)
 ax.legend(fontsize = 10)
 
 fig.subplots_adjust(top=0.96,

@@ -249,7 +249,7 @@ def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
         
         # sample
         S = np.random.randint(low = 0, high = N, size = batch_size)
-        #S = np.random.choice(a = np.arange(N), size = batch_size, replace = False)
+        #S = np.random.choice(a = np.arange(N), size = batch_size, replace = True)
         
         # mini-batch gradient step
         G_t = compute_batch_gradient(f, x_t, S)
@@ -300,7 +300,7 @@ def prox_svrg(f, phi, x_t, A, N, tol, gamma, n_epochs, batch_size, m_iter):
             if batch_size == 1:
                 S = np.random.randint(low = 0, high = N, size = 1)
             else:
-                S = np.random.choice(a = np.arange(N), size = batch_size, replace = False)
+                S = np.random.choice(a = np.arange(N), size = batch_size, replace = True)
         
             # compute the gradient
             v_t = compute_batch_gradient(f, x_t, S)
@@ -344,7 +344,7 @@ def prox_svrg(f, phi, x_t, A, N, tol, gamma, n_epochs, batch_size, m_iter):
 #             if batch_size == 1:
 #                 S = np.random.randint(low = 0, high = N, size = 1)
 #             else:
-#                 S = np.random.choice(a = np.arange(N), size = batch_size, replace = False)
+#                 S = np.random.choice(a = np.arange(N), size = batch_size, replace = True)
         
 #             # compute the gradient
 #             v_t = compute_svrg_grad(f, x_t, S)
@@ -375,6 +375,7 @@ def prox_svrg(f, phi, x_t, A, N, tol, gamma, n_epochs, batch_size, m_iter):
 #         vals[i,:] = f.g(A_i @ x, S[i])
     
 #     return vals
+
 #%%
 @njit()
 def batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, batch_size):
@@ -401,7 +402,7 @@ def batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, batch_si
              
         # sample
         #S = np.random.randint(low = 0, high = N, size = batch_size)
-        S = np.random.choice(a = np.arange(N), size = batch_size, replace = False)
+        S = np.random.choice(a = np.arange(N), size = batch_size, replace = True)
         S = np.sort(S)
         
         # compute the gradient
