@@ -34,12 +34,12 @@ print("psi(0) = ", f.eval(np.zeros(n)))
 #%% parameter setup
 
 params_saga = {'n_epochs' : 200, 'gamma' : 5.}
-params_svrg = {'n_epochs' : 200, 'batch_size': 1, 'gamma': 8.}
+params_svrg = {'n_epochs' : 200, 'batch_size': 10, 'gamma': 38.}
 params_adagrad = {'n_epochs' : 500, 'batch_size': 30, 'gamma': 0.004}
-params_ssnsp = {'max_iter' : 1200, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : .032, 'reduce_variance': True}
+params_ssnsp = {'max_iter' : 1200, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : .03, 'reduce_variance': True}
 
 #params_tuner(f, phi, solver = "saga", gamma_range = np.linspace(4,8, 10))
-#params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(2, 20, 10), batch_range = np.array([1, 10]))
+#params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(15, 50, 7), batch_range = np.array([10,20]))
 #params_tuner(f, phi, solver = "adagrad", gamma_range = np.logspace(-3,-2, 6), batch_range = np.array([30, 50]))
 #params_tuner(f, phi, solver = "ssnsp", gamma_range = np.linspace(0.02,0.05,10), batch_range = np.array([15,30]))
 
@@ -63,14 +63,14 @@ print("phi(x_t) = ", phi.eval(Q.x))
 print("psi(x_t) = ", f.eval(Q.x) + phi.eval(Q.x))
 
 
-#%% solve with SVRG/ BATCH-SAGA
-# params_svrg = {'n_epochs' : 100, 'gamma' : 4.}
+#%% solve with SVRG
 
-# Q2 = problem(f, phi, tol = 1e-6, params = params_svrg, verbose = True, measure = True)
+Q2 = problem(f, phi, tol = 1e-6, params = params_svrg, verbose = True, measure = True)
 
-# Q2.solve(solver = 'svrg')
-
-# print(f.eval(Q2.x)+phi.eval(Q2.x))
+Q2.solve(solver = 'svrg')
+print("f(x_t) = ", f.eval(Q2.x))
+print("phi(x_t) = ", phi.eval(Q2.x))
+print("psi(x_t) = ", f.eval(Q2.x) + phi.eval(Q2.x))
 
 #%% solve with ADAGRAD
 
@@ -106,7 +106,6 @@ def tstudent_loss(x, A, b, v):
 
 kwargs2 = {"A": A_test, "b": b_test, "v": f.v}
 
-#%%
 tstudent_loss(Q.x, A_test, b_test, f.v)
 tstudent_loss(Q1.x, A_test, b_test, f.v)
 tstudent_loss(P.x, A_test, b_test, f.v)
@@ -115,6 +114,7 @@ tstudent_loss(P.x, A_test, b_test, f.v)
 L_P = eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2)
 L_Q = eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2)
 L_Q1 = eval_test_set(X = Q1.info["iterates"], loss = tstudent_loss, **kwargs2)
+L_Q2 = eval_test_set(X = Q2.info["iterates"], loss = tstudent_loss, **kwargs2)
 
 #all_loss_P = np.vstack([eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2) for P in allP])
 #all_loss_Q = np.vstack([eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2) for Q in allQ])
@@ -159,7 +159,23 @@ for k in range(K):
     allQ1.append(Q1_k)
 
 all_loss_Q1 = np.vstack(all_loss_Q1)
+
+#%% solve with SVRG (multiple times)
+
+allQ2 = list()
+all_loss_Q2 = list()
+for k in range(K):
     
+    Q2_k = problem(f, phi, tol = 1e-6, params = params_svrg, verbose = True, measure = True)
+    Q2_k.solve(solver = 'svrg')
+    
+    all_loss_Q2.append(eval_test_set(X = Q2_k.info["iterates"], loss = tstudent_loss, **kwargs2))
+    Q2_k.info.pop('iterates')
+    
+    allQ2.append(Q2_k)
+
+all_loss_Q2 = np.vstack(all_loss_Q2)
+
 #%% solve with SSNSP (multiple times, VR)
 
 allP = list()
@@ -176,7 +192,7 @@ for k in range(K):
 
 all_loss_P = np.vstack(all_loss_P)
 
-#%%
+#%% plot objective
 save = False
 
 # use the last objective of SAGA as surrogate optimal value / plot only psi(x^k)
@@ -186,10 +202,11 @@ psi_star = 0
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
-kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 3}
+kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 1}
 
 Q.plot_objective(ax = ax, ls = '--', marker = '<',  **kwargs)
 Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 P.plot_objective(ax = ax, **kwargs)
 
 #plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
@@ -215,8 +232,9 @@ if save:
 fig,ax = plt.subplots(2, 2,  figsize = (7,5))
 Q.plot_path(ax = ax[0,0], xlabel = False)
 Q1.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
-P.plot_path(ax = ax[1,0])
-ax[1,1].axis('off')
+Q2.plot_path(ax = ax[1,0])
+P.plot_path(ax = ax[1,1], ylabel = False)
+#ax[1,1].axis('off')
 
 for a in ax.ravel():
     a.set_ylim(-.2, .5)
@@ -232,14 +250,16 @@ if save:
     
 fig, ax = plt.subplots(1,1,  figsize = (4.5, 3.5))
 
-kwargs = {"log_scale": False, "lw": 0.4, "markersize": 3}
+kwargs = {"log_scale": False, "lw": 0.4, "markersize": 1}
 
 plot_test_error(Q, L_Q,  ax = ax,  marker = '<', **kwargs)
 plot_test_error(Q1, L_Q1,  ax = ax,  marker = '<', **kwargs)
+plot_test_error(Q2, L_Q2,  ax = ax,  marker = '<', **kwargs)
 plot_test_error(P, L_P,  ax = ax,  marker = 'o', **kwargs)
 
 #plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
 #plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
+#plot_multiple_error(all_loss_Q2, allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
 #plot_multiple_error(all_loss_P, allP, ax = ax , label = "ssnsp", **kwargs)
 
 
