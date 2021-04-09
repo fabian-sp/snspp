@@ -122,7 +122,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
         # run SAGA with batch size n^(2/3)
         x_t, x_hist, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['batch_size'])
     elif solver == 'svrg':
-        x_t, x_hist, step_sizes, eta  = prox_svrg(f, phi, x_t, A, N, tol, gamma, params['n_epochs'], params['batch_size'], m_iter)
+        x_t, x_hist, step_sizes, eta  = svrg_loop(f, phi, x_t, A, N, tol, gamma, params['n_epochs'], params['batch_size'], m_iter)
     elif solver == 'adagrad':
         x_t, x_hist, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, gamma, params['delta'] , params['n_epochs'], params['batch_size'])
     end = time.time()
@@ -276,7 +276,7 @@ def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
 
 #%%
 @njit()
-def prox_svrg(f, phi, x_t, A, N, tol, gamma, n_epochs, batch_size, m_iter):
+def svrg_loop(f, phi, x_t, A, N, tol, gamma, n_epochs, batch_size, m_iter):
     
     # initialize for diagnostics
     x_hist = List()
