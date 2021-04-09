@@ -347,8 +347,8 @@ def prox_svrg(f, phi, x_t, A, N, tol, gamma, n_epochs, batch_size, m_iter):
 #                 S = np.random.choice(a = np.arange(N), size = batch_size, replace = True)
         
 #             # compute the gradient
-#             v_t = compute_svrg_grad(f, x_t, S)
-#             A_t = A[S,:]
+#             v_t, A_t = compute_svrg_grad(f, x_t, S)
+#             #A_t = A[S,:]
 #             g_t = (1/batch_size) * (A_t*(v_t - gradient_store[S,:])).sum(axis=0) + g_tilde
 
 #             w_t = x_t - gamma*g_t
@@ -369,12 +369,14 @@ def prox_svrg(f, phi, x_t, A, N, tol, gamma, n_epochs, batch_size, m_iter):
 # def compute_svrg_grad(f, x, S):
     
 #     vals = np.zeros((len(S),1))
+#     A_S = np.zeros((len(S), len(x)))
     
 #     for i in np.arange(len(S)):
 #         A_i = np.ascontiguousarray(f.A[S[i],:]).reshape(1,-1)
 #         vals[i,:] = f.g(A_i @ x, S[i])
-    
-#     return vals
+#         A_S[i,:] = A_i
+        
+#     return vals, A_S
 
 #%%
 @njit()
