@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from ssnsp.solver.opt_problem import problem, color_dict
-from ssnsp.helper.data_generation import get_mnist
-from ssnsp.experiments.experiment_utils import params_tuner, plot_multiple, plot_multiple_error, eval_test_set, initialize_solvers
+from snspp.solver.opt_problem import problem, color_dict
+from snspp.helper.data_generation import get_mnist
+from snspp.experiments.experiment_utils import params_tuner, plot_multiple, plot_multiple_error, eval_test_set, initialize_solvers
 
 from sklearn.linear_model import LogisticRegression
 
@@ -43,7 +43,7 @@ params_svrg = {'n_epochs': 20, 'batch_size': 650, 'gamma': 45000}
 
 params_adagrad = {'n_epochs' : 120, 'batch_size': int(f.N*0.05), 'gamma': 0.03}
 
-params_ssnsp = {'max_iter' : 70, 'batch_size': 650, 'sample_style': 'fast_increasing', \
+params_snspp = {'max_iter' : 70, 'batch_size': 650, 'sample_style': 'fast_increasing', \
           'alpha_C' : 10., 'reduce_variance': True}
     
     
@@ -77,8 +77,8 @@ print(f.eval(Q2.x)+phi.eval(Q2.x))
 
 #%% solve with SSNSP
 
-P = problem(f, phi, tol = 1e-9, params = params_ssnsp, verbose = True, measure = True)
-P.solve(solver = 'ssnsp')
+P = problem(f, phi, tol = 1e-9, params = params_snspp, verbose = True, measure = True)
+P.solve(solver = 'snspp')
 
 
 #%%
@@ -123,20 +123,20 @@ K = 20
 allP = list()
 for k in range(K):
     
-    P_k = problem(f, phi, tol = 1e-9, params = params_ssnsp, verbose = False, measure = True)
-    P_k.solve(solver = 'ssnsp')
+    P_k = problem(f, phi, tol = 1e-9, params = params_snspp, verbose = False, measure = True)
+    P_k.solve(solver = 'snspp')
     allP.append(P_k)
 
 #%% solve with SSNSP (multiple times, no VR)
 
-# params1 = params_ssnsp.copy()
+# params1 = params_snspp.copy()
 # params1["reduce_variance"] = False
 
 # allP1 = list()
 # for k in range(K):
     
 #     P_k = problem(f, phi, tol = 1e-7, params = params1, verbose = False, measure = True)
-#     P_k.solve(solver = 'ssnsp')
+#     P_k.solve(solver = 'snspp')
 #     allP1.append(P_k)
 
 
@@ -161,9 +161,9 @@ kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 3}
 plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
 plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
 plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
-plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
+plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 
-#plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **kwargs)
+#plot_multiple(allP1, ax = ax , label = "snspp_noVR", name = "snspp (no VR)", **kwargs)
 
 ax.set_xlim(-.1,4)
 ax.legend()
@@ -220,7 +220,7 @@ kwargs = {"lw": 1, "markersize": 3}
 plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
 plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
 plot_multiple_error(all_loss_Q2, allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
-plot_multiple_error(all_loss_P, allP, ax = ax , label = "ssnsp", **kwargs)
+plot_multiple_error(all_loss_P, allP, ax = ax , label = "snspp", **kwargs)
 
 ax.set_xlim(-.1,4)
 ax.set_ylim(0.46, 0.48)

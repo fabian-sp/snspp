@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import Lasso, LogisticRegression
 import time
 
-from ssnsp.helper.data_generation import lasso_test, logreg_test
-from ssnsp.solver.opt_problem import problem
-from ssnsp.experiments.experiment_utils import plot_multiple, initialize_solvers, adagrad_step_size_tuner
+from snspp.helper.data_generation import lasso_test, logreg_test
+from snspp.solver.opt_problem import problem
+from snspp.experiments.experiment_utils import plot_multiple, initialize_solvers, adagrad_step_size_tuner
 
 
 #%% generate data
@@ -63,11 +63,11 @@ print(f.eval(Q1.x) +phi.eval(Q1.x))
 
 #%% solve with SSNSP
 
-params_ssnsp = {'max_iter' : 100, 'batch_size': 100, 'sample_style': 'constant', 'alpha_C' : 0.1, 'reduce_variance': True}
+params_snspp = {'max_iter' : 100, 'batch_size': 100, 'sample_style': 'constant', 'alpha_C' : 0.1, 'reduce_variance': True}
 
-P = problem(f, phi, tol = 1e-7, params = params_ssnsp, verbose = True, measure = True)
+P = problem(f, phi, tol = 1e-7, params = params_snspp, verbose = True, measure = True)
 
-P.solve(solver = 'ssnsp')
+P.solve(solver = 'snspp')
 
 
 #%% solve with SSNSP (multiple times, VR)
@@ -76,20 +76,20 @@ K = 10
 allP = list()
 for k in range(K):
     
-    P_k = problem(f, phi, tol = 1e-12, params = params_ssnsp, verbose = False, measure = True)
-    P_k.solve(solver = 'ssnsp')
+    P_k = problem(f, phi, tol = 1e-12, params = params_snspp, verbose = False, measure = True)
+    P_k.solve(solver = 'snspp')
     allP.append(P_k)
     
 #%% solve with SSNSP (multiple times, no VR)
 
-params1 = params_ssnsp.copy()
+params1 = params_snspp.copy()
 params1["reduce_variance"] = False
 
 allP1 = list()
 for k in range(K):
     
     P_k = problem(f, phi, tol = 1e-12, params = params1, verbose = False, measure = True)
-    P_k.solve(solver = 'ssnsp')
+    P_k.solve(solver = 'snspp')
     allP1.append(P_k)
     
 #%% solve with CONSTANT SSNSP
@@ -98,7 +98,7 @@ params = {'max_iter' : 10, 'batch_size': f.N, 'sample_style': 'constant', 'alpha
 
 P1 = problem(f, phi, tol = 1e-7, params = params, verbose = True, measure = True)
 
-P1.solve(solver = 'ssnsp')
+P1.solve(solver = 'snspp')
 
 #%%
 
@@ -116,8 +116,8 @@ Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
 
 
-plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
-#plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **kwargs)
+plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
+#plot_multiple(allP1, ax = ax , label = "snspp_noVR", name = "snspp (no VR)", **kwargs)
 
 #P.plot_objective(ax = ax, **kwargs)
 #P1.plot_objective(ax = ax, label = " constant", marker = "x", **kwargs)

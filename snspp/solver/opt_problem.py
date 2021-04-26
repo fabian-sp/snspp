@@ -16,7 +16,7 @@ from .fast_gradient import stochastic_gradient
 #sns.set_context("paper")
 
 color_dict = {"default": "#002A4A", "saga": "#FFB03B", "batch saga": "#BF842C", "adagrad" : "#B64926", \
-              "ssnsp": "#468966", "ssnsp_noVR": "grey"}
+              "snspp": "#468966", "snspp_noVR": "grey"}
 
 ##FFF0A5
 ##8E2800
@@ -36,13 +36,13 @@ class problem:
         self.measure = measure
         
     
-    def solve(self, solver = 'ssnsp'):
+    def solve(self, solver = 'snspp'):
         
         self.solver = solver
         if self.x0 is None:
             self.x0 = np.zeros(self.n)
         
-        if solver == 'ssnsp':
+        if solver == 'snspp':
             self.x, self.xavg, self.info = stochastic_prox_point(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
                          verbose = self.verbose, measure = self.measure)
         elif solver == 'saga slow':

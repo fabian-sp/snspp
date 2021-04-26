@@ -6,8 +6,8 @@ import time
 from sklearn.linear_model import Lasso
 
 
-from ssnsp.helper.data_generation import lasso_test, tstudent_test
-from ssnsp.solver.opt_problem import problem
+from snspp.helper.data_generation import lasso_test, tstudent_test
+from snspp.solver.opt_problem import problem
 
 N = 1000
 n = 1000
@@ -39,7 +39,7 @@ elif problem_type == "tstudent":
     
     ref_params = {'max_iter': 2000, 'alpha_C': 0.1, 'batch_size': 50, 'sample_style': 'constant', 'reduce_variance': True}
     ref_P = problem(f, phi, tol = 1e-6, params = ref_params, verbose = True, measure = True)
-    ref_P.solve(solver = 'ssnsp')
+    ref_P.solve(solver = 'snspp')
     
     ref_P.plot_objective()
     
@@ -86,7 +86,7 @@ for l in np.arange(L):
         print(f"MAX_ITER = {params['max_iter']}")
         try:
             P = problem(f, phi, tol = 1e-6, params = params, verbose = False, measure = True)
-            P.solve(solver = 'ssnsp')
+            P.solve(solver = 'snspp')
             
             
             xhist = P.info['iterates'].copy()

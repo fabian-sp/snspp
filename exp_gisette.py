@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from ssnsp.solver.opt_problem import problem
-from ssnsp.helper.data_generation import get_gisette
-from ssnsp.experiments.experiment_utils import params_tuner, plot_multiple, plot_multiple_error, initialize_solvers, eval_test_set
+from snspp.solver.opt_problem import problem
+from snspp.helper.data_generation import get_gisette
+from snspp.experiments.experiment_utils import params_tuner, plot_multiple, plot_multiple_error, initialize_solvers, eval_test_set
 
 
 from sklearn.linear_model import LogisticRegression
@@ -52,14 +52,14 @@ params_svrg = {'n_epochs' : 50, 'batch_size': 50, 'gamma': 75.}
 
 params_adagrad = {'n_epochs' : 200, 'batch_size': 240, 'gamma': 0.028}
 
-params_ssnsp = {'max_iter' : 60, 'batch_size': 400, 'sample_style': 'fast_increasing', 'alpha_C' : 7.,\
+params_snspp = {'max_iter' : 60, 'batch_size': 400, 'sample_style': 'fast_increasing', 'alpha_C' : 7.,\
           "reduce_variance": True}
 
 #params_tuner(f, phi, solver = "saga", gamma_range = np.linspace(4,8, 10))
 #params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(30, 80, 8), batch_range = np.array([50]))
 #params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(30, 80, 8), batch_range = np.array([100]))
 #params_tuner(f, phi, solver = "adagrad", batch_range = np.array([50, 250, 500]))
-#params_tuner(f, phi, solver = "ssnsp", gamma_range = np.linspace(5,10, 10), batch_range = np.array([200, 400]))
+#params_tuner(f, phi, solver = "snspp", gamma_range = np.linspace(5,10, 10), batch_range = np.array([200, 400]))
 
 #%% solve with SAGA
 
@@ -88,9 +88,9 @@ print(f.eval(Q2.x)+phi.eval(Q2.x))
 
 #%% solve with SSNSP
 
-P = problem(f, phi, tol = 1e-9, params = params_ssnsp, verbose = True, measure = True)
+P = problem(f, phi, tol = 1e-9, params = params_snspp, verbose = True, measure = True)
 
-P.solve(solver = 'ssnsp')
+P.solve(solver = 'snspp')
 
 #%%
 
@@ -131,20 +131,20 @@ for k in range(K):
 allP = list()
 for k in range(K):
     
-    P_k = problem(f, phi, tol = 1e-9, params = params_ssnsp, verbose = False, measure = True)
-    P_k.solve(solver = 'ssnsp')
+    P_k = problem(f, phi, tol = 1e-9, params = params_snspp, verbose = False, measure = True)
+    P_k.solve(solver = 'snspp')
     allP.append(P_k)
 
 #%% solve with SSNSP (multiple times, no VR)
 
-# params1 = params_ssnsp.copy()
+# params1 = params_snspp.copy()
 # params1["reduce_variance"] = False
 
 # allP1 = list()
 # for k in range(K):
     
 #     P_k = problem(f, phi, tol = 1e-9, params = params1, verbose = False, measure = True)
-#     P_k.solve(solver = 'ssnsp')
+#     P_k.solve(solver = 'snspp')
 #     allP1.append(P_k)
 
 #%% coeffcient frame
@@ -168,9 +168,9 @@ kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 3}
 plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
 plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
 plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
-plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
+plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 
-#plot_multiple(allP1, ax = ax , label = "ssnsp_noVR", name = "ssnsp (no VR)", **kwargs)
+#plot_multiple(allP1, ax = ax , label = "snspp_noVR", name = "snspp (no VR)", **kwargs)
 
 
 ax.set_xlim(-.1, 6)
@@ -228,7 +228,7 @@ kwargs = {"log_scale": False, "lw": 1, "markersize": 3}
 plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
 plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
 plot_multiple_error(all_loss_Q2, allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
-plot_multiple_error(all_loss_P, allP, ax = ax , label = "ssnsp", **kwargs)
+plot_multiple_error(all_loss_P, allP, ax = ax , label = "snspp", **kwargs)
 
 ax.set_xlim(-.1, 6)
 ax.set_ylim(all_loss_P.min()-1e-3, all_loss_P.min()+1e-1)

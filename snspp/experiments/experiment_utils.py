@@ -18,7 +18,7 @@ plt.rc('text', usetex=True)
 ## Plotting
 ##########################################################################
 
-def plot_multiple(allP, ax = None, label = "ssnsp", name = None, marker = 'o', markersize = 3, ls = '-', lw = 0.4, psi_star = 0, log_scale = False, sigma = 0):
+def plot_multiple(allP, ax = None, label = "snspp", name = None, marker = 'o', markersize = 3, ls = '-', lw = 0.4, psi_star = 0, log_scale = False, sigma = 0):
  
   
     if name is None:
@@ -96,7 +96,7 @@ def plot_test_error(P, L,  ax = None, name = None, marker = 'o', markersize = 3,
     
     return
 
-def plot_multiple_error(all_loss, allP, ax = None, label = "ssnsp", name = None, marker = 'o', markersize = 3, ls = '-', lw = 0.4, log_scale = False, sigma = 0):
+def plot_multiple_error(all_loss, allP, ax = None, label = "snspp", name = None, marker = 'o', markersize = 3, ls = '-', lw = 0.4, log_scale = False, sigma = 0):
     
     if name is None:
         name = label
@@ -169,7 +169,7 @@ def initialize_solvers(f, phi):
     
     params = {'max_iter' : 3, 'batch_size': 10, 'alpha_C': 0.01}  
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = False)   
-    tmpP.solve(solver = 'ssnsp')
+    tmpP.solve(solver = 'snspp')
     
     return
 
@@ -195,7 +195,7 @@ def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = N
     current_best_val = np.inf    
     
     # initial parameter setup
-    if solver == 'ssnsp':
+    if solver == 'snspp':
         params = {'max_iter' : n_iter, 'reduce_variance': True}
     else:
         params =  {'n_epochs' : n_iter}  
@@ -208,7 +208,7 @@ def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = N
         for gamma in gamma_range:
             
             # update step size and batch size
-            if solver == 'ssnsp':
+            if solver == 'snspp':
                 params["alpha_C"] = gamma
             else:
                 params["gamma"] = gamma
