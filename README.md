@@ -1,4 +1,4 @@
-# stochastic-ssnal
+# SNSPP
 
 ## Introduction
 This is a Python package for solving problems of the form
