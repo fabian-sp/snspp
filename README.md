@@ -1,7 +1,7 @@
 # stochastic-ssnal
 
 ## Introduction
-A Python package for solving problems of the form
+This is a Python package for solving problems of the form
 
 <img src="https://latex.codecogs.com/gif.latex?\min_xf(x)+\varphi(x)" title="problem formulation"/>
 
