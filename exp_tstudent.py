@@ -8,9 +8,9 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import time
 
-from ssnsp.helper.data_generation import tstudent_test, get_triazines
-from ssnsp.solver.opt_problem import problem
-from ssnsp.experiments.experiment_utils import params_tuner, plot_multiple, initialize_solvers, adagrad_step_size_tuner, eval_test_set, plot_test_error, plot_multiple_error
+from snspp.helper.data_generation import tstudent_test, get_triazines
+from snspp.solver.opt_problem import problem
+from snspp.experiments.experiment_utils import params_tuner, plot_multiple, initialize_solvers, adagrad_step_size_tuner, eval_test_set, plot_test_error, plot_multiple_error
 
 #%% load data
 
@@ -29,29 +29,29 @@ print("psi(0) = ", f.eval(np.zeros(n)))
 # params_saga = {'n_epochs' : 200, 'gamma' : 4.}
 # params_svrg = {'n_epochs' : 200, 'batch_size': 1, 'gamma': 8.}
 # params_adagrad = {'n_epochs' : 500, 'batch_size': 15, 'gamma': 0.002}
-# params_ssnsp = {'max_iter' : 1000, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : 0.008, 'reduce_variance': True}
+# params_snspp = {'max_iter' : 1000, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : 0.008, 'reduce_variance': True}
 
 #%% parameter setup
 
 params_saga = {'n_epochs' : 200, 'gamma' : 5.}
 params_svrg = {'n_epochs' : 200, 'batch_size': 10, 'gamma': 38.}
 params_adagrad = {'n_epochs' : 500, 'batch_size': 30, 'gamma': 0.004}
-params_ssnsp = {'max_iter' : 1200, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : .03, 'reduce_variance': True}
+params_snspp = {'max_iter' : 1200, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : .03, 'reduce_variance': True}
 
 #params_tuner(f, phi, solver = "saga", gamma_range = np.linspace(4,8, 10))
 #params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(15, 50, 7), batch_range = np.array([10,20]))
 #params_tuner(f, phi, solver = "adagrad", gamma_range = np.logspace(-3,-2, 6), batch_range = np.array([30, 50]))
-#params_tuner(f, phi, solver = "ssnsp", gamma_range = np.linspace(0.02,0.05,10), batch_range = np.array([15,30]))
+#params_tuner(f, phi, solver = "snspp", gamma_range = np.linspace(0.02,0.05,10), batch_range = np.array([15,30]))
 
 #%% determine psi_star
 
 # params_ref = {'max_iter' : 500, 'batch_size': f.N, 'sample_style': 'constant', 'alpha_C' : 10., 'reduce_variance': True}
 # ref = problem(f, phi, tol = 1e-6, params = params_ref, verbose = True, measure = True)
-# ref.solve(solver = 'ssnsp')
+# ref.solve(solver = 'snspp')
 
 # if poly = 3
 #params_saga = {'n_epochs' : 200, 'gamma' : 3.}
-#params_ssnsp = {'max_iter' : 1000, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : .06, 'reduce_variance': True}
+#params_snspp = {'max_iter' : 1000, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : .06, 'reduce_variance': True}
     
 
 #%% solve with SAGA
@@ -86,8 +86,8 @@ print("psi(x_t) = ", f.eval(Q1.x) + phi.eval(Q1.x))
 
 #%% solve with SSNSP
 
-P = problem(f, phi, tol = 1e-6, params = params_ssnsp, verbose = True, measure = True)
-P.solve(solver = 'ssnsp')
+P = problem(f, phi, tol = 1e-6, params = params_snspp, verbose = True, measure = True)
+P.solve(solver = 'snspp')
 
 print("f(x_t) = ", f.eval(P.x))
 print("phi(x_t) = ", phi.eval(P.x))
@@ -182,8 +182,8 @@ allP = list()
 all_loss_P = list()
 for k in range(K):
     
-    P_k = problem(f, phi, tol = 1e-6, params = params_ssnsp, verbose = False, measure = True)
-    P_k.solve(solver = 'ssnsp')
+    P_k = problem(f, phi, tol = 1e-6, params = params_snspp, verbose = False, measure = True)
+    P_k.solve(solver = 'snspp')
     
     all_loss_P.append(eval_test_set(X = P_k.info["iterates"], loss = tstudent_loss, **kwargs2))
     P_k.info.pop('iterates')
@@ -211,7 +211,7 @@ P.plot_objective(ax = ax, **kwargs)
 
 #plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
 #plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
-#plot_multiple(allP, ax = ax , label = "ssnsp", **kwargs)
+#plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 
 ax.set_xlim(0,140)
 #ax.set_ylim(0.19,0.3)
@@ -260,7 +260,7 @@ plot_test_error(P, L_P,  ax = ax,  marker = 'o', **kwargs)
 #plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
 #plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
 #plot_multiple_error(all_loss_Q2, allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
-#plot_multiple_error(all_loss_P, allP, ax = ax , label = "ssnsp", **kwargs)
+#plot_multiple_error(all_loss_P, allP, ax = ax , label = "snspp", **kwargs)
 
 
 ax.set_yscale('log')

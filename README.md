@@ -23,7 +23,7 @@ Methods:
 * `g(self, x, i)`: evaluates the gradient of `f_i` at `x`.
 * `fstar(self, x, i)`, `gstar(self, x, i)` and `Hstar(self, x, i)`: evaluates the Fenchel conjugate (its gradient/ its Hessian) of `f_i` at `x`.
 
-Note that `fstar` (and `gstar`, `Hstar`) evaluate each sample `i` individually. In many applications, `f_i` is identical for every `i` (up to data input). In this case, the performance is improved if vectorized methods are implemented, i.e. `fstar_vec(self, x, S)` which computes the conjugate at x for a batch of indices `S`. See `ssnsp/helper/lasso` for an example. 
+Note that `fstar` (and `gstar`, `Hstar`) evaluate each sample `i` individually. In many applications, `f_i` is identical for every `i` (up to data input). In this case, the performance is improved if vectorized methods are implemented, i.e. `fstar_vec(self, x, S)` which computes the conjugate at x for a batch of indices `S`. See `snspp/helper/lasso` for an example. 
 The algorithm detects automatically if vectorized methods are implemented, hence the function called for solving is the same in both cases.
 
 
@@ -51,7 +51,7 @@ The package already contains the following losses
 and regularizers
 * `L1Norm`: the l1-norm. 
 
-The definitions for these classes can be found in `ssnsp/helper/lasso` and `ssnsp/helper/tstudent`. Note that for optimal performance `f` and `phi` should be [Numba jitted classes](https://numba.pydata.org/numba-doc/dev/user/jitclass.html).
+The definitions for these classes can be found in `snspp/helper/lasso` and `snspp/helper/tstudent`. Note that for optimal performance `f` and `phi` should be [Numba jitted classes](https://numba.pydata.org/numba-doc/dev/user/jitclass.html).
 
 
 ## First-order methods

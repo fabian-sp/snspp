@@ -61,7 +61,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     if 'gamma' not in params.keys():
         if solver == 'adagrad':
             gamma_0 = 0.001
-            warnings.warn("Using a default step size for AdaGrad. This may lead to bad performance. A script for tuning the step size is contained in ssnsp/experiments/experimnet_utils. Provide a step size via params[\"gamma\"].")
+            warnings.warn("Using a default step size for AdaGrad. This may lead to bad performance. A script for tuning the step size is contained in snspp/experiments/experimnet_utils. Provide a step size via params[\"gamma\"].")
         else:
             gamma_0 = 1.
     else:

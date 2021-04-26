@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt
 import time
 from sklearn.linear_model import Lasso, LogisticRegression
 
-from ssnsp.helper.data_generation import lasso_test, logreg_test, tstudent_test
-from ssnsp.helper.lasso import Ridge
-from ssnsp.solver.opt_problem import problem
+from snspp.helper.data_generation import lasso_test, logreg_test, tstudent_test
+from snspp.helper.lasso import Ridge
+from snspp.solver.opt_problem import problem
 
-from ssnsp.helper.utils import compute_batch_gradient_table
+from snspp.helper.utils import compute_batch_gradient_table
 
 #from ssnal_elastic.ssnal_elastic_core import ssnal_elastic_core
 
@@ -41,7 +41,7 @@ params = {'max_iter' : 50, 'batch_size': 1000, 'sample_style': 'fast_increasing'
 P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
 start = time.time()
-P.solve(solver = 'ssnsp')
+P.solve(solver = 'snspp')
 end = time.time()
 
 print(f"Computing time: {end-start} sec")
