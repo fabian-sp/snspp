@@ -234,7 +234,6 @@ Q.plot_path(ax = ax[0,0], xlabel = False)
 Q1.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
 Q2.plot_path(ax = ax[1,0])
 P.plot_path(ax = ax[1,1], ylabel = False)
-#ax[1,1].axis('off')
 
 for a in ax.ravel():
     a.set_ylim(-.2, .5)
@@ -244,8 +243,6 @@ plt.subplots_adjust(hspace = 0.33)
 if save:
     fig.savefig(f'data/plots/exp_triazine/coeff.pdf', dpi = 300)
     
-
-
 #%%
     
 fig, ax = plt.subplots(1,1,  figsize = (4.5, 3.5))

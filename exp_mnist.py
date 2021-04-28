@@ -185,8 +185,9 @@ if save:
 fig,ax = plt.subplots(2, 2,  figsize = (7,5))
 Q.plot_path(ax = ax[0,0], xlabel = False)
 Q1.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
-P.plot_path(ax = ax[1,0])
-P.plot_path(ax = ax[1,1], mean = True, ylabel = False)
+Q2.plot_path(ax = ax[1,0])
+P.plot_path(ax = ax[1,1], ylabel = False)
+#P.plot_path(ax = ax[1,1], mean = True, ylabel = False)
 
 for a in ax.ravel():
     a.set_ylim(-.25,.25)
