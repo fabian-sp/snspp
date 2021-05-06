@@ -271,6 +271,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
                     if is_easy:
                         gammas = f.weak_conv(np.arange(f.N))
                         xi = xi_tilde + gammas*(A@x_t)
+                    else:
+                        raise KeyError("Variance reduction for nonconvex problems is only available if all m_i=1.")
+        #########################################################               
        
                     
         #stop criterion

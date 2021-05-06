@@ -56,6 +56,7 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
     if not f.convex: 
         gamma_i = f.weak_conv(S)
         hat_d += (alpha/sample_size) * (gamma_i.reshape(1,-1) * subA.T @ (subA @ x))
+    
     while sub_iter < newton_params['max_iter']:
         
     # step 1: construct Newton matrix and RHS 
