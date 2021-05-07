@@ -84,9 +84,6 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
         eps_reg = 1e-4
         tmp_d = f.Hstar_vec(xi_sub, S)
         
-        #print("MAX of hessian: ", tmp_d.max(), xi_sub[tmp_d.argmax()])
-        #print("MIN of hessian: ", tmp_d.min(), xi_sub[tmp_d.argmin()])
-        
         tmp = np.diag(tmp_d + eps_reg)           
         W = tmp + tmp2
         assert not np.isnan(W).any(), "Something went wrong during construction of the Hessian"

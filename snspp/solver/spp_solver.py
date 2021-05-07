@@ -242,9 +242,13 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         
         #params['newton_params']['eps'] =  min(1e-3, 1e-1/(iter_t+1)**(1.1))
         params['newton_params']['eps'] =  1e-3
+        
         # variance reduction boolean
         reduce_variance = params['reduce_variance'] and (iter_t > vr_min_iter)
-                
+        
+        #########################################################
+        ## Solve subproblem
+        #########################################################
         if not is_easy:
             x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, f.m, S, \
                                              newton_params = params['newton_params'],\
@@ -279,16 +283,10 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #stop criterion
         eta = stop_scikit_saga(x_t, x_old)
         
-        # we only measure runtime of the iteration, excluding computation of the objective
         ssn_info.append(this_ssn)
-        
-        if n >= 1e4 and params['max_iter'] >= 2000:
-            if iter_t % 100 == 0 or iter_t == params['max_iter']-1:
-                x_hist.append(x_t)
-        else:
-            x_hist.append(x_t)
+        x_hist.append(x_t)
             
-            
+        # we only measure runtime of the iteration, excluding computation of the objective
         end = time.time()
         runtime.append(end-start)
 
@@ -305,7 +303,10 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         if verbose and measure:
             print(out_fmt % (iter_t, obj[-1], f_t, phi_t, alpha_t, len(S), eta))
         
-        # if reduce_varaince, use constant step size, else use decreasing step size
+        #########################################################
+        ## Step size adaption
+        #########################################################
+        # if reduce_variance, use constant step size, else use decreasing step size
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
         if f.convex and not params['reduce_variance']:
              alpha_t = C/(iter_t + 2)**(0.51)

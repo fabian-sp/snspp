@@ -3,6 +3,9 @@ from numba.experimental import jitclass
 from numba import int64, float32, float64, typeof
 from numba.typed import List
 
+
+#%% squared loss
+
 spec = [
     ('name', typeof('abc')),
     ('convex', typeof(True)),
@@ -66,7 +69,7 @@ class lsq:
     def Hstar_vec(self, x, S):
         return .5*np.ones_like(x)
 
-#%%
+#%% logistic loss
 
 spec_log = [
     ('name', typeof('abc')),
@@ -118,40 +121,24 @@ class logistic_loss:
         
     def fstar(self, X, i):
         Y = np.zeros_like(X)
-        for j in range(len(X)):
-            x = X[j]
-            if x > 0 or x < -1 :
-                Y[j] = np.inf
-            elif x == 0 or x == -1:
-                Y[j] = 0
-            else:
-                Y[j] = -x*np.log(-x) + (1+x) * np.log(1+x)
-            
+        zz = np.logical_and(X < 0 , X > -1)
+        Y = -X*np.log(-X) + (1+X) * np.log(1+X)
+        Y[~zz] = np.inf            
         return Y
     
     def gstar(self, X, i):
         Y = np.zeros_like(X)
-        for j in range(len(X)):
-            x = X[j]
-            if x > 0 or x < -1 :
-                Y[j] = np.inf
-            elif x == 0 or x == -1:
-                Y[j] = np.sign(x + .5) * 1e8
-            else:
-                Y[j] = np.log(-(1+x)/x)     
+        zz = np.logical_and(X < 0 , X > -1)
+        Y = np.log(-(1+X)/X) 
+        Y[~zz] = np.inf    
         return Y
     
     
     def Hstar(self, X, i):
         Y = np.zeros_like(X)
-        for j in range(len(X)):
-            x = X[j]
-            if x > 0 or x < -1 :
-                Y[j] = np.inf
-            elif x == 0 or x == -1:
-                Y[j] = 1e8
-            else:
-                Y[j] = -1/(x**2+x)
+        zz = np.logical_and(X < 0 , X > -1)
+        Y = -1/(X**2+X)
+        Y[~zz] = np.inf    
         return Y
     
     def fstar_vec(self, x, S):
@@ -171,45 +158,13 @@ class logistic_loss:
         y = -1/(x**2+x)
         y[~zz] = np.inf
         return y
+
 ################
 # The above functions are explicitly written for numba usage
-# As xi variables are arrays (possibly of shape (1,)) we need functions that operate on arrays (and not scalars)
-# Without numba, this is not necessary, and the below functions could be used instead
+# fstar, gstar, Hstar are actually never used
 ################
-
-    # def fstar(self, x, i):
         
-    #     if x > 0 or x < -1 :
-    #         res = np.inf
-    #     elif x == 0 or x == -1:
-    #         res = 0
-    #     else:
-    #         res = -x*np.log(-x) + (1+x) * np.log(1+x)
-        
-    #     return res
-
-    # def gstar(self, x, i):
-        
-    #     if x > 0 or x < -1 :
-    #         res = np.inf
-    #     elif x == 0 or x == -1:
-    #         res = np.sign(x + .5) * 1e8
-    #     else:
-    #         res = np.log(-(1+x)/x)     
-    #     return res
-    
-    
-    # def Hstar(self, x, i):
-        
-    #     if x > 0 or x < -1 :
-    #         res = np.inf
-    #     elif x == 0 or x == -1:
-    #         res = 1e8
-    #     else:
-    #         res = -1/(x**2+x)
-    #     return res
-        
-#%%
+#%% l1 norm regularizer
 
 spec_l1 = [
     ('name', typeof('abc')),
@@ -262,7 +217,7 @@ class L1Norm:
         z = self.prox(x, alpha)
         return alpha*self.eval(z) + .5 * np.linalg.norm(z-x)**2
 
-#%%
+#%% ridge regularizer
 
 spec_ridge = [
     ('name', typeof('abc')),
