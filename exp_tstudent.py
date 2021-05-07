@@ -33,7 +33,7 @@ print("psi(0) = ", f.eval(np.zeros(n)))
 
 #%% parameter setup
 
-params_saga = {'n_epochs' : 200, 'gamma' : 5.}
+params_saga = {'n_epochs' : 200, 'gamma' : 4.5}
 params_svrg = {'n_epochs' : 200, 'batch_size': 10, 'gamma': 38.}
 params_adagrad = {'n_epochs' : 500, 'batch_size': 30, 'gamma': 0.004}
 params_snspp = {'max_iter' : 1200, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : .03, 'reduce_variance': True}
@@ -84,7 +84,7 @@ print("f(x_t) = ", f.eval(Q1.x))
 print("phi(x_t) = ", phi.eval(Q1.x))
 print("psi(x_t) = ", f.eval(Q1.x) + phi.eval(Q1.x))
 
-#%% solve with SSNSP
+#%% solve with SNSPP
 
 P = problem(f, phi, tol = 1e-6, params = params_snspp, verbose = True, measure = True)
 P.solve(solver = 'snspp')
@@ -176,7 +176,7 @@ for k in range(K):
 
 all_loss_Q2 = np.vstack(all_loss_Q2)
 
-#%% solve with SSNSP (multiple times, VR)
+#%% solve with SNSPP (multiple times, VR)
 
 allP = list()
 all_loss_P = list()
@@ -204,14 +204,15 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 1}
 
-Q.plot_objective(ax = ax, ls = '--', marker = '<',  **kwargs)
-Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-P.plot_objective(ax = ax, **kwargs)
+#Q.plot_objective(ax = ax, ls = '--', marker = '<',  **kwargs)
+#Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+#Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+#P.plot_objective(ax = ax, **kwargs)
 
-#plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
-#plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
-#plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
+plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
+plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
+plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
+plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 
 ax.set_xlim(0,140)
 #ax.set_ylim(0.19,0.3)
@@ -249,15 +250,15 @@ fig, ax = plt.subplots(1,1,  figsize = (4.5, 3.5))
 
 kwargs = {"log_scale": False, "lw": 0.4, "markersize": 1}
 
-plot_test_error(Q, L_Q,  ax = ax,  marker = '<', **kwargs)
-plot_test_error(Q1, L_Q1,  ax = ax,  marker = '<', **kwargs)
-plot_test_error(Q2, L_Q2,  ax = ax,  marker = '<', **kwargs)
-plot_test_error(P, L_P,  ax = ax,  marker = 'o', **kwargs)
+#plot_test_error(Q, L_Q,  ax = ax,  marker = '<', **kwargs)
+#plot_test_error(Q1, L_Q1,  ax = ax,  marker = '<', **kwargs)
+#plot_test_error(Q2, L_Q2,  ax = ax,  marker = '<', **kwargs)
+#plot_test_error(P, L_P,  ax = ax,  marker = 'o', **kwargs)
 
-#plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
-#plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
-#plot_multiple_error(all_loss_Q2, allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
-#plot_multiple_error(all_loss_P, allP, ax = ax , label = "snspp", **kwargs)
+plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
+plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
+plot_multiple_error(all_loss_Q2, allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
+plot_multiple_error(all_loss_P, allP, ax = ax , label = "snspp", **kwargs)
 
 
 ax.set_yscale('log')
