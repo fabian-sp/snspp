@@ -10,7 +10,7 @@ import time
 
 from snspp.helper.data_generation import tstudent_test, get_triazines
 from snspp.solver.opt_problem import problem
-from snspp.experiments.experiment_utils import params_tuner, plot_multiple, initialize_solvers, adagrad_step_size_tuner, eval_test_set, plot_test_error, plot_multiple_error
+from snspp.experiments.experiment_utils import params_tuner, plot_multiple, initialize_solvers, eval_test_set, plot_test_error, plot_multiple_error
 
 #%% load data
 
@@ -73,9 +73,6 @@ print("phi(x_t) = ", phi.eval(Q2.x))
 print("psi(x_t) = ", f.eval(Q2.x) + phi.eval(Q2.x))
 
 #%% solve with ADAGRAD
-
-#tune_params = {'n_epochs' : 300, 'batch_size': 15}
-#opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = tune_params)
 
 Q1 = problem(f, phi, tol = 1e-6, params = params_adagrad, verbose = True, measure = True)
 Q1.solve(solver = 'adagrad')

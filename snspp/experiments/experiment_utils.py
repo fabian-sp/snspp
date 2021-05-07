@@ -282,42 +282,4 @@ def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = N
             
     return res, current_best, gamma_range
 
-         
-# deprecated, use params_tuner with solver = adagrad!        
-def adagrad_step_size_tuner(f, phi, gamma_range = None, params = None):
-    """
-    performs step size tuning for ADAGRAD
-    either provide range of gamma values or it is automatically tuned on log-scale (see range below)
-    """
-    if params is None:
-        params = {'n_epochs' : 200, 'batch_size': min(2000, int(0.05*f.N))}
-    
-    if gamma_range is None:
         
-        gamma_range = np.logspace(-3,-1,12)
-        
-    K = len(gamma_range)
-    all_obj = np.zeros(K)
-    
-    fig, axs = plt.subplots(3,4)
-    for k in range(K):
-        
-        params["gamma"] = gamma_range[k]
-        
-        print("Step size: ", gamma_range[k])
-        
-        Q1 = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
-        Q1.solve(solver = 'adagrad')
-
-        this_obj = f.eval(Q1.x) +phi.eval(Q1.x)
-        print(this_obj)
-        
-        all_obj[k] = this_obj
-        
-        Q1.plot_objective(ax = axs.ravel()[k])
-        axs.ravel()[k].set_title(f"step size {gamma_range[k]}")
-        
-    opt_gamma = gamma_range[np.argmin(all_obj)]
-    print("Optimal step size: ", opt_gamma)
-    
-    return opt_gamma, gamma_range, all_obj
