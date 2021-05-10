@@ -93,3 +93,103 @@ class squared_hinge_loss:
         y = 1/2 * np.ones_like(x)
         y[~zz] = np.inf
         return y
+    
+#%% Huber loss 
+
+spec_log = [
+    ('name', typeof('abc')),
+    ('convex', typeof(True)),
+    ('b', float64[:]),               
+    ('A', float64[:,:]),
+    ('mu', float64[:]),
+    ('N', int64), 
+    ('m', int64[:]),
+]
+        
+
+@jitclass(spec_log)
+class huber_loss:
+    """ 
+    f(x) = (1/N) \sum phi_i(A_i@x -b_i)
+    
+    where 
+    phi_i is the Huber loss function i.e.
+        phi_i(z) = z^2/(2*mu_i) if |z| <= mu_i
+                 = |z| - mu/2 else
+        
+    """
+    
+    def __init__(self, A, b, mu):
+        self.name = 'huber'
+        self.convex = True
+        
+        self.b = b
+        self.A = A * np.ascontiguousarray(self.b).reshape((-1,1))
+        self.mu = mu
+        self.N = len(self.b)
+        self.m = np.repeat(1,self.N)
+        
+        return
+    
+    def eval(self, x):
+        """
+        method for evaluating f(x)
+        """
+        z = self.A@x - self.b
+        y = 0
+        for i in np.arange(self.N):
+            y += self.f(z[i],i)
+         
+        return (1/self.N)*y
+
+    def f(self, x, i):
+        """
+        evaluate f_i(x)
+        """
+        if np.abs(x) <= self.mu[i]:
+            y = x**2/(2*self.mu[i])
+        else:
+            y = np.abs(x) - self.mu[i]/2
+        return y
+    
+    def g(self, x, i):
+        ixx = np.abs(x) <= self.mu[i]
+        return (1-ixx)*np.sign(x)  + ixx*(x/self.mu[i])
+        
+    def fstar(self, X, i):
+        Y = np.zeros_like(X)
+        zz = np.less_equal(np.abs(X),1)
+        Y = 0.5*self.mu[i]*X**2
+        Y[~zz] = np.inf
+        return Y
+    
+    def gstar(self, X, i):
+        Y = np.zeros_like(X)
+        zz = np.less_equal(np.abs(X),1)
+        Y = self.mu[i]*X
+        Y[~zz] = np.inf
+        return Y
+     
+    def Hstar(self, X, i):
+        Y = self.mu[i] * np.ones_like(X)
+        zz = np.less_equal(np.abs(X),1)
+        Y[~zz] = np.inf
+        return Y
+    
+    def fstar_vec(self, x, S):
+        zz = np.less_equal(np.abs(x),1)
+        y = 0.5*self.mu[S]*x**2
+        y[~zz] = np.inf
+        return y
+    
+    def gstar_vec(self, x, S):
+        zz = np.less_equal(np.abs(x),1)
+        y = self.mu[S]*x
+        y[~zz] = np.inf
+        return y
+    
+    def Hstar_vec(self, x, S):
+        zz = np.less_equal(np.abs(x),1)
+        y = self.mu[S]
+        y[~zz] = np.inf
+        return y
