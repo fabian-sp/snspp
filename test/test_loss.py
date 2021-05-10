@@ -20,7 +20,7 @@ f = huber_loss(A,b,mu)
 x0 = np.zeros(n)
 x1 = np.random.randn(n)
 
-r = A@x1 -b
+r = A@x1
 
 S = np.arange(10, dtype = int)
 

@@ -135,7 +135,7 @@ class huber_loss:
         """
         method for evaluating f(x)
         """
-        z = self.A@x - self.b
+        z = self.A@x
         y = 0
         for i in np.arange(self.N):
             y += self.f(z[i],i)
@@ -146,27 +146,27 @@ class huber_loss:
         """
         evaluate f_i(x)
         """
-        if np.abs(x) <= self.mu[i]:
-            y = x**2/(2*self.mu[i])
+        if np.abs(x-self.b[i]) <= self.mu[i]:
+            y = (x-self.b[i])**2/(2*self.mu[i])
         else:
-            y = np.abs(x) - self.mu[i]/2
+            y = np.abs(x-self.b[i]) - self.mu[i]/2
         return y
     
     def g(self, x, i):
-        ixx = np.abs(x) <= self.mu[i]
-        return (1-ixx)*np.sign(x)  + ixx*(x/self.mu[i])
+        ixx = np.abs(x-self.b[i]) <= self.mu[i]
+        return (1-ixx)*np.sign(x-self.b[i])  + ixx*((x-self.b[i])/self.mu[i])
         
     def fstar(self, X, i):
         Y = np.zeros_like(X)
         zz = np.less_equal(np.abs(X),1)
-        Y = 0.5*self.mu[i]*X**2
+        Y = 0.5*self.mu[i]*X**2 +self.b[i]*X
         Y[~zz] = np.inf
         return Y
     
     def gstar(self, X, i):
         Y = np.zeros_like(X)
         zz = np.less_equal(np.abs(X),1)
-        Y = self.mu[i]*X
+        Y = self.mu[i]*X + self.b[i]
         Y[~zz] = np.inf
         return Y
      
@@ -178,13 +178,13 @@ class huber_loss:
     
     def fstar_vec(self, x, S):
         zz = np.less_equal(np.abs(x),1)
-        y = 0.5*self.mu[S]*x**2
+        y = 0.5*self.mu[S]*x**2 + self.b[S]*x
         y[~zz] = np.inf
         return y
     
     def gstar_vec(self, x, S):
         zz = np.less_equal(np.abs(x),1)
-        y = self.mu[S]*x
+        y = self.mu[S]*x + self.b[S]
         y[~zz] = np.inf
         return y
     
