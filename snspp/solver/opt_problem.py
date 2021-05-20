@@ -48,7 +48,7 @@ class problem:
         elif solver == 'saga slow':
             self.x, self.xavg, self.info =  saga(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
                                                  verbose = self.verbose, measure = self.measure)
-        elif solver in ['saga', 'batch saga', 'svrg', 'adagrad']:
+        elif solver in ['saga', 'batch saga', 'svrg', 'adagrad', 'sgd']:
             self.x, self.xavg, self.info =  stochastic_gradient(self.f, self.phi, self.x0, solver = self.solver, tol = self.tol, params = self.params, \
                                                  verbose = self.verbose, measure = self.measure)        
         else:
