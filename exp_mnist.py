@@ -37,7 +37,7 @@ initialize_solvers(f, phi)
 
 #%% params
 
-params_saga = {'n_epochs': 20, 'gamma': 65.}
+params_saga = {'n_epochs': 20, 'gamma': 55.}
 
 params_svrg = {'n_epochs': 20, 'batch_size': 650, 'gamma': 45000}
 

@@ -1,9 +1,12 @@
 """
 author: Fabian Schaipp
 """
-import numpy as np
 from ..helper.utils import compute_gradient_table, compute_batch_gradient, compute_batch_gradient_table, compute_xi_inner,\
                             compute_x_mean_hist, stop_scikit_saga
+
+from .sg_solver import sgd_loop
+                            
+import numpy as np                           
 import time
 import warnings
 
@@ -38,11 +41,12 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     gradients = compute_gradient_table(f, x_t).astype('float64')
     assert gradients.shape == (N,n)
     
+    if 'n_epochs' not in params.keys():    
+        params['n_epochs'] = 5
+    
     #########################################################
     ## Solver dependent parameters
     #########################################################
-    if 'n_epochs' not in params.keys():    
-        params['n_epochs'] = 5
     
     if solver == 'saga':
         if 'reg' not in params.keys():    
@@ -80,7 +84,6 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
             L = 1e2
         
         if solver == 'saga':
-            #assert f.convex, "SAGA with batch-size 1 is only guaranteed for f_i being convex, see Defazio et al. 2014"
             # if we regularize, f_i is strongly-convex and we can use a larger step size (see Defazio et al.)
             if params['reg'] > 0:
                 gamma1 = 1/(2*(f.N*params['reg'] + L))
@@ -104,12 +107,13 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
         # for ADAGRAD we use the step size gamma_0
         gamma = gamma_0
     
+    elif solver == 'sgd':
+        gamma = gamma_0
     
     if verbose :
         print(f"Step size of {solver}: ", gamma)
     gamma = np.float64(gamma)  
-    
-    
+     
     #########################################################
     ## Main loop
     #########################################################
@@ -125,6 +129,12 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
         x_t, x_hist, step_sizes, eta  = svrg_loop(f, phi, x_t, A, N, tol, gamma, params['n_epochs'], params['batch_size'], m_iter)
     elif solver == 'adagrad':
         x_t, x_hist, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, gamma, params['delta'] , params['n_epochs'], params['batch_size'])
+    elif solver == 'sgd':
+        x_t, x_hist, step_sizes, eta = sgd_loop(f, phi, x_t, tol, gamma, params['n_epochs'], params['batch_size'], \
+                                                truncate = params['truncate'], normed = params['truncate'])
+    else:
+        raise NotImplementedError("Not a known solver option!")
+    
     end = time.time()
     
     if verbose:
@@ -296,12 +306,10 @@ def svrg_loop(f, phi, x_t, A, N, tol, gamma, n_epochs, batch_size, m_iter):
         
         for t in np.arange(m_iter):
             
-            # np.random.choice is around 30mu-sec slower than np.random.randint --> if we do many iterations this becomes critical
-            if batch_size == 1:
-                S = np.random.randint(low = 0, high = N, size = 1)
-            else:
-                S = np.random.choice(a = np.arange(N), size = batch_size, replace = True)
-        
+            # np.random.choice is slower than np.random.randint 
+            #S = np.random.choice(a = np.arange(N), size = batch_size, replace = True)
+            S = np.random.randint(low = 0, high = N, size = batch_size)
+            
             # compute the gradient
             v_t = compute_batch_gradient(f, x_t, S)
             g_t = v_t - (1/batch_size) * full_g[S,:].sum(axis=0) + g_tilde
@@ -341,10 +349,8 @@ def svrg_loop(f, phi, x_t, A, N, tol, gamma, n_epochs, batch_size, m_iter):
         
 #         for t in np.arange(m_iter):
             
-#             if batch_size == 1:
-#                 S = np.random.randint(low = 0, high = N, size = 1)
-#             else:
-#                 S = np.random.choice(a = np.arange(N), size = batch_size, replace = True)
+#             #S = np.random.choice(a = np.arange(N), size = batch_size, replace = True)
+#             S = np.random.randint(low = 0, high = N, size = batch_size)
         
 #             # compute the gradient
 #             v_t, A_t = compute_svrg_grad(f, x_t, S)
