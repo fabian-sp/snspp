@@ -20,16 +20,8 @@ v2 = np.random.randn(p+2)
 H = np.random.randn(p,q)
 tau = 0.01
 
-def huber(t, eps):
-    # if t >= eps/2:
-    #     y = t
-    # elif np.abs(t) <= eps/2:
-    #     y = 1/(2*eps)*(t+eps/2)**2
-    # else:
-    #     y = 0
-        
-    y = (t>=eps/2)*t + (np.abs(t)<=eps/2) * 1/(2*eps)*(t+eps/2)**2
-        
+def huber(t, eps):  
+    y = (t>=eps/2)*t + (np.abs(t)<=eps/2) * 1/(2*eps)*(t+eps/2)**2        
     return y
 
 def softt(v, rho):
@@ -103,9 +95,14 @@ def construct_gamma(v1, rho, eps, v2 = None):
     #     for j in np.arange(start=i+1,stop=p):
     #         Gam2[i,j] = (s_v[i]-s_v[j])/(v[i]-v[j])
     
-    h1 = np.tile(s_v1, (p2,1)).T - np.tile(s_v2, (p1,1))
-    h2 = np.tile(v1, (p2,1)).T - np.tile(v2, (p1,1))
-    h3 = np.tile(ds_v1, (p2,1)).T
+    # np.tile not supported by numba    
+    # h1 = np.tile(s_v1, (p2,1)).T - np.tile(s_v2, (p1,1))
+    # h2 = np.tile(v1, (p2,1)).T - np.tile(v2, (p1,1))
+    # h3 = np.tile(ds_v1, (p2,1)).T
+    
+    h1 = tile(s_v1, p2).T - tile(s_v2, p1)
+    h2 = tile(v1, p2).T - tile(v2, p1)
+    h3 = tile(ds_v1, p2).T
     # ixx are indices where v_i == v_j --> use derivative at these indices
     ixx = (h2 == 0)
     # avoid nans from dividing by zero
@@ -116,7 +113,10 @@ def construct_gamma(v1, rho, eps, v2 = None):
     
     return Gam
 
-
+def tile(v, q):
+    p=len(v)
+    return np.repeat(v,q).reshape(p,q).T
+    
 def smooth_prox_jacobian(Y, rho, eps, tau, H):
     (p,q) = Y.shape
     assert H.shape == (p,q)
@@ -170,14 +170,25 @@ def smooth_prox_jacobian(Y, rho, eps, tau, H):
 
 
 def test_smooth_prox():
+    """ for rho small, the prox is approx. equal to Y"""
     Y = np.random.randn(p,q)
-    eps = 1e-12
+    eps = 1e-10
     rho = 1e-10
     D = smooth_prox(Y, rho, eps)
     assert np.allclose(Y,D)
     
     return
     
+def test_smooth_prox_jacobian():
+    """for rho small the jacobian is the identity operator """
+    Y = np.random.randn(p,q)
+    eps = 1e-10; tau = 1e-10
+    rho = 1e-10
+    for i in range(10):
+        H = np.random.randn(p,q)
+        Z = smooth_prox_jacobian(Y, rho, eps, tau, H)
+        assert np.allclose(Z,H)
     
+    return    
 
     

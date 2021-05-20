@@ -1,5 +1,5 @@
 """
-@author: Fabian Schaipp
+author: Fabian Schaipp
 """
 
 import numpy as np
@@ -10,12 +10,7 @@ import time
 from sklearn.linear_model import Lasso, LogisticRegression
 
 from snspp.helper.data_generation import lasso_test, logreg_test, tstudent_test
-from snspp.helper.lasso import Ridge
 from snspp.solver.opt_problem import problem
-
-from snspp.helper.utils import compute_batch_gradient_table
-
-#from ssnal_elastic.ssnal_elastic_core import ssnal_elastic_core
 
 #%% generate data
 
@@ -26,12 +21,9 @@ l1 = .001
 
 xsol, A, b, f, phi, A_test, b_test = lasso_test(N, n, k, l1, block = False, kappa = None, noise = 0.1)
 
-xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .1)
+#xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .1)
 
-x, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4)
-
-
-#phi = Ridge(0.1)
+#x, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4)
 
 #%% solve with SSNSP
 
@@ -90,32 +82,6 @@ info2 = Q.info.copy()
 all_x = pd.DataFrame(np.vstack((xsol, P.x, x_sk)).T, columns = ['true', 'spp', 'scikit'])
 
 all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x)).T, columns = ['true', 'spp', 'saga'])
-
-#%% plot error over iterations
-
-true_x = x_sk.copy()
-
-err_l2 = np.linalg.norm(P.info['iterates'] - x_sk, 2, axis = 1)
-err_linf = np.linalg.norm(P.info['iterates'] - x_sk, np.inf, axis = 1)
-
-
-#(P.info['iterates'] * P.info['step_sizes'][:,np.newaxis])
-tmp = P.info['iterates'].cumsum(axis = 0)
-
-scale = (1 / (np.arange(P.info['iterates'].shape[0]) + 1))[:,np.newaxis]
-xmean_hist = scale * tmp 
-
-err_l2_mean = np.linalg.norm(xmean_hist - x_sk, 2, axis = 1)
-
-
-
-
-plt.figure()
-plt.plot(err_l2)
-plt.plot(err_linf)
-plt.plot(err_l2_mean)
-
-plt.legend(labels = ['error xk (l2)', 'error xk(linf)', 'error xmean (l2)'])
 
 #%% convergence of the xi variables
 import seaborn as sns

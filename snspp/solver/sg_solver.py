@@ -1,0 +1,68 @@
+"""
+author: Fabian Schaipp
+"""
+import numpy as np
+from ..helper.utils import compute_batch_gradient, stop_scikit_saga
+
+from numba.typed import List
+from numba import njit
+
+
+def sgd_loop(f, phi, x_t, tol, gamma, n_epochs, batch_size, truncate = False, normed = False):
+    
+    assert not(truncate and normed)
+    # initialize for diagnostics
+    x_hist = List()
+    step_sizes = List()
+    
+    eta = 1e10
+    x_old = x_t
+    
+    # construct array which tells us when to store (at the END of each epoch)
+    max_iter = int(f.N * n_epochs/batch_size)
+    counter = np.arange(max_iter)*batch_size/f.N % 1
+    counter = np.append(counter,0)
+    
+    store = (counter[1:] <= counter[:-1])
+    assert len(store) == max_iter
+    assert store[-1]
+    
+    for iter_t in np.arange(max_iter):
+        
+        if eta <= tol:
+            break
+        
+        # sample
+        S = np.random.choice(a = np.arange(f.N), size = batch_size, replace = True)
+        
+        # mini-batch gradient step
+        g_t = compute_batch_gradient(f, x_t, S)
+        
+        if normed:
+            g_t2 = compute_batch_gradient(f, x_t, S)
+        
+        # determine step size
+        if truncate:
+            alpha_t = np.minimum(gamma, f.eval(x_t)/np.linalg.norm(g_t)**2)        
+        elif normed:
+            alpha_t = 1/(1+np.linalg.norm(g_t2))        
+        else:
+            alpha_t = gamma/(iter_t+1)
+            
+        w_t = x_t - alpha_t*g_t
+        
+        # compute prox step
+        x_t = phi.prox(w_t, alpha_t)
+        
+        # stop criterion (at end of each epoch)
+        if store[iter_t]:
+            eta = stop_scikit_saga(x_t, x_old)
+            x_old = x_t
+            
+        # store everything (at end of each epoch)
+        if store[iter_t]:
+            x_hist.append(x_t)
+            step_sizes.append(alpha_t)
+
+    return x_t, x_hist, step_sizes, eta
+
