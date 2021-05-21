@@ -14,16 +14,16 @@ from snspp.solver.opt_problem import problem
 
 #%% generate data
 
-N = 2000
-n = 3000
-k = 100
-l1 = .001
+N = 1000
+n = 50
+k = 5
+l1 = .01
 
-xsol, A, b, f, phi, A_test, b_test = lasso_test(N, n, k, l1, block = False, kappa = None, noise = 0.1)
+xsol, A, b, f, phi, A_test, b_test = lasso_test(N, n, k, l1, block = False, noise = 0.1, kappa = 10., dist = 'ortho')
 
-#xsol, A, b, f, phi = logreg_test(N, n, k, l1, noise = .1)
+#xsol, A, b, f, phi, A_test, b_test = logreg_test(N, n, k, l1, noise = 0.1, kappa = 10., dist = 'ortho')
 
-#x, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4)
+#x, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4, noise = 0.1, poly = 2, kappa = 10., dist = 'ortho')
 
 #%% solve with SSNSP
 

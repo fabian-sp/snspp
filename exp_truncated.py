@@ -18,7 +18,7 @@ n = 1000
 k = 20
 l1 = .001
 
-xsol, A, b, f, phi, A_test, b_test = lasso_test(N, n, k, l1, block = False, kappa = None, noise = 0.1)
+xsol, A, b, f, phi, A_test, b_test = lasso_test(N, n, k, l1, block = False, noise = 0.1, kappa = 10., dist = 'ortho')
 
 sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-9, max_iter = 20000, selection = 'cyclic')
 sk.fit(A,b)

@@ -14,8 +14,7 @@ from sklearn.utils import check_random_state
 import scipy.special as sp
 from sklearn.preprocessing import PolynomialFeatures
 
-#from sklearn.datasets import load_digits
-#from scipy.stats import ortho_group
+from scipy.stats import ortho_group
 
 from .lasso import L1Norm, lsq, block_lsq, logistic_loss
 from .tstudent import tstudent_loss
@@ -24,7 +23,7 @@ from .tstudent import tstudent_loss
 ### Synthetic data
 ############################################################################################
 def standardize(A):   
-    # standardize
+    # standardize columns of A
     M = A - A.mean(axis=0)
     M = (1/M.std(axis=0)) * M
         
@@ -33,31 +32,46 @@ def standardize(A):
     
     return M
 
-def create_A(N, n, scale = 1.0, kappa = None):
+def create_A(N, n, dist = 'ortho', kappa = 1.):
     """
-    creates a coefficient matrix of shape (N,n) such that
-    max_i=1,..,N \|a_i\| = scale
+    method for cretaing a random matrix A
     
-    if kappa not None: create A with condition sqrt(kappa)
+    Parameters
+    ----------
+    N : int
+        number of rows.
+    n : int
+        number of cols.
+    dist : str, optional
+        * 'ortho': A = QD and columns of A are from random orthogonal group.
+        * 'unif': A has uniform entries between -1 and 1.
+        The default is 'ortho'.
+    kappa : float, optional
+        Condition number of A. Only available for dist = 'ortho'. The default is 1.
+
+    Returns
+    -------
+    A : array of shape (N,n)
     """
-    #A = np.random.randn(N,n)
-    A = np.random.rand(N,n)*2 - 1
-    
-    # create A with condition sqrt(kappa)
-    if kappa is not None:
-        U,_,V = np.linalg.svd(A, full_matrices = False)
-        d = np.linspace(np.sqrt(kappa), 1, min(n,N))
+    if dist == 'ortho':
+        Q = ortho_group.rvs(np.maximum(N,n))
+        d = np.linspace(kappa, 1, n)
         D = np.diag(d)
-        A = U @ D @ V
+        
+        A = Q[:,:n]@D
+        
+        print("Condition number of A:", np.linalg.cond(A) )
+        
+    elif dist == 'unif':
+        A = np.random.rand(N,n)*2 - 1
+    else:
+        raise KeyError("Choose 'unif' or 'ortho' as input for argument dist.")
     
-    # scale max norm of rows, does not change condition
-    A_max = np.apply_along_axis(np.linalg.norm, axis = 1, arr = A).max() 
-    A *= (scale/A_max)
-    
+        
     return A
     
 
-def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., kappa = None, scale = 1.0):
+def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., kappa = 1., dist = 'ortho'):
     """
     generates data for a LASSO problem with n variables and N samples, where solution has k non-zero entries
     lambda1: regularization parameter of 1-norm
@@ -70,7 +84,7 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., k
     else:
         m = np.ones(N, dtype = 'int')
     
-    A = create_A(m.sum(), n, kappa=kappa, scale = scale)
+    A = create_A(m.sum(), n, kappa = kappa, dist = dist)
     
     # create true solution
     x = np.random.randn(k) 
@@ -84,8 +98,8 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., k
     b = b.astype('float64')
     x = x.astype('float64')
     
-    N_test = 100
-    A_test = create_A(N_test, n, kappa=kappa, scale = scale)
+    N_test = max(100,int(N*0.1))
+    A_test = create_A(N_test, n, kappa = kappa, dist = dist)
     b_test = A_test @ x + noise*np.random.randn(N_test)
     
     
@@ -98,7 +112,7 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., k
 
     return x, A, b, f, phi, A_test, b_test
 
-def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
+def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = 1., dist = 'ortho'):
     """
     creates data for l1-regularized logistic regression with n variables and N samples, where solution has k non-zero entries
     lambda1: regularization parameter of 1-norm
@@ -106,8 +120,8 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
     noise = probability of flipping b after generation --> the closer noise is to 1, the nosier the problem becomes
     """
     #np.random.seed(1234)
-    
-    A = create_A(N, n, kappa=kappa)
+    N_test = max(100,int(N*0.1))
+    A = create_A(N+N_test, n, kappa = kappa, dist = dist)
         
     # create true solution
     x = np.random.randn(k) 
@@ -122,11 +136,11 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
     
     if noise > 0:
         assert noise <= 1
-        f = np.random.binomial(n=1, p = noise, size = N)
-        f = (1 - f * 2)      
-        print("Number of lables flipped: ", (f==-1).sum())      
+        flip = np.random.binomial(n=1, p = noise, size = N+N_test)
+        flip = (1 - flip * 2)      
+        #print("Number of lables flipped: ", (f==-1).sum())      
         # flip signs (f in {-1,1})
-        b = b * f
+        b = b * flip
      
     A = np.ascontiguousarray(A.astype('float64'))
     b = b.astype('float64')
@@ -135,12 +149,17 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = None):
     phi = L1Norm(lambda1) 
     f = logistic_loss(A,b)
     
-    return x, A, b, f, phi
+    ##### TEST SET ############
+    
+    A_test = A[N:,:]
+    b_test = b[N:]
+    
+    return x, A[:N,:], b[:N], f, phi, A_test, b_test
 
-def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 4., noise = 0.1, scale = 2., poly = 0, kappa = None):
-    """
-    """ 
-    A = create_A(N, n, scale = scale, kappa = kappa)
+def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 4., noise = 0.1, poly = 0, kappa = 1., dist = 'ortho'):
+    
+    N_test = max(100,int(N*0.1))
+    A = create_A(N+N_test, n, kappa = kappa, dist = dist)
     
     if poly > 0:
         A = poly_expand(A, d=poly)
@@ -151,10 +170,8 @@ def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 4., noise = 0.1, scal
     x = np.random.randn(k)
     x = np.concatenate((x, np.zeros(n-k)))
     np.random.shuffle(x)
-    
-    #x = x/np.linalg.norm(x)
-       
-    b = A@x + noise*np.random.standard_t(v, size = N)
+           
+    b = A@x + noise*np.random.standard_t(v, size = N+N_test)
      
     A = np.ascontiguousarray(A.astype('float64'))
     b = b.astype('float64')
@@ -162,12 +179,11 @@ def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 4., noise = 0.1, scal
     
     phi = L1Norm(lambda1) 
     f = tstudent_loss(A,b,v=v)
+        
+    A_test = A[N:,:]
+    b_test = b[N:]
     
-    N_test = 1000
-    A_test = create_A(N_test, n)
-    b_test = A_test@x + noise*np.random.standard_t(v, size = N_test)
-    
-    return x, A, b, f, phi, A_test, b_test
+    return x, A[:N,:], b[:N], f, phi, A_test, b_test
 
 def poly_expand(A, d = 5):
 

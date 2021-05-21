@@ -17,20 +17,17 @@ l1 = 1e-3
 problem_type = "lasso"
 
 if problem_type == "lasso":
-    xsol, A, b, f, phi,_,_ = lasso_test(N, n, k, l1, block = False, noise = 0.1)
+    xsol, A, b, f, phi, _, _ = lasso_test(N, n, k, l1, block = False, noise = 0.1, kappa = 10., dist = 'ortho')
+
 elif problem_type == "tstudent":
-    xsol, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4, noise = 0.01, scale = 10)
+    xsol, A, b, f, phi, _, _ = tstudent_test(N, n, k, l1, v = 4, noise = 0.1, poly = 2, kappa = 10., dist = 'ortho')
 
 #%% solve with scikt or large max_iter to get psi_star
 
 if problem_type == "lasso":
     sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-8, selection = 'cyclic', max_iter = 1e6)
-
-    start = time.time()
     sk.fit(f.A,b)
-    end = time.time()
 
-    print(end-start)
     xsol = sk.coef_.copy()
     psi_star = f.eval(xsol) + phi.eval(xsol)
     print("Optimal value: ", psi_star)
@@ -44,6 +41,7 @@ elif problem_type == "tstudent":
     ref_P.plot_objective()
     
     psi_star = ref_P.info["objective"][-1]
+    print("Optimal value: ", psi_star)
     
     
 #%% do grid testing

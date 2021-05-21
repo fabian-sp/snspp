@@ -22,7 +22,8 @@ l1 = .2
 
 kappa = 1e6
 
-xsol, A, b, f, phi, A_test, b_test = lasso_test(N, n, k, l1, block = False, kappa = kappa, scale = 10.)
+xsol, A, b, f, phi, A_test, b_test = lasso_test(N, n, k, l1, block = False, noise = 0.1, kappa = kappa, dist = 'unif')
+
 
 sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-9, max_iter = 20000, selection = 'cyclic')
 
