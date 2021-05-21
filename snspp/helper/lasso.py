@@ -42,7 +42,10 @@ class lsq:
         x has to be the same type as A if numba is used (typicall use float64)
         """
         return (1/self.N) * np.linalg.norm(self.A@x - self.b)**2      
-        
+    
+    def eval_batch(self, x, S):
+        return (1/len(S)) * np.linalg.norm(self.A[S,:]@x - self.b[S])**2 
+    
     def f(self, x, i):
         """
         evaluate f_i(x)

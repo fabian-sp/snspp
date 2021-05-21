@@ -131,7 +131,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
         x_t, x_hist, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, gamma, params['delta'] , params['n_epochs'], params['batch_size'])
     elif solver == 'sgd':
         x_t, x_hist, step_sizes, eta = sgd_loop(f, phi, x_t, tol, gamma, params['n_epochs'], params['batch_size'], \
-                                                truncate = params['truncate'], normed = params['truncate'])
+                                                truncate = params['truncate'], normed = params['normed'])
     else:
         raise NotImplementedError("Not a known solver option!")
     

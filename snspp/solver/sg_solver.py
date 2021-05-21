@@ -42,12 +42,15 @@ def sgd_loop(f, phi, x_t, tol, gamma, n_epochs, batch_size, truncate = False, no
             g_t2 = compute_batch_gradient(f, x_t, S)
         
         # determine step size
+        beta = 0.51
         if truncate:
-            alpha_t = np.minimum(gamma, f.eval(x_t)/np.linalg.norm(g_t)**2)        
+            gamma_t = gamma/(iter_t+1)**beta
+            alpha_t = np.minimum(gamma_t, f.eval_batch(x_t, S)/np.linalg.norm(g_t)**2)
         elif normed:
-            alpha_t = 1/(1+np.linalg.norm(g_t2))        
+            gamma_t = gamma/(iter_t+1)**beta
+            alpha_t = np.minimum(gamma_t, 1/np.linalg.norm(g_t2))   
         else:
-            alpha_t = gamma/(iter_t+1)
+            alpha_t = gamma/(iter_t+1)**beta
             
         w_t = x_t - alpha_t*g_t
         
