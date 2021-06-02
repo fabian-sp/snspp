@@ -7,17 +7,18 @@ from sklearn.linear_model import Lasso
 
 
 from snspp.helper.data_generation import lasso_test, tstudent_test
-from snspp.solver.opt_problem import problem
+from snspp.solver.opt_problem import problem, color_dict
 
-N = 1000
+N = 2000
 n = 100
 k = 10
 l1 = 1e-3
 
 problem_type = "lasso"
+EPOCHS = 10
 
 if problem_type == "lasso":
-    xsol, A, b, f, phi, _, _ = lasso_test(N, n, k, l1, block = False, noise = 0.1, kappa = 20., dist = 'ortho')
+    xsol, A, b, f, phi, _, _ = lasso_test(N, n, k, l1, block = False, noise = 0.1, kappa = 10., dist = 'ortho')
 
 elif problem_type == "tstudent":
     xsol, A, b, f, phi, _, _ = tstudent_test(N, n, k, l1, v = 4, noise = 0.1, poly = 2, kappa = 10., dist = 'ortho')
@@ -34,7 +35,7 @@ if problem_type == "lasso":
 
 elif problem_type == "tstudent":
     
-    ref_params = {'max_iter': 2000, 'alpha_C': 0.1, 'batch_size': 50, 'sample_style': 'constant', 'reduce_variance': True}
+    ref_params = {'max_iter': 2000, 'alpha': 0.1, 'batch_size': 50, 'sample_style': 'constant', 'reduce_variance': True}
     ref_P = problem(f, phi, tol = 1e-6, params = ref_params, verbose = True, measure = True)
     ref_P.solve(solver = 'snspp')
     
@@ -43,122 +44,146 @@ elif problem_type == "tstudent":
     psi_star = ref_P.info["objective"][-1]
     print("Optimal value: ", psi_star)
     
+
+#%%
+def do_grid_run(step_size_range, batch_size_range = None, psi_star = 0, solver = "snspp", solver_params = dict()):
     
-#%% do grid testing
-
-ALPHA = np.logspace(-1,2,25)
-
-batch_size = np.array([0.01, 0.05, 0.1])
-
-GRID_A, GRID_B = np.meshgrid(ALPHA, batch_size)
-
-# K ~ len(batch_size), L ~ len(ALPHA)
-K,L = GRID_A.shape
-
-
-psi_tol = 1e-2*psi_star 
-EPOCHS = 50
-
-TIME = np.zeros_like(GRID_A)
-OBJ = np.ones_like(GRID_A) * 100
-CONVERGED = np.zeros_like(GRID_A)
-
-
-for l in np.arange(L):
+    ALPHA = step_size_range
+    if batch_size_range is None:
+        batch_size_range = np.array([1/f.N])
+    BATCH = batch_size_range
     
-    for k in np.arange(K):
+    GRID_A, GRID_B = np.meshgrid(ALPHA, BATCH)
+    
+    # K ~ len(batch_size_range), L ~ len(step_size_range)
+    K,L = GRID_A.shape
         
-        print("######################################")
+    psi_tol = 1e-3 
+    
+    TIME = np.zeros_like(GRID_A)
+    OBJ = np.ones_like(GRID_A) * 100
+    CONVERGED = np.zeros_like(GRID_A)
+    
+    
+    for l in np.arange(L):
         
-        params = {'sample_style': 'constant', 'reduce_variance': True, 'm_iter':10}
-        
-        # target M epochs 
-        params["max_iter"] = int(EPOCHS *  1/GRID_B[k,l])
-        # m = 10 in SSNSP
-        params["max_iter"] = int( EPOCHS * (GRID_B[k,l] + 1/params['m_iter'])**(-1)  )
-        params['batch_size'] = max(1, int(GRID_B[k,l] * f.N))
-        params['alpha_C'] = GRID_A[k,l]
-        
-        print(f"ALPHA = {params['alpha_C']}")
-        print(f"BATCH = {params['batch_size']}")
-        print(f"MAX_ITER = {params['max_iter']}")
-        try:
-            P = problem(f, phi, tol = 1e-6, params = params, verbose = False, measure = True)
-            P.solve(solver = 'snspp')
+        for k in np.arange(K):
             
+            print("######################################")
             
-            xhist = P.info['iterates'].copy()
-            obj = P.info['objective'].copy()
+            # target M epochs 
+            solver_params["max_iter"] = int(EPOCHS *  1/GRID_B[k,l])
+            solver_params['batch_size'] = max(1, int(GRID_B[k,l] * f.N))
+            solver_params['alpha'] = GRID_A[k,l]
             
-            print(f"OBJECTIVE = {obj[-1]}")
-            
-            if np.any(obj <= psi_star + psi_tol):
-                stop = np.where(obj <= psi_star + psi_tol)[0][0]
-                this_time = P.info['runtime'].cumsum()[stop]
+            print(f"ALPHA = {solver_params['alpha']}")
+            print(f"BATCH = {solver_params['batch_size']}")
+            print(f"MAX_ITER = {solver_params['max_iter']}")
+            try:
+                P = problem(f, phi, tol = 1e-6, params = solver_params, verbose = False, measure = True)
+                P.solve(solver = solver)
+                      
+                #xhist = P.info['iterates'].copy()
+                obj = P.info['objective'].copy()
                 
-                CONVERGED[k,l] = 1
-            else:
-                this_time = P.info['runtime'].sum()
-                print("NO CONVERGENCE!")
-        except:
-            obj=[np.inf]
-            this_time = np.inf
-            
-            
-            
-        OBJ[k,l] = obj[-1]
-        TIME[k,l] = this_time
-     
-
-OBJ_ERR = (OBJ - psi_star)/psi_star
-OBJ_ERR[OBJ_ERR >= 10] = np.nan
-
-CONVERGED = CONVERGED.astype(bool)     
-
-#%% stability test for SAGA / SVRG
-
-GAMMA = np.logspace(-1, 3, 20)
-
-TIME_Q = np.zeros_like(GAMMA)
-OBJ_Q = np.zeros_like(GAMMA)
-CONVERGED_Q = np.zeros_like(GAMMA)
-ALPHA_Q = np.zeros_like(GAMMA)
-
-
-for l in np.arange(len(GAMMA)):
-    print("######################################")
-    params_saga = {'n_epochs': EPOCHS, 'batch_size': int(0.05*N), 'alpha': GAMMA[l]}
+                print(f"OBJECTIVE = {obj[-1]}")
+                
+                if np.any(obj <= psi_star *(1+psi_tol)):
+                    stop = np.where(obj <= psi_star *(1+psi_tol))[0][0]
+                    this_time = P.info['runtime'].cumsum()[stop]
+                    
+                    CONVERGED[k,l] = 1
+                else:
+                    this_time = P.info['runtime'].sum()
+                    print("NO CONVERGENCE!")
+            except:
+                obj=[np.inf]
+                this_time = np.inf
+                
+                
+            OBJ[k,l] = obj[-1]
+            TIME[k,l] = this_time
+            ALPHA[l] = P.info["step_sizes"][-1]
+         
     
-    Q = problem(f, phi, tol = 1e-6, params = params_saga, verbose = False, measure = True)
-    Q.solve(solver = 'saga')
+    OBJ_ERR = (OBJ - psi_star)/psi_star
+    OBJ_ERR[OBJ_ERR >= 10] = np.nan
     
-    obj = Q.info['objective'].copy()
+    CONVERGED = CONVERGED.astype(bool)     
     
-    if np.any(obj <= psi_star + psi_tol):
-        stop = np.where(obj <= psi_star + psi_tol)[0][0]
-        this_time = Q.info['runtime'].cumsum()[stop]
-              
-        CONVERGED_Q[l] = 1
-    else:
-        this_time = Q.info['runtime'].sum()
-        print("NO CONVERGENCE!")
-              
-    OBJ_Q[l] = obj[-1]
-    TIME_Q[l] = this_time
-    ALPHA_Q[l] = Q.info["step_sizes"][-1]
+    return OBJ, TIME, CONVERGED, ALPHA, BATCH
+
+#%%
 
 
-CONVERGED_Q = CONVERGED_Q.astype(bool)   
+solver_params = {'sample_style': 'fast_increasing', 'reduce_variance': True, 'm_iter': 10}
 
-#%% 
+step_size_range = np.logspace(-2, 1, 50)
+batch_size_range = np.array([0.01, 0.05, 0.1])
+
+obj, time, conv, alpha, batch = do_grid_run(step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
+                                            solver = "snspp", solver_params = solver_params)
+
+
+#%%
+
+solver_params = {'n_epochs': EPOCHS}
+
+step_size_range = np.logspace(-1,3,50)
+batch_size_range = None
+
+obj1, time1, conv1, alpha1, batch1 = do_grid_run(step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
+                                                 solver = "saga", solver_params = solver_params)
+
+
+
+#%% plot runtime (until convergence) vs step size
+save = False
+
 plt.rcParams["font.family"] = "serif"
 plt.rcParams['font.size'] = 12
 plt.rcParams['axes.linewidth'] = 1
 plt.rc('text', usetex=True)
 
-colors = sns.color_palette("GnBu_d", K)
-colors = sns.color_palette("viridis_r", K)
+Y_MAX = 3.
 
+def plot_result(TIME, CONVERGED, ALPHA, BATCH, ax = None, color = 'k', solver = "snspp"):
+    K,L = TIME.shape
+    
+    if ax is None:
+        fig, ax = plt.subplots(figsize = (7,5))
+    
+    colors = sns.light_palette(color, K+2, reverse = True)
+    
+    for k in np.arange(K):    
+        TIME[k,:][~CONVERGED[k,:]] = Y_MAX    
+        ax.plot(ALPHA, TIME[k,:], c = colors[k], linestyle = '--', marker = 'o', markersize = 4,  label = rf"${solver}, b =  N \cdot$ {BATCH[k]} ")
+    
+      
+    
+    ax.set_xlabel(r"Step size $\alpha$")    
+    ax.set_ylabel(r"Runtime until convergence [sec]")    
+    
+    ax.set_xscale('log')
+    #ax.set_yscale('log')
+    
+    ax.legend()
+
+    return ax
+
+
+fig, ax = plt.subplots(figsize = (7,5))
+
+plot_result(time, conv, alpha, batch, ax = ax, color = color_dict["snspp"], solver = "snspp")
+plot_result(time1, conv1, alpha1, batch1, ax = ax, color = color_dict["saga"], solver = "saga")
+
+ax.hlines(Y_MAX-1 , ax.get_xlim()[0], ax.get_xlim()[1], 'grey', ls = '-')
+ax.annotate("no convergence", (ax.get_xlim()[0]*1.1, Y_MAX-.9 ), color = "grey", fontsize = 14)
+
+if save:
+    fig.savefig(f'data/plots/exp_other/step_size_tuning.pdf', dpi = 300)
+
+    
 #%% plot objective of last iterate vs step size
 
 # fig, ax = plt.subplots()
@@ -179,126 +204,108 @@ colors = sns.color_palette("viridis_r", K)
 
 
 
-#%% plot runtime (until convergence) vs step size
-save = False
+#%% do grid testing
 
-Y_MAX = 3.#TIME.max()*2 +1
+# ALPHA = np.logspace(-2,1,20)
 
-fig, ax = plt.subplots(figsize = (7,5))
+# batch_size = np.array([0.01, 0.05, 0.1])
 
-for k in np.arange(K):    
-    TIME[k,:][~CONVERGED[k,:]] = Y_MAX    
+# GRID_A, GRID_B = np.meshgrid(ALPHA, batch_size)
+
+# # K ~ len(batch_size), L ~ len(ALPHA)
+# K,L = GRID_A.shape
+
+
+# psi_tol = 1e-3*psi_star 
+
+
+# TIME = np.zeros_like(GRID_A)
+# OBJ = np.ones_like(GRID_A) * 100
+# CONVERGED = np.zeros_like(GRID_A)
+
+
+# for l in np.arange(L):
     
-    ax.plot(ALPHA, TIME[k,:], c = colors[k], linestyle = '--', marker = 'o', markersize = 4,  label = rf"$b =  N \cdot$ {batch_size[k]} ")
-
-TIME_Q[~CONVERGED_Q] =  Y_MAX    
-ax.plot(ALPHA_Q, TIME_Q, c = "#FFB03B", linestyle = '--', marker = 'o', markersize = 4,  label = Q.solver)
-    
-
-ax.hlines( Y_MAX-1 , ALPHA[0], ALPHA[-1], 'grey', ls = '-')
-ax.annotate("no convergence", (ALPHA[0], Y_MAX-.9 ), color = "grey", fontsize = 14)
-
-ax.set_xlabel(r"Step size $\alpha$")    
-ax.set_ylabel(r"Runtime until convergence [sec]")    
-
-ax.set_xscale('log')
-#ax.set_yscale('log')
-
-ax.legend()
-
-if save:
-    fig.savefig(f'data/plots/exp_other/step_size_tuning.pdf', dpi = 300)
-
-
-#%%
-
-
-def do_grid_run(step_size_range, batch_size_range = None, psi_star = 0, solver = "snspp", solver_params = dict()):
-    ALPHA = step_size_range
-    if batch_size_range is None:
-        batch_size_range = np.array([1])
-    
-    GRID_A, GRID_B = np.meshgrid(ALPHA, batch_size_range)
-    
-    # K ~ len(batch_size), L ~ len(ALPHA)
-    K,L = GRID_A.shape
-    
-    
-    psi_tol = 1e-2*psi_star 
-    EPOCHS = 50
-    
-    TIME = np.zeros_like(GRID_A)
-    OBJ = np.ones_like(GRID_A) * 100
-    CONVERGED = np.zeros_like(GRID_A)
-    
-    
-    for l in np.arange(L):
+#     for k in np.arange(K):
         
-        for k in np.arange(K):
+#         print("######################################")
+        
+#         params = {'sample_style': 'constant', 'reduce_variance': True, 'm_iter':10}
+        
+#         # target M epochs 
+#         params["max_iter"] = int(EPOCHS *  1/GRID_B[k,l])
+#         # m = 10 in SSNSP
+#         params["max_iter"] = int( EPOCHS * (GRID_B[k,l] + 1/params['m_iter'])**(-1)  )
+#         params['batch_size'] = max(1, int(GRID_B[k,l] * f.N))
+#         params['alpha'] = GRID_A[k,l]
+        
+#         print(f"ALPHA = {params['alpha']}")
+#         print(f"BATCH = {params['batch_size']}")
+#         print(f"MAX_ITER = {params['max_iter']}")
+#         try:
+#             P = problem(f, phi, tol = 1e-6, params = params, verbose = False, measure = True)
+#             P.solve(solver = 'snspp')
             
-            print("######################################")
             
-            # target M epochs 
-            params["max_iter"] = int(EPOCHS *  1/GRID_B[k,l])
-            params['batch_size'] = max(1, int(GRID_B[k,l] * f.N))
-            params['alpha_C'] = GRID_A[k,l]
+#             xhist = P.info['iterates'].copy()
+#             obj = P.info['objective'].copy()
             
-            print(f"ALPHA = {params['alpha_C']}")
-            print(f"BATCH = {params['batch_size']}")
-            print(f"MAX_ITER = {params['max_iter']}")
-            try:
-                P = problem(f, phi, tol = 1e-6, params = solver_params, verbose = False, measure = True)
-                P.solve(solver = solver)
-                      
-                #xhist = P.info['iterates'].copy()
-                obj = P.info['objective'].copy()
+#             print(f"OBJECTIVE = {obj[-1]}")
+            
+#             if np.any(obj <= psi_star + psi_tol):
+#                 stop = np.where(obj <= psi_star + psi_tol)[0][0]
+#                 this_time = P.info['runtime'].cumsum()[stop]
                 
-                print(f"OBJECTIVE = {obj[-1]}")
-                
-                if np.any(obj <= psi_star + psi_tol):
-                    stop = np.where(obj <= psi_star + psi_tol)[0][0]
-                    this_time = P.info['runtime'].cumsum()[stop]
-                    
-                    CONVERGED[k,l] = 1
-                else:
-                    this_time = P.info['runtime'].sum()
-                    print("NO CONVERGENCE!")
-            except:
-                obj=[np.inf]
-                this_time = np.inf
-                
-                
-            OBJ[k,l] = obj[-1]
-            TIME[k,l] = this_time
-            ALPHA[k,l] = P.info["step_sizes"][-1]
-         
+#                 CONVERGED[k,l] = 1
+#             else:
+#                 this_time = P.info['runtime'].sum()
+#                 print("NO CONVERGENCE!")
+#         except:
+#             obj=[np.inf]
+#             this_time = np.inf
+            
+            
+            
+#         OBJ[k,l] = obj[-1]
+#         TIME[k,l] = this_time
+     
+
+# OBJ_ERR = (OBJ - psi_star)/psi_star
+# OBJ_ERR[OBJ_ERR >= 10] = np.nan
+
+# CONVERGED = CONVERGED.astype(bool)     
+
+# #%% stability test for SAGA / SVRG
+
+# GAMMA = np.logspace(-1, 1, 20)
+
+# TIME_Q = np.zeros_like(GAMMA)
+# OBJ_Q = np.zeros_like(GAMMA)
+# CONVERGED_Q = np.zeros_like(GAMMA)
+# ALPHA_Q = np.zeros_like(GAMMA)
+
+
+# for l in np.arange(len(GAMMA)):
+#     print("######################################")
+#     params_saga = {'n_epochs': EPOCHS, 'batch_size': int(0.05*N), 'alpha': GAMMA[l]}
     
-    OBJ_ERR = (OBJ - psi_star)/psi_star
-    OBJ_ERR[OBJ_ERR >= 10] = np.nan
+#     Q = problem(f, phi, tol = 1e-6, params = params_saga, verbose = False, measure = True)
+#     Q.solve(solver = 'saga')
     
-    CONVERGED = CONVERGED.astype(bool)     
+#     obj = Q.info['objective'].copy()
     
-    return OBJ, TIME, CONVERGED
+#     if np.any(obj <= psi_star + psi_tol):
+#         stop = np.where(obj <= psi_star + psi_tol)[0][0]
+#         this_time = Q.info['runtime'].cumsum()[stop]
+              
+#         CONVERGED_Q[l] = 1
+#     else:
+#         this_time = Q.info['runtime'].sum()
+#         print("NO CONVERGENCE!")
+              
+#     OBJ_Q[l] = obj[-1]
+#     TIME_Q[l] = this_time
+#     ALPHA_Q[l] = Q.info["step_sizes"][-1]
 
-#%%
 
-solver_params = {'sample_style': 'constant', 'reduce_variance': True, 'm_iter': 10}
-
-step_size_range = np.logspace(-1,2,5)
-
-batch_size_range = np.array([0.01, 0.05, 0.1])
-
-OBJ, TIME, CONVERGED = do_grid_run(step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
-                                   solver = "snspp", solver_params = solver_params)
-
-
-#%%
-
-solver_params = {'n_epochs': EPOCHS}
-
-step_size_range = np.logspace(-1,3,15)
-
-batch_size_range = None
-
-OBJ, TIME, CONVERGED = do_grid_run(step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
-                                   solver = "saga", solver_params = solver_params)
+# CONVERGED_Q = CONVERGED_Q.astype(bool)   
