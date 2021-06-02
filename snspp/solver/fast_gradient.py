@@ -42,7 +42,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     assert gradients.shape == (N,n)
     
     if 'n_epochs' not in params.keys():    
-        params['n_epochs'] = 5
+        params['n_epochs'] = 20
     
     #########################################################
     ## Solver dependent parameters
@@ -72,6 +72,9 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
         gamma_0 = params['gamma']
     
     # for SAGA/SVRG we use the theoretical step size * gamma_0
+    #########################################################
+    ## SAGA/SVRG
+    #########################################################
     if solver in ['saga', 'batch saga', 'svrg']:
         if f.name == 'squared':
             L = 2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()    
@@ -102,11 +105,17 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
                 params['batch_size'] = 1
             gamma = gamma_0 * 1./(3*L)
             m_iter = int(N/params['batch_size']) 
-           
+            
+    #########################################################
+    ## ADAGRAD
+    #########################################################
     elif solver == 'adagrad':
         # for ADAGRAD we use the step size gamma_0
         gamma = gamma_0
     
+    #########################################################
+    ## SGD
+    #########################################################
     elif solver == 'sgd':
         gamma = gamma_0
     
@@ -131,7 +140,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
         x_t, x_hist, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, gamma, params['delta'] , params['n_epochs'], params['batch_size'])
     elif solver == 'sgd':
         x_t, x_hist, step_sizes, eta = sgd_loop(f, phi, x_t, tol, gamma, params['n_epochs'], params['batch_size'], \
-                                                truncate = params['truncate'], normed = params['normed'])
+                                                truncate = params['truncate'])
     else:
         raise NotImplementedError("Not a known solver option!")
     

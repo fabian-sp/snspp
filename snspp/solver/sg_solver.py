@@ -8,9 +8,8 @@ from numba.typed import List
 from numba import njit
 
 
-def sgd_loop(f, phi, x_t, tol, gamma, n_epochs, batch_size, truncate = False, normed = False):
+def sgd_loop(f, phi, x_t, tol, gamma, n_epochs, batch_size, truncate = False):
     
-    assert not(truncate and normed)
     # initialize for diagnostics
     x_hist = List()
     step_sizes = List()
@@ -38,17 +37,13 @@ def sgd_loop(f, phi, x_t, tol, gamma, n_epochs, batch_size, truncate = False, no
         # mini-batch gradient step
         g_t = compute_batch_gradient(f, x_t, S)
         
-        if normed:
-            g_t2 = compute_batch_gradient(f, x_t, S)
-        
+      
         # determine step size
         beta = 0.51
         if truncate:
             gamma_t = gamma/(iter_t+1)**beta
             alpha_t = np.minimum(gamma_t, f.eval_batch(x_t, S)/np.linalg.norm(g_t)**2)
-        elif normed:
-            gamma_t = gamma/(iter_t+1)**beta
-            alpha_t = np.minimum(gamma_t, 1/np.linalg.norm(g_t2))   
+    
         else:
             alpha_t = gamma/(iter_t+1)**beta
             
