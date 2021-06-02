@@ -41,7 +41,8 @@ initialize_solvers(f, phi)
 
 
 #%% solve with SAGA
-params_saga = {'n_epochs' : 200, 'gamma' : 4.}
+
+params_saga = {'n_epochs' : 200, 'alpha' : 4.}
 Q = problem(f, phi, tol = 1e-9, params = params_saga, verbose = True, measure = True)
 
 Q.solve(solver = 'saga')
@@ -50,12 +51,8 @@ print(f.eval(Q.x) +phi.eval(Q.x))
 
 
 #%% solve with ADAGRAD
-params_adagrad = {'n_epochs' : 300, 'batch_size': int(f.N*0.05), 'gamma': 0.002}
 
-#opt_gamma,_,_ = adagrad_step_size_tuner(f, phi, gamma_range = None, params = None)
-opt_gamma = .01
-
-params = {'n_epochs' : 200, 'batch_size': int(f.N*0.05), 'gamma': opt_gamma}
+params_adagrad = {'n_epochs' : 300, 'batch_size': int(f.N*0.05), 'alpha': 0.002}
 
 Q1 = problem(f, phi, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
 Q1.solve(solver = 'adagrad')
@@ -64,7 +61,7 @@ print(f.eval(Q1.x) +phi.eval(Q1.x))
 
 #%% solve with SSNSP
 
-params_snspp = {'max_iter' : 100, 'batch_size': 100, 'sample_style': 'constant', 'alpha_C' : 0.1, 'reduce_variance': True}
+params_snspp = {'max_iter' : 100, 'batch_size': 100, 'sample_style': 'constant', 'alpha' : 0.1, 'reduce_variance': True}
 
 P = problem(f, phi, tol = 1e-7, params = params_snspp, verbose = True, measure = True)
 

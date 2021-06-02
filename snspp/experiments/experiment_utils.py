@@ -163,25 +163,25 @@ def initialize_solvers(f, phi):
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = False)
     tmpP.solve(solver = 'svrg')
     
-    params = {'n_epochs' : 2, 'batch_size': 10, 'gamma': 0.01}  
+    params = {'n_epochs' : 2, 'batch_size': 10, 'alpha': 0.01}  
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = False)   
     tmpP.solve(solver = 'adagrad')
     
-    params = {'max_iter' : 3, 'batch_size': 10, 'alpha_C': 0.01}  
+    params = {'max_iter' : 3, 'batch_size': 10, 'alpha': 0.01}  
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = False)   
     tmpP.solve(solver = 'snspp')
     
     return
 
-def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = None, n_iter = 50):
+def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = None, n_iter = 50):
     
-    if gamma_range is None:
+    if alpha_range is None:
         if solver in ['saga', 'batch saga', 'svrg']:
-            # for SAGA/SVRG, input for gamma is multiplied with theoretical stepsize --> choose larger than 1
-            gamma_range = np.logspace(0, 2, 10)
+            # for SAGA/SVRG, input for alpha is multiplied with theoretical stepsize --> choose larger than 1
+            alpha_range = np.logspace(0, 2, 10)
     
         else:
-            gamma_range = np.logspace(-3, -1, 10)
+            alpha_range = np.logspace(-3, -1, 10)
     
     if batch_range is None:
         if solver == 'saga':
@@ -205,13 +205,13 @@ def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = N
     
     for b in batch_range:
         res[b] = dict()
-        for gamma in gamma_range:
+        for al in alpha_range:
             
             # update step size and batch size
             if solver == 'snspp':
-                params["alpha_C"] = gamma
+                params["alpha"] = al
             else:
-                params["gamma"] = gamma
+                params["alpha"] = al
             
             if solver != 'saga':
                 params["batch_size"] = b
@@ -227,13 +227,13 @@ def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = N
                 Q.info["objective"] = np.nan*np.zeros(params["n_epochs"])
                 
             # store
-            res[b][gamma] = {'runtime': Q.info["runtime"], 'objective': Q.info["objective"]}
+            res[b][al] = {'runtime': Q.info["runtime"], 'objective': Q.info["objective"]}
             all_time_min = min(all_time_min, Q.info["objective"].min())
             
             # update current best params if necessary
             this_val = Q.info["objective"][-5:].mean()
             if this_val <= current_best_val:
-                current_best = (b, gamma)
+                current_best = (b, al)
                 current_best_val = this_val
             
     # plotting
@@ -242,15 +242,15 @@ def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = N
     markers = ['x', 'o', '^']
     lstyles = ["-", "--", ":"]
     cmap = plt.cm.YlGnBu
-    colors = cmap(np.linspace(0,1,len(gamma_range)))
+    colors = cmap(np.linspace(0,1,len(alpha_range)))
 
     for j in range(len(batch_range)):
         b = batch_range[j]
-        for i in range(len(gamma_range)):  
+        for i in range(len(alpha_range)):  
             
-            gamma = gamma_range[i]
-            x = res[b][gamma]["runtime"].cumsum()
-            y = res[b][gamma]["objective"] - all_time_min
+            al = alpha_range[i]
+            x = res[b][al]["runtime"].cumsum()
+            y = res[b][al]["objective"] - all_time_min
             ax.plot(x, y, color = colors[i], marker = markers[j], ls = lstyles[j], markersize = 6)
     
     
@@ -266,10 +266,10 @@ def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = N
     
     # legend for step sizes 
     g_leg = list()
-    for i in range(len(gamma_range)):
-        g_leg.append(mpatches.Patch(color = colors[i], label = np.round(gamma_range[i], 3)))
+    for i in range(len(alpha_range)):
+        g_leg.append(mpatches.Patch(color = colors[i], label = np.round(alpha_range[i], 3)))
         
-    plt.legend(handles = g_leg, title = "step size (gamma)", loc = 'upper right')
+    plt.legend(handles = g_leg, title = "step size (al)", loc = 'upper right')
         
     # other stuff    
     ax.grid(ls = '-', lw = .5)
@@ -280,6 +280,6 @@ def params_tuner(f, phi, solver = 'adagrad', gamma_range = None, batch_range = N
     
     ax.set_title(f'Parameter tuning for {solver}')
             
-    return res, current_best, gamma_range
+    return res, current_best, alpha_range
 
         

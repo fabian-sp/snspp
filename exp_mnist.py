@@ -37,18 +37,18 @@ initialize_solvers(f, phi)
 
 #%% params
 
-params_saga = {'n_epochs': 20, 'gamma': 55.}
+params_saga = {'n_epochs': 20, 'alpha': 55.}
 
-params_svrg = {'n_epochs': 20, 'batch_size': 650, 'gamma': 45000}
+params_svrg = {'n_epochs': 20, 'batch_size': 650, 'alpha': 45000}
 
-params_adagrad = {'n_epochs' : 120, 'batch_size': int(f.N*0.05), 'gamma': 0.03}
+params_adagrad = {'n_epochs' : 120, 'batch_size': int(f.N*0.05), 'alpha': 0.03}
 
 params_snspp = {'max_iter' : 70, 'batch_size': 650, 'sample_style': 'fast_increasing', \
-          'alpha_C' : 10., 'reduce_variance': True}
+          'alpha' : 10., 'reduce_variance': True}
     
     
-#params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(2e4, 6e4, 7), batch_range = np.array([100, 650]))
-#params_tuner(f, phi, solver = "saga", gamma_range = np.linspace(50, 120, 8))
+#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(2e4, 6e4, 7), batch_range = np.array([100, 650]))
+#params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(50, 120, 8))
 #params_tuner(f, phi, solver = "adagrad", batch_range = np.array([100, 1000, 3000]))
 
 #%% solve with SAGA

@@ -26,32 +26,32 @@ initialize_solvers(f, phi)
 print("psi(0) = ", f.eval(np.zeros(n)))
 
 #%% old param setup for v=0.25
-# params_saga = {'n_epochs' : 200, 'gamma' : 4.}
-# params_svrg = {'n_epochs' : 200, 'batch_size': 1, 'gamma': 8.}
-# params_adagrad = {'n_epochs' : 500, 'batch_size': 15, 'gamma': 0.002}
-# params_snspp = {'max_iter' : 1000, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : 0.008, 'reduce_variance': True}
+# params_saga = {'n_epochs' : 200, 'alpha' : 4.}
+# params_svrg = {'n_epochs' : 200, 'batch_size': 1, 'alpha': 8.}
+# params_adagrad = {'n_epochs' : 500, 'batch_size': 15, 'alpha': 0.002}
+# params_snspp = {'max_iter' : 1000, 'batch_size': 15, 'sample_style': 'constant', 'alpha' : 0.008, 'reduce_variance': True}
 
 #%% parameter setup
 
-params_saga = {'n_epochs' : 200, 'gamma' : 4.5}
-params_svrg = {'n_epochs' : 200, 'batch_size': 10, 'gamma': 38.}
-params_adagrad = {'n_epochs' : 500, 'batch_size': 30, 'gamma': 0.004}
-params_snspp = {'max_iter' : 1200, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : .03, 'reduce_variance': True}
+params_saga = {'n_epochs' : 200, 'alpha' : 4.5}
+params_svrg = {'n_epochs' : 200, 'batch_size': 10, 'alpha': 38.}
+params_adagrad = {'n_epochs' : 500, 'batch_size': 30, 'alpha': 0.004}
+params_snspp = {'max_iter' : 1200, 'batch_size': 15, 'sample_style': 'constant', 'alpha' : .03, 'reduce_variance': True}
 
-#params_tuner(f, phi, solver = "saga", gamma_range = np.linspace(4,8, 10))
-#params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(15, 50, 7), batch_range = np.array([10,20]))
-#params_tuner(f, phi, solver = "adagrad", gamma_range = np.logspace(-3,-2, 6), batch_range = np.array([30, 50]))
-#params_tuner(f, phi, solver = "snspp", gamma_range = np.linspace(0.02,0.05,10), batch_range = np.array([15,30]))
+#params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(4,8, 10))
+#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(15, 50, 7), batch_range = np.array([10,20]))
+#params_tuner(f, phi, solver = "adagrad", alpha_range = np.logspace(-3,-2, 6), batch_range = np.array([30, 50]))
+#params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(0.02,0.05,10), batch_range = np.array([15,30]))
 
 #%% determine psi_star
 
-# params_ref = {'max_iter' : 500, 'batch_size': f.N, 'sample_style': 'constant', 'alpha_C' : 10., 'reduce_variance': True}
+# params_ref = {'max_iter' : 500, 'batch_size': f.N, 'sample_style': 'constant', 'alpha' : 10., 'reduce_variance': True}
 # ref = problem(f, phi, tol = 1e-6, params = params_ref, verbose = True, measure = True)
 # ref.solve(solver = 'snspp')
 
 # if poly = 3
-#params_saga = {'n_epochs' : 200, 'gamma' : 3.}
-#params_snspp = {'max_iter' : 1000, 'batch_size': 15, 'sample_style': 'constant', 'alpha_C' : .06, 'reduce_variance': True}
+#params_saga = {'n_epochs' : 200, 'alpha' : 3.}
+#params_snspp = {'max_iter' : 1000, 'batch_size': 15, 'sample_style': 'constant', 'alpha' : .06, 'reduce_variance': True}
     
 
 #%% solve with SAGA

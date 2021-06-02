@@ -54,7 +54,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     
     elif solver == 'adagrad':
         if 'delta' not in params.keys():    
-                params['delta'] = 1e-12
+            params['delta'] = 1e-12
         if 'batch_size' not in params.keys():    
             params['batch_size'] = max(int(f.N * 0.01), 1)
             
@@ -62,16 +62,16 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     ## Step size + batch size
     #########################################################
     # see Defazio et al. 2014 for (convex) SAGA step size and Sra, Reddi et al 2016 for minibatch SAGA and PROX-SVRG step size
-    if 'gamma' not in params.keys():
+    if 'alpha' not in params.keys():
         if solver == 'adagrad':
-            gamma_0 = 0.001
-            warnings.warn("Using a default step size for AdaGrad. This may lead to bad performance. A script for tuning the step size is contained in snspp/experiments/experimnet_utils. Provide a step size via params[\"gamma\"].")
+            alpha_0 = 0.001
+            warnings.warn("Using a default step size for AdaGrad. This may lead to bad performance. A script for tuning the step size is contained in snspp/experiments/experimnet_utils. Provide a step size via params[\"alpha\"].")
         else:
-            gamma_0 = 1.
+            alpha_0 = 1.
     else:
-        gamma_0 = params['gamma']
+        alpha_0 = params['alpha']
     
-    # for SAGA/SVRG we use the theoretical step size * gamma_0
+    # for SAGA/SVRG we use the theoretical step size * alpha_0
     #########################################################
     ## SAGA/SVRG
     #########################################################
@@ -89,39 +89,39 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
         if solver == 'saga':
             # if we regularize, f_i is strongly-convex and we can use a larger step size (see Defazio et al.)
             if params['reg'] > 0:
-                gamma1 = 1/(2*(f.N*params['reg'] + L))
+                alpha_1 = 1/(2*(f.N*params['reg'] + L))
             else:
-                gamma1 = 0
+                alpha_1 = 0
                 
-            gamma = gamma_0 * max(gamma1, 1./(3*L))
+            alpha = alpha_0 * max(alpha_1, 1./(3*L))
             
         elif solver == 'batch saga':
             if 'batch_size' not in params.keys():    
                 params['batch_size'] = int(f.N**(2/3))
-            gamma = gamma_0 * 1./(5*L)
+            alpha = alpha_0 * 1./(5*L)
         
         elif solver == 'svrg':
             if 'batch_size' not in params.keys():    
                 params['batch_size'] = 1
-            gamma = gamma_0 * 1./(3*L)
+            alpha = alpha_0 * 1./(3*L)
             m_iter = int(N/params['batch_size']) 
             
     #########################################################
     ## ADAGRAD
     #########################################################
     elif solver == 'adagrad':
-        # for ADAGRAD we use the step size gamma_0
-        gamma = gamma_0
+        # for ADAGRAD we use the step size alpha_0
+        alpha = alpha_0
     
     #########################################################
     ## SGD
     #########################################################
     elif solver == 'sgd':
-        gamma = gamma_0
+        alpha = alpha_0
     
     if verbose :
-        print(f"Step size of {solver}: ", gamma)
-    gamma = np.float64(gamma)  
+        print(f"Step size of {solver}: ", alpha)
+    alpha = np.float64(alpha)  
      
     #########################################################
     ## Main loop
@@ -130,16 +130,16 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     
     if solver == 'saga':
         # run SAGA with batch size 1
-        x_t, x_hist, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['reg'])     
+        x_t, x_hist, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['reg'])     
     elif solver == 'batch saga':
         # run SAGA with batch size n^(2/3)
-        x_t, x_hist, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, params['n_epochs'], params['batch_size'])
+        x_t, x_hist, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['batch_size'])
     elif solver == 'svrg':
-        x_t, x_hist, step_sizes, eta  = svrg_loop(f, phi, x_t, A, N, tol, gamma, params['n_epochs'], params['batch_size'], m_iter)
+        x_t, x_hist, step_sizes, eta  = svrg_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter)
     elif solver == 'adagrad':
-        x_t, x_hist, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, gamma, params['delta'] , params['n_epochs'], params['batch_size'])
+        x_t, x_hist, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, alpha, params['delta'] , params['n_epochs'], params['batch_size'])
     elif solver == 'sgd':
-        x_t, x_hist, step_sizes, eta = sgd_loop(f, phi, x_t, tol, gamma, params['n_epochs'], params['batch_size'], \
+        x_t, x_hist, step_sizes, eta = sgd_loop(f, phi, x_t, tol, alpha, params['n_epochs'], params['batch_size'], \
                                                 truncate = params['truncate'])
     else:
         raise NotImplementedError("Not a known solver option!")
@@ -189,7 +189,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
 
 #%%
 @njit()
-def saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, reg):
+def saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg):
     
     # initialize for diagnostics
     x_hist = List()
@@ -215,15 +215,15 @@ def saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, reg):
         g_j = gradients[j,:].reshape(-1)
         old_g = (-1) * g_j + g_sum
         
-        w_t = (1 -gamma*reg)*x_t - gamma * (g + old_g)
-        #w_t = x_t - gamma * (g + old_g)
+        w_t = (1 -alpha*reg)*x_t - alpha * (g + old_g)
+        #w_t = x_t - alpha * (g + old_g)
         
         # store new gradient
         gradients[j,:] = g
         g_sum = g_sum - (1/N)*g_j + (1/N)*g
         
         # compute prox step
-        x_t = phi.prox(w_t, gamma)
+        x_t = phi.prox(w_t, alpha)
         
         # stop criterion
         if iter_t % N == N-1:
@@ -233,14 +233,14 @@ def saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, reg):
         # store everything (at end of each epoch)
         if iter_t % N == N-1:
             x_hist.append(x_t)
-            step_sizes.append(gamma)
+            step_sizes.append(alpha)
         
     return x_t, x_hist, step_sizes, eta
 
 
 #%%
 @njit()
-def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
+def adagrad_loop(f, phi, x_t, A, N, tol, alpha, delta, n_epochs, batch_size):
     
     # initialize for diagnostics
     x_hist = List()
@@ -274,7 +274,7 @@ def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
         G_t = compute_batch_gradient(f, x_t, S)
         G += G_t * G_t
         
-        L_t = (1/gamma) * (delta + np.sqrt(G))
+        L_t = (1/alpha) * (delta + np.sqrt(G))
         
         w_t = x_t - (1/L_t) * G_t
         
@@ -295,7 +295,7 @@ def adagrad_loop(f, phi, x_t, A, N, tol, gamma, delta, n_epochs, batch_size):
 
 #%%
 @njit()
-def svrg_loop(f, phi, x_t, A, N, tol, gamma, n_epochs, batch_size, m_iter):
+def svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter):
     
     # initialize for diagnostics
     x_hist = List()
@@ -323,8 +323,8 @@ def svrg_loop(f, phi, x_t, A, N, tol, gamma, n_epochs, batch_size, m_iter):
             v_t = compute_batch_gradient(f, x_t, S)
             g_t = v_t - (1/batch_size) * full_g[S,:].sum(axis=0) + g_tilde
 
-            w_t = x_t - gamma*g_t
-            x_t = phi.prox(w_t, gamma)
+            w_t = x_t - alpha*g_t
+            x_t = phi.prox(w_t, alpha)
         
    
         # stop criterion
@@ -332,14 +332,14 @@ def svrg_loop(f, phi, x_t, A, N, tol, gamma, n_epochs, batch_size, m_iter):
         x_old = x_t
         # store in each outer iteration
         x_hist.append(x_t)    
-        step_sizes.append(gamma)    
+        step_sizes.append(alpha)    
 
 
     return x_t, x_hist, step_sizes, eta
 
 #%%
 # @njit()
-# def prox_svrg2(f, phi, x_t, A, N, tol, gamma, n_epochs, batch_size, m_iter):
+# def prox_svrg2(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter):
     
 #     # initialize for diagnostics
 #     x_hist = List()
@@ -366,8 +366,8 @@ def svrg_loop(f, phi, x_t, A, N, tol, gamma, n_epochs, batch_size, m_iter):
 #             #A_t = A[S,:]
 #             g_t = (1/batch_size) * (A_t*(v_t - gradient_store[S,:])).sum(axis=0) + g_tilde
 
-#             w_t = x_t - gamma*g_t
-#             x_t = phi.prox(w_t, gamma)
+#             w_t = x_t - alpha*g_t
+#             x_t = phi.prox(w_t, alpha)
         
    
 #         # stop criterion
@@ -375,7 +375,7 @@ def svrg_loop(f, phi, x_t, A, N, tol, gamma, n_epochs, batch_size, m_iter):
 #         x_old = x_t
 #         # store in each outer iteration
 #         x_hist.append(x_t)    
-#         step_sizes.append(gamma)    
+#         step_sizes.append(alpha)    
 
 
 #     return x_t, x_hist, step_sizes, eta
@@ -395,7 +395,7 @@ def svrg_loop(f, phi, x_t, A, N, tol, gamma, n_epochs, batch_size, m_iter):
 
 #%%
 @njit()
-def batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, batch_size):
+def batch_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, batch_size):
     
     # initialize for diagnostics
     x_hist = List()
@@ -434,14 +434,14 @@ def batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, batch_si
         
         old_g = (-1/batch_size) * g_j + g_sum
         
-        w_t = x_t - gamma * ((1/batch_size)*batch_g_sum + old_g)
+        w_t = x_t - alpha * ((1/batch_size)*batch_g_sum + old_g)
         
         # store new gradient
         gradients[S,:] = batch_g
         g_sum = g_sum - (1/N)*g_j + (1/N)*batch_g_sum
         
         # compute prox step
-        x_t = phi.prox(w_t, gamma)
+        x_t = phi.prox(w_t, alpha)
         
         # stop criterion
         if store[iter_t]:
@@ -451,6 +451,6 @@ def batch_saga_loop(f, phi, x_t, A, N, tol, gamma, gradients, n_epochs, batch_si
         # store everything (at end of each epoch)
         if store[iter_t]:
             x_hist.append(x_t)
-            step_sizes.append(gamma)
+            step_sizes.append(alpha)
         
     return x_t, x_hist, step_sizes, eta
