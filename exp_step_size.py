@@ -9,16 +9,16 @@ from sklearn.linear_model import Lasso
 from snspp.helper.data_generation import lasso_test, tstudent_test
 from snspp.solver.opt_problem import problem, color_dict
 
-N = 2000
-n = 100
-k = 10
+N = 1000
+n = 40
+k = 5
 l1 = 1e-3
 
 problem_type = "lasso"
-EPOCHS = 10
+EPOCHS = 20
 
 if problem_type == "lasso":
-    xsol, A, b, f, phi, _, _ = lasso_test(N, n, k, l1, block = False, noise = 0.1, kappa = 10., dist = 'ortho')
+    xsol, A, b, f, phi, _, _ = lasso_test(N, n, k, l1, block = False, noise = 0.1, kappa = 15., dist = 'ortho')
 
 elif problem_type == "tstudent":
     xsol, A, b, f, phi, _, _ = tstudent_test(N, n, k, l1, v = 4, noise = 0.1, poly = 2, kappa = 10., dist = 'ortho')
@@ -72,7 +72,12 @@ def do_grid_run(step_size_range, batch_size_range = None, psi_star = 0, solver =
             print("######################################")
             
             # target M epochs 
-            solver_params["max_iter"] = int(EPOCHS *  1/GRID_B[k,l])
+            if solver == "snspp":
+                solver_params["max_iter"] = 500
+            else:
+                solver_params["max_iter"] = int(EPOCHS *  1/GRID_B[k,l])
+                
+                
             solver_params['batch_size'] = max(1, int(GRID_B[k,l] * f.N))
             solver_params['alpha'] = GRID_A[k,l]
             
@@ -118,7 +123,7 @@ def do_grid_run(step_size_range, batch_size_range = None, psi_star = 0, solver =
 
 solver_params = {'sample_style': 'fast_increasing', 'reduce_variance': True, 'm_iter': 10}
 
-step_size_range = np.logspace(-2, 1, 50)
+step_size_range = np.logspace(-2, 2, 40)
 batch_size_range = np.array([0.01, 0.05, 0.1])
 
 obj, time, conv, alpha, batch = do_grid_run(step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
@@ -129,7 +134,7 @@ obj, time, conv, alpha, batch = do_grid_run(step_size_range, batch_size_range = 
 
 solver_params = {'n_epochs': EPOCHS}
 
-step_size_range = np.logspace(-1,3,50)
+step_size_range = np.logspace(-2,3,50)
 batch_size_range = None
 
 obj1, time1, conv1, alpha1, batch1 = do_grid_run(step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
@@ -157,7 +162,8 @@ def plot_result(TIME, CONVERGED, ALPHA, BATCH, ax = None, color = 'k', solver = 
     
     for k in np.arange(K):    
         TIME[k,:][~CONVERGED[k,:]] = Y_MAX    
-        ax.plot(ALPHA, TIME[k,:], c = colors[k], linestyle = '--', marker = 'o', markersize = 4,  label = rf"${solver}, b =  N \cdot$ {BATCH[k]} ")
+        ax.plot(ALPHA, TIME[k,:], c = colors[k], linestyle = '--', marker = 'o', markersize = 4,\
+                label = solver + ", " + rf"$b =  N \cdot$ {BATCH[k]} ")
     
       
     
