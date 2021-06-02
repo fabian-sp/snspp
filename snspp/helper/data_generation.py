@@ -34,7 +34,7 @@ def standardize(A):
 
 def create_A(N, n, dist = 'ortho', kappa = 1.):
     """
-    method for cretaing a random matrix A
+    method for creating a random matrix A
     
     Parameters
     ----------
@@ -54,12 +54,19 @@ def create_A(N, n, dist = 'ortho', kappa = 1.):
     A : array of shape (N,n)
     """
     if dist == 'ortho':
-        Q = ortho_group.rvs(np.maximum(N,n))
-        d = np.linspace(kappa, 1, n)
-        D = np.diag(d)
+        if N >= n:
+            Q = ortho_group.rvs(N)
+            d = np.linspace(kappa, 1, n)
+            D = np.diag(d)
         
-        A = Q[:,:n]@D
-        
+            A = Q[:,:n]@D
+        else:
+            # N < n
+            A = 2*np.random.rand(N,n)-1
+            U,S,Vh = np.linalg.svd(A, full_matrices = False)
+            d = np.linspace(kappa, 1, N)
+            A = U@np.diag(d)@Vh
+            
         print("Condition number of A:", np.linalg.cond(A) )
         
     elif dist == 'unif':
