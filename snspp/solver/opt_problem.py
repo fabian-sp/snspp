@@ -9,7 +9,6 @@ import seaborn as sns
 
 from .spp_solver import stochastic_prox_point
 from .saga import saga
-from .warm_spp import warm_spp
 from .fast_gradient import stochastic_gradient
 
 #sns.set()
