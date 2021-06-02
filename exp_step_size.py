@@ -127,7 +127,7 @@ ALPHA_Q = np.zeros_like(GAMMA)
 
 for l in np.arange(len(GAMMA)):
     print("######################################")
-    params_saga = {'n_epochs': EPOCHS, 'batch_size': int(0.05*N), 'gamma': GAMMA[l]}
+    params_saga = {'n_epochs': EPOCHS, 'batch_size': int(0.05*N), 'alpha': GAMMA[l]}
     
     Q = problem(f, phi, tol = 1e-6, params = params_saga, verbose = False, measure = True)
     Q.solve(solver = 'saga')

@@ -46,20 +46,20 @@ initialize_solvers(f, phi)
 
 #%% params
 
-params_saga = {'n_epochs' : 50, 'gamma': 5.5}
+params_saga = {'n_epochs' : 50, 'alpha': 5.5}
 
-params_svrg = {'n_epochs' : 50, 'batch_size': 50, 'gamma': 75.}
+params_svrg = {'n_epochs' : 50, 'batch_size': 50, 'alpha': 75.}
 
-params_adagrad = {'n_epochs' : 200, 'batch_size': 240, 'gamma': 0.028}
+params_adagrad = {'n_epochs' : 200, 'batch_size': 240, 'alpha': 0.028}
 
-params_snspp = {'max_iter' : 60, 'batch_size': 400, 'sample_style': 'fast_increasing', 'alpha_C' : 7.,\
+params_snspp = {'max_iter' : 60, 'batch_size': 400, 'sample_style': 'fast_increasing', 'alpha' : 7.,\
           "reduce_variance": True}
 
-#params_tuner(f, phi, solver = "saga", gamma_range = np.linspace(4,8, 10))
-#params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(30, 80, 8), batch_range = np.array([50]))
-#params_tuner(f, phi, solver = "svrg", gamma_range = np.linspace(30, 80, 8), batch_range = np.array([100]))
+#params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(4,8, 10))
+#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(30, 80, 8), batch_range = np.array([50]))
+#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(30, 80, 8), batch_range = np.array([100]))
 #params_tuner(f, phi, solver = "adagrad", batch_range = np.array([50, 250, 500]))
-#params_tuner(f, phi, solver = "snspp", gamma_range = np.linspace(5,10, 10), batch_range = np.array([200, 400]))
+#params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(5,10, 10), batch_range = np.array([200, 400]))
 
 #%% solve with SAGA
 

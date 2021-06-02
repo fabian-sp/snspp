@@ -8,7 +8,7 @@ from numba.typed import List
 from numba import njit
 
 
-def sgd_loop(f, phi, x_t, tol, gamma, n_epochs, batch_size, truncate = False):
+def sgd_loop(f, phi, x_t, tol, alpha, n_epochs, batch_size, truncate = False):
     
     # initialize for diagnostics
     x_hist = List()
@@ -41,11 +41,11 @@ def sgd_loop(f, phi, x_t, tol, gamma, n_epochs, batch_size, truncate = False):
         # determine step size
         beta = 0.51
         if truncate:
-            gamma_t = gamma/(iter_t+1)**beta
+            gamma_t = alpha/(iter_t+1)**beta
             alpha_t = np.minimum(gamma_t, f.eval_batch(x_t, S)/np.linalg.norm(g_t)**2)
     
         else:
-            alpha_t = gamma/(iter_t+1)**beta
+            alpha_t = alpha/(iter_t+1)**beta
             
         w_t = x_t - alpha_t*g_t
         

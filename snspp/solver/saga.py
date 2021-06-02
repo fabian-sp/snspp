@@ -37,7 +37,7 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
     if 'reg' not in params.keys():    
             params['reg'] = 0
     
-    if 'gamma' not in params.keys():
+    if 'alpha' not in params.keys():
         if f.name == 'squared':
             L = 2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A)**2).max()
         elif f.name == 'logistic':
@@ -45,9 +45,9 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         else:
             warnings.warn("We could not determine the correct SAGA step size! The default step size is maybe too large (divergence) or too small (slow convergence).")            
             L = 100
-        gamma = 1./(3*L) 
+        alpha = 1./(3*L) 
     else:
-        gamma = params['gamma']
+        alpha = params['alpha']
     
     # initialize for stopping criterion
     status = 'not optimal'
@@ -62,7 +62,7 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
     hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s\t%10s"
     out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
     if verbose and measure:
-        print(hdr_fmt % ("iter", "psi(x_t)", "f(x_t)", "phi(x_t)", "gamma", "eta"))
+        print(hdr_fmt % ("iter", "psi(x_t)", "f(x_t)", "phi(x_t)", "alpha", "eta"))
     
     
     g_sum = (1/N)*gradients.sum(axis = 0)
@@ -85,14 +85,14 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         g = A_j.T @ f.g(A_j@x_t, j)
         g_j = gradients[j,:].squeeze()
         old_g = (-1) * g_j + g_sum
-        w_t = x_t - gamma * (g + old_g)
+        w_t = x_t - alpha * (g + old_g)
         
         # store new gradient
         gradients[j,:] = g.copy()
         g_sum = g_sum - (1/N)*g_j + (1/N)*g
         
         # compute prox step
-        x_t = phi.prox(w_t, gamma)
+        x_t = phi.prox(w_t, alpha)
         
         # stop criterion
         if measure:
@@ -104,7 +104,7 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         
         # store everything
         x_hist.append(x_t)
-        step_sizes.append(gamma)
+        step_sizes.append(alpha)
                   
         if measure and iter_t % N == 1:
             f_t = f.eval(x_t.astype('float64'))
@@ -116,7 +116,7 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
             obj2.append(f.eval(x_mean.astype('float64')) + phi.eval(x_mean))
             
             if verbose:
-                print(out_fmt % (iter_t, f_t+phi_t, f_t , phi_t, gamma, eta))
+                print(out_fmt % (iter_t, f_t+phi_t, f_t , phi_t, alpha, eta))
           
         
     if eta > tol:

@@ -145,11 +145,12 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     #########################################################
     ## Set parameters
     #########################################################
-    if 'alpha_C' not in params.keys():
-        C = 1.
+    if 'alpha' not in params.keys():
+        alpha = 1.
     else:
-        C = params['alpha_C']       
-    alpha_t = C
+        alpha = params['alpha']
+    # initialize step size
+    alpha_t = alpha
     
     if 'max_iter' not in params.keys():    
         params['max_iter'] = 100
@@ -309,7 +310,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         # if reduce_variance, use constant step size, else use decreasing step size
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
         if f.convex and not params['reduce_variance']:
-             alpha_t = C/(iter_t + 2)**(0.51)
+             alpha_t = alpha/(iter_t + 2)**(0.51)
         
         
     if eta > tol:
