@@ -59,10 +59,10 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
     obj = list(); obj2 = list()
     runtime = list()
     
-    hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s"
-    out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
+    hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s\t%10s"
+    out_fmt = "%4d\t%10.4g\t%10.4g\t%10.4g\t%10.4g\t%10.4g"
     if verbose and measure:
-        print(hdr_fmt % ("iter", "obj (x_t)", "obj(x_mean)", "gamma", "eta"))
+        print(hdr_fmt % ("iter", "psi(x_t)", "f(x_t)", "phi(x_t)", "gamma", "eta"))
     
     
     g_sum = (1/N)*gradients.sum(axis = 0)
@@ -95,7 +95,6 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         x_t = phi.prox(w_t, gamma)
         
         # stop criterion
-        #eta = stop_optimal(x_t, f, phi)
         if measure:
             end = time.time()
             runtime.append(end-start)
@@ -108,15 +107,16 @@ def saga(f, phi, x0, tol = 1e-3, params = dict(), verbose = False, measure = Fal
         step_sizes.append(gamma)
                   
         if measure and iter_t % N == 1:
-            obj.append(f.eval(x_t.astype('float64')) + phi.eval(x_t))
+            f_t = f.eval(x_t.astype('float64'))
+            phi_t = phi.eval(x_t)
+            obj.append(f_t + phi_t)
         
-        # calculate x_mean       
-        if measure and iter_t % N == 1:
+            # calculate x_mean          
             x_mean = compute_x_mean(x_hist, step_sizes = None)
             obj2.append(f.eval(x_mean.astype('float64')) + phi.eval(x_mean))
             
             if verbose:
-                print(out_fmt % (iter_t, obj[-1], obj2[-1] , gamma, eta))
+                print(out_fmt % (iter_t, f_t+phi_t, f_t , phi_t, gamma, eta))
           
         
     if eta > tol:
