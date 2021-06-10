@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import time
 
-from sklearn.linear_model import Lasso
+from sklearn.linear_model import Lasso, LogisticRegression
 
 
-from snspp.helper.data_generation import lasso_test, tstudent_test
+from snspp.helper.data_generation import lasso_test, logreg_test, get_gisette
 from snspp.solver.opt_problem import problem, color_dict
 
 N = 1000
@@ -14,14 +14,17 @@ n = 40
 k = 5
 l1 = 1e-3
 
-problem_type = "lasso"
-EPOCHS = 20
+EPOCHS = 40
+problem_type = "gisette"
 
 if problem_type == "lasso":
     xsol, A, b, f, phi, _, _ = lasso_test(N, n, k, l1, block = False, noise = 0.1, kappa = 15., dist = 'ortho')
 
-elif problem_type == "tstudent":
-    xsol, A, b, f, phi, _, _ = tstudent_test(N, n, k, l1, v = 4, noise = 0.1, poly = 2, kappa = 10., dist = 'ortho')
+elif problem_type == "logreg":
+    xsol, A, b, f, phi, _, _ = logreg_test(N, n, k, lambda1 = l1, noise = 0.3, kappa = 15., dist = 'ortho')
+
+elif problem_type == "gisette":
+    f, phi, A, b, _, _ = get_gisette(lambda1 = 0.05)
 
 #%% solve with scikt or large max_iter to get psi_star
 
@@ -33,16 +36,31 @@ if problem_type == "lasso":
     psi_star = f.eval(xsol) + phi.eval(xsol)
     print("Optimal value: ", psi_star)
 
-elif problem_type == "tstudent":
+elif problem_type in ["logreg", "gisette"]:
+    sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-9, \
+                            solver = 'saga', max_iter = 200, verbose = 1)
+    sk.fit(A, b)
     
-    ref_params = {'max_iter': 2000, 'alpha': 0.1, 'batch_size': 50, 'sample_style': 'constant', 'reduce_variance': True}
-    ref_P = problem(f, phi, tol = 1e-6, params = ref_params, verbose = True, measure = True)
-    ref_P.solve(solver = 'snspp')
-    
-    ref_P.plot_objective()
-    
-    psi_star = ref_P.info["objective"][-1]
+    xsol = sk.coef_.copy().squeeze()
+    psi_star = f.eval(xsol) + phi.eval(xsol)
     print("Optimal value: ", psi_star)
+    
+    P = problem(f, phi, tol = 1e-6, params = {'n_epochs': 200, 'alpha': 1.}, verbose = False, measure = False)
+    P.solve(solver = 'saga')
+    
+    print(np.linalg.norm(P.x-xsol))
+    
+
+# elif problem_type == "tstudent":
+    
+#     ref_params = {'max_iter': 2000, 'alpha': 0.1, 'batch_size': 50, 'sample_style': 'constant', 'reduce_variance': True}
+#     ref_P = problem(f, phi, tol = 1e-6, params = ref_params, verbose = True, measure = True)
+#     ref_P.solve(solver = 'snspp')
+    
+#     ref_P.plot_objective()
+    
+#     psi_star = ref_P.info["objective"][-1]
+#     print("Optimal value: ", psi_star)
     
 
 #%%
@@ -58,7 +76,7 @@ def do_grid_run(step_size_range, batch_size_range = None, psi_star = 0, solver =
     # K ~ len(batch_size_range), L ~ len(step_size_range)
     K,L = GRID_A.shape
         
-    psi_tol = 1e-3 
+    psi_tol = 1e-2
     
     TIME = np.zeros_like(GRID_A)
     OBJ = np.ones_like(GRID_A) * 100
@@ -73,7 +91,7 @@ def do_grid_run(step_size_range, batch_size_range = None, psi_star = 0, solver =
             
             # target M epochs 
             if solver == "snspp":
-                solver_params["max_iter"] = 500
+                solver_params["max_iter"] = 200
             else:
                 solver_params["max_iter"] = int(EPOCHS *  1/GRID_B[k,l])
                 
@@ -123,7 +141,7 @@ def do_grid_run(step_size_range, batch_size_range = None, psi_star = 0, solver =
 
 solver_params = {'sample_style': 'fast_increasing', 'reduce_variance': True, 'm_iter': 10}
 
-step_size_range = np.logspace(-2, 2, 40)
+step_size_range = np.logspace(-2, 2, 10)
 batch_size_range = np.array([0.01, 0.05, 0.1])
 
 obj, time, conv, alpha, batch = do_grid_run(step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
@@ -134,7 +152,7 @@ obj, time, conv, alpha, batch = do_grid_run(step_size_range, batch_size_range = 
 
 solver_params = {'n_epochs': EPOCHS}
 
-step_size_range = np.logspace(-2,3,50)
+step_size_range = np.logspace(-2,3,20)
 batch_size_range = None
 
 obj1, time1, conv1, alpha1, batch1 = do_grid_run(step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \

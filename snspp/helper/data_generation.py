@@ -154,7 +154,7 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = 1., dist
     x = x.astype('float64')
     
     phi = L1Norm(lambda1) 
-    f = logistic_loss(A,b)
+    f = logistic_loss(A[:N,:],b[:N])
     
     ##### TEST SET ############
     
@@ -185,7 +185,7 @@ def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 4., noise = 0.1, poly
     x = x.astype('float64')
     
     phi = L1Norm(lambda1) 
-    f = tstudent_loss(A,b,v=v)
+    f = tstudent_loss(A[:N,:],b[:N],v=v)
         
     A_test = A[N:,:]
     b_test = b[N:]
