@@ -7,7 +7,7 @@ from ..helper.utils import compute_batch_gradient, stop_scikit_saga
 from numba.typed import List
 from numba import njit
 
-
+@njit()
 def sgd_loop(f, phi, x_t, tol, alpha, n_epochs, batch_size, truncate = False):
     
     # initialize for diagnostics
@@ -32,7 +32,7 @@ def sgd_loop(f, phi, x_t, tol, alpha, n_epochs, batch_size, truncate = False):
             break
         
         # sample
-        S = np.random.choice(a = np.arange(f.N), size = batch_size, replace = True)
+        S = np.random.randint(low = 0, high = f.N, size = batch_size)
         
         # mini-batch gradient step
         g_t = compute_batch_gradient(f, x_t, S)
@@ -42,8 +42,7 @@ def sgd_loop(f, phi, x_t, tol, alpha, n_epochs, batch_size, truncate = False):
         beta = 0.51
         if truncate:
             gamma_t = alpha/(iter_t+1)**beta
-            alpha_t = np.minimum(gamma_t, f.eval_batch(x_t, S)/np.linalg.norm(g_t)**2)
-    
+            alpha_t = np.minimum(gamma_t, f.eval_batch(x_t, S)/np.linalg.norm(g_t)**2)  
         else:
             alpha_t = alpha/(iter_t+1)**beta
             

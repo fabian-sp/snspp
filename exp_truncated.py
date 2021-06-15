@@ -33,16 +33,15 @@ psi_star = f.eval(x_sk) + phi.eval(x_sk)
 
 params_sgd = {'n_epochs': 300, 'batch_size': 10, 'alpha': 100, 'truncate': False, 'normed': False}
 
-
 P = problem(f, phi, tol = 1e-5, params = params_sgd, verbose = True, measure = True)
 P.solve(solver = 'sgd')
 
 P.plot_objective(runtime = False, psi_star = psi_star, log_scale = True)
 #P.plot_path()
 
-#%% solve with SGD
+#%% solve with truncated SGD
 
-params_sgd = {'n_epochs': 300, 'batch_size': 10, 'alpha': 100, 'truncate': True, 'normed': False}
+params_sgd = {'n_epochs': 500, 'batch_size': 10, 'alpha': 100, 'truncate': True, 'normed': False}
 
 P1 = problem(f, phi, tol = 1e-5, params = params_sgd, verbose = True, measure = True)
 P1.solve(solver = 'sgd')

@@ -213,9 +213,9 @@ def saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg):
         g = A_j.T @ f.g(A_j @ x_t, j)
             
         g_j = gradients[j,:].reshape(-1)
-        old_g = (-1) * g_j + g_sum
+        old_g = (-1)*g_j + g_sum
         
-        w_t = (1 -alpha*reg)*x_t - alpha * (g + old_g)
+        w_t = (1 - alpha*reg)*x_t - alpha*(g + old_g)
         #w_t = x_t - alpha * (g + old_g)
         
         # store new gradient
@@ -418,20 +418,15 @@ def batch_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, batch_si
             break
              
         # sample
-        #S = np.random.randint(low = 0, high = N, size = batch_size)
-        S = np.random.choice(a = np.arange(N), size = batch_size, replace = True)
+        #S = np.random.choice(a = np.arange(N), size = batch_size, replace = True)
+        S = np.random.randint(low = 0, high = N, size = batch_size)
         S = np.sort(S)
         
         # compute the gradient
         batch_g = compute_batch_gradient_table(f, x_t, S)
         batch_g_sum = batch_g.sum(axis=0)
         
-        
-        # np.sum does not copy the array --> 3x faster for large batches
         g_j = gradients[S,:].sum(axis=0)
-        #ixx= np.isin(np.arange(N), S)
-        #g_j = np.sum(gradients.T, axis = 1, where = ixx)
-        
         old_g = (-1/batch_size) * g_j + g_sum
         
         w_t = x_t - alpha * ((1/batch_size)*batch_g_sum + old_g)
