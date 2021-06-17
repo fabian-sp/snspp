@@ -11,6 +11,10 @@ where the first part of the objective has the special form
 
 This problem structure is common in statistical learning problems: each summand of `f` is the loss at one data sample and `phi` is a regularizer.
 
+Install via 
+
+    python setup.py clean --all develop clean --all
+
 ## Functions as classes
 For all solvers of this packages, `f` and `phi` have to be instances of a class. As the solvers need certain information on the involved functions `f` and `phi`, these classes need to have several methods and attributes implemented.
 
