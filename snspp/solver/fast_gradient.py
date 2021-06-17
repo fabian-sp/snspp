@@ -4,7 +4,7 @@ author: Fabian Schaipp
 from ..helper.utils import compute_gradient_table, compute_batch_gradient, compute_batch_gradient_table, compute_xi_inner,\
                             compute_x_mean_hist, stop_scikit_saga
 
-from .sg_solver import sgd_loop
+from .sgd import sgd_loop
                             
 import numpy as np                           
 import time
