@@ -32,7 +32,7 @@ The algorithm detects automatically if vectorized methods are implemented, hence
 
 
 Attributes:
-* `name`: name of `f`. This is needed e.g. to decide on starting points or make some computations more efficient for the l1-norm.
+* `name`: name of `f`. This is needed e.g. to decide on starting points.
 * `convex`: boolean that indicates whether `f` is convex.
 
 ### Regularizer `phi`
@@ -43,32 +43,38 @@ Methods:
 * `jacobian_prox(self, x, alpha)`: computes an element of the subdifferential of the proximal operator of `alpha*phi` at `x`.
 * `moreau(self, x, alpha)`: evaluates the moreau envelope of `alpha*phi` at `x`.
 
-Note that many common regularizer, e.g the l1/l2-norm or combinations of it, the proximal operator as well as its subdifferential can be computed in closed form.
+Attributes:
+* `name`: name of `phi`. For the l1-norm, some computations are simplified and thus this can be useful.
+
+Note that many common regularizers, e.g the l1/l2-norm or combinations of it, the proximal operator as well as its subdifferential can be computed in closed form.
 
 ### Examples
 
 The package already contains the following losses
-* `logistic_loss`: the loss for logistic regression
-* `lsq`: the squared loss
-* `tstudent_loss`: loss for regression with Student-t residuals
+* `logistic_loss`: the loss for logistic regression.
+* `lsq`: the squared loss.
+* `tstudent_loss`: loss for regression with Student-t residuals.
+* `huber_loss`: the Huber loss function.
+* `squared_hinge_loss`: the squared hinge loss.
 
 and regularizers
-* `L1Norm`: the l1-norm. 
+* `L1Norm`: the l1-norm.
+* `Ridge`: the squared l2-norm (known from ridge regression). 
 
 The definitions for these classes can be found in `snspp/helper/lasso` and `snspp/helper/tstudent`. Note that for optimal performance `f` and `phi` should be [Numba jitted classes](https://numba.pydata.org/numba-doc/dev/user/jitclass.html).
 
 
 ## First-order methods
-The package also contains fast implementations of AdaGrad [1], SVRG [2] and SAGA [3]. These algorithms do not need all of the methods listed above. In general, only `eval` for evaluation and `g` for computing gradients is needed for `f`. For `phi` we only need the `prox` method (and for AdaGrad a `adagrad_prox` method which computes the proximal operator wrt a custom norm).
-The implementation of these algorithms is optimized for Numba-jitted function classes.
+The package also contains fast implementations of AdaGrad [1], SVRG [2] and SAGA [3]. These algorithms do not need all of the methods listed above. In general, only `eval` for evaluation (which is not actually used for the algorithm) and `g` for computing gradients is needed for `f`. For `phi` we only need the `prox` method (and for AdaGrad a `adagrad_prox` method which computes the proximal operator wrt a custom norm).
+The implementation of these algorithms is only available for Numba-jitted function classes.
 
 
 
 
 ## References 
 
-* [1] Duchi, J., Hazan, E., and Singer, Y. (2011).  [Adaptive subgradient methods for online learning and stochastic optimization.](https://www.jmlr.org/papers/volume12/duchi11a/duchi11a.pdf)J. Mach. Learn.Res., 12(null):2121–2159.
+* [1] J. Duchi, E. Hazan, and  Y. Singer, [Adaptive subgradient methods for online learning and stochastic optimization](https://www.jmlr.org/papers/volume12/duchi11a/duchi11a.pdf), J. Mach. Learn. Res., 12 (2011), pp. 2121–2159.
 
-* [2] J.  Reddi,  S.,  Sra,  S.,  Poczos,  B.,  and  Smola,  A.  J.  (2016).[Proximal stochastic methods for nonsmooth nonconvex finite-sum optimization.](https://papers.nips.cc/paper/2016/hash/291597a100aadd814d197af4f4bab3a7-Abstract.html)In Lee, D. D., Sugiyama, M., Luxburg, U. V., Guyon, I., and Garnett, R., editors, Advances in Neural Information Processing Systems 29, pages 1145–1153. Curran Associates, Inc.
+* [2] S. J. Reddi, S. Sra, B. Poczos, and A. J. Smola, [Proximal stochastic methods for nonsmooth nonconvex finite-sum optimization](https://papers.nips.cc/paper/2016/hash/291597a100aadd814d197af4f4bab3a7-Abstract.html), in Advances in Neural Information Processing Systems 29, D. D. Lee, M. Sugiyama, U. V. Luxburg, I. Guyon, and R. Garnett, eds., Curran Associates, Inc., 2016, pp. 1145–1153.
 
-* [3] Defazio, A., Bach, F., and Lacoste-Julien, S. (2014).  [Saga:  A fast incremental gradient method with support for non-strongly convex composite objectives.](https://papers.nips.cc/paper/2014/file/ede7e2b6d13a41ddf9f4bdef84fdc737-Paper.pdf) In  Ghahramani,  Z.,  Welling,  M.,  Cortes,  C.,  Lawrence,  N.,  and Weinberger, K. Q., editors, Advances in Neural Information Processing Systems,volume 27, pages 1646–1654. Curran Associates, Inc.
+* [3] A. Defazio, F. Bach, and  S. Lacoste-Julien, [Saga: A fast incremental gradient method with support for non-strongly convex composite objectives](https://papers.nips.cc/paper/2014/file/ede7e2b6d13a41ddf9f4bdef84fdc737-Paper.pdf), in Advances in Neural Information Processing Systems, Z. Ghahramani, M. Welling, C. Cortes, N. Lawrence, and K. Q. Weinberger, eds., vol. 27, CurranAssociates, Inc., 2014, pp. 1646–1654.
