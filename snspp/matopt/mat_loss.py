@@ -7,7 +7,7 @@ from numba import int64, float32, float64, typeof
 from numba.typed import List
 from numba import njit
 
-from utils import mat_inner
+from utils import matdot
 
 #%%
 p = 20

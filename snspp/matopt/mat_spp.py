@@ -9,10 +9,10 @@ import warnings
 
 #%%
 from nuclear import NuclearNorm
-from utils import multiple_mat_inner
+from utils import multiple_matdot, matdot
 
 xi = np.ones(N)
-S = np.arange(10, dtype = int)
+S = np.arange(20, dtype = int)
 reduce_variance = False
 alpha = 0.1
 
@@ -37,15 +37,30 @@ def Ueval(xi_sub, f, phi, x, alpha, S, subA, hat_d):
     
     sample_size = len(S)
     
-    z = x - (alpha/sample_size) * (subA.T @ xi_sub) + hat_d
-    term2 = .5 * np.linalg.norm(z)**2 - phi.moreau(z, alpha)
+    adjA_xi = np.dot(subA, xi_sub)
+    Z = x - (alpha/sample_size) * adjA_xi + hat_d
+    
+    term2 = .5 * np.linalg.norm(Z)**2 - phi.moreau(Z, alpha)
     
     term1 = f.fstar_vec(xi_sub, S).sum()
     res = term1 + (sample_size/alpha) * term2
     
     return res.squeeze()
 
-
+def calc_AUA(phi, Z, alpha, subA):
+    (p,q,b) = subA.shape
+    res = np.zeros((b,b))
+    
+    for i in np.arange(b):
+        for j in np.arange(start = i, stop = b):
+            res[i,j] = mat_inner(subA[:,:,i], phi.jacobian_prox(Z, subA[:,:,j], alpha))
+    
+    # result is symmetric 
+    d = np.diag(res)
+    res = res + res.T
+    np.fill_diagonal(res, d)
+    
+    return res
     
 def solve_subproblem_easy(f, phi, X, xi, alpha, A, S, newton_params = None, reduce_variance = False, xi_tilde = None, full_g = None, verbose = True):
     """
@@ -97,16 +112,15 @@ def solve_subproblem_easy(f, phi, X, xi, alpha, A, S, newton_params = None, redu
             converged = True
             break
         
-        U = phi.jacobian_prox(Z, alpha)
-        
-        tmp2 = (alpha/sample_size) * subA @ U @ subA.T
+     
+        W2 = (alpha/sample_size) * calc_AUA(phi, Z, alpha, subA)
         
         
         eps_reg = 1e-4
         tmp_d = f.Hstar_vec(xi_sub, S)
+        W1 = np.diag(tmp_d + eps_reg)           
         
-        tmp = np.diag(tmp_d + eps_reg)           
-        W = tmp + tmp2
+        W = W1 + W2
         assert not np.isnan(W).any(), "Something went wrong during construction of the Hessian"
         
     # step2: solve Newton system
@@ -122,13 +136,13 @@ def solve_subproblem_easy(f, phi, X, xi, alpha, A, S, newton_params = None, redu
 
     # step 3: backtracking line search
         
-        U_old = Ueval(xi_sub, f, phi, x, alpha, S, subA, hat_d)
+        U_old = Ueval(xi_sub, f, phi, X, alpha, S, subA, hat_d)
         beta = 1.
-        U_new = Ueval(xi_sub + beta*d, f, phi, x, alpha, S, subA, hat_d)
+        U_new = Ueval(xi_sub + beta*d, f, phi, X, alpha, S, subA, hat_d)
            
         while U_new > U_old + newton_params['mu'] * beta * (d @ -rhs):
             beta *= newton_params['rho']
-            U_new = Ueval(xi_sub + beta*d, f, phi, x, alpha, S, subA, hat_d)
+            U_new = Ueval(xi_sub + beta*d, f, phi, X, alpha, S, subA, hat_d)
             
         step_sz.append(beta)
         obj.append(U_new)
@@ -144,10 +158,11 @@ def solve_subproblem_easy(f, phi, X, xi, alpha, A, S, newton_params = None, redu
     # update xi variable
     xi[S] = xi_sub.copy()
     # update primal iterate
-    z = x - (alpha/sample_size) * (subA.T @ xi_sub) + hat_d
-    new_x = phi.prox(z, alpha)
+    adjA_xi = np.dot(subA, xi_sub)
+    Z = X - (alpha/sample_size) * adjA_xi + hat_d
+    new_X = phi.prox(Z, alpha)
     
     info = {'residual': np.array(residual), 'direction' : norm_dir, 'step_size': step_sz, 'objective': np.array(obj)}
     
     
-    return new_x, xi, info
+    return new_X, xi, info

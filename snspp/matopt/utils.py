@@ -5,7 +5,7 @@ import numpy as np
 from numba import njit
 
 @njit()
-def mat_inner(Y,X):
+def matdot(Y,X):
     """
     calculates <Y,X> = Tr(Y.T @ X)
     """
@@ -17,11 +17,11 @@ def mat_inner(Y,X):
     return res
 
 @njit()
-def multiple_mat_inner(A,X):
+def multiple_matdot(A,X):
     (p,q,m) = A.shape
     res = np.zeros(m)
     
     for j in np.arange(m):
-         res[j] = mat_inner(A[:,:,j], X)
+         res[j] = matdot(A[:,:,j], X)
          
     return res
