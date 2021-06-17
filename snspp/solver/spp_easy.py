@@ -24,7 +24,6 @@ def Ueval(xi_sub, f, phi, x, alpha, S, subA, hat_d):
     
 def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, reduce_variance = False, xi_tilde = None, full_g = None, verbose = True):
     """
-    m: vector with all dimensions m_i, i = 1,..,N
     
     """
     if xi_tilde is None or full_g is None:

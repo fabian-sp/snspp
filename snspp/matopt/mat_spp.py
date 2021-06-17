@@ -7,12 +7,28 @@ import numpy as np
 from scipy.sparse.linalg import cg
 import warnings
 
+#%%
+from nuclear import NuclearNorm
+from utils import multiple_mat_inner
 
-
-xi = np.zeros(N)
-
+xi = np.ones(N)
 S = np.arange(10, dtype = int)
+reduce_variance = False
+alpha = 0.1
 
+def get_default_newton_params():
+    
+    params = {'tau': .9, 'eta' : 1e-5, 'rho': .5, 'mu': .4, 'eps': 1e-3, \
+              'cg_max_iter': 12, 'max_iter': 20}
+    
+    return params
+
+newton_params = get_default_newton_params()
+
+
+
+phi = NuclearNorm(0.1)
+f = mat_lsq(A, b)
 
 
 
@@ -31,7 +47,7 @@ def Ueval(xi_sub, f, phi, x, alpha, S, subA, hat_d):
 
 
     
-def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, reduce_variance = False, xi_tilde = None, full_g = None, verbose = True):
+def solve_subproblem_easy(f, phi, X, xi, alpha, A, S, newton_params = None, reduce_variance = False, xi_tilde = None, full_g = None, verbose = True):
     """
     m: vector with all dimensions m_i, i = 1,..,N
     
@@ -44,7 +60,7 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
     sample_size = len(S)
     #assert np.all(S == np.sort(S)), "S is not sorted!"
     
-    subA = A[S,:]
+    subA = A[:,:,S]
     xi_sub = xi[S]
     
     sub_iter = 0
@@ -62,32 +78,28 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
         hat_d = 0.
         
     #compute term coming from weak convexity
-    if not f.convex: 
-        gamma_i = f.weak_conv(S)
-        hat_d += (alpha/sample_size) * (gamma_i.reshape(1,-1) * subA.T @ (subA @ x))
+    # if not f.convex: 
+    #     gamma_i = f.weak_conv(S)
+    #     hat_d += (alpha/sample_size) * (gamma_i.reshape(1,-1) * subA.T @ (subA @ X))
     
     while sub_iter < newton_params['max_iter']:
         
     # step 1: construct Newton matrix and RHS 
         
-        z = x - (alpha/sample_size) * (subA.T @ xi_sub) + hat_d
-        rhs = -1. * (f.gstar_vec(xi_sub, S) - subA @ phi.prox(z, alpha))
+        #adjA_xi = np.sum((xi_sub[:,np.newaxis,np.newaxis]*subA), axis=0)
+        adjA_xi = np.dot(subA, xi_sub) #faster if no trasnpose
+        
+        Z = X - (alpha/sample_size) * adjA_xi + hat_d
+        rhs = -1. * (f.gstar_vec(xi_sub, S) - multiple_mat_inner(subA, phi.prox(Z, alpha)))
         
         residual.append(np.linalg.norm(rhs))
         if np.linalg.norm(rhs) <= newton_params['eps']:
             converged = True
             break
         
-        U = phi.jacobian_prox(z, alpha)
+        U = phi.jacobian_prox(Z, alpha)
         
-        if phi.name == '1norm':
-            # U is 1d array with only 1 or 0 --> speedup by not constructing 2d diagonal array
-            bool_d = U.astype(bool)
-            
-            subA_d = subA[:, bool_d].astype('float32')
-            tmp2 = (alpha/sample_size) * subA_d @ subA_d.T
-        else:
-            tmp2 = (alpha/sample_size) * subA @ U @ subA.T
+        tmp2 = (alpha/sample_size) * subA @ U @ subA.T
         
         
         eps_reg = 1e-4

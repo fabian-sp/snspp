@@ -7,8 +7,9 @@ from numba import int64, float32, float64, typeof
 from numba.typed import List
 from numba import njit
 
+from utils import mat_inner
 
-
+#%%
 p = 20
 q = 30
 N = 100
@@ -16,26 +17,16 @@ N = 100
 
 r = 5
 
-A = np.zeros((N,p,q))
+A = np.zeros((p,q,N))
 b = np.zeros(N)
 
 for i in np.arange(N):
-    A[i,:,:] = np.random.randn(p,q)
+    A[:,:,i] = np.random.randn(p,q)
     
     
 X = np.random.randn(p,q)
     
-@njit()
-def mat_inner(Y,X):
-    """
-    calculates <Y,X> = Tr(Y.T @ X)
-    """
-    (p,q) = X.shape
-    res = 0
-    for j in np.arange(q):
-        res += np.dot(Y[:,j], X[:,j])
-        
-    return res
+
 
 #%timeit mat_inner(A[0,:,:], X)
 #%timeit np.trace(A[0,:,:].T@X)
@@ -83,7 +74,7 @@ class mat_lsq:
         Z = np.zeros(self.N)
         
         for i in np.arange(self.N):
-            Z[i] = mat_inner(self.A[i,:,:],X)
+            Z[i] = mat_inner(self.A[:,:,i],X)
         
         return (1/self.N) * np.linalg.norm(Z - self.b)**2      
     
@@ -116,8 +107,5 @@ class mat_lsq:
     
     
     
-#%%
 
-f = mat_lsq(A, b)
 
-f.eval(X)

@@ -5,21 +5,6 @@ author: Fabian Schaipp
 
 import numpy as np
 
-p = 100
-q = 200
-
-Y = np.random.randn(p,q)
-
-v = np.random.randn(p)
-eps = 1e-5
-rho = 0.5
-
-v1 = np.random.randn(p)
-v2 = np.random.randn(p+2)
-
-H = np.random.randn(p,q)
-tau = 0.01
-
 def huber(t, eps):  
     y = (t>=eps/2)*t + (np.abs(t)<=eps/2) * 1/(2*eps)*(t+eps/2)**2        
     return y
@@ -146,9 +131,62 @@ def smooth_prox_jacobian(Y, rho, eps, tau, H):
     term2 = U @ (Gam_ab*H2) @ V2.T
     
     return term1 + term2
+
+#%%
+
+class NuclearNorm:
+    """
+    class for the regularizer x --> lambda1 ||X||_\star
+    """
+    def __init__(self, lambda1):
+        assert lambda1 > 0 
+        self.name = 'nuclear_norm'
+        self.lambda1 = lambda1
+        
+    def eval(self, X):
+        #_,S,_ = np.linalg.svd(X, full_matrices = False)
+        #S.sum()
+        return self.lambda1 * np.linalg.norm(X, 'nuc')
+    
+    def prox(self, X, alpha):
+        """
+        calculates prox_{alpha*phi}(x)
+        """
+        assert alpha > 0
+        l = alpha * self.lambda1
+        return smooth_prox(X, l, eps = 1e-3)
+    
+
+    def jacobian_prox(self, X, H, alpha):
+        assert alpha > 0
+        l = alpha * self.lambda1
+        
+        return smooth_prox_jacobian(X, l, eps = 1e-3, tau = 1e-3, H = H)
+    
+    def moreau(self, x, alpha):
+        assert alpha > 0
+        z = self.prox(x, alpha)
+        return alpha*self.eval(z) + .5 * np.linalg.norm(z-x)**2
     
     
 #%% tests
+
+# p = 100
+# q = 200
+
+# Y = np.random.randn(p,q)
+# v = np.random.randn(p)
+# eps = 1e-5
+# rho = 0.5
+
+# v1 = np.random.randn(p)
+# v2 = np.random.randn(p+2)
+
+# H = np.random.randn(p,q)
+# tau = 0.01
+
+
+
 # x = np.linspace(-1,1,1000)
 # y = smooth_softt(x, 0.5, 0.2)
 # y2 = deriv_smooth_softt(x, 0.5, 0.2)
