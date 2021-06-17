@@ -9,28 +9,6 @@ from numba import njit
 
 from utils import matdot
 
-#%%
-p = 20
-q = 30
-N = 100
-
-
-r = 5
-
-A = np.zeros((p,q,N))
-b = np.zeros(N)
-
-for i in np.arange(N):
-    A[:,:,i] = np.random.randn(p,q)
-    
-    
-X = np.random.randn(p,q)
-    
-
-
-#%timeit mat_inner(A[0,:,:], X)
-#%timeit np.trace(A[0,:,:].T@X)
-
 #%% squared loss
 
 spec = [

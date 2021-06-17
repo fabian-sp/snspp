@@ -3,13 +3,43 @@ author: Fabian Schaipp
 """
 
 import numpy as np
-
+from numba import njit
 from scipy.sparse.linalg import cg
 import warnings
 
 #%%
 from nuclear import NuclearNorm
 from utils import multiple_matdot, matdot
+
+
+
+#%%
+p = 20
+q = 30
+N = 100
+
+r = 5
+
+A = np.zeros((p,q,N))
+b = np.zeros(N)
+
+for i in np.arange(N):
+    A[:,:,i] = np.random.randn(p,q)
+    
+    
+X = np.random.randn(p,q)
+    
+#%timeit mat_inner(A[0,:,:], X)
+#%timeit np.trace(A[0,:,:].T@X)
+
+
+phi = NuclearNorm(0.1)
+
+Y = phi.prox(X, 0.1)
+Y = phi.jacobian_prox(X, np.zeros_like(X), 0.1)
+
+f = mat_lsq(A, b)
+
 
 xi = np.ones(N)
 S = np.arange(20, dtype = int)
@@ -24,12 +54,6 @@ def get_default_newton_params():
     return params
 
 newton_params = get_default_newton_params()
-
-
-
-phi = NuclearNorm(0.1)
-f = mat_lsq(A, b)
-
 
 
 #%%
@@ -47,13 +71,14 @@ def Ueval(xi_sub, f, phi, x, alpha, S, subA, hat_d):
     
     return res.squeeze()
 
+@njit()
 def calc_AUA(phi, Z, alpha, subA):
     (p,q,b) = subA.shape
     res = np.zeros((b,b))
     
     for i in np.arange(b):
         for j in np.arange(start = i, stop = b):
-            res[i,j] = mat_inner(subA[:,:,i], phi.jacobian_prox(Z, subA[:,:,j], alpha))
+            res[i,j] = matdot(subA[:,:,i], phi.jacobian_prox(Z, subA[:,:,j], alpha))
     
     # result is symmetric 
     d = np.diag(res)
@@ -105,7 +130,7 @@ def solve_subproblem_easy(f, phi, X, xi, alpha, A, S, newton_params = None, redu
         adjA_xi = np.dot(subA, xi_sub) #faster if no trasnpose
         
         Z = X - (alpha/sample_size) * adjA_xi + hat_d
-        rhs = -1. * (f.gstar_vec(xi_sub, S) - multiple_mat_inner(subA, phi.prox(Z, alpha)))
+        rhs = -1. * (f.gstar_vec(xi_sub, S) - multiple_matdot(subA, phi.prox(Z, alpha)))
         
         residual.append(np.linalg.norm(rhs))
         if np.linalg.norm(rhs) <= newton_params['eps']:

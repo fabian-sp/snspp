@@ -4,21 +4,29 @@ author: Fabian Schaipp
 
 
 import numpy as np
+from numba import njit
 
+from numba.experimental import jitclass
+from numba import float64, typeof
+
+@njit()
 def huber(t, eps):  
     y = (t>=eps/2)*t + (np.abs(t)<=eps/2) * 1/(2*eps)*(t+eps/2)**2        
     return y
 
+@njit()
 def softt(v, rho):
     """ soft threshholding operator"""
     # equivalent:
     #np.maximum(0, v-rho) - np.maximum(0, -v-rho)
     return np.sign(v) * np.maximum(np.abs(v) - rho, 0.)    
 
+@njit()
 def smooth_softt(v, rho, eps):
     """ smoothed soft threshholding operator"""
     return huber(v-rho, eps) - huber(-v-rho, eps)
 
+@njit()
 def deriv_smooth_softt(v, rho, eps):
     """ derivative of the smoothed soft threshholding operator"""
     
@@ -33,6 +41,7 @@ def deriv_smooth_softt(v, rho, eps):
     val4 = 1
     return val1*ix1 + val2*ix2 + val3*ix3 + val4*ix4 
 
+@njit()
 def deriv_eps_smooth_softt(v, rho, eps):
     """ derivative of the smoothed soft threshholding operator (after eps variable)"""
     
@@ -46,7 +55,8 @@ def deriv_eps_smooth_softt(v, rho, eps):
     val3 = 0
     val4 = 0
     return val1*ix1 + val2*ix2 + val3*ix3 + val4*ix4            
-    
+  
+@njit()  
 def smooth_prox(Y, rho, eps = 1e-3):
     """smoothed proximal operator of the nuclear norm"""
     
@@ -56,12 +66,13 @@ def smooth_prox(Y, rho, eps = 1e-3):
     
     return (U*S_bar)@Vt
 
-def construct_gamma(v1, rho, eps, v2 = None):
+@njit()
+def construct_gamma(v1, v2, rho, eps):
     """
     v1, v2 vector of sg. values
     """
     p1 = len(v1)
-    if v2 is None:
+    if np.all(np.isnan(v2)):
         v2 = v1.copy()
         p2 = p1
     else:
@@ -71,7 +82,7 @@ def construct_gamma(v1, rho, eps, v2 = None):
     s_v1 = smooth_softt(v1, rho, eps)
     ds_v1 = deriv_smooth_softt(v1, rho, eps)
     
-    if v2 is None:
+    if np.all(np.isnan(v2)):
         s_v2 = s_v1.copy()
     else:
         s_v2 = smooth_softt(v2, rho, eps)
@@ -91,17 +102,19 @@ def construct_gamma(v1, rho, eps, v2 = None):
     # ixx are indices where v_i == v_j --> use derivative at these indices
     ixx = (h2 == 0)
     # avoid nans from dividing by zero
-    Gam = h3*ixx + (1-ixx)*np.nan_to_num(h1/h2)
+    Gam = h3*ixx + (1-ixx)*(h1/(1e-8+h2))
         
-    if v2 is None:
+    if np.all(np.isnan(v2)):
         assert np.all(Gam == Gam.T)
     
     return Gam
 
+@njit()
 def tile(v, q):
     p=len(v)
     return np.repeat(v,q).reshape(p,q).T
-    
+
+@njit()    
 def smooth_prox_jacobian(Y, rho, eps, tau, H):
     (p,q) = Y.shape
     assert H.shape == (p,q)
@@ -123,7 +136,8 @@ def smooth_prox_jacobian(Y, rho, eps, tau, H):
     Ha = (H1-H1.T)/2
     
     D = np.diag(deriv_eps_smooth_softt(S, rho, eps))
-    Gam_aa = construct_gamma(v1 = S, v2 = None, rho = rho, eps = eps)
+    tmp = np.ones_like(S)*np.nan
+    Gam_aa = construct_gamma(v1 = S, v2 = tmp, rho = rho, eps = eps)
     Gam_ay = construct_gamma(v1 = S, v2 = -S, rho = rho, eps = eps)
     Gam_ab = construct_gamma(v1 = S, v2 = np.zeros(q-p), rho = rho, eps = eps)
     
@@ -133,7 +147,12 @@ def smooth_prox_jacobian(Y, rho, eps, tau, H):
     return term1 + term2
 
 #%%
+spec_l1 = [
+    ('name', typeof('abc')),
+    ('lambda1', float64)
+]
 
+@jitclass(spec_l1)
 class NuclearNorm:
     """
     class for the regularizer x --> lambda1 ||X||_\star
@@ -144,9 +163,9 @@ class NuclearNorm:
         self.lambda1 = lambda1
         
     def eval(self, X):
-        #_,S,_ = np.linalg.svd(X, full_matrices = False)
-        #S.sum()
-        return self.lambda1 * np.linalg.norm(X, 'nuc')
+        _,S,_ = np.linalg.svd(X, full_matrices = False)
+        
+        return S.sum()#self.lambda1 * np.linalg.norm(X, 'nuc')
     
     def prox(self, X, alpha):
         """
@@ -171,13 +190,13 @@ class NuclearNorm:
     
 #%% tests
 
-# p = 100
-# q = 200
+# p = 10
+# q = 20
 
 # Y = np.random.randn(p,q)
 # v = np.random.randn(p)
 # eps = 1e-5
-# rho = 0.5
+# rho = 1e-5
 
 # v1 = np.random.randn(p)
 # v2 = np.random.randn(p+2)
