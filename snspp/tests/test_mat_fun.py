@@ -29,7 +29,7 @@ def test_smooth_prox_jacobian():
     for i in range(10):
         H = np.random.randn(p,q)
         Z = smooth_prox_jacobian(Y, rho, eps, tau, H)
-        assert np.allclose(Z,H)
+        assert np.allclose(Z,H, rtol = 1e-5, atol = 1e-5)
     
     return    
 

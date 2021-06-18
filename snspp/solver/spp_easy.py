@@ -3,7 +3,7 @@ author: Fabian Schaipp
 """
 
 import numpy as np
-
+from scipy.linalg import cho_factor, cho_solve
 from scipy.sparse.linalg import cg
 import warnings
 
@@ -88,14 +88,19 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
         assert not np.isnan(W).any(), "Something went wrong during construction of the Hessian"
         
     # step2: solve Newton system
-        cg_tol = min(newton_params['eta'], np.linalg.norm(rhs)**(1+ newton_params['tau']))
+        use_cg = True
         
-        precond = None
-        
-        d, cg_status = cg(W, rhs, tol = cg_tol, maxiter = 12, M = precond)
+        if use_cg:
+            cg_tol = min(newton_params['eta'], np.linalg.norm(rhs)**(1+ newton_params['tau']))
+            precond = None
+            d, cg_status = cg(W, rhs, tol = cg_tol, maxiter = 12, M = precond)
+        else:
+            chol,lower = cho_factor(W)
+            d = cho_solve((chol,lower), rhs)
         
         if not d@rhs > -1e-8:
             warnings.warn(f"No descent direction, {d@rhs}")
+        
         norm_dir.append(np.linalg.norm(d))
 
     # step 3: backtracking line search
