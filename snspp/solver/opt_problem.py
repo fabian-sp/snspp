@@ -183,7 +183,7 @@ class problem:
     
     #%% newton convergence
 
-    def plot_subproblem(self, M = 20):
+    def plot_subproblem(self, stepsize = True, M = 20):
         
         assert self.solver == "snspp"
         
@@ -199,7 +199,7 @@ class problem:
         fig, axs = plt.subplots(nrow, ncol, figsize = (12,9))
         
         
-        col_dict = {'objective': "#91BED4", 'residual': "#304269", 'stepsize': "#F26101"}
+        col_dict = {'objective': "#91BED4", 'residual': "#304269", 'step_size': "#F26101"}
         
         for j in np.arange(nrow):
             for l in np.arange(ncol):
@@ -209,10 +209,13 @@ class problem:
                 ax2 = ax.twinx()
                 ax2.plot(info[ix]['objective'], c = col_dict["objective"] , marker = "o", ls = "--")
                 
+                if stepsize:
+                    ax.plot(info[ix]['step_size'], c = col_dict["step_size"], marker = "x", ls = ':')
+                
                 ax.set_title(f"outer iteration {ix}", fontsize = 8)
                 ax.set_yscale('log')
                 
-                ax.set_ylim(1e-8,1e2)
+                ax.set_ylim(1e-6,1e1)
                 #ax2.set_ylim(0,1.1)
                 ax.grid(ls = '-', lw = .5)
                 
@@ -239,6 +242,10 @@ class problem:
         
         legend_elements = [Line2D([0], [0], marker = 'o', ls = '--', color=col_dict["objective"], label='objective'),
                            Line2D([0], [0], marker='o', ls = ':', color=col_dict["residual"], label='residual')]
+     
+        if stepsize:
+            legend_elements.append(Line2D([0], [0], marker = 'x', ls = ':', color=col_dict["step_size"], label='step size'))    
+            
         fig.legend(handles=legend_elements, loc='upper right')
         fig.subplots_adjust(hspace = 0.4)
         
