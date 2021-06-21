@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
+from matplotlib.lines import Line2D
 
 from .spp_solver import stochastic_prox_point
 from .saga import saga
@@ -180,22 +181,85 @@ class problem:
         
         return
     
-    def plot_samples(self):
-        assert 'samples' in self.info.keys(), "No sample information"
+    #%% newton convergence
+
+    def plot_subproblem(self, M = 20):
         
-        tmpfun = lambda x: np.isin(np.arange(self.f.N), x)
+        assert self.solver == "snspp"
         
-        tmp = np.array([tmpfun(s) for s in self.info['samples']])
-        tmp2 = tmp.sum(axis=0)
+        plt.rcParams["font.family"] = "serif"
+        plt.rcParams['font.size'] = 12
+        plt.rcParams['axes.linewidth'] = 1
+        plt.rc('text', usetex=True)
         
-        fig = plt.figure(figsize=(6, 6))
-        grid = plt.GridSpec(1, 10, wspace=0.4, hspace=0.3)
-        ax1 = fig.add_subplot(grid[:, :-3])
-        ax2 = fig.add_subplot(grid[:, -3:])
+        info = self.info['ssn_info']
         
-        sns.heatmap(tmp.T, square = False, annot = False, cmap = 'Blues', vmin = 0, vmax = tmp.max(), cbar = False, \
-                    xticklabels = [], ax = ax1)
-        sns.heatmap(tmp2[:,np.newaxis], square = False, annot = True, cmap = 'Blues', cbar = False, \
-                    xticklabels = [], yticklabels = [], ax = ax2)
+        nrow = 4
+        ncol = 5
+        fig, axs = plt.subplots(nrow, ncol, figsize = (12,9))
         
-        return
+        
+        col_dict = {'objective': "#91BED4", 'residual': "#304269", 'stepsize': "#F26101"}
+        
+        for j in np.arange(nrow):
+            for l in np.arange(ncol):
+                ax = axs[j,l]
+                ix = j*ncol + l
+                ax.plot(info[ix]['residual'], c = col_dict["residual"], marker = "o", ls = ':')
+                ax2 = ax.twinx()
+                ax2.plot(info[ix]['objective'], c = col_dict["objective"] , marker = "o", ls = "--")
+                
+                ax.set_title(f"outer iteration {ix}", fontsize = 8)
+                ax.set_yscale('log')
+                
+                ax.set_ylim(1e-8,1e2)
+                #ax2.set_ylim(0,1.1)
+                ax.grid(ls = '-', lw = .5)
+                
+                if l%ncol !=0:
+                    ax.set_yticklabels([])
+                ax2.set_yticklabels([])
+                
+                ax.tick_params(axis='both', labelsize=8)
+                
+                if l%ncol == 0:
+                    ax.set_ylabel(r"$\mathcal{V}(\xi^j)$")
+    
+                if l%ncol == ncol-1:
+                    ax2.set_ylabel(r"$\mathcal{U}(\xi^j)$")            
+                
+                
+        
+                if j == nrow-1:
+                    ax.set_xlabel("Iteration")            
+                
+            
+        
+        fig.suptitle('Convergence of the subproblem')
+        
+        legend_elements = [Line2D([0], [0], marker = 'o', ls = '--', color=col_dict["objective"], label='objective'),
+                           Line2D([0], [0], marker='o', ls = ':', color=col_dict["residual"], label='residual')]
+        fig.legend(handles=legend_elements, loc='upper right')
+        fig.subplots_adjust(hspace = 0.4)
+        
+        return fig
+    
+    # def plot_samples(self):
+    #     assert 'samples' in self.info.keys(), "No sample information"
+        
+    #     tmpfun = lambda x: np.isin(np.arange(self.f.N), x)
+        
+    #     tmp = np.array([tmpfun(s) for s in self.info['samples']])
+    #     tmp2 = tmp.sum(axis=0)
+        
+    #     fig = plt.figure(figsize=(6, 6))
+    #     grid = plt.GridSpec(1, 10, wspace=0.4, hspace=0.3)
+    #     ax1 = fig.add_subplot(grid[:, :-3])
+    #     ax2 = fig.add_subplot(grid[:, -3:])
+        
+    #     sns.heatmap(tmp.T, square = False, annot = False, cmap = 'Blues', vmin = 0, vmax = tmp.max(), cbar = False, \
+    #                 xticklabels = [], ax = ax1)
+    #     sns.heatmap(tmp2[:,np.newaxis], square = False, annot = True, cmap = 'Blues', cbar = False, \
+    #                 xticklabels = [], yticklabels = [], ax = ax2)
+        
+    #     return

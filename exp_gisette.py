@@ -48,7 +48,7 @@ initialize_solvers(f, phi)
 
 params_saga = {'n_epochs' : 50, 'alpha': 5.5}
 
-params_svrg = {'n_epochs' : 50, 'batch_size': 50, 'alpha': 75.}
+params_svrg = {'n_epochs' : 50, 'batch_size': 50, 'alpha': 60.}
 
 params_adagrad = {'n_epochs' : 200, 'batch_size': 240, 'alpha': 0.028}
 
@@ -91,6 +91,9 @@ print(f.eval(Q2.x)+phi.eval(Q2.x))
 P = problem(f, phi, tol = 1e-9, params = params_snspp, verbose = True, measure = True)
 
 P.solve(solver = 'snspp')
+
+fig = P.plot_subproblem(M=20)
+fig.savefig(f'data/plots/exp_gisette/subprob.pdf', dpi = 300)
 
 #%%
 
