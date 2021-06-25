@@ -11,6 +11,7 @@ from sklearn.linear_model import Lasso, LogisticRegression
 
 from snspp.helper.data_generation import lasso_test, logreg_test, tstudent_test
 from snspp.solver.opt_problem import problem
+from snspp.helper.regz import Zero
 
 #%% generate data
 
@@ -24,10 +25,11 @@ xsol, A, b, f, phi, A_test, b_test = lasso_test(N, n, k, l1, block = False, nois
 #xsol, A, b, f, phi, A_test, b_test = logreg_test(N, n, k, l1, noise = 0.1, kappa = 10., dist = 'ortho')
 
 #x, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4, noise = 0.1, poly = 2, kappa = 10., dist = 'ortho')
+phi = Zero()
 
 #%% solve with SSNSP
 
-params = {'max_iter' : 50, 'batch_size': 1000, 'sample_style': 'fast_increasing', \
+params = {'max_iter' : 50, 'batch_size': 100, 'sample_style': 'fast_increasing', \
           'alpha' : 10., 'reduce_variance': False}
 
 P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
@@ -62,7 +64,7 @@ f.eval(x_sk) + phi.eval(x_sk)
 
 #%% compare to SAGA/ADAGRAD
 
-params = {'n_epochs' : 200, 'alpha': 1}
+params = {'n_epochs' : 100, 'alpha': 1.}
 
 Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
