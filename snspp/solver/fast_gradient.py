@@ -15,11 +15,14 @@ from numba import njit
 
 def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict(), verbose = False, measure = False):
     """
-    fast implementation of the SAGA algorithm for problems of the form 
+    fast implementation of first-order methods for problems of the form 
+    
     min 1/N * sum f_i(A_i x) + phi(x)
     
-    works only if m_i = 1 forall i, i.e. one sample gives one summand!
-    speedup achieved by numba, hence classes f and phi need to be jitted beforehand. If not possible use saga.py instead.
+    * contains: SAGA, SVRG, AdaGrad, SGD
+    * works only if m_i = 1 forall i, i.e. one sample gives one summand!
+    * speedup achieved by numba, hence classes f and phi need to be jitted beforehand.
+    
     """
     
     name = solver.upper()
@@ -27,7 +30,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     # initialize all variables
     n = len(x0)
     m = f.m.copy()
-    assert np.all(f.m==1), "These implementations are restricted to the case m_i = 1, use saga.py if not the case"
+    assert np.all(f.m==1), "These implementations are restricted to the case m_i = 1, use SNSPP if not the case"
     N = len(f.m)
     A = f.A.astype('float64')
     assert n == A.shape[1], "wrong dimensions"
@@ -83,7 +86,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
         elif f.name == 'tstudent':
             L =  (2/f.v) * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
         else:
-            warnings.warn("We could not determine the correct SAGA step size! The default step size is maybe too large (divergence) or too small (slow convergence).")
+            warnings.warn("We could not determine the correct Lischitz smoothness constant! The default step size is maybe too large (divergence) or too small (slow convergence).")
             L = 1e2
         
         if solver == 'saga':

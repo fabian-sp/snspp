@@ -71,7 +71,8 @@ Note that for optimal performance `f` and `phi` should be [Numba jitted classes]
 
 ## First-order methods
 The package also contains fast implementations of AdaGrad [1], SVRG [2] and SAGA [3]. These algorithms do not need all of the methods listed above. In general, only `eval` for evaluation (which is not actually used for the algorithm) and `g` for computing gradients is needed for `f`. For `phi` we only need the `prox` method (and for AdaGrad a `adagrad_prox` method which computes the proximal operator wrt a custom norm).
-The implementation of these algorithms is only available for Numba-jitted function classes.
+
+**Note:** The implementation of these algorithms is only available for Numba-jitted function classes.
 
 
 
