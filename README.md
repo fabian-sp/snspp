@@ -57,11 +57,16 @@ The package already contains the following losses
 * `huber_loss`: the Huber loss function.
 * `squared_hinge_loss`: the squared hinge loss.
 
+The definitions for these classes can be found in `snspp/helper/loss1`, `snspp/helper/loss2` and `snspp/helper/tstudent`. 
+
 and regularizers
 * `L1Norm`: the l1-norm.
 * `Ridge`: the squared l2-norm (known from ridge regression). 
+* `Zero`: the constant zero function for unregularized problems.
 
-The definitions for these classes can be found in `snspp/helper/lasso` and `snspp/helper/tstudent`. Note that for optimal performance `f` and `phi` should be [Numba jitted classes](https://numba.pydata.org/numba-doc/dev/user/jitclass.html).
+The definitions for these classes can be found in `snspp/helper/regz`.
+
+Note that for optimal performance `f` and `phi` should be [Numba jitted classes](https://numba.pydata.org/numba-doc/dev/user/jitclass.html).
 
 
 ## First-order methods
