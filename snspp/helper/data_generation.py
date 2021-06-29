@@ -16,7 +16,8 @@ from sklearn.preprocessing import PolynomialFeatures
 
 from scipy.stats import ortho_group
 
-from .lasso import L1Norm, lsq, block_lsq, logistic_loss
+from .loss1 import lsq, block_lsq, logistic_loss
+from .regz import L1Norm
 from .tstudent import tstudent_loss
 
 ############################################################################################

@@ -20,9 +20,9 @@ n = 50
 k = 5
 l1 = .01
 
-xsol, A, b, f, phi, A_test, b_test = lasso_test(N, n, k, l1, block = False, noise = 0.1, kappa = 10., dist = 'ortho')
+#xsol, A, b, f, phi, A_test, b_test = lasso_test(N, n, k, l1, block = False, noise = 0.1, kappa = 10., dist = 'ortho')
 
-#xsol, A, b, f, phi, A_test, b_test = logreg_test(N, n, k, l1, noise = 0.1, kappa = 10., dist = 'ortho')
+xsol, A, b, f, phi, A_test, b_test = logreg_test(N, n, k, l1, noise = 0.1, kappa = 10., dist = 'ortho')
 
 #x, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4, noise = 0.1, poly = 2, kappa = 10., dist = 'ortho')
 phi = Zero()
@@ -30,7 +30,7 @@ phi = Zero()
 #%% solve with SSNSP
 
 params = {'max_iter' : 50, 'batch_size': 100, 'sample_style': 'fast_increasing', \
-          'alpha' : 10., 'reduce_variance': False}
+          'alpha' : 10., 'reduce_variance': True}
 
 P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
