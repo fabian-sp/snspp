@@ -26,7 +26,7 @@ from .tstudent import tstudent_loss
 def standardize(A):   
     # standardize columns of A
     M = A - A.mean(axis=0)
-    M = (1/M.std(axis=0)) * M
+    M = (1/(M.std(axis=0))) * M
         
     assert max(abs(M.mean(axis=0))) <= 1e-5
     assert max(abs(M.std(axis=0) - 1)) <= 1e-5
@@ -254,6 +254,7 @@ def get_gisette(lambda1 = 0.02, train_size = .8):
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
                                                         random_state = 1234)
     
+    
     phi = L1Norm(lambda1) 
     f = logistic_loss(X_train, y_train)
         
@@ -265,6 +266,27 @@ def get_triazines(lambda1 = 0.01, train_size = .8, v = 1, poly = 0, noise = 0):
     
     X,y = load_from_txt('triazines')
     
+    y += noise*np.random.standard_t(v, size = len(y))
+    
+    X = X.astype('float64')
+    y = y.astype('float64')
+    
+    if poly > 0:
+        X = poly_expand(X, d=poly)
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+                                                        random_state = 1234)
+    
+    phi = L1Norm(lambda1) 
+    f = tstudent_loss(X_train, y_train, v=v)
+    
+    return f, phi, X_train, y_train, X_test, y_test
+
+def get_cpusmall(lambda1 = 0.05, train_size = .8, v = 1, poly = 0, noise = 0):
+    
+    assert v > 0
+    
+    X,y = load_from_txt('cpusmall')
     y += noise*np.random.standard_t(v, size = len(y))
     
     X = X.astype('float64')
