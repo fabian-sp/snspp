@@ -183,7 +183,7 @@ class problem:
     
     #%% newton convergence
 
-    def plot_subproblem(self, stepsize = True, M = 20):
+    def plot_subproblem(self, stepsize = True, M = 20, start = 0):
         
         assert self.solver == "snspp"
         
@@ -204,7 +204,8 @@ class problem:
         for j in np.arange(nrow):
             for l in np.arange(ncol):
                 ax = axs[j,l]
-                ix = j*ncol + l
+                ix = start + j*ncol + l
+                
                 ax.plot(info[ix]['residual'], c = col_dict["residual"], marker = "o", ls = ':')
                 ax2 = ax.twinx()
                 ax2.plot(info[ix]['objective'], c = col_dict["objective"] , marker = "o", ls = "--")
@@ -232,12 +233,9 @@ class problem:
                     ax2.set_ylabel(r"$\mathcal{U}(\xi^j)$")            
                 
                 
-        
                 if j == nrow-1:
                     ax.set_xlabel("Iteration")            
-                
-            
-        
+      
         fig.suptitle('Convergence of the subproblem')
         
         legend_elements = [Line2D([0], [0], marker = 'o', ls = '--', color=col_dict["objective"], label='objective'),

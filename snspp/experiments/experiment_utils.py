@@ -250,7 +250,7 @@ def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = N
             
             al = alpha_range[i]
             x = res[b][al]["runtime"].cumsum()
-            y = res[b][al]["objective"] - all_time_min
+            y = res[b][al]["objective"] #- all_time_min
             ax.plot(x, y, color = colors[i], marker = markers[j], ls = lstyles[j], markersize = 6)
     
     
