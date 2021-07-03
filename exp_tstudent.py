@@ -118,8 +118,8 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 1}
 
 Q.plot_objective(ax = ax, ls = '--', marker = '<',  **kwargs)
-Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+#Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+#Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 P.plot_objective(ax = ax, **kwargs)
 
 #plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
