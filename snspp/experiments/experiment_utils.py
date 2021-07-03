@@ -173,7 +173,7 @@ def initialize_solvers(f, phi):
     
     return
 
-def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = None, n_iter = 50):
+def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = None, n_iter = 50, relative = False):
     
     if alpha_range is None:
         if solver in ['saga', 'batch saga', 'svrg']:
@@ -250,7 +250,7 @@ def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = N
             
             al = alpha_range[i]
             x = res[b][al]["runtime"].cumsum()
-            y = res[b][al]["objective"] #- all_time_min
+            y = res[b][al]["objective"] - all_time_min*relative
             ax.plot(x, y, color = colors[i], marker = markers[j], ls = lstyles[j], markersize = 6)
     
     
@@ -276,8 +276,11 @@ def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = N
     ax.set_yscale('log')
     
     ax.set_xlabel('Runtime [sec]')
-    ax.set_ylabel('Objective - cst.')
-    
+    if relative:
+        ax.set_ylabel('Objective - best observed.')
+    else:
+        ax.set_ylabel('Objective')
+        
     ax.set_title(f'Parameter tuning for {solver}')
             
     return res, current_best, alpha_range

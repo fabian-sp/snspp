@@ -166,6 +166,8 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = 1., dist
 
 def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 4., noise = 0.1, poly = 0, kappa = 1., dist = 'ortho'):
     
+    np.random.seed(23456)
+    
     N_test = max(100,int(N*0.1))
     A = create_A(N+N_test, n, kappa = kappa, dist = dist)
     
