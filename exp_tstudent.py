@@ -14,7 +14,7 @@ from snspp.experiments.experiment_utils import params_tuner, plot_multiple, init
 #%% load data
 #f, phi, X_train, y_train, X_test, y_test = get_cpusmall(lambda1 = l1, train_size = .99, v = v, poly = 0, noise = 0.)
 
-setup = 2
+setup = 1
 
 if setup == 1:
 
@@ -30,6 +30,13 @@ elif setup == 2:
     poly = 0
     n = 5000; N = 1000; k = 100
     noise = 0.1
+    
+elif setup == 3:
+    l1 = 0.01
+    v = 1.
+    poly = 0
+    n = 10000; N = 2000; k = 100
+    noise = 0.2
 
 
 #%%
@@ -43,14 +50,20 @@ print("psi(0) = ", f.eval(np.zeros(n)))
 #%% parameter setup
 
 if setup == 1:
-    params_saga = {'n_epochs' : 200, 'alpha' : 16}
-    params_svrg = {'n_epochs' : 200, 'batch_size': 20, 'alpha': 450.}
+    params_saga = {'n_epochs' : 150, 'alpha' : 17}
+    params_svrg = {'n_epochs' : 150, 'batch_size': 20, 'alpha': 500.}
     params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.07}
-    
-    params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'constant', 'alpha' : 5, 'reduce_variance': True}
+    params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 5, 'reduce_variance': True}
 
 elif setup == 2:
     params_saga = {'n_epochs' : 200, 'alpha' : 30}
+    params_svrg = {'n_epochs' : 200, 'batch_size': 20, 'alpha': 1000.}
+    params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.14}
+    
+    params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 9, 'reduce_variance': True}
+
+elif setup == 3:
+    params_saga = {'n_epochs' : 200, 'alpha' : 45}
     params_svrg = {'n_epochs' : 200, 'batch_size': 20, 'alpha': 1000.}
     params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.14}
     
@@ -118,8 +131,8 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 1}
 
 Q.plot_objective(ax = ax, ls = '--', marker = '<',  **kwargs)
-#Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-#Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 P.plot_objective(ax = ax, **kwargs)
 
 #plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
@@ -127,7 +140,7 @@ P.plot_objective(ax = ax, **kwargs)
 #plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
 #plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 
-ax.set_xlim(0,0.6)
+ax.set_xlim(0,1)
 #ax.set_ylim(0.19,0.3)
 ax.legend(fontsize = 10)
 
@@ -139,7 +152,7 @@ fig.subplots_adjust(top=0.96,
                     wspace=0.2)
 
 if save:
-    fig.savefig(f'data/plots/exp_cpusmall/obj.pdf', dpi = 300)
+    fig.savefig(f'data/plots/exp_tstudent/obj.pdf', dpi = 300)
     
 #%% coeffcient frame
 
@@ -167,7 +180,7 @@ L_Q2 = eval_test_set(X = Q2.info["iterates"], loss = tstudent_loss, **kwargs2)
     
 fig, ax = plt.subplots(1,1,  figsize = (4.5, 3.5))
 
-kwargs = {"log_scale": False, "lw": 0.4, "markersize": 1}
+kwargs = {"log_scale": False, "lw": 0.4, "markersize": 1.5}
 
 plot_test_error(Q, L_Q,  ax = ax,  marker = '<', **kwargs)
 plot_test_error(Q1, L_Q1,  ax = ax,  marker = '<', **kwargs)
@@ -191,3 +204,5 @@ fig.subplots_adjust(top=0.96,
                     hspace=0.2,
                     wspace=0.2)
 
+if save:
+    fig.savefig(f'data/plots/exp_tstudent/error.pdf', dpi = 300)
