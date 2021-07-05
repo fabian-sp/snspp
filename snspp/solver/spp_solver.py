@@ -211,8 +211,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     # variance reduction
     if params['reduce_variance']:
-        #counter = batch_size.cumsum() % f.N
-        #xi_tilde_update = (np.diff(counter, prepend = f.N) < 0)
         xi_tilde = None; full_g = None
         vr_min_iter = 0
     else:
@@ -267,7 +265,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         if params['reduce_variance']:
             if iter_t % params['m_iter'] == 0 and iter_t >= vr_min_iter:
                 xi_tilde = compute_full_xi(f, x_t, is_easy)
-                full_g = (1/f.N) * (f.A.T @ xi_tilde)
+                full_g = (1/f.N) * (A.T @ xi_tilde)
                 
                 # update xi
                 if f.convex:
