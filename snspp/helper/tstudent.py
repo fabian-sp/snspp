@@ -151,6 +151,7 @@ class tstudent_loss:
             Y[j] = 1/(self._h(g_i, self.b[i]))
             
         return Y
+    
     # vectorized versions
     def fstar_vec(self, x, S):
         """
@@ -161,13 +162,15 @@ class tstudent_loss:
             Y[j] = self._fstar(x[j],S[j])
             
         return Y   
+    
     def gstar_vec(self, x, S):
         Y = np.zeros_like(x)
         for j in range(len(x)):
             z_j =self._zstar(x[j], self.b[S[j]])      
             self.z[S[j]] = z_j
             Y[j] = z_j
-        return Y    
+        return Y
+    
     def Hstar_vec(self, x, S):
         b_S = self.b[S]
         g_S = self.z[S]
@@ -177,11 +180,6 @@ class tstudent_loss:
         #     #self.z[S[j]] = z_j
         #     g_S[j] = z_j
         return 1/(self._h(g_S, b_S))
-
-    # def g_vec(self, x, S):
-    #     z = self.A[S,:] @ x - self.b[S]
-    #     res = 2*z/(self.v+z**2)
-    #     return res
 
 #%%    
 # A= np.random.randn(50,100)

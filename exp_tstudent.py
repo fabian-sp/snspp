@@ -14,7 +14,7 @@ from snspp.experiments.experiment_utils import params_tuner, plot_multiple, init
 #%% load data
 #f, phi, X_train, y_train, X_test, y_test = get_cpusmall(lambda1 = l1, train_size = .99, v = v, poly = 0, noise = 0.)
 
-setup = 1
+setup = 3
 
 if setup == 1:
 
@@ -35,8 +35,8 @@ elif setup == 3:
     l1 = 0.01
     v = 1.
     poly = 0
-    n = 10000; N = 2000; k = 100
-    noise = 0.2
+    n = 10000; N = 1000; k = 20
+    noise = 0.1
 
 
 #%%
@@ -56,23 +56,23 @@ if setup == 1:
     params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 5, 'reduce_variance': True}
 
 elif setup == 2:
-    params_saga = {'n_epochs' : 200, 'alpha' : 30}
-    params_svrg = {'n_epochs' : 200, 'batch_size': 20, 'alpha': 1000.}
+    params_saga = {'n_epochs' : 150, 'alpha' : 30}
+    params_svrg = {'n_epochs' : 150, 'batch_size': 20, 'alpha': 1000.}
     params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.14}
     
     params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 9, 'reduce_variance': True}
 
 elif setup == 3:
-    params_saga = {'n_epochs' : 200, 'alpha' : 45}
-    params_svrg = {'n_epochs' : 200, 'batch_size': 20, 'alpha': 1000.}
-    params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.14}
+    params_saga = {'n_epochs' : 150, 'alpha' : 50}
+    params_svrg = {'n_epochs' : 150, 'batch_size': 10, 'alpha': 1300.}
+    params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.06}
     
-    params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 9, 'reduce_variance': True}
+    params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 12.5, 'reduce_variance': True}
 
 
 
 #params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(20,50, 10), n_iter = 150)
-#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(400, 1000, 7), batch_range = np.array([10,20]), n_iter = 150)
+#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(500, 1500, 10), batch_range = np.array([10,20]), n_iter = 150)
 #params_tuner(f, phi, solver = "adagrad", alpha_range = np.logspace(-3,0,6), batch_range = np.array([10, 50, 100]), n_iter = 150)
 #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(5,15,10), batch_range = np.array([10,20]), n_iter = 200)
 
@@ -152,7 +152,7 @@ fig.subplots_adjust(top=0.96,
                     wspace=0.2)
 
 if save:
-    fig.savefig(f'data/plots/exp_tstudent/obj.pdf', dpi = 300)
+    fig.savefig(f'data/plots/exp_tstudent/obj_N_{N}_n_{n}.pdf', dpi = 300)
     
 #%% coeffcient frame
 
@@ -205,4 +205,4 @@ fig.subplots_adjust(top=0.96,
                     wspace=0.2)
 
 if save:
-    fig.savefig(f'data/plots/exp_tstudent/error.pdf', dpi = 300)
+    fig.savefig(f'data/plots/exp_tstudent/error_N_{N}_n_{n}.pdf', dpi = 300)
