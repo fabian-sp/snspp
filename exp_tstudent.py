@@ -44,8 +44,8 @@ elif setup == 3:
 xsol, X_train, y_train, f, phi, X_test, y_test = tstudent_test(N = N, n = n, k = k, lambda1 = l1, v = v,\
                                                                noise = noise, poly = poly, kappa = 15., dist = 'ortho')
 
-initialize_solvers(f, phi)
 print("psi(0) = ", f.eval(np.zeros(n)))
+initialize_solvers(f, phi)
 
 #%% parameter setup
 
@@ -63,9 +63,9 @@ elif setup == 2:
     params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 9, 'reduce_variance': True}
 
 elif setup == 3:
-    params_saga = {'n_epochs' : 150, 'alpha' : 50}
-    params_svrg = {'n_epochs' : 150, 'batch_size': 10, 'alpha': 1300.}
-    params_svrg = {'n_epochs' : 150, 'batch_size': 100, 'alpha': 20000.}
+    params_saga = {'n_epochs' : 25, 'alpha' : 50}
+    params_svrg = {'n_epochs' : 10, 'batch_size': 10, 'alpha': 1300.}
+    #params_svrg = {'n_epochs' : 10, 'batch_size': 100, 'alpha': 20000.}
     params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.06}
     
     params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 12.5, 'reduce_variance': True}
@@ -116,10 +116,44 @@ print("f(x_t) = ", f.eval(P.x))
 print("phi(x_t) = ", phi.eval(P.x))
 print("psi(x_t) = ", f.eval(P.x) + phi.eval(P.x))
 
-
-#P.plot_objective()
-#P.plot_path()
 #fig = P.plot_subproblem(start = 0)
+
+#%% solve with SAGA (multiple times)
+
+K = 20
+allQ = list()
+for k in range(K):
+    
+    Q_k = problem(f, phi, tol = 1e-19, params = params_saga, verbose = True, measure = True)
+    Q_k.solve(solver = 'saga')
+    allQ.append(Q_k)
+
+#%% solve with ADAGRAD (multiple times)
+
+allQ1 = list()
+for k in range(K):
+    
+    Q1_k = problem(f, phi, tol = 1e-19, params = params_adagrad, verbose = True, measure = True)
+    Q1_k.solve(solver = 'adagrad')
+    allQ1.append(Q1_k)
+
+#%% solve with SVRG (multiple times)
+
+allQ2 = list()
+for k in range(K):
+    
+    Q2_k = problem(f, phi, tol = 1e-19, params = params_svrg, verbose = True, measure = True)
+    Q2_k.solve(solver = 'svrg')
+    allQ2.append(Q2_k)
+    
+#%% solve with SSNSP (multiple times, VR)
+
+allP = list()
+for k in range(K):
+    
+    P_k = problem(f, phi, tol = 1e-19, params = params_snspp, verbose = False, measure = True)
+    P_k.solve(solver = 'snspp')
+    allP.append(P_k)
 
 #%% plot objective
 save = False
@@ -135,13 +169,13 @@ kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 1}
 
 #Q.plot_objective(ax = ax, ls = '--', marker = '<',  **kwargs)
 #Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+#Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 #P.plot_objective(ax = ax, **kwargs)
 
-#plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
-#plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
-#plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
-#plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
+plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
+plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
+plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
+plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 
 ax.set_xlim(0,1)
 #ax.set_ylim(0.19,0.3)
@@ -169,15 +203,18 @@ def tstudent_loss(x, A, b, v):
 
 kwargs2 = {"A": X_test, "b": y_test, "v": f.v}
 
-
+# eval loss of single problem
 L_P = eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2)
 L_Q = eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2)
 L_Q1 = eval_test_set(X = Q1.info["iterates"], loss = tstudent_loss, **kwargs2)
 L_Q2 = eval_test_set(X = Q2.info["iterates"], loss = tstudent_loss, **kwargs2)
 
-#all_loss_P = np.vstack([eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2) for P in allP])
-#all_loss_Q = np.vstack([eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2) for Q in allQ])
-#all_loss_Q1 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2) for Q in allQ1])
+# eval loss of multiple problems
+all_loss_P = np.vstack([eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2) for P in allP])
+all_loss_Q = np.vstack([eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2) for Q in allQ])
+all_loss_Q1 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2) for Q in allQ1])
+all_loss_Q2 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2) for Q in allQ2])
+
 
 #%%
     

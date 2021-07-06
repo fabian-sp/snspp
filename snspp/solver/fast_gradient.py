@@ -311,6 +311,8 @@ def svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter):
     
     for s in np.arange(S_iter):
         
+        if eta < tol:
+            break
         #full_g = compute_batch_gradient_table(f, x_t, np.arange(N))  
         full_g = A * compute_xi_inner(f, x_t)
         g_tilde = (1/N) * full_g.sum(axis=0)
