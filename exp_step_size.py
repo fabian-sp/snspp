@@ -8,14 +8,18 @@ from sklearn.linear_model import Lasso, LogisticRegression
 
 from snspp.helper.data_generation import lasso_test, logreg_test, get_gisette
 from snspp.solver.opt_problem import problem, color_dict
+from snspp.experiments.experiment_utils import initialize_solvers
 
 N = 2000
 n = 1000
 k = 20
 l1 = 0.01
 
-EPOCHS = 100
-problem_type = "logreg"
+EPOCHS = 50 # epcohs for SAGA/SVRG
+MAX_ITER = 200 # max iter for SNSPP
+PSI_TOL = 1e-3 # relative accuracy for objective to be considered as converged
+
+problem_type = "gisette"
 
 if problem_type == "lasso":
     xsol, A, b, f, phi, _, _ = lasso_test(N, n, k, l1, block = False, noise = 0.1, kappa = 15., dist = 'ortho')
@@ -25,6 +29,8 @@ elif problem_type == "logreg":
 
 elif problem_type == "gisette":
     f, phi, A, b, _, _ = get_gisette(lambda1 = 0.05)
+
+initialize_solvers(f, phi)
 
 #%% solve with scikt or large max_iter to get psi_star
 
@@ -45,17 +51,13 @@ elif problem_type in ["logreg", "gisette"]:
     psi_star = f.eval(xsol) + phi.eval(xsol)
     print("Optimal value: ", psi_star)
     
-    P = problem(f, phi, tol = 1e-6, params = {'n_epochs': 300, 'alpha': 2.}, verbose = False, measure = False)
-    P.solve(solver = 'saga')
-    
-    print(np.linalg.norm(P.x-xsol))
     
 
 # elif problem_type == "tstudent":
     
-#     ref_params = {'max_iter': 2000, 'alpha': 0.1, 'batch_size': 50, 'sample_style': 'constant', 'reduce_variance': True}
+#     ref_params = {'n_epochs': 100, 'alpha': 2}
 #     ref_P = problem(f, phi, tol = 1e-6, params = ref_params, verbose = True, measure = True)
-#     ref_P.solve(solver = 'snspp')
+#     ref_P.solve(solver = 'saga')
     
 #     ref_P.plot_objective()
     
@@ -64,7 +66,7 @@ elif problem_type in ["logreg", "gisette"]:
     
 
 #%%
-def do_grid_run(f, phi, step_size_range, batch_size_range = None, psi_star = 0, psi_tol = 1e-2,\
+def do_grid_run(f, phi, step_size_range, batch_size_range = None, psi_star = 0, psi_tol = 1e-3,\
                 solver = "snspp", solver_params = dict()):
     
     ALPHA = step_size_range.copy()
@@ -92,15 +94,14 @@ def do_grid_run(f, phi, step_size_range, batch_size_range = None, psi_star = 0, 
             print("######################################")
             
             # target M epochs 
-            if solver == "snspp":
-                this_params["max_iter"] = 200 #int(EPOCHS *  1/GRID_B[k,l])
+            #if solver == "snspp":
+            #    this_params["max_iter"] = 200 #int(EPOCHS *  1/GRID_B[k,l])
             
             this_params['batch_size'] = max(1, int(GRID_B[k,l] * f.N))
             this_params['alpha'] = GRID_A[k,l]
             
             print(f"ALPHA = {this_params['alpha']}")
             print(f"BATCH = {this_params['batch_size']}")
-            #print(f"MAX_ITER = {this_params['max_iter']}")
             
             try:
                 P = problem(f, phi, tol = 1e-6, params = this_params, verbose = False, measure = True)
@@ -173,7 +174,7 @@ def plot_result(res, ax = None, color = 'k', replace_inf = 3.):
 
 #%%
 
-solver_params = {'sample_style': 'constant', 'reduce_variance': True, 'm_iter': 10}
+solver_params = {'max_iter': MAX_ITER, 'sample_style': 'fast_increasing', 'reduce_variance': True, 'm_iter': 10}
 
 step_size_range = np.logspace(-2,3,20)
 batch_size_range = np.array([0.01,0.05,0.1])
@@ -193,7 +194,17 @@ res_saga = do_grid_run(f, phi, step_size_range, batch_size_range = batch_size_ra
                                                  solver = "saga", solver_params = solver_params)
 
 
+#%%
 
+solver_params = {'n_epochs': EPOCHS}
+
+step_size_range = np.logspace(-2,3,20)
+batch_size_range = np.array([0.01,0.05,0.1])
+
+res_spp = do_grid_run(f, phi, step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
+                                            solver = "svrg", solver_params = solver_params)
+
+    
 #%% plot runtime (until convergence) vs step size
 save = False
 
@@ -208,13 +219,13 @@ fig, ax = plt.subplots(figsize = (7,5))
 plot_result(res_spp, ax = ax, color = color_dict["snspp"])
 plot_result(res_saga, ax = ax, color = color_dict["saga"])
 
-annot_y = 2.5
+annot_y = 2.5 # y value for annotation
 
 ax.hlines(annot_y , ax.get_xlim()[0], ax.get_xlim()[1], 'grey', ls = '-')
 ax.annotate("no convergence", (ax.get_xlim()[0]*1.1, annot_y+0.1), color = "grey", fontsize = 14)
 
 if save:
-    fig.savefig(f'data/plots/exp_other/step_size_tuning.pdf', dpi = 300)
+    fig.savefig(f'data/plots/exp_other/step_size_tuning_{problem_type}.pdf', dpi = 300)
 
     
 #%% plot objective of last iterate vs step size
