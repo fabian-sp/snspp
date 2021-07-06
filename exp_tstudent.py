@@ -65,6 +65,7 @@ elif setup == 2:
 elif setup == 3:
     params_saga = {'n_epochs' : 150, 'alpha' : 50}
     params_svrg = {'n_epochs' : 150, 'batch_size': 10, 'alpha': 1300.}
+    params_svrg = {'n_epochs' : 150, 'batch_size': 100, 'alpha': 20000.}
     params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.06}
     
     params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 12.5, 'reduce_variance': True}
@@ -73,6 +74,8 @@ elif setup == 3:
 
 #params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(20,50, 10), n_iter = 150)
 #params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(500, 1500, 10), batch_range = np.array([10,20]), n_iter = 150)
+#params_tuner(f, phi, solver = "svrg", alpha_range = np.logspace(3, 5, 10), batch_range = np.array([10,100]), n_iter = 150)
+
 #params_tuner(f, phi, solver = "adagrad", alpha_range = np.logspace(-3,0,6), batch_range = np.array([10, 50, 100]), n_iter = 150)
 #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(5,15,10), batch_range = np.array([10,20]), n_iter = 200)
 
@@ -130,10 +133,10 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 1}
 
-Q.plot_objective(ax = ax, ls = '--', marker = '<',  **kwargs)
-Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+#Q.plot_objective(ax = ax, ls = '--', marker = '<',  **kwargs)
+#Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-P.plot_objective(ax = ax, **kwargs)
+#P.plot_objective(ax = ax, **kwargs)
 
 #plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
 #plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)

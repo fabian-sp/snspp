@@ -57,7 +57,7 @@ params_snspp = {'max_iter' : 60, 'batch_size': 400, 'sample_style': 'fast_increa
 
 #params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(4,8, 10))
 #params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(50, 80, 8), batch_range = np.array([50]))
-#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(30, 80, 8), batch_range = np.array([100]))
+#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(100, 400, 8), batch_range = np.array([300, 400]))
 #params_tuner(f, phi, solver = "adagrad", batch_range = np.array([50, 250, 500]))
 #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(5,10, 10), batch_range = np.array([200, 400]))
 
@@ -226,7 +226,7 @@ all_loss_Q2 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = logreg_los
 #%%
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
-kwargs = {"log_scale": False, "lw": 1, "markersize": 3}
+kwargs = {"log_scale": False, "lw": 0.7, "markersize": 3}
 
 plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
 plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
