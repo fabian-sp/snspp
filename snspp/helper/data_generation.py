@@ -203,9 +203,9 @@ def poly_expand(A, d = 5):
     poly = PolynomialFeatures(d)
     return poly.fit_transform(A)
 
-
+#%%
 ############################################################################################
-### Actual data
+### Actual data - CLASSIFICATION
 ############################################################################################
 
 def get_mnist(lambda1 = 0.02, train_size = .8, scale = True):
@@ -261,6 +261,28 @@ def get_gisette(lambda1 = 0.02, train_size = .8):
     f = logistic_loss(X_train, y_train)
         
     return f, phi, X_train, y_train, X_test, y_test
+
+def get_sido(lambda1 = 0.02, train_size = .8):
+    X = np.loadtxt('data/sido0/sido0_train.data')
+    y = np.loadtxt('data/sido0/sido0_train.targets')
+    
+    assert np.all(np.isin(y,[-1,1]))
+    
+    X = X.astype('float64')
+    y = y.astype('float64')
+    
+    np.nan_to_num(X, copy = False)
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+                                                        random_state = 1234)
+    
+    
+    phi = L1Norm(lambda1) 
+    f = logistic_loss(X_train, y_train)
+        
+    return f, phi, X_train, y_train, X_test, y_test
+
+#%% REGRESSION
 
 def get_triazines(lambda1 = 0.01, train_size = .8, v = 1, poly = 0, noise = 0):
     
@@ -337,24 +359,3 @@ def load_from_txt(name):
 
     return X,y
         
-
-#%% misc snippets
-
-# def get_rcv1(lambda1 = 0.02, train_size = .8, scale = True):
-    
-#     rcv1 = fetch_rcv1()
-    
-#     X = rcv1.data.astype('float64')
-#     y = rcv1.target[:,0].astype('float64')
-    
-#     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size)
-    
-#     if scale:
-#         scaler = StandardScaler()
-#         X_train = scaler.fit_transform(X_train)
-#         X_test = scaler.transform(X_test)
-    
-#     phi = L1Norm(lambda1) 
-#     f = logistic_loss(X_train, y_train)
-    
-#     return f, phi, X_train, y_train, X_test, y_test
