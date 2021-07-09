@@ -130,17 +130,6 @@ for k in range(K):
     P_k.solve(solver = 'snspp')
     allP.append(P_k)
 
-#%% solve with SSNSP (multiple times, no VR)
-
-# params1 = params_snspp.copy()
-# params1["reduce_variance"] = False
-
-# allP1 = list()
-# for k in range(K):
-    
-#     P_k = problem(f, phi, tol = 1e-9, params = params1, verbose = False, measure = True)
-#     P_k.solve(solver = 'snspp')
-#     allP1.append(P_k)
 
 #%% coeffcient frame
 
