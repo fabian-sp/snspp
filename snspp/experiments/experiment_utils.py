@@ -173,7 +173,7 @@ def initialize_solvers(f, phi):
     
     return
 
-def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = None, n_iter = 50, relative = False):
+def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = None, n_iter = 50, relative = True):
     
     if alpha_range is None:
         if solver in ['saga', 'batch saga', 'svrg']:

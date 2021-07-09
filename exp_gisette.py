@@ -17,14 +17,6 @@ f, phi, X_train, y_train, X_test, y_test = get_gisette(lambda1 = 0.05)
 
 print("Regularization parameter lambda:", phi.lambda1)
 
-def predict(A,x):
-    
-    h = np.exp(A@x)
-    odds = h/(1+h)  
-    y = (odds >= .5)*2 -1
-    
-    return y
-
 #%% solve with scikit (SAGA)
 
 sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-8, \
@@ -173,7 +165,6 @@ plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwa
 plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
 plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 
-#plot_multiple(allP1, ax = ax , label = "snspp_noVR", name = "snspp (no VR)", **kwargs)
 
 
 ax.set_xlim(-.1, 6)
