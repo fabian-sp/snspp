@@ -12,9 +12,9 @@ from snspp.experiments.experiment_utils import params_tuner, plot_multiple, plot
 
 from sklearn.linear_model import LogisticRegression
 
+l1 = 1e-3
 
-f, phi, X_train, y_train, X_test, y_test = get_sido(lambda1 = 0.02)
-
+f, phi, X_train, y_train, X_test, y_test = get_sido(lambda1 = l1)
 
 print("Regularization parameter lambda:", phi.lambda1)
 
@@ -37,24 +37,39 @@ psi_star = f.eval(x_sk) + phi.eval(x_sk)
 print("psi(x*) = ", psi_star)
 initialize_solvers(f, phi)
 
-#%% params
 
-params_saga = {'n_epochs' : 20, 'alpha': 10}
+#%% params (l1=1e-3)
 
-params_svrg = {'n_epochs' : 30, 'batch_size': 20, 'alpha': 370.}
+params_saga = {'n_epochs' : 20, 'alpha': 8}
+
+params_svrg = {'n_epochs' : 30, 'batch_size': 20, 'alpha': 180.}
 
 params_adagrad = {'n_epochs' : 50, 'batch_size': 500, 'alpha': 0.15}
 
-params_snspp = {'max_iter' : 60, 'batch_size': 80, 'sample_style': 'fast_increasing', 'alpha' : 24.,\
+params_snspp = {'max_iter' : 400, 'batch_size': 200, 'sample_style': 'fast_increasing', 'alpha' : 4.5,\
           "reduce_variance": True}
+    
+#params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(6,12,10), n_iter = 25)
+#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(80, 300, 10), batch_range = np.array([20,100,200]), n_iter = 40)
+#params_tuner(f, phi, solver = "adagrad", batch_range = np.array([20, 100, 500]))
+#params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(0.3, 5, 10), batch_range = np.array([20,100,200]), n_iter = 200)
 
-params_snspp = {'max_iter' : 80, 'batch_size': 20, 'sample_style': 'fast_increasing', 'alpha' : 19.,\
-          "reduce_variance": True}
+
+#%% params (l1=0.02)
+
+# params_saga = {'n_epochs' : 20, 'alpha': 10}
+
+# params_svrg = {'n_epochs' : 30, 'batch_size': 20, 'alpha': 370.}
+
+# params_adagrad = {'n_epochs' : 50, 'batch_size': 500, 'alpha': 0.15}
+
+# params_snspp = {'max_iter' : 80, 'batch_size': 20, 'sample_style': 'fast_increasing', 'alpha' : 19.,\
+#           "reduce_variance": True}
     
 #params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(9,20,10), n_iter = 25)
 #params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(250, 600, 10), batch_range = np.array([10, 20]), n_iter = 40)
 #params_tuner(f, phi, solver = "adagrad", batch_range = np.array([20, 100, 500]))
-#params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(5, 30, 10), batch_range = np.array([20, 80]))
+#params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(5, 30, 10), batch_range = np.array([20, 80]), n_iter = 40)
 
 #%% solve with SAGA
 
@@ -136,7 +151,7 @@ for k in range(K):
 
 #%% coeffcient frame
 
-all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q1.x)).T, columns = ['scikit', 'spp', 'saga', 'adagrad'])
+all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q2.x)).T, columns = ['scikit', 'spp', 'saga', 'svrg'])
 
 #%% objective plot
 
@@ -158,7 +173,7 @@ P.plot_objective(ax = ax, **kwargs)
 #plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 
 
-ax.set_xlim(-.1, 4)
+ax.set_xlim(-.1, 6)
 ax.legend(fontsize = 10)
 
 fig.subplots_adjust(top=0.96,
@@ -182,7 +197,8 @@ Q2.plot_path(ax = ax[1,0])
 P.plot_path(ax = ax[1,1], ylabel = False)
 
 for a in ax.ravel():
-    a.set_ylim(-2., 0.5)
+    a.set_xlim(-.1, 6)
+    a.set_ylim(-1.5, 1.5)
     
 plt.subplots_adjust(hspace = 0.33)
 
@@ -217,7 +233,7 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 kwargs = {"log_scale": False, "lw": 0.7, "markersize": 3}
 
 plot_test_error(Q, L_Q,  ax = ax,  marker = '<', **kwargs)
-plot_test_error(Q1, L_Q1,  ax = ax,  marker = '<', **kwargs)
+#plot_test_error(Q1, L_Q1,  ax = ax,  marker = '<', **kwargs)
 plot_test_error(Q2, L_Q2,  ax = ax,  marker = '<', **kwargs)
 plot_test_error(P, L_P,  ax = ax,  marker = 'o', **kwargs)
 
@@ -227,7 +243,7 @@ plot_test_error(P, L_P,  ax = ax,  marker = 'o', **kwargs)
 #plot_multiple_error(all_loss_Q2, allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
 #plot_multiple_error(all_loss_P, allP, ax = ax , label = "snspp", **kwargs)
 
-ax.set_xlim(-.1, 4)
+ax.set_xlim(-.1, 10)
 ax.set_ylim(all_loss_P.min()-1e-3, all_loss_P.min()+1e-1)
 ax.legend(fontsize = 10)
 
