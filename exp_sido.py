@@ -21,7 +21,7 @@ print("Regularization parameter lambda:", phi.lambda1)
 #%% solve with scikit (SAGA)
 
 sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-8, \
-                        solver = 'saga', max_iter = 200, verbose = 0)
+                        solver = 'saga', max_iter = 150, verbose = 0)
 
 start = time.time()
 sk.fit(X_train, y_train)
@@ -41,17 +41,20 @@ initialize_solvers(f, phi)
 
 params_saga = {'n_epochs' : 20, 'alpha': 10}
 
-params_svrg = {'n_epochs' : 30, 'batch_size': 10, 'alpha': 214.}
+params_svrg = {'n_epochs' : 30, 'batch_size': 20, 'alpha': 370.}
 
 params_adagrad = {'n_epochs' : 50, 'batch_size': 500, 'alpha': 0.15}
 
-params_snspp = {'max_iter' : 60, 'batch_size': 100, 'sample_style': 'fast_increasing', 'alpha' : 20.,\
+params_snspp = {'max_iter' : 60, 'batch_size': 80, 'sample_style': 'fast_increasing', 'alpha' : 24.,\
           "reduce_variance": True}
 
+params_snspp = {'max_iter' : 80, 'batch_size': 20, 'sample_style': 'fast_increasing', 'alpha' : 19.,\
+          "reduce_variance": True}
+    
 #params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(9,20,10), n_iter = 25)
-#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(100, 300, 8), batch_range = np.array([10, 50]), n_iter = 40)
+#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(250, 600, 10), batch_range = np.array([10, 20]), n_iter = 40)
 #params_tuner(f, phi, solver = "adagrad", batch_range = np.array([20, 100, 500]))
-#params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(5,20, 10), batch_range = np.array([100, 400]))
+#params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(5, 30, 10), batch_range = np.array([20, 80]))
 
 #%% solve with SAGA
 
