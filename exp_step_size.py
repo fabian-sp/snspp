@@ -15,9 +15,12 @@ n = 1000
 k = 20
 l1 = 0.01
 
+
 EPOCHS = 50 # epcohs for SAGA/SVRG
 MAX_ITER = 200 # max iter for SNSPP
 PSI_TOL = 1e-3 # relative accuracy for objective to be considered as converged
+
+#%%
 
 problem_type = "gisette"
 
@@ -201,7 +204,7 @@ solver_params = {'n_epochs': EPOCHS}
 step_size_range = np.logspace(-2,3,20)
 batch_size_range = np.array([0.01,0.05,0.1])
 
-res_spp = do_grid_run(f, phi, step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
+res_svrg = do_grid_run(f, phi, step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
                                             solver = "svrg", solver_params = solver_params)
 
     
