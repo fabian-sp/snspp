@@ -42,7 +42,8 @@ initialize_solvers(f, phi)
 
 params_saga = {'n_epochs' : 20, 'alpha': 6.5}
 
-params_svrg = {'n_epochs' : 30, 'batch_size': 100, 'alpha': 270.}
+params_svrg = {'n_epochs' : 30, 'batch_size': 50, 'alpha': 160.}
+#params_svrg = {'n_epochs' : 30, 'batch_size': 100, 'alpha': 270.} # not much worse, but same batch as snspp
 
 params_adagrad = {'n_epochs' : 50, 'batch_size': 20, 'alpha': 0.008}
 
@@ -162,7 +163,7 @@ kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 3}
 
 #Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
 #Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
-#Q2.plot_objective(ax = ax, ls = '-.', marker = '<', **kwargs)
+#Q2.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
 #P.plot_objective(ax = ax, **kwargs)
 
 
