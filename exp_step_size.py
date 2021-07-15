@@ -17,7 +17,7 @@ l1 = 0.01
 
 
 EPOCHS = 50 # epcohs for SAGA/SVRG
-MAX_ITER = 200 # max iter for SNSPP
+MAX_ITER = 250 # max iter for SNSPP
 PSI_TOL = 1e-3 # relative accuracy for objective to be considered as converged
 
 #%%
@@ -31,7 +31,7 @@ elif problem_type == "logreg":
     xsol, A, b, f, phi, _, _ = logreg_test(N, n, k, lambda1 = l1, noise = 0.1, kappa = 10., dist = 'ortho')
 
 elif problem_type == "gisette":
-    f, phi, A, b, _, _ = get_gisette(lambda1 = 0.05)
+    f, phi, A, b, _, _ = get_gisette(lambda1 = 0.01)
 
 initialize_solvers(f, phi)
 
@@ -177,7 +177,7 @@ def plot_result(res, ax = None, color = 'k', replace_inf = 3.):
 
 #%%
 
-solver_params = {'max_iter': MAX_ITER, 'sample_style': 'fast_increasing', 'reduce_variance': True, 'm_iter': 10}
+solver_params = {'max_iter': MAX_ITER, 'sample_style': 'constant', 'reduce_variance': True}
 
 step_size_range = np.logspace(-2,3,20)
 batch_size_range = np.array([0.01,0.05,0.1])
