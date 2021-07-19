@@ -90,7 +90,7 @@ class tstudent_loss:
         return self.gamma * np.ones(len(S))
     
     # computes solution to cubic polynomial
-    def _zstar(self, x, b):
+    def _zstar0(self, x, b):
         
         c3 = -self.gamma
         c2 = x + 2*self.gamma*b
@@ -98,14 +98,36 @@ class tstudent_loss:
         c0 = x*self.v + x*b**2 + 2*b
         
         z = np.roots(np.array([c3,c2,c1,c0], dtype=np.complex64))  
-        #z = z[np.abs(np.imag(z)) <= 1e-3]
- 
-        # if len(z) == 0:
-        #     res = np.nan
-        # else:
-        #     res = np.real(z)[0]
+        # get root with minimal imaginary part
         ixx = np.abs(np.imag(z)).argmin()
         return np.real(z[ixx])
+    
+    def _zstar(self, x, b, tol=1e-12, max_iter=10):
+
+        a2 = -(x + 2*self.gamma*b)/self.gamma
+        a1 = -(-2*b*x - 2 - self.gamma*self.v - self.gamma*(b**2))/self.gamma
+        a0 = -(x*self.v + x*b**2 + 2*b)/self.gamma
+        
+        xinfl = -a2/3
+        yinfl = xinfl**3+ a2*xinfl**2 + a1*xinfl +a0
+        
+        d = a2**2 - 3*a1
+        if d >= 0:
+            if yinfl < 0 :
+                z = xinfl + (2/3)*np.sqrt(d)
+            else:
+                z = xinfl - (2/3)*np.sqrt(d)
+        else:
+            z = xinfl
+        
+        for k in np.arange(max_iter):
+            fun =     z**3 +   a2*z**2 + a1*z + a0
+            deriv = 3*z**2 + 2*a2*z    + a1
+            
+            if np.abs(fun) <= tol:
+                break   
+            z = z - fun/deriv       
+        return z
     
     def _fstar(self, x ,i):
         z = self._zstar(x, self.b[i])
@@ -114,6 +136,7 @@ class tstudent_loss:
         else:
             res = x*z - self.f(z,i) - (self.gamma/2)*z**2
         return res
+    
     # loop versions
     def fstar(self, X, i):
         Y = np.zeros_like(X)
