@@ -77,7 +77,7 @@ elif setup == 3:
 #params_tuner(f, phi, solver = "svrg", alpha_range = np.logspace(3, 5, 10), batch_range = np.array([10,100]), n_iter = 150)
 
 #params_tuner(f, phi, solver = "adagrad", alpha_range = np.logspace(-3,0,6), batch_range = np.array([10, 50, 100]), n_iter = 150)
-#params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(5,15,10), batch_range = np.array([10,20]), n_iter = 200)
+#params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(10,30,10), batch_range = np.array([10,100]), n_iter = 200)
 
 #%% solve with SAGA
 
@@ -167,17 +167,17 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 1}
 
-#Q.plot_objective(ax = ax, ls = '--', marker = '<',  **kwargs)
-#Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-#Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-#P.plot_objective(ax = ax, **kwargs)
+Q.plot_objective(ax = ax, ls = '--', marker = '<',  **kwargs)
+Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+P.plot_objective(ax = ax, **kwargs)
 
-plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
-plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
-plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
-plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
+#plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
+#plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
+#plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
+#plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 
-ax.set_xlim(0,1)
+ax.set_xlim(0, 1)
 #ax.set_ylim(0.19,0.3)
 ax.legend(fontsize = 10)
 
