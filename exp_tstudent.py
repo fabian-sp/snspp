@@ -57,8 +57,8 @@ if setup == 1:
 
 elif setup == 2:
     params_saga = {'n_epochs' : 50, 'alpha' : 2.5}
-    params_svrg = {'n_epochs' : 70, 'batch_size': 10, 'alpha': 45.}
-    params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.14}
+    params_svrg = {'n_epochs' : 70, 'batch_size': 20, 'alpha': 100.}
+    params_adagrad = {'n_epochs' : 150, 'batch_size': 20, 'alpha': 0.03}
     
     params_snspp = {'max_iter' : 200, 'batch_size': 20, 'sample_style': 'fast_increasing', 'alpha' : 3, 'reduce_variance': True}
 
@@ -74,9 +74,9 @@ elif setup == 3:
 
 #params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(2,10, 10), n_iter = 50)
 #params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(500, 1500, 10), batch_range = np.array([10,20]), n_iter = 150)
-#params_tuner(f, phi, solver = "svrg", alpha_range = np.logspace(1, 3, 10), batch_range = np.array([10,100]), n_iter = 70)
+#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(50, 150, 10), batch_range = np.array([20,200]), n_iter = 70)
 
-#params_tuner(f, phi, solver = "adagrad", alpha_range = np.logspace(-3,0,6), batch_range = np.array([10, 50, 100]), n_iter = 150)
+#params_tuner(f, phi, solver = "adagrad", alpha_range = np.logspace(-3,0.5,8), batch_range = np.array([20, 50, 200]), n_iter = 80)
 #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(1,10,10), batch_range = np.array([20,200]), n_iter = 100)
 
 #%% solve with SAGA
@@ -167,15 +167,15 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 1}
 
-Q.plot_objective(ax = ax, ls = '--', marker = '<',  **kwargs)
-Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-P.plot_objective(ax = ax, **kwargs)
+#Q.plot_objective(ax = ax, ls = '--', marker = '<',  **kwargs)
+#Q1.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+#Q2.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
+#P.plot_objective(ax = ax, **kwargs)
 
-#plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
-#plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
-#plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
-#plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
+plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
+plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
+plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
+plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 
 ax.set_xlim(0, 3)
 #ax.set_ylim(0.19,0.3)
@@ -193,8 +193,26 @@ if save:
     
 #%% coeffcient frame
 
-all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x)).T, columns = ['sol', 'spp', 'saga', 'adagrad'])
+all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x, Q2.x)).T, columns = ['sol', 'spp', 'saga', 'adagrad', 'svrg'])
 
+#%% coeffcient plot
+
+#P = allP[-1]
+
+fig,ax = plt.subplots(2, 2,  figsize = (7,5))
+Q.plot_path(ax = ax[0,0], xlabel = False)
+Q1.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
+Q2.plot_path(ax = ax[1,0])
+P.plot_path(ax = ax[1,1], ylabel = False)
+
+for a in ax.ravel():
+    a.set_ylim(-2., 2.)
+    
+plt.subplots_adjust(hspace = 0.33)
+
+if save:
+    fig.savefig(f'data/plots/exp_tstudent/coeff_N_{N}_n_{n}.pdf', dpi = 300)
+    
 #%% Test set evaluation
 
 def tstudent_loss(x, A, b, v):
@@ -222,15 +240,15 @@ fig, ax = plt.subplots(1,1,  figsize = (4.5, 3.5))
 
 kwargs = {"log_scale": False, "lw": 0.4, "markersize": 1.5}
 
-plot_test_error(Q, L_Q,  ax = ax,  marker = '<', **kwargs)
-plot_test_error(Q1, L_Q1,  ax = ax,  marker = '<', **kwargs)
-plot_test_error(Q2, L_Q2,  ax = ax,  marker = '<', **kwargs)
-plot_test_error(P, L_P,  ax = ax,  marker = 'o', **kwargs)
+#plot_test_error(Q, L_Q,  ax = ax,  marker = '<', **kwargs)
+#plot_test_error(Q1, L_Q1,  ax = ax,  marker = '<', **kwargs)
+#plot_test_error(Q2, L_Q2,  ax = ax,  marker = '<', **kwargs)
+#plot_test_error(P, L_P,  ax = ax,  marker = 'o', **kwargs)
 
-#plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
-#plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
-#plot_multiple_error(all_loss_Q2, allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
-#plot_multiple_error(all_loss_P, allP, ax = ax , label = "snspp", **kwargs)
+plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
+plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
+plot_multiple_error(all_loss_Q2, allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
+plot_multiple_error(all_loss_P, allP, ax = ax , label = "snspp", **kwargs)
 
 
 ax.set_yscale('log')
