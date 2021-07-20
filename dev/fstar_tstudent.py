@@ -55,7 +55,7 @@ sols = sp.solvers.solve(H.diff(x), x)
 for s in sols:    
     print(H.subs(x, s))
 
-#%% test poly solver
+#%% testing
 
 from snspp.helper.data_generation import tstudent_test
 
@@ -68,40 +68,50 @@ xsol, X_train, y_train, f, phi, X_test, y_test = tstudent_test(N = 100, n = 20, 
                                                                noise = 0.1, poly = 0, kappa = 15., dist = 'ortho')
 
 #%%
-gamma = f.gamma
+   
+# A= np.random.randn(50,100)
+# b = np.random.randn(50)
+# b[0] = 0.
+# x = np.random.randn(100)
 
-@njit()
-def deiters_method(x, b, tol = 1e-12, max_iter = 5):
+# f = tstudent_loss(A, b, v=1.)
 
-    a2 = -(x + 2*gamma*b)/gamma
-    a1 = -(-2*b*x - 2 - gamma*v - gamma*(b**2))/gamma
-    a0 = -(x*v + x*b**2 + 2*b)/gamma
-    
-    xinfl = -a2/3
-    yinfl = xinfl**3+ a2*xinfl**2 + a1*xinfl +a0
-    
-    d = a2**2 - 3*a1
-    if d >= 0:
-        if yinfl < 0 :
-            z = xinfl + (2/3)*np.sqrt(d)
-        else:
-            z = xinfl - (2/3)*np.sqrt(d)
-    else:
-        z = xinfl
-    
-    for k in np.arange(max_iter):
-        
-        fun =     z**3 +   a2*z**2 + a1*z + a0
-        deriv = 3*z**2 + 2*a2*z    + a1
-        
-        if np.abs(fun) <= tol:
-            break
-        
-        z = z - fun/deriv
-        
-    
-    return z
+# z = np.array([1.], dtype = np.float64)
 
-#%%
+# f._zstar(1,1)
+
+# f.fstar(z,1)
+# f.gstar(z,1)
+# f.Hstar(z,1)
+
+
+# f.g(np.array([4]),4)
+
+# for i in range(1000):
+    
+#     x = np.random.randn(1)
+#     y = np.random.randn(1)
+    
+#     print(f.f(x,3) + f.gamma/2 * x**2 + f.fstar(y,3) - x*y)
+#     assert (f.f(x,3) + f.gamma/2*x**2 + f.fstar(y,3) - x*y) >= 0
+
+
+
+# all_x = np.linspace(-100,100, 2000)
+# all_f = np.zeros_like(all_x)
+# all_g = np.zeros_like(all_x)
+# all_h = np.zeros_like(all_x)
+
+# for j in range(len(all_x)):
+    
+#     xx = all_x[j]
+#     all_f[j] = f.fstar(np.array([xx]), 166)
+#     all_g[j] = f.gstar(np.array([xx]), 166)
+#     all_h[j] = f.Hstar(np.array([xx]), 166)
+
+    
+# plt.plot(all_x, all_f)
+# plt.plot(all_x, all_g)
+# plt.plot(all_x, all_h)
 
 
