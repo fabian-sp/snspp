@@ -7,7 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import time
 
-from snspp.helper.data_generation import get_cpusmall, tstudent_test
+from snspp.helper.data_generation import tstudent_test
 from snspp.solver.opt_problem import problem
 from snspp.experiments.experiment_utils import params_tuner, plot_multiple, initialize_solvers, eval_test_set, plot_test_error, plot_multiple_error
 
@@ -60,7 +60,7 @@ elif setup == 2:
     params_svrg = {'n_epochs' : 70, 'batch_size': 20, 'alpha': 100.}
     params_adagrad = {'n_epochs' : 150, 'batch_size': 20, 'alpha': 0.03}
     
-    params_snspp = {'max_iter' : 200, 'batch_size': 20, 'sample_style': 'fast_increasing', 'alpha' : 3, 'reduce_variance': True}
+    params_snspp = {'max_iter' : 250, 'batch_size': 20, 'sample_style': 'fast_increasing', 'alpha' : 3, 'reduce_variance': True}
 
 elif setup == 3:
     params_saga = {'n_epochs' : 25, 'alpha' : 50}
@@ -68,7 +68,7 @@ elif setup == 3:
     #params_svrg = {'n_epochs' : 10, 'batch_size': 100, 'alpha': 20000.}
     params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.06}
     
-    params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'constant', 'alpha' : 12.5, 'reduce_variance': True}
+    params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 12.5, 'reduce_variance': True}
 
 
 
@@ -238,7 +238,7 @@ all_loss_Q2 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = tstudent_l
     
 fig, ax = plt.subplots(1,1,  figsize = (4.5, 3.5))
 
-kwargs = {"log_scale": False, "lw": 0.4, "markersize": 1.5}
+kwargs = {"log_scale": False, "lw": 0.4, "markersize": 1.7}
 
 #plot_test_error(Q, L_Q,  ax = ax,  marker = '<', **kwargs)
 #plot_test_error(Q1, L_Q1,  ax = ax,  marker = '<', **kwargs)
