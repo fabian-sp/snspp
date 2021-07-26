@@ -156,18 +156,16 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     x_hist = np.vstack(x_hist)
     n_iter = x_hist.shape[0]
     
-    # compute x_mean retrospectivly and evaluate objective
-    obj = list()
-    
-    if n <= 1e4:
+    # compute x_mean retrospectivly (disabled)
+    if False:
         xmean_hist = compute_x_mean_hist(np.vstack(x_hist))
         x_mean = xmean_hist[-1,:].copy()
     else:
         xmean_hist = None; x_mean = None
         
-  
+    # evaluate objective at x_t after every epoch
+    obj = list()
     if measure:
-        # evaluate objective at x_t after every epoch
         for j in np.arange(n_iter):
             obj.append(f.eval(x_hist[j,:]) + phi.eval(x_hist[j,:]))
         
