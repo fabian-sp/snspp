@@ -121,10 +121,7 @@ class tstudent_loss:
     
     def _fstar(self, x ,i):
         z = self._zstar(x, self.b[i])
-        if np.isnan(z):
-            res = np.inf
-        else:
-            res = x*z - self.f(z,i) - (self.gamma/2)*z**2
+        res = x*z - self.f(z,i) - (self.gamma/2)*z**2
         return res
     
     # loop versions
@@ -179,7 +176,7 @@ class tstudent_loss:
     def gstar_vec(self, x, S):
         Y = np.zeros_like(x)
         for j in range(len(x)):
-            z_j =self._zstar(x[j], self.b[S[j]])      
+            z_j = self._zstar(x[j], self.b[S[j]])      
             self.z[S[j]] = z_j
             Y[j] = z_j
         return Y
@@ -187,6 +184,9 @@ class tstudent_loss:
     def Hstar_vec(self, x, S):
         b_S = self.b[S]
         g_S = self.z[S]
+        self.z = np.zeros(self.N)
+        
+        # recomputing alterantive
         # g_S = np.zeros_like(x)
         # for j in range(len(x)):
         #     z_j =self._zstar(x[j], self.b[S[j]])      

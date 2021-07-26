@@ -57,19 +57,18 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
         hat_d += (alpha/sample_size) * (gamma_i.reshape(1,-1) * subA.T @ (subA @ x))
     
     z = x - (alpha/sample_size) * (subA.T @ xi_sub) + hat_d
+    
     while sub_iter < newton_params['max_iter']:
         
-    # step 1: construct Newton matrix and RHS 
-        
+    # step 1: construct Newton matrix and RHS     
         rhs = -1. * (f.gstar_vec(xi_sub, S) - subA @ phi.prox(z, alpha))
-        
+              
         residual.append(np.linalg.norm(rhs))
         if np.linalg.norm(rhs) <= newton_params['eps']:
             converged = True
             break
         
         U = phi.jacobian_prox(z, alpha)
-        
         if phi.name == '1norm':
             # U is 1d array with only 1 or 0 --> speedup by not constructing 2d diagonal array
             bool_d = U.astype(bool)
@@ -78,7 +77,6 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
             tmp2 = (alpha/sample_size) * subA_d @ subA_d.T
         else:
             tmp2 = (alpha/sample_size) * subA @ U @ subA.T
-        
         
         eps_reg = 1e-4
         tmp_d = f.Hstar_vec(xi_sub, S)
