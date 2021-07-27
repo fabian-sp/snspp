@@ -41,15 +41,22 @@ def sgd_loop(f, phi, x_t, tol, alpha, n_epochs, batch_size, truncate = False):
         # determine step size
         beta = 0.51
         if truncate:
-            gamma_t = alpha/(iter_t+1)**beta
-            alpha_t = np.minimum(gamma_t, f.eval_batch(x_t, S)/np.linalg.norm(g_t)**2)  
+        # no prox step
+            gamma_t = alpha/(iter_t+1)**beta            
+            u_t = phi.subg(x_t)            
+            alpha_t = np.minimum(gamma_t, (f.eval_batch(x_t, S) + phi.eval(x_t))/np.linalg.norm(g_t + u_t)**2)  
+    
+            x_t = x_t - alpha_t* (g_t + u_t)
+                
         else:
-            alpha_t = alpha/(iter_t+1)**beta
+        # prox step
+            gamma_t = alpha/(iter_t+1)**beta
+            alpha_t = np.minimum(gamma_t, (f.eval_batch(x_t, S))/np.linalg.norm(g_t)**2)  
             
-        w_t = x_t - alpha_t*g_t
+            w_t = x_t - alpha_t*g_t
         
-        # compute prox step
-        x_t = phi.prox(w_t, alpha_t)
+            # compute prox step
+            x_t = phi.prox(w_t, alpha_t)
         
         # stop criterion (at end of each epoch)
         if store[iter_t]:

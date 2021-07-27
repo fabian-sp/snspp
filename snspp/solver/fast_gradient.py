@@ -122,9 +122,11 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     elif solver == 'sgd':
         alpha = alpha_0
     
+    alpha = np.float64(alpha)  
+    
     if verbose :
         print(f"Step size of {solver}: ", alpha)
-    alpha = np.float64(alpha)  
+    
      
     #########################################################
     ## Main loop

@@ -26,6 +26,9 @@ class L1Norm:
     def eval(self, x):
         return self.lambda1 * np.linalg.norm(x, 1)
     
+    def subg(self, x):
+        return self.lambda1 * np.sign(x)
+    
     def prox(self, x, alpha):
         """
         calculates prox_{alpha*phi}(x)
