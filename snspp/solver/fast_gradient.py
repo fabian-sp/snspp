@@ -45,7 +45,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     assert gradients.shape == (N,n)
     
     if 'n_epochs' not in params.keys():    
-        params['n_epochs'] = 20
+        params['n_epochs'] = 50
     
     #########################################################
     ## Solver dependent parameters
