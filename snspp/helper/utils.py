@@ -63,18 +63,6 @@ def compute_xi_inner(f, x):
     
     return vals
             
-# def compute_full_gradient(f,x):
-#     """
-#     computes the full gradient 1/N * sum (A_i.T @ grad f_i(A_ix))
-#     NOTE: not storage optimized (needs O(N*n) storage)
-#     """
-#     if f.name == 'logistic':
-#         g = logreg_gradient(f, x)
-#     else:
-#         grads = compute_gradient_table(f, x)
-#         g = (1/f.N)*grads.sum(axis = 0)
-        
-#     return g
 
 # needed for initializing in SAGA (only used once)
 def compute_gradient_table(f, x):
@@ -182,17 +170,6 @@ def compute_x_mean_hist(iterates):
     res = scaler[:,np.newaxis] * iterates.cumsum(axis = 0)
     
     return res
-
-def logreg_gradient(f, x):
-    """
-    computes full gradient for f being the logistic loss
-    """
-    g_i = -1/( 1+ np.exp(f.A @ x) )[:,np.newaxis] * f.A 
-    g = (1/f.N) * g_i.sum(axis=0)
-    
-    return g
-
-
 
 ############################################################################################
 ### Linear ALgebra stuff
