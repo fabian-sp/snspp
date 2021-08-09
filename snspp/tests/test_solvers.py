@@ -49,7 +49,7 @@ def template_test(f, phi, x_sk, params, solver, assert_objective = True):
 #%%
 def test_saga_lasso():
     #params = dict()
-    params = {'n_epochs' : 100, 'alpha': 1.}
+    params = {'n_epochs' : 1000, 'alpha': 1.}
     
     f, phi, x_sk = create_test_instance(prob = 'lasso')
     template_test(f, phi, x_sk, params, 'saga')
@@ -57,15 +57,15 @@ def test_saga_lasso():
     return
 
 def test_adagrad_lasso():
-    params = {'n_epochs' : 100}
+    params = {'n_epochs' : 50}
     
     f, phi, x_sk = create_test_instance(prob = 'lasso')
-    template_test(f, phi, x_sk, params, 'adagrad')
+    template_test(f, phi, x_sk, params, 'adagrad', assert_objective = False)
     
     return
 
 def test_svrg_lasso():
-    params = {'n_epochs' : 100, 'batch_size': 10}
+    params = {'n_epochs' : 1000, 'batch_size': 2}
     
     f, phi, x_sk = create_test_instance(prob = 'lasso')
     template_test(f, phi, x_sk, params, 'svrg')
@@ -75,7 +75,7 @@ def test_svrg_lasso():
 #%%
 
 def test_saga_logreg():
-    params = {'n_epochs' : 100, 'alpha': 1.}
+    params = {'n_epochs' : 1000, 'alpha': 1.}
     
     f, phi, x_sk = create_test_instance(prob = 'logreg')
     template_test(f, phi, x_sk, params, 'saga')
@@ -83,15 +83,15 @@ def test_saga_logreg():
     return
 
 def test_adagrad_logreg():
-    params = {'n_epochs' : 100}
+    params = {'n_epochs' : 50}
     
     f, phi, x_sk = create_test_instance(prob = 'logreg')
-    template_test(f, phi, x_sk, params, 'adagrad')
+    template_test(f, phi, x_sk, params, 'adagrad', assert_objective = False)
     
     return
 
 def test_svrg_logreg():
-    params = {'n_epochs' : 100, 'batch_size': 10}
+    params = {'n_epochs' : 1000, 'batch_size': 2}
     
     f, phi, x_sk = create_test_instance(prob = 'logreg')
     template_test(f, phi, x_sk, params, 'svrg')
@@ -101,7 +101,7 @@ def test_svrg_logreg():
 #%%
 
 def test_snspp_lasso():
-    params = {'max_iter' : 200, 'alpha': 1., 'reduce_variance': True}
+    params = {'max_iter' : 2000, 'alpha': 1., 'reduce_variance': True}
     
     f, phi, x_sk = create_test_instance(prob = 'lasso')
     template_test(f, phi, x_sk, params, 'snspp')
@@ -109,7 +109,7 @@ def test_snspp_lasso():
     return
 
 def test_snspp_logreg():
-    params = {'max_iter' : 300, 'alpha': 10., 'reduce_variance': True}
+    params = {'max_iter' : 2000, 'alpha': 10., 'reduce_variance': True}
     
     f, phi, x_sk = create_test_instance(prob = 'logreg')
     P = template_test(f, phi, x_sk, params, 'snspp')

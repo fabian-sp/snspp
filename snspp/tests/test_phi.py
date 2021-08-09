@@ -40,24 +40,18 @@ def template_phi(phi, alpha = 1e-10):
 
 x = np.random.randn(20)
 
-def test_1norm():
-    
+def test_1norm(): 
     phi = L1Norm(1)
-    template_prox_id(phi, x, alpha = 1e-10)
-    
+    template_prox_id(phi, x, alpha = 1e-10) 
     return
 
 def test_Ridge():
-    
     phi = Ridge(1)
-    template_prox_id(phi, x, alpha = 1e-10)
-    
+    template_prox_id(phi, x, alpha = 1e-10) 
     return    
     
 def test_Zero():
-    
     phi = Zero()
-    template_prox_id(phi, x, alpha = 1e-10)
-    
+    template_prox_id(phi, x, alpha = 1e-10) 
     return
  
