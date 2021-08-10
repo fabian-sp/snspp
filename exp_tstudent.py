@@ -14,7 +14,7 @@ from snspp.experiments.experiment_utils import params_tuner, plot_multiple, init
 #%% load data
 #f, phi, X_train, y_train, X_test, y_test = get_cpusmall(lambda1 = l1, train_size = .99, v = v, poly = 0, noise = 0.)
 
-setup = 2
+setup = 3
 
 if setup == 1:
 
@@ -178,7 +178,8 @@ plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs
 plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 
 ax.set_xlim(0, 3)
-#ax.set_ylim(0.19,0.3)
+ax.set_ylim(1e-7,)
+
 ax.legend(fontsize = 10)
 
 fig.subplots_adjust(top=0.96,

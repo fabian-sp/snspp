@@ -167,7 +167,7 @@ def initialize_solvers(f, phi):
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)   
     tmpP.solve(solver = 'adagrad')
     
-    params = {'max_iter' : 15, 'batch_size': 10, 'alpha': 1}  
+    params = {'max_iter' : 25, 'batch_size': 20, 'alpha': 2}  
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)   
     tmpP.solve(solver = 'snspp')
     

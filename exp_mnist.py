@@ -166,6 +166,8 @@ plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 #plot_multiple(allP1, ax = ax , label = "snspp_noVR", name = "snspp (no VR)", **kwargs)
 
 ax.set_xlim(-.1,4)
+ax.set_ylim(1e-7,)
+
 ax.legend()
 
 fig.subplots_adjust(top=0.96,

@@ -168,6 +168,8 @@ plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 
 
 ax.set_xlim(-.1, 6)
+ax.set_ylim(1e-7,)
+
 ax.legend(fontsize = 10)
 
 fig.subplots_adjust(top=0.96,
