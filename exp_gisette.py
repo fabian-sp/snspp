@@ -166,7 +166,6 @@ plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs
 plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 
 
-
 ax.set_xlim(-.1, 6)
 ax.set_ylim(1e-7,)
 
@@ -184,14 +183,13 @@ if save:
 
 #%% coeffcient plot
 
-#P = allP[-1]
+P = allP[-1]
 
 fig,ax = plt.subplots(2, 2,  figsize = (7,5))
 Q.plot_path(ax = ax[0,0], xlabel = False)
 Q1.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
 Q2.plot_path(ax = ax[1,0])
 P.plot_path(ax = ax[1,1], ylabel = False)
-#P.plot_path(ax = ax[1,1], mean = True, ylabel = False)
 
 for a in ax.ravel():
     a.set_ylim(-.5,.3)

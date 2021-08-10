@@ -163,8 +163,6 @@ plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwa
 plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
 plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 
-#plot_multiple(allP1, ax = ax , label = "snspp_noVR", name = "snspp (no VR)", **kwargs)
-
 ax.set_xlim(-.1,4)
 ax.set_ylim(1e-7,)
 
@@ -182,7 +180,7 @@ if save:
 
 #%% coefficent plot
 
-#P = allP[-1]
+P = allP[-1]
 
 fig,ax = plt.subplots(2, 2,  figsize = (7,5))
 Q.plot_path(ax = ax[0,0], xlabel = False)
