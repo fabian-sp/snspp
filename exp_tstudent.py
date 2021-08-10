@@ -14,7 +14,7 @@ from snspp.experiments.experiment_utils import params_tuner, plot_multiple, init
 #%% load data
 #f, phi, X_train, y_train, X_test, y_test = get_cpusmall(lambda1 = l1, train_size = .99, v = v, poly = 0, noise = 0.)
 
-setup = 3
+setup = 2
 
 if setup == 1:
 
@@ -177,7 +177,11 @@ plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwa
 plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
 plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 
-ax.set_xlim(0, 3)
+if setup == 3:
+    ax.set_xlim(0, 0.6)
+else:
+    ax.set_xlim(0, 2.5)
+    
 ax.set_ylim(1e-7,)
 
 ax.legend(fontsize = 10)
@@ -253,7 +257,10 @@ plot_multiple_error(all_loss_P, allP, ax = ax , label = "snspp", **kwargs)
 
 
 ax.set_yscale('log')
-ax.set_xlim(0,0.8)
+if setup == 3:
+    ax.set_xlim(0, 0.6)
+else:
+    ax.set_xlim(0, 2.5)
 #ax.set_ylim(0.08,0.15)
 
 fig.subplots_adjust(top=0.96,
