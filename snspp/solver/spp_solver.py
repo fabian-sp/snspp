@@ -318,7 +318,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         print(f"Stochastic ProxPoint terminated after {iter_t} iterations with accuracy {eta}")
         print(f"Stochastic ProxPoint status: {status}")
     
-    if n <= 1e4:
+    if False:
         xmean_hist = compute_x_mean_hist(np.vstack(x_hist))
         x_mean = xmean_hist[-1,:].copy()
     else:
