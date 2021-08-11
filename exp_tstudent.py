@@ -53,13 +53,13 @@ if setup == 1:
     params_saga = {'n_epochs' : 150, 'alpha' : 17}
     params_svrg = {'n_epochs' : 150, 'batch_size': 20, 'alpha': 500.}
     params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.07}
-    params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 5, 'reduce_variance': True}
+    params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 5., 'reduce_variance': True}
 
 elif setup == 2:
     params_saga = {'n_epochs' : 50, 'alpha' : 2.5}
     params_svrg = {'n_epochs' : 70, 'batch_size': 20, 'alpha': 100.}
     params_adagrad = {'n_epochs' : 150, 'batch_size': 20, 'alpha': 0.03}   
-    params_snspp = {'max_iter' : 250, 'batch_size': 20, 'sample_style': 'fast_increasing', 'alpha' : 3, 'reduce_variance': True}
+    params_snspp = {'max_iter' : 250, 'batch_size': 20, 'sample_style': 'fast_increasing', 'alpha' : 3., 'reduce_variance': True}
 
 elif setup == 3:
     params_saga = {'n_epochs' : 25, 'alpha' : 50}

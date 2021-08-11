@@ -35,8 +35,8 @@ x_sk = sk.coef_.copy().squeeze()
 
 psi_star = f.eval(x_sk) + phi.eval(x_sk)
 print("psi(x*) = ", psi_star)
-initialize_solvers(f, phi)
 
+initialize_solvers(f, phi)
 
 #%% params (l1=1e-3)
 if l1 == 1e-3:
