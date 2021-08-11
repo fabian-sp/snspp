@@ -39,39 +39,39 @@ initialize_solvers(f, phi)
 
 
 #%% params (l1=1e-3)
-
-params_saga = {'n_epochs' : 20, 'alpha': 6.5}
-
-params_svrg = {'n_epochs' : 30, 'batch_size': 50, 'alpha': 160.}
-#params_svrg = {'n_epochs' : 30, 'batch_size': 100, 'alpha': 270.} # not much worse, but same batch as snspp
-
-params_adagrad = {'n_epochs' : 50, 'batch_size': 20, 'alpha': 0.008}
-
-params_snspp = {'max_iter' : 300, 'batch_size': 200, 'sample_style': 'constant', 'alpha' : 3.,\
-                "reduce_variance": True}
+if l1 == 1e-3:
+    params_saga = {'n_epochs' : 20, 'alpha': 6.5}
     
-#params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(5,12,12), n_iter = 25)
-#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(200, 500, 10), batch_range = np.array([50, 100,200]), n_iter = 40)
-#params_tuner(f, phi, solver = "adagrad", batch_range = np.array([20, 200, 500]))
-#params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(0.3, 4.5, 10), batch_range = np.array([50,100,200]), n_iter = 200)
-
-
-#%% params (l1=1e-2)
-
-params_saga = {'n_epochs' : 20, 'alpha': 8.}
-
-params_svrg = {'n_epochs' : 30, 'batch_size': 200, 'alpha': 500.}
-
-params_adagrad = {'n_epochs' : 50, 'batch_size': 200, 'alpha': 0.06}
-
-params_snspp = {'max_iter' : 100, 'batch_size': 200, 'sample_style': 'fast_increasing', 'alpha' : 20.,\
-                "reduce_variance": True}
+    params_svrg = {'n_epochs' : 30, 'batch_size': 50, 'alpha': 160.}
+    #params_svrg = {'n_epochs' : 30, 'batch_size': 100, 'alpha': 270.} # not much worse, but same batch as snspp
     
-#params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(5,15,10), n_iter = 20)
-#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(400, 1000, 10), batch_range = np.array([50, 200]), n_iter = 30)
-#params_tuner(f, phi, solver = "adagrad", batch_range = np.array([20, 200, 500]))
-#params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(5, 40, 10), batch_range = np.array([20, 200]), n_iter = 80)
-#params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(1, 5, 10), batch_range = np.array([20]), n_iter = 80)
+    params_adagrad = {'n_epochs' : 80, 'batch_size': 20, 'alpha': 0.008}
+    
+    params_snspp = {'max_iter' : 300, 'batch_size': 200, 'sample_style': 'constant', 'alpha' : 3.,\
+                    "reduce_variance": True}
+    
+    #params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(5,12,12), n_iter = 25)
+    #params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(200, 500, 10), batch_range = np.array([50, 100,200]), n_iter = 40)
+    #params_tuner(f, phi, solver = "adagrad", batch_range = np.array([20, 200, 500]))
+    #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(0.3, 4.5, 10), batch_range = np.array([50,100,200]), n_iter = 200)
+
+elif l1 == 1e-2:
+    # params (l1=1e-2)
+    
+    params_saga = {'n_epochs' : 20, 'alpha': 8.}
+    
+    params_svrg = {'n_epochs' : 30, 'batch_size': 200, 'alpha': 500.}
+    
+    params_adagrad = {'n_epochs' : 80, 'batch_size': 200, 'alpha': 0.06}
+    
+    params_snspp = {'max_iter' : 100, 'batch_size': 200, 'sample_style': 'fast_increasing', 'alpha' : 20.,\
+                    "reduce_variance": True}
+        
+    #params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(5,15,10), n_iter = 20)
+    #params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(400, 1000, 10), batch_range = np.array([50, 200]), n_iter = 30)
+    #params_tuner(f, phi, solver = "adagrad", batch_range = np.array([20, 200, 500]))
+    #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(5, 40, 10), batch_range = np.array([20, 200]), n_iter = 80)
+    #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(1, 5, 10), batch_range = np.array([20]), n_iter = 80)
 
 #%% solve with SAGA
 
@@ -97,7 +97,7 @@ Q2.solve(solver = 'svrg')
 
 print(f.eval(Q2.x)+phi.eval(Q2.x))
 
-#%% solve with SSNSP
+#%% solve with SNSPP
 
 P = problem(f, phi, tol = 1e-9, params = params_snspp, verbose = True, measure = True)
 
@@ -139,7 +139,7 @@ for k in range(K):
     Q2_k.solve(solver = 'svrg')
     allQ2.append(Q2_k)
     
-#%% solve with SSNSP (multiple times, VR)
+#%% solve with SNSPP (multiple times, VR)
 
 allP = list()
 for k in range(K):
@@ -173,7 +173,7 @@ plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs
 plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 
 
-ax.set_xlim(-.1, 6)
+ax.set_xlim(-.1, 4)
 ax.set_ylim(1e-7,)
 
 ax.legend(fontsize = 10)
@@ -245,7 +245,7 @@ plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', 
 plot_multiple_error(all_loss_Q2, allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
 plot_multiple_error(all_loss_P, allP, ax = ax , label = "snspp", **kwargs)
 
-ax.set_xlim(-.1, 6)
+ax.set_xlim(-.1, 4)
 ax.set_ylim(all_loss_P.min()-1e-3, all_loss_P.min()+1e-2)
 ax.legend(fontsize = 10)
 
