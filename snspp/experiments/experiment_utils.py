@@ -41,6 +41,7 @@ def plot_multiple(allP, ax = None, label = "snspp", runtime = True, name = None,
     
     if runtime:
         all_xax = np.vstack([allP[k].info["runtime"] for k in range(K)]).mean(axis=0).cumsum()
+        #all_xax_std=np.vstack([allP[k].info["runtime"] for k in range(K)]).std(axis=0)
     else: 
         all_xax = np.vstack([allP[k].info["evaluations"] for k in range(K)]).mean(axis=0).cumsum() / N
         

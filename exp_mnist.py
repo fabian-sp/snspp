@@ -1,3 +1,11 @@
+import sys
+
+if len(sys.argv) > 1:
+    save = sys.argv[1]
+else:
+    save = False
+
+#%%
 import time
 import matplotlib.pyplot as plt
 import numpy as np
@@ -145,8 +153,6 @@ for k in range(K):
 all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q1.x)).T, columns = ['scikit', 'spp', 'saga', 'adagrad'])
 
 #%% objective plot
-
-save = False
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 

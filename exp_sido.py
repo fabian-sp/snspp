@@ -1,8 +1,17 @@
+import sys
+
+if len(sys.argv) > 2:
+    save = sys.argv[1]
+    l1 = float(sys.argv[2])
+else:
+    save = False
+    l1 = 1e-3
+    
+#%%
 import time
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 
 from snspp.solver.opt_problem import problem
 from snspp.helper.data_generation import get_sido
@@ -12,7 +21,6 @@ from snspp.experiments.experiment_utils import params_tuner, plot_multiple, plot
 
 from sklearn.linear_model import LogisticRegression
 
-l1 = 1e-3
 
 f, phi, X_train, y_train, X_test, y_test = get_sido(lambda1 = l1)
 
@@ -73,6 +81,8 @@ elif l1 == 1e-2:
     #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(5, 40, 10), batch_range = np.array([20, 200]), n_iter = 80)
     #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(1, 5, 10), batch_range = np.array([20]), n_iter = 80)
 
+else:
+    raise KeyError("Parameters not tuned for this value of l1.")
 #%% solve with SAGA
 
 Q = problem(f, phi, tol = 1e-9, params = params_saga, verbose = True, measure = True)
@@ -154,8 +164,6 @@ for k in range(K):
 all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q2.x)).T, columns = ['scikit', 'spp', 'saga', 'svrg'])
 
 #%% objective plot
-
-save = False
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
