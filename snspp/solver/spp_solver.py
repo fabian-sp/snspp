@@ -207,12 +207,12 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     step_sizes = list()
     obj = list()
     ssn_info = list(); S_hist = list()
-    runtime = list()
+    runtime = list(); num_eval = list()
     
     # variance reduction
     if params['reduce_variance']:
         xi_tilde = None; full_g = None
-        vr_min_iter = 0
+        vr_min_iter = 0; this_iter_vr = False
     else:
         xi_tilde = None; full_g = None
     
@@ -263,7 +263,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         ## Variance reduction
         #########################################################
         if params['reduce_variance']:
-            if iter_t % params['m_iter'] == 0 and iter_t >= vr_min_iter:
+            this_iter_vr = iter_t % params['m_iter'] == 0 and iter_t >= vr_min_iter
+            if this_iter_vr:
+                
                 xi_tilde = compute_full_xi(f, x_t, is_easy)
                 full_g = (1/f.N) * (A.T @ xi_tilde)
                 
@@ -288,6 +290,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         # we only measure runtime of the iteration, excluding computation of the objective
         end = time.time()
         runtime.append(end-start)
+        num_eval.append(this_ssn['evaluations'].sum() + int(this_iter_vr) * f.N)
 
         if measure:
             f_t = f.eval(x_t.astype('float64')) 
@@ -327,7 +330,10 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     info = {'objective': np.array(obj), 'iterates': np.vstack(x_hist), \
             'mean_hist': xmean_hist, 'xi_hist': xi_hist,\
             'step_sizes': np.array(step_sizes), 'samples' : S_hist, \
-            'ssn_info': ssn_info, 'runtime': np.array(runtime)}
+            'ssn_info': ssn_info, 'runtime': np.array(runtime),\
+            'evaluations': np.array(num_eval)
+            }
+        
     
     return x_t, x_mean, info
 
@@ -395,6 +401,8 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     residual = list()
     norm_dir = list()
     step_sz = list()
+    obj = list()
+    num_eval = list()
     
     # compute var. reduction term
     if reduce_variance:
@@ -471,6 +479,10 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
             U_new = Ueval(xi_stack + beta*d, f, phi, x, alpha, S, sub_dims, subA, hat_d)
             
         step_sz.append(beta)
+        obj.append(U_new)
+        # 2 from Hstar, gstar, rest from fstar during Armijo
+        num_eval.append((2+ np.log(beta)/np.log(newton_params['rho'])) * sample_size )
+       
         
     # step 4: update xi
         xi_stack += beta * d
@@ -491,7 +503,8 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     z = x - (alpha/sample_size) * (subA.T @ xi_stack) + hat_d
     new_x = phi.prox(z, alpha)
     
-    info = {'residual': np.array(residual), 'direction' : norm_dir, 'step_size': step_sz }
+    info = {'residual': np.array(residual), 'direction' : norm_dir, 'step_size': step_sz, \
+            'objective': np.array(obj), 'evaluations': np.array(num_eval)}
     
     
     return new_x, xi, info

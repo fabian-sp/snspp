@@ -44,6 +44,7 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
     norm_dir = list()
     step_sz = list()
     obj = list()
+    num_eval = list()
     
     # compute var. reduction term
     if reduce_variance:
@@ -113,6 +114,8 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
             
         step_sz.append(beta)
         obj.append(U_new)
+        # 2 from Hstar, gstar, rest from fstar during Armijo
+        num_eval.append((2+ np.log(beta)/np.log(newton_params['rho'])) * sample_size )
         
     # step 4: update xi
         xi_sub += beta * d         
@@ -128,7 +131,8 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
     #z = x - (alpha/sample_size) * (subA.T @ xi_sub) + hat_d
     new_x = phi.prox(z, alpha)
     
-    info = {'residual': np.array(residual), 'direction' : norm_dir, 'step_size': step_sz, 'objective': np.array(obj)}
+    info = {'residual': np.array(residual), 'direction' : norm_dir, 'step_size': step_sz, \
+            'objective': np.array(obj), 'evaluations': np.array(num_eval)}
     
     
     return new_x, xi, info

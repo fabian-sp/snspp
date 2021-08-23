@@ -100,7 +100,7 @@ class problem:
         
         return
     
-    def plot_objective(self, ax = None, runtime = True, mean_obj = False, label = None, marker = 'o', markersize = 3, lw = 0.4, ls = '-', psi_star = 0, log_scale = False):
+    def plot_objective(self, ax = None, runtime = True, num_eval = False, label = None, marker = 'o', markersize = 3, lw = 0.4, ls = '-', psi_star = 0, log_scale = False):
         """
         
         Parameters
@@ -108,9 +108,9 @@ class problem:
         ax : matplotlib.axes, optional
             Axis where to plot. The default is None.
         runtime : bool, optional
-            whether to plot runtime as x-axis (or iteration number). The default is True.
-        mean_obj : bool, optional
-            plot additionally the objective of the mean iterate. The default is False.
+            whether to plot runtime as x-axis (other: num evaluations or iteration number). The default is True.
+        num_eval : bool, optional
+            whether to plot number of evaluations as x-axis. The default is False.
         label : str, optional
             label for legend. The default is None.
         marker : str, optional
@@ -127,6 +127,8 @@ class problem:
         None.
 
         """
+        assert not(runtime and num_eval), "Only one of the two arguments for the x-axis can be set to True."
+        
         plt.rcParams["font.family"] = "serif"
         plt.rcParams['font.size'] = 12
         plt.rcParams['axes.linewidth'] = 1
@@ -140,6 +142,8 @@ class problem:
         
         if runtime:
             x = self.info['runtime'].cumsum()
+        elif num_eval:
+            x = self.info['evaluations'].cumsum() / self.f.N
         else:
             x = np.arange(len(self.info['objective']))
         
@@ -157,14 +161,11 @@ class problem:
             c = color_dict["default"]
         pt = ax.plot(x,y, marker = marker, ls = ls, label = label, markersize = markersize, c = c)
         
-        if mean_obj:
-            y1 = self.info['objective_mean'] - psi_star
-            ax.plot(x,y1, marker = None, ls = 'dotted', lw = 2, label = label + '_mean',\
-                    c = pt[0].get_color())
-            
         ax.legend()
         if runtime:
             ax.set_xlabel("Runtime [sec]", fontsize = 12)
+        elif num_eval:
+            ax.set_xlabel(r"Evaluations/$N$", fontsize = 12)
         else:
             ax.set_xlabel("Iteration / epoch number", fontsize = 12)
         

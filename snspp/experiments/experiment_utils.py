@@ -18,7 +18,7 @@ plt.rc('text', usetex=True)
 ## Plotting
 ##########################################################################
 
-def plot_multiple(allP, ax = None, label = "snspp", name = None, marker = 'o', markersize = 3, ls = '-', lw = 0.4, psi_star = 0, log_scale = False, sigma = 0):
+def plot_multiple(allP, ax = None, label = "snspp", runtime = True, name = None, marker = 'o', markersize = 3, ls = '-', lw = 0.4, psi_star = 0, log_scale = False, sigma = 0):
  
   
     if name is None:
@@ -28,6 +28,7 @@ def plot_multiple(allP, ax = None, label = "snspp", name = None, marker = 'o', m
         fig, ax = plt.subplots()
             
     K = len(allP)
+    N = allP[0].f.N
     
     for k in range(K):
         assert allP[k].solver == label, "solver attribute and label are not matching!"
@@ -38,21 +39,28 @@ def plot_multiple(allP, ax = None, label = "snspp", name = None, marker = 'o', m
     all_mean = all_obj.mean(axis=0)
     all_std = all_obj.std(axis=0)
     
-    all_rt = np.vstack([allP[k].info["runtime"] for k in range(K)]).mean(axis=0).cumsum()
-    
+    if runtime:
+        all_xax = np.vstack([allP[k].info["runtime"] for k in range(K)]).mean(axis=0).cumsum()
+    else: 
+        all_xax = np.vstack([allP[k].info["evaluations"] for k in range(K)]).mean(axis=0).cumsum() / N
+        
     try:
         c = color_dict[label]
     except:
         c = color_dict["default"]
     
-    ax.plot(all_rt, all_mean, marker = marker, ls = ls, markersize = markersize, color = c, label = name)
+    ax.plot(all_xax, all_mean, marker = marker, ls = ls, markersize = markersize, color = c, label = name)
     
     # plot band of standard deviation
     if sigma > 0:
-        ax.fill_between(all_rt, all_mean - sigma*all_std, all_mean+sigma*all_std, color = c, alpha = .5)
+        ax.fill_between(all_xax, all_mean - sigma*all_std, all_mean+sigma*all_std, color = c, alpha = .5)
     
     ax.grid(ls = '-', lw = .5) 
-    ax.set_xlabel("Runtime [sec]", fontsize = 12)
+    
+    if runtime:
+        ax.set_xlabel("Runtime [sec]", fontsize = 12)
+    else:
+        ax.set_xlabel(r"Evaluations/$N$", fontsize = 12)
     
     if psi_star == 0:
         ax.set_ylabel(r"$\psi(x^k)$", fontsize = 12)
@@ -65,11 +73,15 @@ def plot_multiple(allP, ax = None, label = "snspp", name = None, marker = 'o', m
     return
 
 
-def plot_test_error(P, L,  ax = None, name = None, marker = 'o', markersize = 3, ls = '-', lw = 0.4, log_scale = True):
+def plot_test_error(P, L, ax = None, runtime = True, name = None, marker = 'o', markersize = 3, ls = '-', lw = 0.4, log_scale = True):
     
     assert len(P.info["iterates"]) == len(L), "the vector of losses has a different length than the stored iterates"
     
-    x = P.info["runtime"].cumsum()
+    if runtime:
+        x = P.info["runtime"].cumsum()
+    else:
+        x = P.info["evaluations"].cumsum() / P.f.N
+        
     y = L.copy()
     
     if name is None:
@@ -86,7 +98,12 @@ def plot_test_error(P, L,  ax = None, name = None, marker = 'o', markersize = 3,
     ax.plot(x, y, marker = marker, lw = lw, markersize = markersize, color = c, label = name)
     
     ax.grid(ls = '-', lw = .5) 
-    ax.set_xlabel("Runtime [sec]", fontsize = 12)
+    
+    if runtime:
+        ax.set_xlabel("Runtime [sec]", fontsize = 12)
+    else:
+        ax.set_xlabel("Evaluations/$N$", fontsize = 12)
+        
     ax.set_ylabel("Test error", fontsize = 12)
     
     if log_scale:
@@ -96,7 +113,7 @@ def plot_test_error(P, L,  ax = None, name = None, marker = 'o', markersize = 3,
     
     return
 
-def plot_multiple_error(all_loss, allP, ax = None, label = "snspp", name = None, marker = 'o', markersize = 3, ls = '-', lw = 0.4, log_scale = False, sigma = 0):
+def plot_multiple_error(all_loss, allP, ax = None, label = "snspp", runtime = True, name = None, marker = 'o', markersize = 3, ls = '-', lw = 0.4, log_scale = False, sigma = 0):
     
     if name is None:
         name = label
@@ -105,27 +122,36 @@ def plot_multiple_error(all_loss, allP, ax = None, label = "snspp", name = None,
         fig, ax = plt.subplots()
             
     K = len(allP)
+    N = allP[0].f.N
     
     for k in range(K):
         assert allP[k].solver == label, "solver attribute and label are not matching!"
     
     y = all_loss.mean(axis=0)
     all_std = all_loss.std(axis=0)
-    all_rt = np.vstack([allP[k].info["runtime"] for k in range(K)]).mean(axis=0).cumsum()
     
+    if runtime:
+        all_xax = np.vstack([allP[k].info["runtime"] for k in range(K)]).mean(axis=0).cumsum()
+    else: 
+        all_xax = np.vstack([allP[k].info["evaluations"] for k in range(K)]).mean(axis=0).cumsum() / N
+     
     try:
         c = color_dict[label]
     except:
         c = color_dict["default"]
     
-    ax.plot(all_rt, y, marker = marker, ls = ls, lw = lw, markersize = markersize, color = c, label = name)
+    ax.plot(all_xax, y, marker = marker, ls = ls, lw = lw, markersize = markersize, color = c, label = name)
     
     # plot band of standard deviation
     if sigma > 0:
-        ax.fill_between(all_rt, y - sigma*all_std, y+sigma*all_std, color = c, alpha = .5)
+        ax.fill_between(all_xax, y - sigma*all_std, y+sigma*all_std, color = c, alpha = .5)
     
     ax.grid(ls = '-', lw = .5) 
-    ax.set_xlabel("Runtime [sec]", fontsize = 12)
+    
+    if runtime:
+        ax.set_xlabel("Runtime [sec]", fontsize = 12)
+    else:
+        ax.set_xlabel(r"Evaluations/$N$", fontsize = 12)
     
     ax.set_ylabel(r"Test error", fontsize = 12)
     
