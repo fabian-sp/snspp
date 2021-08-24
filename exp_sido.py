@@ -1,3 +1,6 @@
+"""
+@author: Fabian Schaipp
+"""
 import sys
 
 if len(sys.argv) > 2:

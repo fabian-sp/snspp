@@ -173,7 +173,7 @@ def eval_test_set(X, loss, **kwargs):
  
     return L
 
-def runtime_infos(list_of_P, name):
+def runtime_infos(list_of_P, name, suffix = ''):
     """
 
     Parameters
@@ -200,13 +200,13 @@ def runtime_infos(list_of_P, name):
         n_iter = rt_array.shape[1]
         
         rt_info.loc[solver, 'mean'] = rt_mean.mean()
-        rt_info.loc[solver, 'max'] = rt_mean.max()
-        rt_info.loc[solver, 'min'] = rt_mean.min()
-        rt_info.loc[solver, 'std'] = rt_std.mean()/rt_mean.mean()
+        rt_info.loc[solver, 'std'] = rt_std.mean()
+        rt_info.loc[solver, 'std/mean'] = (rt_std/rt_mean).mean()
         
         
-    #rt_info.to_csv()
-
+    path = f'data/plots/{name}/rt_info'+ suffix + '.csv'
+    rt_info.to_csv(path)
+    
     return rt_info
 
         

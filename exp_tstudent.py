@@ -2,6 +2,16 @@
 @author: Fabian Schaipp
 """
 
+import sys
+
+if len(sys.argv) > 2:
+    save = sys.argv[1]
+    setup = float(sys.argv[2])
+else:
+    save = False
+    setup = 2
+
+#%%
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -9,7 +19,8 @@ import time
 
 from snspp.helper.data_generation import tstudent_test
 from snspp.solver.opt_problem import problem
-from snspp.experiments.experiment_utils import params_tuner, plot_multiple, initialize_solvers, eval_test_set, plot_test_error, plot_multiple_error
+from snspp.experiments.experiment_utils import params_tuner, plot_multiple, initialize_solvers,\
+                                                eval_test_set, plot_test_error, plot_multiple_error, runtime_infos
 
 #%% load data
 #f, phi, X_train, y_train, X_test, y_test = get_cpusmall(lambda1 = l1, train_size = .99, v = v, poly = 0, noise = 0.)
@@ -154,7 +165,6 @@ for k in range(K):
     allP.append(P_k)
 
 #%% plot objective
-save = False
 
 # use the last objective of SAGA as surrogate optimal value / plot only psi(x^k)
 psi_star = f.eval(Q.x)+phi.eval(Q.x)
@@ -194,9 +204,12 @@ fig.subplots_adjust(top=0.96,
 if save:
     fig.savefig(f'data/plots/exp_tstudent/obj_N_{N}_n_{n}.pdf', dpi = 300)
     
-#%% coeffcient frame
+#%% coeffcient frame + runtime infos
 
 all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x, Q2.x)).T, columns = ['sol', 'spp', 'saga', 'adagrad', 'svrg'])
+
+if save:
+    rt_info = runtime_infos([allQ, allQ1, allQ2, allP], 'exp_tstudent', suffix = f'_N_{N}_n_{n}')
 
 #%% coeffcient plot
 
