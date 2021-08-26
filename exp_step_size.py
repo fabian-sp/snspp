@@ -20,7 +20,7 @@ l1 = 0.01
 
 EPOCHS = 50 # epochs for SAGA/SVRG
 MAX_ITER = 150 # max iter for SNSPP
-PSI_TOL = 1e-3 # relative accuracy for objective to be considered as converged
+PSI_TOL = 1e-5 # relative accuracy for objective to be considered as converged
 N_REP = 5 # number of repetitions for each setting
 Y_MAX = 1. # y-value of not-converged stepsizes
 
@@ -116,6 +116,7 @@ def do_grid_run(f, phi, step_size_range, batch_size_range = None, psi_star = 0, 
                     obj_arr = P.info['objective'].copy()
                     
                     print(f"OBJECTIVE = {obj_arr[-1]}")
+                    this_alpha = P.info["step_sizes"][-1]
                     
                     if np.any(obj_arr <= psi_star *(1+psi_tol)):
                         stop = np.where(obj_arr <= psi_star *(1+psi_tol))[0][0]
@@ -133,6 +134,7 @@ def do_grid_run(f, phi, step_size_range, batch_size_range = None, psi_star = 0, 
                     this_stop_iter.append(np.inf)
                     this_time.append(np.inf)
                     this_obj.append(np.inf)
+                    this_alpha = np.nan
             
             # set as CONVERGED if all repetiitions converged
             CONVERGED[k,l] = np.all(~np.isinf(this_stop_iter))
@@ -141,11 +143,12 @@ def do_grid_run(f, phi, step_size_range, batch_size_range = None, psi_star = 0, 
             NITER[k,l] = np.mean(this_stop_iter)
             
             # TO DO: fix if run into exception
-            ALPHA[l] = P.info["step_sizes"][-1]
+            ALPHA[l] = this_alpha
     
     CONVERGED = CONVERGED.astype(bool)     
     
     assert np.all(~np.isinf(RTIME) == CONVERGED), "Runtime and convergence arrays are incosistent!"
+    assert np.all(~np.isnan(ALPHA)), "actual step size not available"
     
     results = {'step_size': ALPHA, 'batch_size': BATCH, 'objective': OBJ, 'runtime': RTIME,\
                'n_iter': NITER, 'converged': CONVERGED, 'solver': solver}

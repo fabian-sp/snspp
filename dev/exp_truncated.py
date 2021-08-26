@@ -33,13 +33,12 @@ x_sk = sk.coef_.copy().squeeze()
 psi_star = f.eval(x_sk) + phi.eval(x_sk)
 print("Optimal value: ", psi_star)
 
-#%% solve with truncated SGD
+#%% solve with vanilla SGD
 
-params_sgd = {'n_epochs': 300, 'batch_size': 10, 'alpha': 20., 'truncate': True}
+params_sgd = {'n_epochs': 600, 'batch_size': 50, 'alpha': 1e-1, 'beta': 0.6, 'style': 'vanilla'}
 
 P = problem(f, phi, tol = 1e-5, params = params_sgd, verbose = True, measure = True)
 P.solve(solver = 'sgd')
-
 
 #P.plot_path()
 
@@ -47,7 +46,7 @@ print("Objective value: ", f.eval(P.x) + phi.eval(P.x))
 
 #%% solve with truncated SGD (COMPOSITE)
 
-params_sgd = {'n_epochs': 300, 'batch_size': 10, 'alpha': 20., 'truncate': False}
+params_sgd = {'n_epochs': 600, 'batch_size': 10, 'alpha': 1., 'style': 'polyak'}
 
 P1 = problem(f, phi, tol = 1e-5, params = params_sgd, verbose = True, measure = True)
 P1.solve(solver = 'sgd')
@@ -56,6 +55,7 @@ P1.plot_objective(runtime = False, psi_star = psi_star, log_scale = True)
 #P1.plot_path()
 
 print("Objective value: ", f.eval(P1.x) + phi.eval(P1.x))
+
 #%%
 fig, ax = plt.subplots()
 
@@ -64,7 +64,7 @@ P1.plot_objective(ax = ax, runtime = False, psi_star = psi_star, log_scale = Tru
 
 #%%
 
-all_x = pd.DataFrame(np.vstack((xsol, P1.x, P.x, x_sk)).T, columns = ['true', 'truncated', 'truncated_composite', 'scikit'])
+all_x = pd.DataFrame(np.vstack((xsol, P.x, P1.x, x_sk)).T, columns = ['true', 'sgd', 'polyak', 'scikit'])
 
 
 #%%

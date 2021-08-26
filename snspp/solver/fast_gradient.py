@@ -29,16 +29,12 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
         
     # initialize all variables
     n = len(x0)
-    m = f.m.copy()
     assert np.all(f.m==1), "These implementations are restricted to the case m_i = 1, use SNSPP if not the case"
     N = len(f.m)
     A = f.A.astype('float64')
     assert n == A.shape[1], "wrong dimensions"
     
     x_t = x0.copy().astype('float64')
-    
-    # creates a vector with nrows like A in order to index the relevant A_i from A
-    dims = np.repeat(np.arange(N),m)
 
     # initialize object for storing all gradients 
     gradients = compute_gradient_table(f, x_t).astype('float64')
@@ -60,6 +56,14 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
             params['delta'] = 1e-12
         if 'batch_size' not in params.keys():    
             params['batch_size'] = max(int(f.N * 0.01), 1)
+    
+    elif solver == 'sgd':
+        if 'batch_size' not in params.keys():    
+            params['batch_size'] = max(int(f.N * 0.01), 1)
+        if 'style' not in params.keys(): 
+            params['style'] = 'vanilla'
+        
+        assert params['style'] in ['vanilla', 'polyak']
             
     #########################################################
     ## Step size + batch size
@@ -121,7 +125,9 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     #########################################################
     elif solver == 'sgd':
         alpha = alpha_0
-    
+        if 'beta' not in params.keys(): 
+            params['beta'] = 0.51
+            
     alpha = np.float64(alpha)  
     
     if verbose :
@@ -144,8 +150,8 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     elif solver == 'adagrad':
         x_t, x_hist, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, alpha, params['delta'] , params['n_epochs'], params['batch_size'])
     elif solver == 'sgd':
-        x_t, x_hist, step_sizes, eta = sgd_loop(f, phi, x_t, tol, alpha, params['n_epochs'], params['batch_size'], \
-                                                truncate = params['truncate'])
+        x_t, x_hist, step_sizes, eta = sgd_loop(f, phi, x_t, tol, alpha, params['beta'], params['n_epochs'], params['batch_size'], \
+                                                params['style'])
     else:
         raise NotImplementedError("Not a known solver option!")
     
@@ -349,62 +355,6 @@ def svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter):
     return x_t, x_hist, step_sizes, eta
 
 #%%
-# @njit()
-# def prox_svrg2(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter):
-    
-#     # initialize for diagnostics
-#     x_hist = List()
-#     step_sizes = List()
-    
-#     eta = 1e10
-#     x_old = x_t
-    
-#     S_iter = int(n_epochs*N / (batch_size*m_iter))
-    
-#     for s in np.arange(S_iter):
-          
-#         gradient_store = compute_xi_inner(f, x_t)
-#         g_tilde = (1/N) * (A*gradient_store).sum(axis=0)
-
-        
-#         for t in np.arange(m_iter):
-            
-#             #S = np.random.choice(a = np.arange(N), size = batch_size, replace = True)
-#             S = np.random.randint(low = 0, high = N, size = batch_size)
-        
-#             # compute the gradient
-#             v_t, A_t = compute_svrg_grad(f, x_t, S)
-#             #A_t = A[S,:]
-#             g_t = (1/batch_size) * (A_t*(v_t - gradient_store[S,:])).sum(axis=0) + g_tilde
-
-#             w_t = x_t - alpha*g_t
-#             x_t = phi.prox(w_t, alpha)
-        
-   
-#         # stop criterion
-#         eta = stop_scikit_saga(x_t, x_old)
-#         x_old = x_t
-#         # store in each outer iteration
-#         x_hist.append(x_t)    
-#         step_sizes.append(alpha)    
-
-
-#     return x_t, x_hist, step_sizes, eta
-
-# @njit()
-# def compute_svrg_grad(f, x, S):
-    
-#     vals = np.zeros((len(S),1))
-#     A_S = np.zeros((len(S), len(x)))
-    
-#     for i in np.arange(len(S)):
-#         A_i = np.ascontiguousarray(f.A[S[i],:]).reshape(1,-1)
-#         vals[i,:] = f.g(A_i @ x, S[i])
-#         A_S[i,:] = A_i
-        
-#     return vals, A_S
-
-#%%
 @njit()
 def batch_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, batch_size):
     
@@ -460,3 +410,60 @@ def batch_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, batch_si
             step_sizes.append(alpha)
         
     return x_t, x_hist, step_sizes, eta
+
+#%%
+# @njit()
+# def prox_svrg2(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter):
+    
+#     # initialize for diagnostics
+#     x_hist = List()
+#     step_sizes = List()
+    
+#     eta = 1e10
+#     x_old = x_t
+    
+#     S_iter = int(n_epochs*N / (batch_size*m_iter))
+    
+#     for s in np.arange(S_iter):
+          
+#         gradient_store = compute_xi_inner(f, x_t)
+#         g_tilde = (1/N) * (A*gradient_store).sum(axis=0)
+
+        
+#         for t in np.arange(m_iter):
+            
+#             #S = np.random.choice(a = np.arange(N), size = batch_size, replace = True)
+#             S = np.random.randint(low = 0, high = N, size = batch_size)
+        
+#             # compute the gradient
+#             v_t, A_t = compute_svrg_grad(f, x_t, S)
+#             #A_t = A[S,:]
+#             g_t = (1/batch_size) * (A_t*(v_t - gradient_store[S,:])).sum(axis=0) + g_tilde
+
+#             w_t = x_t - alpha*g_t
+#             x_t = phi.prox(w_t, alpha)
+        
+   
+#         # stop criterion
+#         eta = stop_scikit_saga(x_t, x_old)
+#         x_old = x_t
+#         # store in each outer iteration
+#         x_hist.append(x_t)    
+#         step_sizes.append(alpha)    
+
+
+#     return x_t, x_hist, step_sizes, eta
+
+# @njit()
+# def compute_svrg_grad(f, x, S):
+    
+#     vals = np.zeros((len(S),1))
+#     A_S = np.zeros((len(S), len(x)))
+    
+#     for i in np.arange(len(S)):
+#         A_i = np.ascontiguousarray(f.A[S[i],:]).reshape(1,-1)
+#         vals[i,:] = f.g(A_i @ x, S[i])
+#         A_S[i,:] = A_i
+        
+#     return vals, A_S
+
