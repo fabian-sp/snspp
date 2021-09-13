@@ -1,3 +1,16 @@
+"""
+@author: Fabian Schaipp
+
+This runs the L1-Logistic Regression experiment on the Gisette dataset.
+For this to run, download the dataset. Then convert the .txt file to a .npy file by running the function (see snspp.data_generation.py)
+
+X, y = load_from_txt('gisette')
+
+The returned arrays need to be saved in the directory 'data/gisette_X.npy' and 'data/gisette_y.npy' using
+
+np.save('data/gisette_X.npy', X)
+
+"""
 import sys
 
 if len(sys.argv) > 1:
@@ -37,8 +50,6 @@ end = time.time()
 print(f"Computing time: {end-start} sec")
 
 x_sk = sk.coef_.copy().squeeze()
-
-#(np.sign(predict(X_test, x_sk)) == np.sign(y_test)).sum() / len(y_test)
 
 psi_star = f.eval(x_sk) + phi.eval(x_sk)
 print("psi(x*) = ", psi_star)

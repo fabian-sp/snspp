@@ -6,10 +6,8 @@ import numpy as np
 import pandas as pd
 
 from sklearn.datasets import fetch_openml
-from sklearn.datasets import fetch_rcv1
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.utils import check_random_state
 
 import scipy.special as sp
 from sklearn.preprocessing import PolynomialFeatures
@@ -23,6 +21,7 @@ from .tstudent import tstudent_loss
 ############################################################################################
 ### Synthetic data
 ############################################################################################
+
 def standardize(A):   
     # standardize columns of A
     M = A - A.mean(axis=0)
@@ -87,6 +86,8 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., k
     noise: std. deviation of Gaussian noise added to measurements b
     kappa: if not None, A is created such that is has condition sqrt(kappa)
     """
+    np.random.seed(1234)
+    
     if block:
         m = np.random.randint(low = 3, high = 10, size = N)
     else:
@@ -127,7 +128,8 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = 1., dist
     b \in{-1,1}
     noise = probability of flipping b after generation --> the closer noise is to 1, the nosier the problem becomes
     """
-    #np.random.seed(1234)
+    np.random.seed(1234)
+    
     N_test = max(100,int(N*0.1))
     A = create_A(N+N_test, n, kappa = kappa, dist = dist)
         
@@ -146,7 +148,6 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = 1., dist
         assert noise <= 1
         flip = np.random.binomial(n=1, p = noise, size = N+N_test)
         flip = (1 - flip * 2)      
-        #print("Number of lables flipped: ", (f==-1).sum())      
         # flip signs (f in {-1,1})
         b = b * flip
      
@@ -158,7 +159,6 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = 1., dist
     f = logistic_loss(A[:N,:],b[:N])
     
     ##### TEST SET ############
-    
     A_test = A[N:,:]
     b_test = b[N:]
     
@@ -223,11 +223,8 @@ def get_mnist(lambda1 = 0.02, train_size = .8, scale = True):
     
     assert np.all(np.isin(y,[-1,1]))
     
-    #random_state = check_random_state(0)
-    #permutation = random_state.permutation(X.shape[0])
     X = X.astype('float64')
     y = y.astype('float64')
-    #X = X.reshape((X.shape[0], -1))
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
                                                         random_state = 12345)
@@ -243,6 +240,8 @@ def get_mnist(lambda1 = 0.02, train_size = .8, scale = True):
     return f, phi, X_train, y_train, X_test, y_test
 
 def get_gisette(lambda1 = 0.02, train_size = .8):
+    # download from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#gisette
+    
     X = np.load('data/gisette_X.npy')
     y = np.load('data/gisette_y.npy')
     
@@ -256,13 +255,14 @@ def get_gisette(lambda1 = 0.02, train_size = .8):
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
                                                         random_state = 1234)
     
-    
     phi = L1Norm(lambda1) 
     f = logistic_loss(X_train, y_train)
         
     return f, phi, X_train, y_train, X_test, y_test
 
 def get_sido(lambda1 = 0.02, train_size = .8):
+    # download from http://www.causality.inf.ethz.ch/challenge.php?page=datasets
+    
     X = np.loadtxt('data/sido0/sido0_train.data')
     y = np.loadtxt('data/sido0/sido0_train.targets')
     
@@ -276,20 +276,19 @@ def get_sido(lambda1 = 0.02, train_size = .8):
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
                                                         random_state = 1234)
     
-    
     phi = L1Norm(lambda1) 
     f = logistic_loss(X_train, y_train)
         
     return f, phi, X_train, y_train, X_test, y_test
 
-#%% REGRESSION
+############################################################################################
+################## REGRESSION
 
 def get_triazines(lambda1 = 0.01, train_size = .8, v = 1, poly = 0, noise = 0):
-    
+    # dowloand from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/regression/triazines_scale
     assert v > 0
     
-    X,y = load_from_txt('triazines')
-    
+    X,y = load_from_txt('triazines') 
     y += noise*np.random.standard_t(v, size = len(y))
     
     X = X.astype('float64')
@@ -305,30 +304,24 @@ def get_triazines(lambda1 = 0.01, train_size = .8, v = 1, poly = 0, noise = 0):
     f = tstudent_loss(X_train, y_train, v=v)
     
     return f, phi, X_train, y_train, X_test, y_test
+    
+#%% for loading libsvm data from .txt-file
 
-def get_cpusmall(lambda1 = 0.05, train_size = .8, v = 1, poly = 0, noise = 0):
-    
-    assert v > 0
-    
-    X,y = load_from_txt('cpusmall')
-    y += noise*np.random.standard_t(v, size = len(y))
-    
-    X = X.astype('float64')
-    y = y.astype('float64')
-    
-    if poly > 0:
-        X = poly_expand(X, d=poly)
-    
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
-                                                        random_state = 1234)
-    
-    phi = L1Norm(lambda1) 
-    f = tstudent_loss(X_train, y_train, v=v)
-    
-    return f, phi, X_train, y_train, X_test, y_test
-    
-# for loading libsvm data from .txt
 def load_from_txt(name):
+    """
+    Parameters
+    ----------
+    name : str
+        name of the .txt file, e.g. 'gisette'.
+
+    Returns
+    -------
+    X : array
+        input features.
+    y : array
+        response/class labels.
+
+    """
     with open(f'data/{name}.txt', 'r') as f:
             
         data = []
