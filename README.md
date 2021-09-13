@@ -46,7 +46,7 @@ Methods:
 Attributes:
 * `name`: name of `phi`. For the l1-norm, some computations are simplified and thus this can be useful.
 
-Note that many common regularizers, e.g the l1/l2-norm or combinations of it, the proximal operator as well as its subdifferential can be computed in closed form.
+A detailled documentation of how the above methods are intended is given for `L1Norm` in `snspp/helper/regz`. Note that many common regularizers, e.g the l1/l2-norm or combinations of it, the proximal operator as well as its subdifferential can be computed in closed form.
 
 ### Examples
 
