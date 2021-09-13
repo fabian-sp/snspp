@@ -22,12 +22,12 @@ We list the methods and attributes that these objects need to have for the algor
 
 ### Loss functions `f`
 Methods:
-* `eval(self, x)`: evaluates the function at `x`.
-* `f(self, x, i)`: evaluates `f_i` at `x`.
-* `g(self, x, i)`: evaluates the gradient of `f_i` at `x`.
-* `fstar(self, x, i)`, `gstar(self, x, i)` and `Hstar(self, x, i)`: evaluates the Fenchel conjugate (its gradient/ its Hessian) of `f_i` at `x`.
+* `eval(x)`: evaluates the function at `x`.
+* `f(x, i)`: evaluates `f_i` at `x`.
+* `g(x, i)`: evaluates the gradient of `f_i` at `x`.
+* `fstar(x, i)`, `gstar(x, i)` and `Hstar(x, i)`: evaluates the Fenchel conjugate (its gradient/ its Hessian) of `f_i` at `x`.
 
-Note that `fstar` (and `gstar`, `Hstar`) evaluate each sample `i` individually. In many applications, `f_i` is identical for every `i` (up to data input). In this case, the performance is improved if vectorized methods are implemented, i.e. `fstar_vec(self, x, S)` which computes the conjugate at x for a batch of indices `S`. See `snspp/helper/lasso` for an example. 
+Note that `fstar` (and `gstar`, `Hstar`) evaluate each sample `i` individually. In many applications, `f_i` is identical for every `i` (up to data input). In this case, the performance is improved if vectorized methods are implemented, i.e. `fstar_vec(x, S)` which computes the conjugate at x for a batch of indices `S`. See `snspp/helper/lasso` for an example. 
 The algorithm detects automatically if vectorized methods are implemented, hence the function called for solving is the same in both cases.
 
 
@@ -38,10 +38,10 @@ Attributes:
 ### Regularizer `phi`
 
 Methods:
-* `eval(self, x)`: evaluates the function at `x`.
-* `prox(self, x, alpha)`: evaluates the proximal operator of `alpha*phi` at `x`.
-* `jacobian_prox(self, x, alpha)`: computes an element of the subdifferential of the proximal operator of `alpha*phi` at `x`.
-* `moreau(self, x, alpha)`: evaluates the moreau envelope of `alpha*phi` at `x`.
+* `eval(x)`: evaluates the function at `x`.
+* `prox(x, alpha)`: evaluates the proximal operator of `alpha*phi` at `x`.
+* `jacobian_prox(x, alpha)`: computes an element of the subdifferential of the proximal operator of `alpha*phi` at `x`.
+* `moreau(x, alpha)`: evaluates the moreau envelope of `alpha*phi` at `x`.
 
 Attributes:
 * `name`: name of `phi`. For the l1-norm, some computations are simplified and thus this can be useful.
