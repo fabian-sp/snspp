@@ -9,7 +9,9 @@ import warnings
 
 
 def Ueval(xi_sub, f, phi, x, alpha, S, subA, hat_d):
-    
+    """
+    This functions evaluates the objective of the subproblem :math:`\mathcal{U}` at the point ``xi_sub``.
+    """
     sample_size = len(S)
     
     z = x - (alpha/sample_size) * (subA.T @ xi_sub) + hat_d
@@ -24,7 +26,47 @@ def Ueval(xi_sub, f, phi, x, alpha, S, subA, hat_d):
     
 def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, reduce_variance = False, xi_tilde = None, full_g = None, verbose = True):
     """
+    This function solves the subproblem in each SNSPP iteration. 
+    The stopping criterion is reached when the norm of the gradient is below ``newton_params['eps']`` or when the maximum number of iterations is reached.
     
+    Parameters
+    ----------
+    f : loss function object
+        This object describes the function :math:`f(x)`. 
+        See ``snspp/helper/loss1.py`` for an example.
+    phi : regularization function object
+        This object describes the function :math:`\phi(x)`.
+        See ``snspp/helper/regz.py`` for an example.
+    x : array of shape (n,)
+        Current iterate.
+    xi : array of shape (N,)
+        Current dual iterates.
+    alpha : float
+        Step size.
+    A : array of shape (N,n)
+        Input matrix.
+    S : array
+        Mini-batch (should be sorted and has possibly duplicate entries).
+    newton_params : dict, optional
+        Parameters for the semismooth Newton method for the subproblem. See ``get_default_newton_params()`` in ``/spp_solver.py`` for the default values.
+    reduce_variance : boolean, optional
+        Whether variance reduction is used. The default is False.
+    xi_tilde : array of shape (N,), optional
+        If VR is enabled, this is given by :math:`\nabla f_i(A_i \tilde{x}),~~ i=1,\dots,N`.
+    full_g : array of shape (n,), optional
+        If VR is enabled, this is given by :math:`\nabla f(\tilde{x})`. It is precomputed once for every inner loop in ``stochastic_proximal_point()``.
+    verbose : boolean, optional
+        Verbosity for the subproblem. The default is True.
+
+    Returns
+    -------
+    new_x : array of shape (n,)
+        New primal iterate.
+    xi : array of shape (N,)
+        Updated dual iterates.
+    info : dict
+        Information on the convergence of the subproblem.
+
     """
     if xi_tilde is None or full_g is None:
         assert not reduce_variance
@@ -122,7 +164,7 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
         sub_iter += 1
         
     if not converged and verbose:
-        print(f"WARNING: reached max. iter in semismooth Newton with residual {residual[-1]}")
+        warnings.warn(f"Reached max. iter in semismooth Newton with residual {residual[-1]}")
     
     
     # update xi variable

@@ -64,7 +64,7 @@ def compute_xi_inner(f, x):
     return vals
             
 
-# needed for initializing in SAGA (only used once)
+# needed for initializing in SAGA (only used once and outside of main loop)
 def compute_gradient_table(f, x):
     """
     computes a table of gradients at point x
@@ -172,7 +172,7 @@ def compute_x_mean_hist(iterates):
     return res
 
 ############################################################################################
-### Linear ALgebra stuff
+### Linear Algebra stuff
 ############################################################################################
 
 def block_diag(arrs):

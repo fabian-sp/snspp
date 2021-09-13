@@ -6,13 +6,15 @@ from setuptools import setup, find_packages
 NAME = 'snspp'
 DESCRIPTION = 'Algorithms for stochastic composite optimization'
 URL = 'https://github.com/fabian-sp/snspp'
-EMAIL = 'fabian.schaipp@tum.de'
+EMAIL = 'fabian.schaipp@gmail.com'
 AUTHOR = 'Fabian Schaipp'
 REQUIRES_PYTHON = '>=3.7.0'
 VERSION = "0.1.0"
 
 # What packages are required for this module to be executed?
-REQUIRED = []
+REQUIRED = [
+    "numpy>=1.18.1", "numba>=0.49.0", "pandas", "scipy",
+    "matplotlib", "seaborn"]
 
 # What packages are optional?
 EXTRAS = {

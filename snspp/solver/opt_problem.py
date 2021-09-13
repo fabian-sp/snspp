@@ -18,15 +18,12 @@ from .fast_gradient import stochastic_gradient
 color_dict = {"svrg": "#002A4A", "saga": "#FFB03B", "batch saga": "#BF842C", "adagrad" : "#B64926", \
               "snspp": "#468966", "default": "#142B40"}
 
-##FFF0A5
-##8E2800
 
 class problem:
     
     def __init__(self, f, phi, x0 = None, tol = 1e-3, params = dict(), verbose = True, measure = True):
         self.f = f
         self.phi = phi
-        #self.A = f.A.copy()
         self.n = f.A.shape[1]
         
         self.x0 = x0
@@ -218,7 +215,6 @@ class problem:
                 ax.set_yscale('log')
                 
                 ax.set_ylim(1e-6,1e1)
-                #ax2.set_ylim(0,1.1)
                 ax.grid(ls = '-', lw = .5)
                 
                 if l%ncol !=0:

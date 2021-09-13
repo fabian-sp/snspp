@@ -3,7 +3,7 @@ author: Fabian Schaipp
 """
 
 import numpy as np
-from ..helper.utils import block_diag, compute_x_mean, stop_scikit_saga
+from ..helper.utils import block_diag, stop_scikit_saga
 from ..helper.utils import compute_full_xi, compute_x_mean_hist
 from .spp_easy import solve_subproblem_easy
 
@@ -12,11 +12,13 @@ import time
 import warnings
 
 #%% functions for creating the samples S_k
+
 def sampler(N, size, replace = False):
     """
     samples a subset of {1,..,N} with/without replacement
     """
     assert size <= N, "specified a bigger sample size than N"
+    
     S = np.random.choice(a = np.arange(N).astype('int'), p = (1/N) * np.ones(N), \
                          size = int(size), replace = replace)
     
@@ -59,49 +61,6 @@ def cyclic_batch(N, batch_size, t):
     
     np.sort(S)
     return S
-
-def determine_alpha(f, batch_size, m_iter, Lb = None):
-    """
-    calculates the step size given by the theory.
-    
-    v1-v5: free positive parameters
-    m_iter: number of iter after which we compute full gradient
-    Lb: can be given as a (lower bound) estimate from sampling
-    """
-    v1 = 1
-    v2 = 1
-    v3 = 1
-    v4 = 1
-    v5 = 1e-3
-    theta = 1
-    
-    gbar = f.weak_conv(np.arange(f.N)).max()
-    normA = np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A)
-    
-    if f.name == 'squared':
-        L_i = 2.  
-    elif f.name == 'logistic':
-        L_i = .25 
-    elif f.name == 'tstudent':
-        L_i =  (2/f.v)
-    else:
-        raise ValueError("Unknown function, cannot determine Lipschitz constant!")
-    
-    L = (1/f.N) * np.sum(normA**2 * L_i)
-    if Lb is None:
-        Lb = (normA**2).max() * L_i
-        
-    Cb = gbar*(normA**2).max()
-    
-    s1 = 2*(theta+L) + v3*Cb
-    s2 = v5*Lb**2*m_iter*(m_iter+1)/(2*batch_size) + v4*Lb + L
-    s3 = Lb/v4 + 1/v5 + Cb/v3 + 1/v1 + 1/v2
-        
-    
-    print(s1,s2,s3)
-    
-    return 1/max(s1,s2,s3)
-    
     
 #%% functions for parameter handling
 
@@ -127,15 +86,80 @@ def check_newton_params(newton_params):
 #%% main functions
 
 def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
+    """
+    This implements the semismooth Newton stochastic proximal point method (SNSPP) for solving 
+    
+    .. math::
+        \min{x} f(x) + \phi(x)
+        
+    where 
+    
+    .. math::
+        f(x) = \frac{1}{N} \sum_{i=1}^{N} f_i(A_i x)
+    
+    For the case that each :math:`f_i` maps to :math:`\mathbb{R}`, the implementation becomes much easier and efficient.
+    In this case, the dual variables :math:`\\xi` wil be an array of length :math:`N`.
+    In the more general case, :math:`\\xi` is a dictionary with keys ``1,..,N``.
+    
+    SNSPP is executed with constant step sizes if variance reduction is allowed, i.e. ``params['reduce_variance']==True``.
+    If variance reduction is disabled, the step sizes are chosen as 
+    
+    .. math::
+        \alpha_k = \frac{\alpha}{0.51^k}
+    
+    where ::math::`\alpha` can be specified in ``params``.
+    
+    Parameters
+    ----------
+    f : loss function object
+        This object describes the function :math:`f(x)`. 
+        See ``snspp/helper/loss1.py`` for an example.
+    phi : regularization function object
+        This object describes the function :math:`\phi(x)`.
+        See ``snspp/helper/regz.py`` for an example.
+    x0 : array of shape (n,)
+        Starting point. If no better guess is available, use zero.
+    xi : array or dict, optional
+        Starting values for the dual variables :math:`\\xi`. The default is None.
+    tol : float, optional
+        Tolerance for the stopping criterion (sup-norm of relative change in the coefficients). The default is 1e-3.
+    params : dict, optional
+        Dictionary with all parameters. Possible keys:
+            
+            * ``max_iter``: int, maximal number of iteartions.
+            * ``batch_size``: int, batch size.
+            * ``alpha``: float, step size of the algorithm.
+            * ``reduce_variance``: boolean. Whether to use VR or not (default = True).
+            * ``m_iter``: int, number of iteration for inner loop (if VR is used).
+            * ``newton_params``: parameters for the semismooth Newton method for the subproblem. See ``get_default_newton_params`` for the default values.
+            * ``sample_style``: str, can be 'constant' or 'fast_increasing'. THe latter will increase the batch size over the first iterations which can be more efficient.
+            
+    verbose : boolean, optional
+        Verbosity. The default is False.
+    measure : boolean, optional
+        Whether to evaluate the objective after each itearion. The default is False.
+        For the experiments, needs to be set to ``True``, for actual computation it is recommended to set this to ``False``.
+        
+
+    Returns
+    -------
+    x_t : array of shape (n,)
+        Final iterate.
+    x_mean : None
+        Potentially, we could return the mean of the iterates. This is currently disabled.
+    info : dict
+        Information on objective, runtime and subproblem convergence.
+    
+    """    
     
     A = f.A.copy()
     n = len(x0)
-    assert n == A.shape[1], "wrong dimensions"
+    assert n == A.shape[1], f"Starting point has wrong dimension {n} while matrices A_i have dimension {A.shape[1]}."
     
     # boolean to check whether we are in a simple setting --> faster computations (see file spp_easy.py)
     is_easy = (f.m.max() == 1) and callable(getattr(f, "fstar_vec", None))
     if verbose:
-        print("Use vectorized impl. of conjugates?", is_easy)
+        print("Have easy version of the subproblem?", is_easy)
     
     x_t = x0.copy()
     
@@ -212,9 +236,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     # variance reduction
     if params['reduce_variance']:
         xi_tilde = None; full_g = None
-        vr_min_iter = 0; this_iter_vr = False
+        vr_min_iter = 0
     else:
-        xi_tilde = None; full_g = None
+        xi_tilde = None; full_g = None; this_iter_vr = False
     
             
     hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s\t%10s\t%10s"
@@ -337,10 +361,19 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     return x_t, x_mean, info
 
-#%% solve subproblem (an alternative version (vectorized but less general) is in spp_easy.py)
+#%% 
+# SOLVE SUBPROBLEM
+###################### 
+#
+# The below functions are only used in the most general case. For most real-world applications, we have that each f_i maps to R and thus we can simplify compuatations.
+# For the simpler case, the analogous functions are in ./spp_easy.py.
+#
+######################
 
 def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, hat_d):
-    
+    """
+    This functions evaluates the objective of the subproblem :math:`\mathcal{U}` at the point ``xi_sub``.
+    """
     sample_size = len(S)
     
     z = x - (alpha/sample_size) * (subA.T @ xi_stack) + hat_d
@@ -358,8 +391,7 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, hat_d):
 
 def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce_variance = False, xi_tilde = None, verbose = True):
     """
-    m: vector with all dimensions m_i, i = 1,..,N
-    
+    see ``solve_subproblem_easy()`` in ``./spp_easy.py`` for a documentation.
     """
     if newton_params is None:
         newton_params = get_default_newton_params()
@@ -497,7 +529,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         sub_iter += 1
         
     if not converged and verbose:
-        print(f"WARNING: reached max. iter in semismooth Newton with residual {residual[-1]}")
+        warnings.warn(f"Reached max. iter in semismooth Newton with residual {residual[-1]}")
     
     # update primal iterate
     z = x - (alpha/sample_size) * (subA.T @ xi_stack) + hat_d
@@ -509,5 +541,45 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
     
     return new_x, xi, info
 
-
+# def determine_alpha(f, batch_size, m_iter, Lb = None):
+#     """
+#     calculates the step size given by the theory.
+    
+#     v1-v5: free positive parameters
+#     m_iter: number of iter after which we compute full gradient
+#     Lb: can be given as a (lower bound) estimate from sampling
+#     """
+#     v1 = 1
+#     v2 = 1
+#     v3 = 1
+#     v4 = 1
+#     v5 = 1e-3
+#     theta = 1
+    
+#     gbar = f.weak_conv(np.arange(f.N)).max()
+#     normA = np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A)
+    
+#     if f.name == 'squared':
+#         L_i = 2.  
+#     elif f.name == 'logistic':
+#         L_i = .25 
+#     elif f.name == 'tstudent':
+#         L_i =  (2/f.v)
+#     else:
+#         raise ValueError("Unknown function, cannot determine Lipschitz constant!")
+    
+#     L = (1/f.N) * np.sum(normA**2 * L_i)
+#     if Lb is None:
+#         Lb = (normA**2).max() * L_i
+        
+#     Cb = gbar*(normA**2).max()
+    
+#     s1 = 2*(theta+L) + v3*Cb
+#     s2 = v5*Lb**2*m_iter*(m_iter+1)/(2*batch_size) + v4*Lb + L
+#     s3 = Lb/v4 + 1/v5 + Cb/v3 + 1/v1 + 1/v2
+        
+    
+#     print(s1,s2,s3)
+    
+#     return 1/max(s1,s2,s3)
     
