@@ -236,9 +236,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     # variance reduction
     if params['reduce_variance']:
         xi_tilde = None; full_g = None
-        vr_min_iter = 0; this_iter_vr = False
+        vr_min_iter = 0
     else:
-        xi_tilde = None; full_g = None
+        xi_tilde = None; full_g = None; this_iter_vr = False
     
             
     hdr_fmt = "%4s\t%10s\t%10s\t%10s\t%10s\t%10s\t%10s"
@@ -361,10 +361,19 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     return x_t, x_mean, info
 
-#%% solve subproblem (an alternative version (vectorized but less general) is in spp_easy.py)
+#%% 
+# SOLVE SUBPROBLEM
+###################### 
+#
+# The below functions are only used in the most general case. For most real-world applications, we have that each f_i maps to R and thus we can simplify compuatations.
+# For the simpler case, the analogous functions are in ./spp_easy.py.
+#
+######################
 
 def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, hat_d):
-    
+    """
+    This functions evaluates the objective of the subproblem :math:`\mathcal{U}` at the point ``xi_sub``.
+    """
     sample_size = len(S)
     
     z = x - (alpha/sample_size) * (subA.T @ xi_stack) + hat_d
@@ -382,8 +391,7 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, hat_d):
 
 def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce_variance = False, xi_tilde = None, verbose = True):
     """
-    m: vector with all dimensions m_i, i = 1,..,N
-    
+    see ``solve_subproblem_easy()`` in ``./spp_easy.py`` for a documentation.
     """
     if newton_params is None:
         newton_params = get_default_newton_params()
@@ -521,7 +529,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         sub_iter += 1
         
     if not converged and verbose:
-        print(f"WARNING: reached max. iter in semismooth Newton with residual {residual[-1]}")
+        warnings.warn(f"Reached max. iter in semismooth Newton with residual {residual[-1]}")
     
     # update primal iterate
     z = x - (alpha/sample_size) * (subA.T @ xi_stack) + hat_d

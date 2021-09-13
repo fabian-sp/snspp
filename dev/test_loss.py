@@ -4,7 +4,7 @@ import os
 os.chdir(os.path.pardir)
 
 
-from snspp.helper.loss import huber_loss
+from snspp.helper.loss2 import huber_loss
 
 
 n = 100
