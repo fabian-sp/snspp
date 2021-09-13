@@ -23,8 +23,8 @@ We list the methods and attributes that these objects need to have for the algor
 ### Loss functions `f`
 Methods:
 * `eval(x)`: evaluates the function at `x`.
-* `f(x, i)`: evaluates `f_i` at `x`.
-* `g(x, i)`: evaluates the gradient of `f_i` at `x`.
+* `f(x, i)`: evaluates `f_i` at `x`. Note that here `x` is typically a scalar.
+* `g(x, i)`: evaluates the derivative/gradient of `f_i` at `x`.
 * `fstar(x, i)`, `gstar(x, i)` and `Hstar(x, i)`: evaluates the Fenchel conjugate (its gradient/ its Hessian) of `f_i` at `x`.
 
 Note that `fstar` (and `gstar`, `Hstar`) evaluate each sample `i` individually. In many applications, `f_i` is identical for every `i` (up to data input). In this case, the performance is improved if vectorized methods are implemented, i.e. `fstar_vec(x, S)` which computes the conjugate at x for a batch of indices `S`. See `snspp/helper/lasso` for an example. 
