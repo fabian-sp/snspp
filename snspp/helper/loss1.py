@@ -32,10 +32,12 @@ class lsq:
         f(x) = \frac{1}{N} \|Ax-b\|^2.
         
     Hence, we have
+    
     .. math:
         f_i(z) = |z-b_i|^2.
         
     The convex conjugate is given by
+    
     .. math:
         f_i^\ast(z) = \frac{1}{4} \|z\|^2 + b_i\cdot z.
     
@@ -53,7 +55,7 @@ class lsq:
     
     def eval(self, x):
         """
-        Method for evaluating ``f(x)``.
+        Method for evaluating :math:`f(x)`.
         The array ``x`` should be the same type as A (we use float64).
         """
         return (1/self.N) * np.linalg.norm(self.A@x - self.b)**2      
@@ -64,13 +66,13 @@ class lsq:
     
     def f(self, x, i):
         """
-        Method for evaluating ``f_i(x)``.
+        Method for evaluating :math:`f_i(x)`.
         """
         return (x - self.b[i])**2
     
     def g(self, x, i):
         """
-        Method for evaluating ``f'_i(x)``.
+        Method for evaluating :math:`f_i'(x)`.
         """
         return 2 * (x - self.b[i])
     
@@ -115,10 +117,12 @@ class logistic_loss:
     where :math:`a_i` is the i-th row of :math:`A`.
     
     Using the row-wise multiplication :math`b \cdot A`, we have
+    
     .. math:
         f_i(z) = \ln(1+\exp(-z))
         
     The convex conjugate is given by
+    
     .. math:
         f_i^\ast(z) = \begin{cases} -z\ln(-z)+ (1+z)\ln(1+z) \quad z\in (-1,0)\\ +\infty \quad text{else} \end{cases}.
     
@@ -135,7 +139,7 @@ class logistic_loss:
     
     def eval(self, x):
         """
-        Method for evaluating ``f(x)``.
+        Method for evaluating :math:`f(x)`.
         """
         z = self.A@x
         y = np.log(1+ np.exp(-z)).sum()        
@@ -143,13 +147,13 @@ class logistic_loss:
 
     def f(self, x, i):
         """
-        Method for evaluating ``f_i(x)``.
+        Method for evaluating :math:`f_i(x)`.
         """
         return np.log(1+np.exp(-x))   
     
     def g(self, x, i):
         """
-        Method for evaluating ``f'_i(x)``.
+        Method for evaluating :math:`f_i'(x)`.
         """
         return -1/(1+np.exp(x)) 
      
