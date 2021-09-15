@@ -20,8 +20,57 @@ color_dict = {"svrg": "#002A4A", "saga": "#FFB03B", "batch saga": "#BF842C", "ad
 
 
 class problem:
+    """
+    A class for composite optimization problems of the form 
     
+    .. math::
+        \min{x} f(x) + \phi(x)
+        
+    where 
+    
+    .. math::
+        f(x) = \frac{1}{N} \sum_{i=1}^{N} f_i(A_i x)
+        
+    For the case that each :math:`f_i` has scalar output, several classical algorithms are implemented:
+        
+        * SGD: mini-batch stochastic proximal gradient descent.
+        * SAGA: available also with mini-batches using ``solver = batch saga``.
+        * SVRG
+        * ADAGRAD
+        * SNSPP: stochastic proximal point (with or without variance reduction).
+        
+    """
     def __init__(self, f, phi, x0 = None, tol = 1e-3, params = dict(), verbose = True, measure = True):
+        """
+
+        Parameters
+        ----------
+        f : loss function object
+            This object describes the function :math:`f(x)`. 
+            See ``snspp/helper/loss1.py`` for an example.
+        phi : regularization function object
+            This object describes the function :math:`\phi(x)`. See ``snspp/helper/regz.py`` for an example.
+        x0 : array, optional
+            Starting point. The default is zero.
+        tol : float, optional
+             Tolerance for the stopping criterion (sup-norm of relative change in the coefficients). The default is 1e-3.
+        params : dict, optional
+            Parameters for the solver. Common keys are
+            
+            * `alpha` : Step size. For variance reduced method constant step sizes are used. Otherwise, it decays as ``(alpha/k**beta)```with ``beta > 1/2``. 
+            * `batch_size` : Size of the mini-batch.
+            
+        verbose : boolean, optional
+            Verbosity. The default is True.
+        measure : boolean, optional
+            Whether to evaluate the objective after each itearion. The default is False.
+            For the experiments, needs to be set to ``True``, for actual computation it is recommended to set this to ``False``.
+
+        Returns
+        -------
+        None.
+
+        """
         self.f = f
         self.phi = phi
         self.n = f.A.shape[1]
@@ -54,6 +103,9 @@ class problem:
         return
     
     def plot_path(self, ax = None, runtime = True, mean = False, xlabel = True, ylabel = True):
+        """
+        Plots the coefficients of the iterates.
+        """
         plt.rcParams["font.family"] = "serif"
         plt.rcParams['font.size'] = 10
         
@@ -92,7 +144,6 @@ class problem:
         if ylabel:
             ax.set_ylabel('Coefficient')
         ax.set_title(self.solver + title_suffix)
-        
         #ax.grid(axis = 'y', ls = '-', lw = .5)
         
         return
@@ -182,7 +233,9 @@ class problem:
     #%% newton convergence
 
     def plot_subproblem(self, stepsize = True, M = 20, start = 0):
-        
+        """
+        For SNSPP, this plots the convergence of the semismooth Newton method for solving the subproblems.
+        """
         assert self.solver == "snspp"
         
         plt.rcParams["font.family"] = "serif"
