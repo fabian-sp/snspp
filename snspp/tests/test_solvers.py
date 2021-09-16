@@ -124,3 +124,21 @@ def test_snspp_novr():
     P = template_test(f, phi, x_sk, params, 'snspp', assert_objective = False)
     
     return
+
+
+def test_snspp_general():
+    
+    l1 = 1e-3
+    
+    xsol, A, b, f, phi, A_test, b_test = lasso_test(N, n, k, l1, block = True, dist = 'ortho')
+    params = {'max_iter' : 500, 'alpha': 15., 'reduce_variance': False}
+    
+    P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
+    P.solve(solver = 'snspp')
+    
+    sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-6, max_iter = 10000, selection = 'cyclic')
+    sk.fit(A,b)
+
+    #np.linalg.norm(P.x - sk.coef_)
+    
+    return
