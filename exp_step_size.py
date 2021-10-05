@@ -20,13 +20,13 @@ l1 = 0.01
 
 EPOCHS = 50 # epochs for SAGA/SVRG
 MAX_ITER = 150 # max iter for SNSPP
-PSI_TOL = 1e-5 # relative accuracy for objective to be considered as converged
+PSI_TOL = 1e-3 # relative accuracy for objective to be considered as converged
 N_REP = 5 # number of repetitions for each setting
-Y_MAX = 1. # y-value of not-converged stepsizes
+Y_MAX = 10. # y-value of not-converged stepsizes
 
 #%%
 
-problem_type = "logreg"
+problem_type = "gisette"
 
 if problem_type == "lasso":
     xsol, A, b, f, phi, _, _ = lasso_test(N, n, k, l1, block = False, noise = 0.1, kappa = 15., dist = 'ortho')
@@ -35,7 +35,7 @@ elif problem_type == "logreg":
     xsol, A, b, f, phi, _, _ = logreg_test(N, n, k, lambda1 = l1, noise = 0.1, kappa = 10., dist = 'ortho')
 
 elif problem_type == "gisette":
-    f, phi, A, b, _, _ = get_gisette(lambda1 = 0.01)
+    f, phi, A, b, _, _ = get_gisette(lambda1 = 0.05)
 
 initialize_solvers(f, phi)
 
@@ -84,6 +84,7 @@ def do_grid_run(f, phi, step_size_range, batch_size_range = None, psi_star = 0, 
     K,L = GRID_A.shape
         
     RTIME = np.ones_like(GRID_A) * np.inf
+    RT_STD = np.ones_like(GRID_A) * np.inf
     OBJ = np.ones_like(GRID_A) * np.inf
     CONVERGED = np.zeros_like(GRID_A)
     NITER = np.ones_like(GRID_A) * np.inf
@@ -140,6 +141,7 @@ def do_grid_run(f, phi, step_size_range, batch_size_range = None, psi_star = 0, 
             CONVERGED[k,l] = np.all(~np.isinf(this_stop_iter))
             OBJ[k,l] = np.mean(this_obj)
             RTIME[k,l] = np.mean(this_time)
+            RT_STD[k,l] = np.std(this_time)
             NITER[k,l] = np.mean(this_stop_iter)
             
             # TO DO: fix if run into exception
@@ -150,7 +152,7 @@ def do_grid_run(f, phi, step_size_range, batch_size_range = None, psi_star = 0, 
     assert np.all(~np.isinf(RTIME) == CONVERGED), "Runtime and convergence arrays are incosistent!"
     assert np.all(~np.isnan(ALPHA)), "actual step size not available"
     
-    results = {'step_size': ALPHA, 'batch_size': BATCH, 'objective': OBJ, 'runtime': RTIME,\
+    results = {'step_size': ALPHA, 'batch_size': BATCH, 'objective': OBJ, 'runtime': RTIME, 'runtime_std': RT_STD,\
                'n_iter': NITER, 'converged': CONVERGED, 'solver': solver}
     
     return results
@@ -186,33 +188,33 @@ def plot_result(res, ax = None, color = 'k', replace_inf = 10.):
 
     return ax
 
-#%%
+#%% SNSPP
 
 solver_params = {'max_iter': MAX_ITER, 'sample_style': 'constant', 'reduce_variance': True}
 
-step_size_range = np.logspace(-2,3,20)
+step_size_range = np.logspace(-2,2,20)
 batch_size_range = np.array([0.01,0.05,0.1])
 
 res_spp = do_grid_run(f, phi, step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
                       psi_tol = PSI_TOL, n_rep = N_REP, solver = "snspp", solver_params = solver_params)
 
 
-#%%
+#%% SAGA
 
 solver_params = {'n_epochs': EPOCHS}
 
-step_size_range = np.logspace(-2,3,20)
+step_size_range = np.logspace(-1,3,20)
 batch_size_range = None
 
 res_saga = do_grid_run(f, phi, step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
                        psi_tol = PSI_TOL, n_rep = N_REP, solver = "saga", solver_params = solver_params)
 
 
-#%%
+#%% SVRG
 
 solver_params = {'n_epochs': EPOCHS}
 
-step_size_range = np.logspace(-2,3,20)
+step_size_range = np.logspace(-1,4,20)
 batch_size_range = np.array([0.01,0.05,0.1])
 
 res_svrg = do_grid_run(f, phi, step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
