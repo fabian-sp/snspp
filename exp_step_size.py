@@ -10,23 +10,28 @@ from snspp.helper.data_generation import lasso_test, logreg_test, get_gisette
 from snspp.solver.opt_problem import problem, color_dict
 from snspp.experiments.experiment_utils import initialize_solvers
 
-N = 2000
-n = 1000
-k = 20
-l1 = 0.01
+
+problem_type = "gisette"
+
+# parameter setup
+if problem_type == "gisette":
+    l1 = 0.05
+    EPOCHS = 50 # epochs for SAGA/SVRG
+    MAX_ITER = 150 # max iter for SNSPP
+    PSI_TOL = 1e-3 # relative accuracy for objective to be considered as converged
+
+elif problem_type in ["logreg", "lasso"]:
+    N = 2000; n = 1000; k = 20
+    l1 = 0.01
+    EPOCHS = 50 # epochs for SAGA/SVRG
+    MAX_ITER = 150 # max iter for SNSPP
+    PSI_TOL = 1e-3 # relative accuracy for objective to be considered as converged
 
 
-# setup of parameters
-
-EPOCHS = 50 # epochs for SAGA/SVRG
-MAX_ITER = 150 # max iter for SNSPP
-PSI_TOL = 1e-3 # relative accuracy for objective to be considered as converged
 N_REP = 5 # number of repetitions for each setting
 Y_MAX = 10. # y-value of not-converged stepsizes
 
-#%%
-
-problem_type = "gisette"
+#%% 
 
 if problem_type == "lasso":
     xsol, A, b, f, phi, _, _ = lasso_test(N, n, k, l1, block = False, noise = 0.1, kappa = 15., dist = 'ortho')
@@ -35,7 +40,7 @@ elif problem_type == "logreg":
     xsol, A, b, f, phi, _, _ = logreg_test(N, n, k, lambda1 = l1, noise = 0.1, kappa = 10., dist = 'ortho')
 
 elif problem_type == "gisette":
-    f, phi, A, b, _, _ = get_gisette(lambda1 = 0.05)
+    f, phi, A, b, _, _ = get_gisette(lambda1 = l1)
 
 initialize_solvers(f, phi)
 
@@ -237,16 +242,14 @@ plot_result(res_spp, ax = ax, color = color_dict["snspp"], replace_inf = Y_MAX)
 plot_result(res_saga, ax = ax, color = color_dict["saga"], replace_inf = Y_MAX)
 plot_result(res_svrg, ax = ax, color = color_dict["svrg"], replace_inf = Y_MAX)
 
-
 annot_y = Y_MAX * 0.9 # y value for annotation
 
 ax.hlines(annot_y , ax.get_xlim()[0], ax.get_xlim()[1], 'grey', ls = '-')
 ax.annotate("no convergence", (ax.get_xlim()[0]*1.1, annot_y+0.1), color = "grey", fontsize = 14)
 
 if save:
-    fig.savefig(f'data/plots/exp_other/step_size_tuning_{problem_type}.pdf', dpi = 300)
+    fig.savefig(f'data/plots/exp_other/stability_{problem_type}_l1_{l1}.pdf', dpi = 300)
 
-    
 #%% plot objective of last iterate vs step size
 
 # fig, ax = plt.subplots()

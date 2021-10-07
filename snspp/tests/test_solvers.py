@@ -136,9 +136,11 @@ def test_snspp_general():
     P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
     P.solve(solver = 'snspp')
     
-    sk = Lasso(alpha = l1/2, fit_intercept = False, tol = 1e-6, max_iter = 10000, selection = 'cyclic')
+    sk = Lasso(alpha = l1*f.N/(2*f.A.shape[0]), fit_intercept = False, tol = 1e-8, max_iter = 10000, selection = 'cyclic')
     sk.fit(A,b)
 
-    #np.linalg.norm(P.x - sk.coef_)
+    obj1 = f.eval(P.x)+phi.eval(P.x)
+    obj2 = f.eval(sk.coef_)+phi.eval(sk.coef_)
+    assert_almost_equal(obj1, obj2, decimal = 4) 
     
     return
