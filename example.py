@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import time
 from sklearn.linear_model import Lasso, LogisticRegression
 
-from snspp.helper.data_generation import lasso_test, logreg_test, tstudent_test
+from snspp.helper.data_generation import lasso_test, logreg_test, tstudent_test, huber_test
 from snspp.solver.opt_problem import problem
 from snspp.helper.regz import Zero
 
@@ -18,14 +18,17 @@ from snspp.helper.regz import Zero
 N = 1000
 n = 50
 k = 5
-l1 = .01
+l1 = .001
 
 #xsol, A, b, f, phi, A_test, b_test = lasso_test(N, n, k, l1, block = False, noise = 0.1, kappa = 10., dist = 'ortho')
 
 xsol, A, b, f, phi, A_test, b_test = logreg_test(N, n, k, l1, noise = 0.1, kappa = 10., dist = 'ortho')
 
 #x, A, b, f, phi, A_test, b_test = tstudent_test(N, n, k, l1, v = 4, noise = 0.1, poly = 2, kappa = 10., dist = 'ortho')
-phi = Zero()
+
+xsol, A, b, f, phi, A_test, b_test = huber_test(N, n, k, l1, mu = 0.2, noise = 0.1, kappa = 10., dist = 'ortho')
+
+#phi = Zero()
 
 #%% solve with SSNSP
 

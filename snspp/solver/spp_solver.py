@@ -219,6 +219,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
             xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(f.m[i]) for i in np.arange(f.N)]))
         elif f.name == 'tstudent':
             xi = dict(zip(np.arange(f.N), [np.ones(f.m[i]) for i in np.arange(f.N)]))
+        elif f.name == 'huber':
+            xi = dict(zip(np.arange(f.N), [np.zeros(f.m[i]) for i in np.arange(f.N)]))
         else:
             xi = dict(zip(np.arange(f.N), [np.zeros(f.m[i]) for i in np.arange(f.N)]))
     
@@ -484,7 +486,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
             tmp += eps_reg * np.eye(tmp.shape[0])
 
         W = tmp + tmp2
-        assert not np.isnan(W).any(), "Something went wrong during construction of the Hessian"
+        assert not np.isnan(W).any(), "The Newton matrix contains NA entries, check f.Hstar."
     # step2: solve Newton system
             
         cg_tol = min(newton_params['eta'], np.linalg.norm(rhs)**(1+ newton_params['tau']))

@@ -15,6 +15,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from scipy.stats import ortho_group
 
 from .loss1 import lsq, block_lsq, logistic_loss
+from .loss2 import huber_loss
 from .regz import L1Norm
 from .tstudent import tstudent_loss
 
@@ -203,6 +204,43 @@ def poly_expand(A, d = 5):
     poly = PolynomialFeatures(d)
     return poly.fit_transform(A)
 
+def huber_test(N = 10, n = 20, k = 5, lambda1 = .1, mu = 1., noise = 0., kappa = 1., dist = 'ortho'):
+    """
+    generates data for a Huber regression problem with n variables and N samples, where solution has k non-zero entries
+    lambda1: regularization parameter of 1-norm
+    mu: parameter for the Huber function
+    block: if True, the A_i have different dimensions (>1 rows)
+    noise: std. deviation of Gaussian noise added to measurements b
+    kappa: if not None, A is created such that is has condition sqrt(kappa)
+    """
+    np.random.seed(1234)
+    
+    m = np.ones(N, dtype = 'int')
+    
+    A = create_A(m.sum(), n, kappa = kappa, dist = dist)
+    
+    # create true solution
+    x = np.random.randn(k) 
+    x = np.concatenate((x, np.zeros(n-k)))
+    np.random.shuffle(x)
+    
+    # create measurements
+    b = A @ x + noise*np.random.randn(m.sum())
+    
+    A = np.ascontiguousarray(A.astype('float64'))
+    b = b.astype('float64')
+    x = x.astype('float64')
+    
+    N_test = max(100,int(N*0.1))
+    A_test = create_A(N_test, n, kappa = kappa, dist = dist)
+    b_test = A_test @ x + noise*np.random.randn(N_test)
+    
+    
+    phi = L1Norm(lambda1) 
+    mu_arr = mu * np.ones(N) 
+    f = huber_loss(A, b, mu_arr)
+        
+    return x, A, b, f, phi, A_test, b_test
 #%%
 ############################################################################################
 ### Actual data - CLASSIFICATION
