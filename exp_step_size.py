@@ -6,7 +6,7 @@ import time
 from sklearn.linear_model import Lasso, LogisticRegression
 
 
-from snspp.helper.data_generation import lasso_test, logreg_test, get_gisette
+from snspp.helper.data_generation import lasso_test, logreg_test, get_gisette, get_mnist
 from snspp.solver.opt_problem import problem, color_dict
 from snspp.experiments.experiment_utils import initialize_solvers
 
@@ -17,11 +17,17 @@ problem_type = "gisette"
 if problem_type == "gisette":
     l1 = 0.05
     EPOCHS = 50 # epochs for SAGA/SVRG
+    MAX_ITER = 200 # max iter for SNSPP
+    PSI_TOL = 1e-3 # relative accuracy for objective to be considered as converged
+
+elif problem_type == "mnist":
+    l1 = 0.02
+    EPOCHS = 30 # epochs for SAGA/SVRG
     MAX_ITER = 150 # max iter for SNSPP
     PSI_TOL = 1e-3 # relative accuracy for objective to be considered as converged
 
 elif problem_type in ["logreg", "lasso"]:
-    N = 2000; n = 1000; k = 20
+    N = 100; n = 10; k = 5
     l1 = 0.01
     EPOCHS = 50 # epochs for SAGA/SVRG
     MAX_ITER = 150 # max iter for SNSPP
@@ -42,6 +48,9 @@ elif problem_type == "logreg":
 elif problem_type == "gisette":
     f, phi, A, b, _, _ = get_gisette(lambda1 = l1)
 
+elif problem_type == "mnist":
+    f, phi, A, b, _, _ = get_mnist(lambda1 = l1)
+
 initialize_solvers(f, phi)
 
 #%% solve with scikt or large max_iter to get psi_star
@@ -54,7 +63,7 @@ if problem_type == "lasso":
     psi_star = f.eval(xsol) + phi.eval(xsol)
     print("Optimal value: ", psi_star)
 
-elif problem_type in ["logreg", "gisette"]:
+elif problem_type in ["logreg", "gisette", "mnist"]:
     sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-20, \
                             solver = 'saga', max_iter = 200, verbose = 1)
     sk.fit(A, b)
@@ -162,10 +171,11 @@ def do_grid_run(f, phi, step_size_range, batch_size_range = None, psi_star = 0, 
     
     return results
 
-def plot_result(res, ax = None, color = 'k', replace_inf = 10.):
+def plot_result(res, ax = None, color = 'k', replace_inf = 10., sigma = 0.):
     
     K,L = res['runtime'].shape
     rt = res['runtime'].copy()
+    rt_std = res['runtime_std'].copy()
     
     if ax is None:
         fig, ax = plt.subplots(figsize = (7,5))
@@ -173,23 +183,30 @@ def plot_result(res, ax = None, color = 'k', replace_inf = 10.):
     colors = sns.light_palette(color, K+2, reverse = True)
     
     for k in np.arange(K):    
-        rt[k,:][~res['converged'][k,:]] = replace_inf   
+        rt[k,:][~res['converged'][k,:]] = replace_inf
+        rt_std[k,:][~res['converged'][k,:]] = 0 
         
         if K == 1:
             label = res['solver']
         else:
-            label = res['solver'] + ", " + rf"$b =  N \cdot$ {res['batch_size'][k]} "
+            label = res['solver'] + ", " + rf"$b =  N \cdot${res['batch_size'][k]} "
         
         ax.plot(res['step_size'], rt[k,:], c = colors[k], linestyle = '--', marker = 'o', markersize = 4,\
                 label = label)
+        
+        # add standard dev of runtime
+        if sigma > 0.:
+            ax.fill_between(res['step_size'], rt[k,:] - sigma*rt_std[k,:], rt[k,:] + sigma*rt_std[k,:],\
+                            color = colors[k], alpha = 0.5)
+            
     
-      
     ax.set_xlabel(r"Step size $\alpha$")    
     ax.set_ylabel(r"Runtime until convergence [sec]")    
     
     ax.set_xscale('log')
     #ax.set_yscale('log')
-    ax.legend()
+    ax.legend(loc = 'lower left', fontsize = 8)
+    ax.set_title(rf'Convergence = objective less than {1+PSI_TOL}$\psi^\ast$')
 
     return ax
 
@@ -198,7 +215,7 @@ def plot_result(res, ax = None, color = 'k', replace_inf = 10.):
 solver_params = {'max_iter': MAX_ITER, 'sample_style': 'constant', 'reduce_variance': True}
 
 step_size_range = np.logspace(-2,2,20)
-batch_size_range = np.array([0.01,0.05,0.1])
+batch_size_range = np.array([0.005,0.01,0.05])
 
 res_spp = do_grid_run(f, phi, step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
                       psi_tol = PSI_TOL, n_rep = N_REP, solver = "snspp", solver_params = solver_params)
@@ -220,7 +237,7 @@ res_saga = do_grid_run(f, phi, step_size_range, batch_size_range = batch_size_ra
 solver_params = {'n_epochs': EPOCHS}
 
 step_size_range = np.logspace(-1,4,20)
-batch_size_range = np.array([0.01,0.05,0.1])
+batch_size_range = np.array([0.005,0.01,0.05])
 
 res_svrg = do_grid_run(f, phi, step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
                        psi_tol = PSI_TOL, n_rep = N_REP, solver = "svrg", solver_params = solver_params)
@@ -236,16 +253,18 @@ plt.rc('text', usetex=True)
 
 #%%
 
+SIGMA = 1. # plot 2SIGMA band around the mean
+
 fig, ax = plt.subplots(figsize = (7,5))
 
-plot_result(res_spp, ax = ax, color = color_dict["snspp"], replace_inf = Y_MAX)
-plot_result(res_saga, ax = ax, color = color_dict["saga"], replace_inf = Y_MAX)
-plot_result(res_svrg, ax = ax, color = color_dict["svrg"], replace_inf = Y_MAX)
+plot_result(res_spp, ax = ax, color = color_dict["snspp"], replace_inf = Y_MAX, sigma = SIGMA)
+plot_result(res_saga, ax = ax, color = color_dict["saga"], replace_inf = Y_MAX, sigma = SIGMA)
+plot_result(res_svrg, ax = ax, color = color_dict["svrg"], replace_inf = Y_MAX, sigma = SIGMA)
 
 annot_y = Y_MAX * 0.9 # y value for annotation
 
 ax.hlines(annot_y , ax.get_xlim()[0], ax.get_xlim()[1], 'grey', ls = '-')
-ax.annotate("no convergence", (ax.get_xlim()[0]*1.1, annot_y+0.1), color = "grey", fontsize = 14)
+ax.annotate("no convergence", (ax.get_xlim()[0]*1.1, annot_y+0.3), color = "grey", fontsize = 14)
 
 if save:
     fig.savefig(f'data/plots/exp_other/stability_{problem_type}_l1_{l1}.pdf', dpi = 300)
