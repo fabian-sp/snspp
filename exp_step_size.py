@@ -11,7 +11,7 @@ from snspp.solver.opt_problem import problem, color_dict
 from snspp.experiments.experiment_utils import initialize_solvers
 
 
-problem_type = "gisette"
+problem_type = "mnist"
 
 # parameter setup
 if problem_type == "gisette":
@@ -191,7 +191,7 @@ def plot_result(res, ax = None, color = 'k', replace_inf = 10., sigma = 0.):
         else:
             label = res['solver'] + ", " + rf"$b =  N \cdot${res['batch_size'][k]} "
         
-        ax.plot(res['step_size'], rt[k,:], c = colors[k], linestyle = '--', marker = 'o', markersize = 4,\
+        ax.plot(res['step_size'], rt[k,:], c = colors[k], linestyle = '-', marker = 'o', markersize = 4,\
                 label = label)
         
         # add standard dev of runtime

@@ -23,16 +23,13 @@ from snspp.experiments.experiment_utils import params_tuner, plot_multiple, init
                                                 eval_test_set, plot_test_error, plot_multiple_error, runtime_infos
 
 #%% load data
-#f, phi, X_train, y_train, X_test, y_test = get_cpusmall(lambda1 = l1, train_size = .99, v = v, poly = 0, noise = 0.)
-
-setup = 2
 
 if setup == 1:
 
-    l1 = 0.01
+    l1 = 0.001
     v = 1.
     poly = 0
-    n = 5000; N = 1000; k = 10
+    n = 5000; N = 6000; k = 20
     noise = 0.1
     
 elif setup == 2:
