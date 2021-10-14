@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from snspp.solver.opt_problem import problem, color_dict
+from snspp.solver.opt_problem import problem
 from snspp.helper.data_generation import get_mnist
 from snspp.experiments.experiment_utils import params_tuner, plot_multiple, plot_multiple_error, eval_test_set, initialize_solvers
 
@@ -107,7 +107,6 @@ for k in range(K):
 
 #%% solve with ADAGRAD (multiple times)
 
-K = 20
 allQ1 = list()
 for k in range(K):
     
@@ -117,7 +116,6 @@ for k in range(K):
 
 #%% solve with SVRG (multiple times)
 
-K = 20
 allQ2 = list()
 for k in range(K):
     
@@ -127,7 +125,6 @@ for k in range(K):
     
 #%% solve with SSNSP (multiple times, VR)
 
-K = 20
 allP = list()
 for k in range(K):
     
