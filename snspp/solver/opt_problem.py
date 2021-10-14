@@ -18,6 +18,8 @@ from .fast_gradient import stochastic_gradient
 color_dict = {"svrg": "#002A4A", "saga": "#FFB03B", "batch saga": "#BF842C", "adagrad" : "#B64926", \
               "snspp": "#468966", "default": "#142B40"}
 
+marker_dict = {"svrg": "<", "saga": ">", "batch saga": ">", "adagrad" : "D", \
+          "snspp": "o", "default": "+"}
 
 class problem:
     """
@@ -148,7 +150,7 @@ class problem:
         
         return
     
-    def plot_objective(self, ax = None, runtime = True, num_eval = False, label = None, marker = 'o', markersize = 3, lw = 0.4, ls = '-', psi_star = 0, log_scale = False):
+    def plot_objective(self, ax = None, runtime = True, num_eval = False, label = None, markersize = 3, lw = 0.4, ls = '-', psi_star = 0, log_scale = False):
         """
         
         Parameters
@@ -205,8 +207,11 @@ class problem:
         
         try:
             c = color_dict[label]
+            marker = marker_dict[label]
         except:
             c = color_dict["default"]
+            marker = marker_dict["default"]
+            
         pt = ax.plot(x,y, marker = marker, ls = ls, label = label, markersize = markersize, c = c)
         
         ax.legend()

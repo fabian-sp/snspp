@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 
-from ..solver.opt_problem import problem, color_dict
+from ..solver.opt_problem import problem, color_dict, marker_dict
 
 plt.rcParams["font.family"] = "serif"
 plt.rcParams['font.size'] = 12
@@ -48,9 +48,11 @@ def plot_multiple(allP, ax = None, label = "snspp", runtime = True, name = None,
         
     try:
         c = color_dict[label]
+        marker = marker_dict[label]
     except:
         c = color_dict["default"]
-    
+        marker = marker_dict["default"]
+
     ax.plot(all_xax, all_mean, marker = marker, ls = ls, markersize = markersize, color = c, label = name)
     
     # plot band of standard deviation
@@ -75,7 +77,7 @@ def plot_multiple(allP, ax = None, label = "snspp", runtime = True, name = None,
     return
 
 
-def plot_test_error(P, L, ax = None, runtime = True, name = None, marker = 'o', markersize = 3, ls = '-', lw = 0.4, log_scale = True):
+def plot_test_error(P, L, ax = None, runtime = True, name = None, markersize = 3, ls = '-', lw = 0.4, log_scale = True):
     
     assert len(P.info["iterates"]) == len(L), "the vector of losses has a different length than the stored iterates"
     
@@ -91,8 +93,10 @@ def plot_test_error(P, L, ax = None, runtime = True, name = None, marker = 'o', 
         
     try:
         c = color_dict[P.solver]
+        marker = marker_dict[P.solver]
     except:
         c = color_dict["default"]
+        marker = marker_dict["default"]
         
     if ax is None:
         fig, ax = plt.subplots()
@@ -115,7 +119,7 @@ def plot_test_error(P, L, ax = None, runtime = True, name = None, marker = 'o', 
     
     return
 
-def plot_multiple_error(all_loss, allP, ax = None, label = "snspp", runtime = True, name = None, marker = 'o', markersize = 3, ls = '-', lw = 0.4, log_scale = False, sigma = 0):
+def plot_multiple_error(all_loss, allP, ax = None, label = "snspp", runtime = True, name = None, markersize = 3, ls = '-', lw = 0.4, log_scale = False, sigma = 0):
     
     if name is None:
         name = label
@@ -139,8 +143,10 @@ def plot_multiple_error(all_loss, allP, ax = None, label = "snspp", runtime = Tr
      
     try:
         c = color_dict[label]
+        marker = marker_dict[label]
     except:
         c = color_dict["default"]
+        marker = marker_dict["default"]
     
     ax.plot(all_xax, y, marker = marker, ls = ls, lw = lw, markersize = markersize, color = c, label = name)
     

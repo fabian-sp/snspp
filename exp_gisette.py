@@ -171,15 +171,15 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 3}
 
-#Q.plot_objective(ax = ax, ls = '--', marker = '<', **kwargs)
-#Q1.plot_objective(ax = ax, ls = '-.', marker = '>', **kwargs)
-#Q2.plot_objective(ax = ax, ls = '-.', marker = '<', **kwargs)
+#Q.plot_objective(ax = ax, ls = '--', **kwargs)
+#Q1.plot_objective(ax = ax, ls = '-.', **kwargs)
+#Q2.plot_objective(ax = ax, ls = '-.', **kwargs)
 #P.plot_objective(ax = ax, **kwargs)
 
 
-plot_multiple(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
-plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
-plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
+plot_multiple(allQ, ax = ax , label = "saga", ls = '--', **kwargs)
+plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', **kwargs)
+plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', **kwargs)
 plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 
 
@@ -236,9 +236,9 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
 kwargs = {"log_scale": False, "lw": 0.7, "markersize": 3}
 
-plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
-plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
-plot_multiple_error(all_loss_Q2, allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
+plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', **kwargs)
+plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', **kwargs)
+plot_multiple_error(all_loss_Q2, allQ2, ax = ax , label = "svrg", ls = '--', **kwargs)
 plot_multiple_error(all_loss_P, allP, ax = ax , label = "snspp", **kwargs)
 
 ax.set_xlim(-.1, 6)
