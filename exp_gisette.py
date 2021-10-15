@@ -244,6 +244,7 @@ plot_multiple_error(allQ2, ax = ax , label = "svrg", ls = '--', **kwargs)
 plot_multiple_error(allP, ax = ax , label = "snspp", **kwargs)
 
 ax.set_xlim(-.1, 6)
+ax.set_ylim(0.32, 0.42)
 ax.legend(fontsize = 10)
 
 fig.subplots_adjust(top=0.96,

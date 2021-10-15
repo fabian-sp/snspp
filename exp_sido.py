@@ -250,7 +250,12 @@ plot_multiple_error(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **
 plot_multiple_error(allP, ax = ax , label = "snspp", **kwargs)
 
 ax.set_xlim(-.1, 4)
-#ax.set_ylim(all_loss_P.min()-1e-3, all_loss_P.min()+1e-2)
+
+if l1 == 0.01:
+    ax.set_ylim(0.104, 0.114)
+else:
+    ax.set_ylim(0.086, 0.096)
+    
 ax.legend(fontsize = 10)
 
 fig.subplots_adjust(top=0.96,
