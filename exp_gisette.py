@@ -27,7 +27,8 @@ import pandas as pd
 
 from snspp.solver.opt_problem import problem
 from snspp.helper.data_generation import get_gisette
-from snspp.experiments.experiment_utils import params_tuner, plot_multiple, plot_multiple_error, initialize_solvers, eval_test_set
+from snspp.experiments.experiment_utils import params_tuner, plot_multiple, plot_multiple_error, initialize_solvers, eval_test_set,\
+                                                convert_to_dict
 
 
 from sklearn.linear_model import LogisticRegression
@@ -149,21 +150,36 @@ for k in range(K):
     P_k.solve(solver = 'snspp')
     allP.append(P_k)
 
-#%% solve with SSNSP (multiple times, no VR)
 
-# params1 = params_snspp.copy()
-# params1["reduce_variance"] = False
+#%% eval test set loss
 
-# allP1 = list()
-# for k in range(K):
+def logreg_loss(x, A, b):
+    z = A@x
+    return np.log(1 + np.exp(-b*z)).mean()
+
+kwargs2 = {"A": X_test, "b": y_test}
+
+for P in allP: P.info['test_error'] = eval_test_set(X = P.info["iterates"], loss = logreg_loss, **kwargs2)
+for Q in allQ: Q.info['test_error'] = eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2)
+for Q in allQ1: Q.info['test_error'] = eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2)
+for Q in allQ2: Q.info['test_error'] = eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2)
     
-#     P_k = problem(f, phi, tol = 1e-9, params = params1, verbose = False, measure = True)
-#     P_k.solve(solver = 'snspp')
-#     allP1.append(P_k)
+#all_loss_P = np.vstack([eval_test_set(X = P.info["iterates"], loss = logreg_loss, **kwargs2) for P in allP])
+#all_loss_Q = np.vstack([eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2) for Q in allQ])
+#all_loss_Q1 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2) for Q in allQ1])
+#all_loss_Q2 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2) for Q in allQ2])
 
 #%% coeffcient frame
 
 all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q1.x)).T, columns = ['scikit', 'spp', 'saga', 'adagrad'])
+
+res_to_save = dict()
+res_to_save.update(convert_to_dict(allQ))
+res_to_save.update(convert_to_dict(allQ1))
+res_to_save.update(convert_to_dict(allQ2))
+res_to_save.update(convert_to_dict(allP))
+
+np.save('data/output/exp_gisette.npy', res_to_save)
 
 #%% objective plot
 
@@ -217,32 +233,17 @@ if save:
     fig.savefig(f'data/plots/exp_gisette/coeff.pdf', dpi = 300)
 
 
-#%% eval test set loss
-
-def logreg_loss(x, A, b):
-    z = A@x
-    return np.log(1 + np.exp(-b*z)).mean()
-
-kwargs2 = {"A": X_test, "b": y_test}
-
-all_loss_P = np.vstack([eval_test_set(X = P.info["iterates"], loss = logreg_loss, **kwargs2) for P in allP])
-all_loss_Q = np.vstack([eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2) for Q in allQ])
-all_loss_Q1 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2) for Q in allQ1])
-all_loss_Q2 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2) for Q in allQ2])
-
-
 #%%
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
 kwargs = {"log_scale": False, "lw": 0.7, "markersize": 3}
 
-plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', **kwargs)
-plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', **kwargs)
-plot_multiple_error(all_loss_Q2, allQ2, ax = ax , label = "svrg", ls = '--', **kwargs)
-plot_multiple_error(all_loss_P, allP, ax = ax , label = "snspp", **kwargs)
+plot_multiple_error(allQ, ax = ax , label = "saga", ls = '--', **kwargs)
+plot_multiple_error(allQ1, ax = ax , label = "adagrad", ls = '--', **kwargs)
+plot_multiple_error(allQ2, ax = ax , label = "svrg", ls = '--', **kwargs)
+plot_multiple_error(allP, ax = ax , label = "snspp", **kwargs)
 
 ax.set_xlim(-.1, 6)
-ax.set_ylim(all_loss_P.min()-1e-3, all_loss_P.min()+1e-1)
 ax.legend(fontsize = 10)
 
 fig.subplots_adjust(top=0.96,

@@ -77,16 +77,14 @@ def plot_multiple(allP, ax = None, label = "snspp", runtime = True, name = None,
     return
 
 
-def plot_test_error(P, L, ax = None, runtime = True, name = None, markersize = 3, ls = '-', lw = 0.4, log_scale = True):
-    
-    assert len(P.info["iterates"]) == len(L), "the vector of losses has a different length than the stored iterates"
+def plot_test_error(P, ax = None, runtime = True, name = None, markersize = 3, ls = '-', lw = 0.4, log_scale = True):
     
     if runtime:
         x = P.info["runtime"].cumsum()
     else:
         x = P.info["evaluations"].cumsum() / P.f.N
         
-    y = L.copy()
+    y = P.info["test_error"].copy()
     
     if name is None:
         name = P.solver
@@ -119,7 +117,7 @@ def plot_test_error(P, L, ax = None, runtime = True, name = None, markersize = 3
     
     return
 
-def plot_multiple_error(all_loss, allP, ax = None, label = "snspp", runtime = True, name = None, markersize = 3, ls = '-', lw = 0.4, log_scale = False, sigma = 0):
+def plot_multiple_error(allP, ax = None, label = "snspp", runtime = True, name = None, markersize = 3, ls = '-', lw = 0.4, log_scale = False, sigma = 0):
     
     if name is None:
         name = label
@@ -133,6 +131,7 @@ def plot_multiple_error(all_loss, allP, ax = None, label = "snspp", runtime = Tr
     for k in range(K):
         assert allP[k].solver == label, "solver attribute and label are not matching!"
     
+    all_loss = np.vstack([allP[k].info["test_error"] for k in range(K)])
     y = all_loss.mean(axis=0)
     all_std = all_loss.std(axis=0)
     
@@ -161,6 +160,8 @@ def plot_multiple_error(all_loss, allP, ax = None, label = "snspp", runtime = Tr
     else:
         ax.set_xlabel(r"Evaluations/$N$", fontsize = 12)
     
+    
+    #ax.set_ylim(all_loss.min()-1e-3, all_loss.min()+1e-1)
     ax.set_ylabel(r"Test error", fontsize = 12)
     
     if log_scale:
@@ -355,4 +356,26 @@ def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = N
             
     return res, current_best, alpha_range
 
+
+#%%
+##########################################################################
+## Store and read
+##########################################################################
+
+def convert_to_dict(allP):
+    all_res = dict()   
+    label = allP[0].solver
+    K = len(allP)
+    
+    for k in range(K):
+        assert allP[k].solver == label, "Mismatch within the list of problems!"
+    
+    for k in range(K):
+        all_res[k] = dict()
+        all_res[k]['objective'] = allP[k].info['objective']
+        all_res[k]['runtime'] = allP[k].info['runtime']
+        if 'test_error' in allP[k].info.keys():
+            all_res[k]['test_error'] = allP[k].info['test_error']
         
+    return {label: all_res}
+     

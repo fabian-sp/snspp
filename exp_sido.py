@@ -19,7 +19,7 @@ import pandas as pd
 from snspp.solver.opt_problem import problem
 from snspp.helper.data_generation import get_sido
 from snspp.experiments.experiment_utils import params_tuner, plot_multiple, plot_multiple_error, initialize_solvers, eval_test_set,\
-                                                plot_test_error
+                                                convert_to_dict
 
 
 from sklearn.linear_model import LogisticRegression
@@ -162,9 +162,30 @@ for k in range(K):
     allP.append(P_k)
 
 
+#%% eval test set loss
+
+def logreg_loss(x, A, b):
+    z = A@x
+    return np.log(1 + np.exp(-b*z)).mean()
+
+kwargs2 = {"A": X_test, "b": y_test}
+
+for P in allP: P.info['test_error'] = eval_test_set(X = P.info["iterates"], loss = logreg_loss, **kwargs2)
+for Q in allQ: Q.info['test_error'] = eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2)
+for Q in allQ1: Q.info['test_error'] = eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2)
+for Q in allQ2: Q.info['test_error'] = eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2)
+    
 #%% coeffcient frame
 
-all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q2.x)).T, columns = ['scikit', 'spp', 'saga', 'svrg'])
+all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q1.x)).T, columns = ['scikit', 'spp', 'saga', 'adagrad'])
+
+res_to_save = dict()
+res_to_save.update(convert_to_dict(allQ))
+res_to_save.update(convert_to_dict(allQ1))
+res_to_save.update(convert_to_dict(allQ2))
+res_to_save.update(convert_to_dict(allP))
+
+np.save(f'data/output/exp_sido_l1_{l1}.npy', res_to_save)
 
 #%% objective plot
 
@@ -218,46 +239,18 @@ plt.subplots_adjust(hspace = 0.33)
 if save:
     fig.savefig(f'data/plots/exp_sido/l1_{l1}/coeff.pdf', dpi = 300)
 
-
-#%% eval test set loss
-
-def logreg_loss(x, A, b):
-    z = A@x
-    return np.log(1 + np.exp(-b*z)).mean()
-
-kwargs2 = {"A": X_test, "b": y_test}
-
-# eval loss of single problem
-L_P = eval_test_set(X = P.info["iterates"], loss = logreg_loss, **kwargs2)
-L_Q = eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2)
-L_Q1 = eval_test_set(X = Q1.info["iterates"], loss = logreg_loss, **kwargs2)
-L_Q2 = eval_test_set(X = Q2.info["iterates"], loss = logreg_loss, **kwargs2)
-
-
-all_loss_P = np.vstack([eval_test_set(X = P.info["iterates"], loss = logreg_loss, **kwargs2) for P in allP])
-all_loss_Q = np.vstack([eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2) for Q in allQ])
-all_loss_Q1 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2) for Q in allQ1])
-all_loss_Q2 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2) for Q in allQ2])
-
-
 #%%
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
 kwargs = {"log_scale": False, "lw": 0.7, "markersize": 3}
 
-#plot_test_error(Q, L_Q,  ax = ax,  marker = '<', **kwargs)
-#plot_test_error(Q1, L_Q1,  ax = ax,  marker = '<', **kwargs)
-#plot_test_error(Q2, L_Q2,  ax = ax,  marker = '<', **kwargs)
-#plot_test_error(P, L_P,  ax = ax,  marker = 'o', **kwargs)
-
-
-plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
-plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
-plot_multiple_error(all_loss_Q2, allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
-plot_multiple_error(all_loss_P, allP, ax = ax , label = "snspp", **kwargs)
+plot_multiple_error(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
+plot_multiple_error(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
+plot_multiple_error(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
+plot_multiple_error(allP, ax = ax , label = "snspp", **kwargs)
 
 ax.set_xlim(-.1, 4)
-ax.set_ylim(all_loss_P.min()-1e-3, all_loss_P.min()+1e-2)
+#ax.set_ylim(all_loss_P.min()-1e-3, all_loss_P.min()+1e-2)
 ax.legend(fontsize = 10)
 
 fig.subplots_adjust(top=0.96,
@@ -269,8 +262,6 @@ fig.subplots_adjust(top=0.96,
 
 if save:
     fig.savefig(f'data/plots/exp_sido/l1_{l1}/error.pdf', dpi = 300)
-
-
 
 #%%
 def predict(A,x):

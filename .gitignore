@@ -1,5 +1,6 @@
 *.pyc
 *.egg-info
-*.npy
+gisette_X.npy
+gisette_y.npy
 ssnal_elastic
 data/sido0

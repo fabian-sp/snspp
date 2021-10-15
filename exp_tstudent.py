@@ -20,7 +20,7 @@ import time
 from snspp.helper.data_generation import tstudent_test
 from snspp.solver.opt_problem import problem
 from snspp.experiments.experiment_utils import params_tuner, plot_multiple, initialize_solvers,\
-                                                eval_test_set, plot_test_error, plot_multiple_error, runtime_infos
+                                                eval_test_set, plot_test_error, plot_multiple_error, runtime_infos, convert_to_dict
 
 #%% load data
 
@@ -161,6 +161,38 @@ for k in range(K):
     P_k.solve(solver = 'snspp')
     allP.append(P_k)
 
+#%% Test set evaluation
+
+def tstudent_loss(x, A, b, v):
+    z = A@x - b
+    return 1/A.shape[0] * np.log(1+ z**2/v).sum()
+
+kwargs2 = {"A": X_test, "b": y_test, "v": f.v}
+
+# eval loss of single problem
+P.info['test_error'] = eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2)
+Q.info['test_error'] = eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2)
+Q1.info['test_error'] = eval_test_set(X = Q1.info["iterates"], loss = tstudent_loss, **kwargs2)
+Q2.info['test_error'] = eval_test_set(X = Q2.info["iterates"], loss = tstudent_loss, **kwargs2)
+
+
+for P in allP: P.info['test_error'] = eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2)
+for Q in allQ: Q.info['test_error'] = eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2)
+for Q in allQ1: Q.info['test_error'] = eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2)
+for Q in allQ2: Q.info['test_error'] = eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2)
+    
+#%% coeffcient frame
+
+all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x, Q2.x)).T, columns = ['sol', 'spp', 'saga', 'adagrad', 'svrg'])
+
+res_to_save = dict()
+res_to_save.update(convert_to_dict(allQ))
+res_to_save.update(convert_to_dict(allQ1))
+res_to_save.update(convert_to_dict(allQ2))
+res_to_save.update(convert_to_dict(allP))
+
+np.save(f'data/output/exp_tstudent_N_{N}_n_{n}.npy', res_to_save)
+
 #%% plot objective
 
 # use the last objective of SAGA as surrogate optimal value / plot only psi(x^k)
@@ -200,13 +232,7 @@ fig.subplots_adjust(top=0.96,
 
 if save:
     fig.savefig(f'data/plots/exp_tstudent/obj_N_{N}_n_{n}.pdf', dpi = 300)
-    
-#%% coeffcient frame + runtime infos
 
-all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x, Q2.x)).T, columns = ['sol', 'spp', 'saga', 'adagrad', 'svrg'])
-
-if save:
-    rt_info = runtime_infos([allQ, allQ1, allQ2, allP], 'exp_tstudent', suffix = f'_N_{N}_n_{n}')
 
 #%% coeffcient plot
 
@@ -226,25 +252,6 @@ plt.subplots_adjust(hspace = 0.33)
 if save:
     fig.savefig(f'data/plots/exp_tstudent/coeff_N_{N}_n_{n}.pdf', dpi = 300)
     
-#%% Test set evaluation
-
-def tstudent_loss(x, A, b, v):
-    z = A@x - b
-    return 1/A.shape[0] * np.log(1+ z**2/v).sum()
-
-kwargs2 = {"A": X_test, "b": y_test, "v": f.v}
-
-# eval loss of single problem
-L_P = eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2)
-L_Q = eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2)
-L_Q1 = eval_test_set(X = Q1.info["iterates"], loss = tstudent_loss, **kwargs2)
-L_Q2 = eval_test_set(X = Q2.info["iterates"], loss = tstudent_loss, **kwargs2)
-
-# eval loss of multiple problems
-all_loss_P = np.vstack([eval_test_set(X = P.info["iterates"], loss = tstudent_loss, **kwargs2) for P in allP])
-all_loss_Q = np.vstack([eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2) for Q in allQ])
-all_loss_Q1 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2) for Q in allQ1])
-all_loss_Q2 = np.vstack([eval_test_set(X = Q.info["iterates"], loss = tstudent_loss, **kwargs2) for Q in allQ2])
 
 
 #%%
@@ -253,15 +260,15 @@ fig, ax = plt.subplots(1,1,  figsize = (4.5, 3.5))
 
 kwargs = {"log_scale": False, "lw": 0.4, "markersize": 1.7}
 
-#plot_test_error(Q, L_Q,  ax = ax, **kwargs)
-#plot_test_error(Q1, L_Q1,  ax = ax, **kwargs)
-#plot_test_error(Q2, L_Q2,  ax = ax, **kwargs)
-#plot_test_error(P, L_P,  ax = ax, **kwargs)
+#plot_test_error(Q, ax = ax, **kwargs)
+#plot_test_error(Q1, ax = ax, **kwargs)
+#plot_test_error(Q2, ax = ax, **kwargs)
+#plot_test_error(P, ax = ax, **kwargs)
 
-plot_multiple_error(all_loss_Q, allQ, ax = ax , label = "saga", ls = '--', **kwargs)
-plot_multiple_error(all_loss_Q1, allQ1, ax = ax , label = "adagrad", ls = '--', **kwargs)
-plot_multiple_error(all_loss_Q2, allQ2, ax = ax , label = "svrg", ls = '--', **kwargs)
-plot_multiple_error(all_loss_P, allP, ax = ax , label = "snspp", **kwargs)
+plot_multiple_error(allQ, ax = ax , label = "saga", ls = '--', **kwargs)
+plot_multiple_error(allQ1, ax = ax , label = "adagrad", ls = '--', **kwargs)
+plot_multiple_error(allQ2, ax = ax , label = "svrg", ls = '--', **kwargs)
+plot_multiple_error(allP, ax = ax , label = "snspp", **kwargs)
 
 
 ax.set_yscale('log')
