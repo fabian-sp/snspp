@@ -272,12 +272,15 @@ plot_multiple_error(allP, ax = ax , label = "snspp", **kwargs)
 
 
 ax.set_yscale('log')
+
 if setup == 3:
     ax.set_xlim(0, 0.6)
     ax.set_ylim(0.224, 0.26)
 else:
     ax.set_xlim(0, 2.5)
     ax.set_ylim(0.2, 0.4)
+    
+ax.legend(fontsize = 10)
 
 fig.subplots_adjust(top=0.96,
                     bottom=0.14,
