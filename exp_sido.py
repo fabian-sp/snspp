@@ -45,7 +45,7 @@ x_sk = sk.coef_.copy().squeeze()
 #(np.sign(predict(X_test, x_sk)) == np.sign(y_test)).sum() / len(y_test)
 
 psi_star = f.eval(x_sk) + phi.eval(x_sk)
-print("psi(x*) = ", psi_star)
+print("l1, psi(x*) = ", l1, psi_star)
 
 initialize_solvers(f, phi)
 
@@ -75,7 +75,7 @@ elif l1 == 1e-2:
     
     params_adagrad = {'n_epochs' : 80, 'batch_size': 200, 'alpha': 0.06}
     
-    params_snspp = {'max_iter' : 100, 'batch_size': 200, 'sample_style': 'fast_increasing', 'alpha' : 20.,\
+    params_snspp = {'max_iter' : 300, 'batch_size': 200, 'sample_style': 'fast_increasing', 'alpha' : 20.,\
                     "reduce_variance": True}
         
     #params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(5,15,10), n_iter = 20)
@@ -244,9 +244,9 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
 kwargs = {"log_scale": False, "lw": 0.7, "markersize": 3}
 
-plot_multiple_error(allQ, ax = ax , label = "saga", ls = '--', marker = '<', **kwargs)
-plot_multiple_error(allQ1, ax = ax , label = "adagrad", ls = '--', marker = '>', **kwargs)
-plot_multiple_error(allQ2, ax = ax , label = "svrg", ls = '--', marker = '>', **kwargs)
+plot_multiple_error(allQ, ax = ax , label = "saga", ls = '--', **kwargs)
+plot_multiple_error(allQ1, ax = ax , label = "adagrad", ls = '--', **kwargs)
+plot_multiple_error(allQ2, ax = ax , label = "svrg", ls = '--', **kwargs)
 plot_multiple_error(allP, ax = ax , label = "snspp", **kwargs)
 
 ax.set_xlim(-.1, 4)
