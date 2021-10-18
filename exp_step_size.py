@@ -11,7 +11,7 @@ from snspp.solver.opt_problem import problem, color_dict, marker_dict
 from snspp.experiments.experiment_utils import initialize_solvers
 
 
-problem_type = "mnist"
+problem_type = "gisette"
 
 # parameter setup
 if problem_type == "gisette":
@@ -248,7 +248,19 @@ batch_size_range = np.array([0.005,0.01,0.05])
 res_svrg = do_grid_run(f, phi, step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
                        psi_tol = PSI_TOL, n_rep = N_REP, solver = "svrg", solver_params = solver_params)
 
-    
+
+
+#%%
+
+res_to_save = dict()
+res_to_save.update({'snspp': res_spp})
+res_to_save.update({'saga': res_saga})
+res_to_save.update({'svrg': res_svrg})
+
+np.save('data/output/stability_{problem_type}_l1_{l1}.npy', res_to_save)    
+
+#[()]
+
 #%% plot runtime (until convergence) vs step size
 save = False
 
