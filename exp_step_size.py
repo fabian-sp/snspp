@@ -8,7 +8,7 @@ from sklearn.linear_model import Lasso, LogisticRegression
 
 from snspp.helper.data_generation import lasso_test, logreg_test, get_gisette, get_mnist
 from snspp.solver.opt_problem import problem, color_dict, marker_dict
-from snspp.experiments.experiment_utils import initialize_solvers
+from snspp.experiments.experiment_utils import initialize_solvers, load_stability_results
 
 
 problem_type = "gisette"
@@ -250,16 +250,16 @@ res_svrg = do_grid_run(f, phi, step_size_range, batch_size_range = batch_size_ra
 
 
 
-#%%
+#%% store (or load results)
 
 res_to_save = dict()
 res_to_save.update({'snspp': res_spp})
 res_to_save.update({'saga': res_saga})
 res_to_save.update({'svrg': res_svrg})
 
-np.save('data/output/stability_{problem_type}_l1_{l1}.npy', res_to_save)    
+np.save(f'data/output/exp_stability_{problem_type}_l1_{l1}.npy', res_to_save)    
 
-#[()]
+#res_spp, res_saga, res_svrg = load_stability_results(problem_type, l1)
 
 #%% plot runtime (until convergence) vs step size
 save = False
@@ -271,7 +271,7 @@ plt.rc('text', usetex=True)
 
 #%%
 
-Y_MAX = 25. # y-value of not-converged stepsizes
+Y_MAX = 12. # y-value of not-converged stepsizes
 SIGMA = 1. # plot 2SIGMA band around the mean
 
 fig, ax = plt.subplots(figsize = (7,5))

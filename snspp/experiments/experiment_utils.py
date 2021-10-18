@@ -378,4 +378,14 @@ def convert_to_dict(allP):
             all_res[k]['test_error'] = allP[k].info['test_error']
         
     return {label: all_res}
-     
+    
+def load_stability_results(problem_type, l1):
+    
+    tmp = np.load(f'data/output/exp_stability_{problem_type}_l1_{l1}.npy', allow_pickle = True)
+    tmp_dict = tmp[()]
+    
+    res_spp = tmp_dict['snspp']
+    res_saga = tmp_dict['saga']
+    res_svrg = tmp_dict['svrg']
+    
+    return res_spp, res_saga, res_svrg
