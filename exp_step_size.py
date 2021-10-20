@@ -11,7 +11,7 @@ from snspp.solver.opt_problem import problem, color_dict, marker_dict
 from snspp.experiments.experiment_utils import initialize_solvers, load_stability_results
 
 
-problem_type = "mnist"
+problem_type = "gisette"
 
 # parameter setup
 if problem_type == "gisette":
