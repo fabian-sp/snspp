@@ -11,20 +11,25 @@ from snspp.solver.opt_problem import problem, color_dict, marker_dict
 from snspp.experiments.experiment_utils import initialize_solvers, load_stability_results
 
 
-problem_type = "gisette"
+problem_type = "mnist"
 
 # parameter setup
 if problem_type == "gisette":
     l1 = 0.05
-    EPOCHS = 50 # epochs for SAGA/SVRG
-    MAX_ITER = 200 # max iter for SNSPP
-    PSI_TOL = 1e-3 # relative accuracy for objective to be considered as converged
+    EPOCHS = 55 # epochs for SAGA/SVRG
+    MAX_ITER = 230 # max iter for SNSPP
+    PSI_TOL = 1e-4 # relative accuracy for objective to be considered as converged
+    
+    Y_MAX = 8. # y-value of not-converged stepsizes
+
 
 elif problem_type == "mnist":
     l1 = 0.02
     EPOCHS = 30 # epochs for SAGA/SVRG
-    MAX_ITER = 150 # max iter for SNSPP
-    PSI_TOL = 1e-3 # relative accuracy for objective to be considered as converged
+    MAX_ITER = 180 # max iter for SNSPP
+    PSI_TOL = 1e-4 # relative accuracy for objective to be considered as converged
+    
+    Y_MAX = 25. # y-value of not-converged stepsizes
 
 elif problem_type in ["logreg", "lasso"]:
     N = 100; n = 10; k = 5
@@ -134,6 +139,14 @@ def do_grid_run(f, phi, step_size_range, batch_size_range = None, psi_star = 0, 
                     
                     if np.any(obj_arr <= psi_star *(1+psi_tol)):
                         stop = np.where(obj_arr <= psi_star *(1+psi_tol))[0][0]
+                        
+                        # account for possibility of reaching accuracy inside the epoch --> take lower bound for runtime
+                        if solver != 'snspp':
+                            if stop > 0:
+                                stop -= 1
+                            else:
+                                print("Convergence during first EPOCH!")
+                        
                         this_stop_iter.append(stop)
                         this_time.append(P.info['runtime'].cumsum()[stop])
                         this_obj.append(obj_arr[-1])
@@ -145,6 +158,7 @@ def do_grid_run(f, phi, step_size_range, batch_size_range = None, psi_star = 0, 
                         
                         print("NO CONVERGENCE!")
                 except:
+                    print("SOLVER FAILED!")
                     this_stop_iter.append(np.inf)
                     this_time.append(np.inf)
                     this_obj.append(np.inf)
@@ -252,12 +266,14 @@ res_svrg = do_grid_run(f, phi, step_size_range, batch_size_range = batch_size_ra
 
 #%% store (or load results)
 
+filename = f'stability_{problem_type}_l1_{l1}_psistar_' + str(float(PSI_TOL)).split('.')[1]
+
 res_to_save = dict()
 res_to_save.update({'snspp': res_spp})
 res_to_save.update({'saga': res_saga})
 res_to_save.update({'svrg': res_svrg})
 
-np.save(f'data/output/exp_stability_{problem_type}_l1_{l1}.npy', res_to_save)    
+np.save('data/output/exp_'+filename+'.npy', res_to_save)    
 
 #res_spp, res_saga, res_svrg = load_stability_results(problem_type, l1)
 
@@ -271,7 +287,6 @@ plt.rc('text', usetex=True)
 
 #%%
 
-Y_MAX = 12. # y-value of not-converged stepsizes
 SIGMA = 1. # plot 2SIGMA band around the mean
 
 fig, ax = plt.subplots(figsize = (7,5))
@@ -285,8 +300,10 @@ annot_y = Y_MAX * 0.9 # y value for annotation
 ax.hlines(annot_y , ax.get_xlim()[0], ax.get_xlim()[1], 'grey', ls = '-')
 ax.annotate("no convergence", (ax.get_xlim()[0]*1.1, annot_y+0.3), color = "grey", fontsize = 14)
 
+ax.set_ylim(-1e-3,)
+
 if save:
-    fig.savefig(f'data/plots/exp_other/stability_{problem_type}_l1_{l1}.pdf', dpi = 300)
+    fig.savefig('data/plots/exp_other/'+'.pdf', dpi = 300)
 
 #%% plot objective of last iterate vs step size
 
