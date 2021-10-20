@@ -303,7 +303,7 @@ ax.annotate("no convergence", (ax.get_xlim()[0]*1.1, annot_y+0.3), color = "grey
 ax.set_ylim(-1e-3,)
 
 if save:
-    fig.savefig('data/plots/exp_other/'+'.pdf', dpi = 300)
+    fig.savefig('data/plots/exp_other/'+filename+'.pdf', dpi = 300)
 
 #%% plot objective of last iterate vs step size
 
