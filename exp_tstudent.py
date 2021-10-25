@@ -67,14 +67,14 @@ elif setup == 2:
     params_saga = {'n_epochs' : 50, 'alpha' : 2.5}
     params_svrg = {'n_epochs' : 70, 'batch_size': 20, 'alpha': 100.}
     params_adagrad = {'n_epochs' : 150, 'batch_size': 20, 'alpha': 0.03}   
-    params_snspp = {'max_iter' : 250, 'batch_size': 20, 'sample_style': 'fast_increasing', 'alpha' : 3., 'reduce_variance': True}
+    params_snspp = {'max_iter' : 300, 'batch_size': 20, 'sample_style': 'fast_increasing', 'alpha' : 3., 'reduce_variance': True}
 
 elif setup == 3:
     params_saga = {'n_epochs' : 25, 'alpha' : 50}
     params_svrg = {'n_epochs' : 10, 'batch_size': 10, 'alpha': 1300.}
     #params_svrg = {'n_epochs' : 10, 'batch_size': 100, 'alpha': 20000.}
     params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.06}   
-    params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 12.5, 'reduce_variance': True}
+    params_snspp = {'max_iter' : 250, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 12.5, 'reduce_variance': True}
 
 
 
@@ -217,7 +217,7 @@ plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 if setup == 3:
     ax.set_xlim(0, 0.6)
 else:
-    ax.set_xlim(0, 2.5)
+    ax.set_xlim(0, 1.5)
     
 ax.set_ylim(1e-7,)
 
@@ -277,7 +277,7 @@ if setup == 3:
     ax.set_xlim(0, 0.6)
     ax.set_ylim(0.224, 0.26)
 else:
-    ax.set_xlim(0, 2.5)
+    ax.set_xlim(0, 1.5)
     ax.set_ylim(0.2, 0.4)
     
 ax.legend(fontsize = 10)

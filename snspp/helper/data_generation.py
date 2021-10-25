@@ -79,7 +79,7 @@ def create_A(N, n, dist = 'ortho', kappa = 1.):
     return A
     
 
-def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., kappa = 1., dist = 'ortho'):
+def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., kappa = 1., dist = 'ortho', seed = 1234):
     """
     generates data for a LASSO problem with n variables and N samples, where solution has k non-zero entries
     lambda1: regularization parameter of 1-norm
@@ -87,7 +87,7 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., k
     noise: std. deviation of Gaussian noise added to measurements b
     kappa: if not None, A is created such that is has condition sqrt(kappa)
     """
-    np.random.seed(1234)
+    np.random.seed(seed)
     
     if block:
         m = np.random.randint(low = 3, high = 10, size = N)
@@ -122,14 +122,14 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., k
 
     return x, A, b, f, phi, A_test, b_test
 
-def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = 1., dist = 'ortho'):
+def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = 1., dist = 'ortho', seed = 1234):
     """
     creates data for l1-regularized logistic regression with n variables and N samples, where solution has k non-zero entries
     lambda1: regularization parameter of 1-norm
     b \in{-1,1}
     noise = probability of flipping b after generation --> the closer noise is to 1, the nosier the problem becomes
     """
-    np.random.seed(1234)
+    np.random.seed(seed)
     
     N_test = max(100,int(N*0.1))
     A = create_A(N+N_test, n, kappa = kappa, dist = dist)
@@ -165,9 +165,9 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = 1., dist
     
     return x, A[:N,:], b[:N], f, phi, A_test, b_test
 
-def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 4., noise = 0.1, poly = 0, kappa = 1., dist = 'ortho'):
+def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 4., noise = 0.1, poly = 0, kappa = 1., dist = 'ortho', seed = 23456):
     
-    np.random.seed(23456)
+    np.random.seed(seed)
     
     N_test = max(100,int(N*0.1))
     A = create_A(N+N_test, n, kappa = kappa, dist = dist)
@@ -196,15 +196,7 @@ def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 4., noise = 0.1, poly
     
     return x, A[:N,:], b[:N], f, phi, A_test, b_test
 
-def poly_expand(A, d = 5):
-
-    n = A.shape[1]
-    print("Number of features after polynomial expansion: ", sp.comb(n+d, d, True))
-    
-    poly = PolynomialFeatures(d)
-    return poly.fit_transform(A)
-
-def huber_test(N = 10, n = 20, k = 5, lambda1 = .1, mu = 1., noise = 0., kappa = 1., dist = 'ortho'):
+def huber_test(N = 10, n = 20, k = 5, lambda1 = .1, mu = 1., noise = 0., kappa = 1., dist = 'ortho', seed = 23456):
     """
     generates data for a Huber regression problem with n variables and N samples, where solution has k non-zero entries
     lambda1: regularization parameter of 1-norm
@@ -213,7 +205,7 @@ def huber_test(N = 10, n = 20, k = 5, lambda1 = .1, mu = 1., noise = 0., kappa =
     noise: std. deviation of Gaussian noise added to measurements b
     kappa: if not None, A is created such that is has condition sqrt(kappa)
     """
-    np.random.seed(1234)
+    np.random.seed(seed)
     
     m = np.ones(N, dtype = 'int')
     
@@ -241,6 +233,15 @@ def huber_test(N = 10, n = 20, k = 5, lambda1 = .1, mu = 1., noise = 0., kappa =
     f = huber_loss(A, b, mu_arr)
         
     return x, A, b, f, phi, A_test, b_test
+
+def poly_expand(A, d = 5):
+
+    n = A.shape[1]
+    print("Number of features after polynomial expansion: ", sp.comb(n+d, d, True))
+    
+    poly = PolynomialFeatures(d)
+    return poly.fit_transform(A)
+
 #%%
 ############################################################################################
 ### Actual data - CLASSIFICATION
