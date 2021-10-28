@@ -5,7 +5,6 @@ This file serves to derive the convex conjugate of the (regularized) likelihood 
 import sympy as sp
 import numpy as np
 import matplotlib.pyplot as plt
-from numba import njit
 
 sp.init_printing(use_unicode=True)
 
@@ -55,17 +54,6 @@ sols = sp.solvers.solve(H.diff(x), x)
 for s in sols:    
     print(H.subs(x, s))
 
-#%% testing
-
-from snspp.helper.data_generation import tstudent_test
-
-v = 1.
-x = 1.
-b = 1.
-
-
-xsol, X_train, y_train, f, phi, X_test, y_test = tstudent_test(N = 100, n = 20, k = 3, lambda1 = 0.01, v = v,\
-                                                               noise = 0.1, poly = 0, kappa = 15., dist = 'ortho')
 
 #%%
    
