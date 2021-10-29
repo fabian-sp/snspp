@@ -65,7 +65,7 @@ print(sp.latex(fast1))
 
 #%%
 
-def plot_fun(g, arg = z, sub0 = dict(), xrange = np.linspace(-5,5,100), ax = None, label = '', c = 'k'):
+def plot_fun(g, arg = z, sub0 = dict(), xrange = np.linspace(-5,5,100), ax = None, label = '', c = 'k', ls = '-'):
     """
     """
     if ax is None:
@@ -75,25 +75,25 @@ def plot_fun(g, arg = z, sub0 = dict(), xrange = np.linspace(-5,5,100), ax = Non
     gnum = sp.lambdify(arg, g0)
     y = gnum(xrange)
      
-    ax.plot(xrange, y, label = label, c = c)
+    ax.plot(xrange, y, label = label, c = c, ls = ls)
     
     return (xrange, y)
 
 #%% plot loss and conjugates
 
-sub0 = {mu:0.01, b:0}
-X = np.linspace(-2,2,1000)
+sub0 = {mu:0.1, b:0}
+X = np.linspace(-.9,.9,1000)
 
 colors = ['#2C3E50','#E74C3C','#3498DB','#2980B9']
 
 fig, ax = plt.subplots()        
-_ = plot_fun(f, arg = z, sub0 = sub0, xrange = X, ax = ax, label = 'f', c= colors[0])
+_ = plot_fun(f, arg = z, sub0 = sub0, xrange = X, ax = ax, label = 'f', c= colors[3], ls = '--')
 _ = plot_fun(fast, arg = z, sub0 = sub0, xrange = X, ax = ax, label = r'$f^\ast$', c=colors[1])
 _ = plot_fun(fast1, arg = z, sub0 = sub0, xrange = X, ax = ax, label = r"$(f^\ast)'$", c=colors[2])
-_ = plot_fun(fast2, arg = z, sub0 = sub0, xrange = X, ax = ax, label = r"$(f^\ast)''$", c=colors[3])
+_ = plot_fun(fast2, arg = z, sub0 = sub0, xrange = X, ax = ax, label = r"$(f^\ast)''$", c=colors[0])
 
-ax.set_ylim(-2,2)
-ax.legend()
+#ax.set_ylim(-2,2)
+ax.legend(loc = 'upper right')
 
 
 #%% plot objective of conjugate problem
