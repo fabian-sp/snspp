@@ -24,6 +24,11 @@ mu = sp.symbols('mu', positive = True)
 f = sp.Piecewise((1/2*(z-b)**2/mu, sp.Abs(z-b) <= mu), (sp.Abs(z-b) -mu/2 ,True))
 uhat = mu*z+b
 
+### PSEUDOHUBER ####
+b = sp.symbols('b') # specific symbols 
+f = (z-b)**2
+uhat = None
+
 #uhat = sp.functions.elementary.piecewise.ExprCondPair(mu*z+b, sp.Abs(z)<=1)
 #fast = sp.Piecewise((1/2*mu*z**2+b*z, sp.Abs(z) <= 1),(sp.oo, True))
 
@@ -57,7 +62,6 @@ def compute_conjugate(f, uhat = None, danskin = True):
 #%% compute conjugate
 
 danskin = True
-uhat = uhat
 
 f1, H, fast, fast1, fast2 = compute_conjugate(f, uhat = uhat, danskin = danskin)
 
@@ -74,7 +78,9 @@ def plot_fun(g, arg = z, sub0 = dict(), xrange = np.linspace(-5,5,100), ax = Non
     g0 = g.subs(sub0)
     gnum = sp.lambdify(arg, g0)
     y = gnum(xrange)
-     
+    if type(y) == float:
+        y *= np.ones_like(xrange)
+        
     ax.plot(xrange, y, label = label, c = c, ls = ls)
     
     return (xrange, y)
