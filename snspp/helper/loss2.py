@@ -216,3 +216,93 @@ class huber_loss:
         y = self.mu[S]
         y[~zz] = np.inf
         return y
+    
+    
+#%% Pseudo-Huber loss 
+
+spec_log = [
+    ('name', typeof('abc')),
+    ('convex', typeof(True)),
+    ('b', float64[:]),               
+    ('A', float64[:,:]),
+    ('mu', float64[:]),
+    ('N', int64), 
+    ('m', int64[:]),
+]
+        
+
+@jitclass(spec_log)
+class pseudohuber_loss:
+    """ 
+          
+    Let :math:``A \in \mathbb{R}^{N\times n}`` and :math:``b \in \mathbb{R}^{N}`` be given.
+    This implements the squared loss function given by
+    
+    .. math:
+        f(x) = \frac{1}{N} \sum_{i=1}^{N} f_i(A_i x)
+        
+    with
+    
+    .. math:
+        f_i(z) = \sqrt{\mu^2+(z-b_i)^2} - \mu.
+        
+    The convex conjugate is given by
+    
+    .. math:
+        f_i^\ast(z) = \begin{cases} b_i z+\frac{\mu z^2-\mu}{\sqrt{1-z^2}} \quad |z| < 1 \\ +\infty \quad \text{else} \end{cases}.
+        
+    """
+    
+    def __init__(self, A, b, mu):
+        self.name = 'pseudohuber'
+        self.convex = True
+        
+        self.b = b
+        self.A = A * np.ascontiguousarray(self.b).reshape((-1,1))
+        self.mu = mu
+        self.N = len(self.b)
+        self.m = np.repeat(1,self.N)
+        
+        return
+    
+    def eval(self, x):
+        """
+        Method for evaluating :math:`f(x)`.
+        The array ``x`` should be the same type as A (we use float64).
+        """
+        z = self.A@x
+        y = 0
+        for i in np.arange(self.N):
+            y += self.f(z[i],i)
+         
+        return (1/self.N)*y
+
+    def f(self, x, i):
+        """
+        Method for evaluating :math:`f_i(x)`.
+        """
+        y = np.sqrt(self.mu[i]**2 + (x-self.b[i])**2) - self.mu[i]
+        return y
+    
+    def g(self, x, i):
+        """
+        Method for evaluating :math:`f_i'(x)`.
+        """
+        y = (x-self.b[i])/np.sqrt(self.mu[i]**2 + (x-self.b[i])**2)
+        return y
+        
+    def fstar_vec(self, x, S):
+        zz = np.less(np.abs(x),1)
+        y = self.b[S] * x + (self.mu[S]*x**2 - self.mu[S])/np.sqrt(1-x**2) + self.mu[S]
+        y[~zz] = np.inf
+        return y
+    def gstar_vec(self, x, S):
+        zz = np.less(np.abs(x),1)
+        y = self.b[S] + self.mu[S]*x/np.sqrt(1-x**2)
+        y[~zz] = np.inf
+        return y
+    def Hstar_vec(self, x, S):
+        zz = np.less(np.abs(x),1)
+        y = self.mu[S]/(1-x**2)**(1.5)
+        y[~zz] = np.inf
+        return y

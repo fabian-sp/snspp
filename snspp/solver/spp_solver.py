@@ -61,6 +61,22 @@ def cyclic_batch(N, batch_size, t):
     
     np.sort(S)
     return S
+
+#%%
+
+def get_xi_start_point(f):
+    if f.name == 'logistic':
+        xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(f.m[i]) for i in np.arange(f.N)]))
+    elif f.name == 'tstudent':
+        xi = dict(zip(np.arange(f.N), [np.ones(f.m[i]) for i in np.arange(f.N)]))
+    elif f.name == 'huber':
+        xi = dict(zip(np.arange(f.N), [np.zeros(f.m[i]) for i in np.arange(f.N)]))
+    elif f.name == 'pseudohuber':
+        xi = dict(zip(np.arange(f.N), [np.zeros(f.m[i]) for i in np.arange(f.N)]))
+    else:
+        xi = dict(zip(np.arange(f.N), [np.zeros(f.m[i]) for i in np.arange(f.N)]))
+
+    return xi
     
 #%% functions for parameter handling
 
@@ -215,14 +231,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     ## Initialization
     #########################################################
     if xi is None:
-        if f.name == 'logistic':
-            xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(f.m[i]) for i in np.arange(f.N)]))
-        elif f.name == 'tstudent':
-            xi = dict(zip(np.arange(f.N), [np.ones(f.m[i]) for i in np.arange(f.N)]))
-        elif f.name == 'huber':
-            xi = dict(zip(np.arange(f.N), [np.zeros(f.m[i]) for i in np.arange(f.N)]))
-        else:
-            xi = dict(zip(np.arange(f.N), [np.zeros(f.m[i]) for i in np.arange(f.N)]))
+        xi = get_xi_start_point(f)
     
     # for easy problems, xi is an array (and not a dict), because we can index it faster
     if is_easy:

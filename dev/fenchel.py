@@ -10,7 +10,7 @@ import seaborn as sns
 sp.init_printing(use_unicode=True)
 
 # standard symbols
-z,u = sp.symbols('z,u')
+z,u = sp.symbols('z,u', real = True)
 
 ### PSEUDOHUBER ####
 b= sp.symbols('b') # specific symbols 
@@ -21,13 +21,23 @@ uhat = b + (mu*z)/sp.sqrt(1-z**2)
 ### HUBER ####
 b= sp.symbols('b') # specific symbols 
 mu = sp.symbols('mu', positive = True)
-f = sp.Piecewise((1/2*(z-b)**2/mu, sp.Abs(z-b) <= mu), (sp.Abs(z-b) -mu/2 ,True))
+f = sp.Piecewise((1/2*(z-b)**2/mu, sp.Abs(z-b) <= mu), (sp.Abs(z-b) -mu/2,True))
 uhat = mu*z+b
 
-### PSEUDOHUBER ####
+### SQUARED ####
 b = sp.symbols('b') # specific symbols 
 f = (z-b)**2
 uhat = None
+
+### LOGISTIC ####
+b = sp.symbols('b') # specific symbols 
+f = sp.ln(1+sp.exp(-z))
+uhat = None
+
+### STUDENT-T ####
+b,v,gamma = sp.symbols('b,v,gamma')
+f = sp.log(1+((z-b)**2/v)) + gamma/2*z**2
+
 
 #uhat = sp.functions.elementary.piecewise.ExprCondPair(mu*z+b, sp.Abs(z)<=1)
 #fast = sp.Piecewise((1/2*mu*z**2+b*z, sp.Abs(z) <= 1),(sp.oo, True))
@@ -88,7 +98,12 @@ def plot_fun(g, arg = z, sub0 = dict(), xrange = np.linspace(-5,5,100), ax = Non
 #%% plot loss and conjugates
 
 sub0 = {mu:0.1, b:0}
-X = np.linspace(-.9,.9,1000)
+sub0 = {}
+
+X = np.linspace(-.99,.99,1000)
+X = np.linspace(-.99,-1e-3,1000)
+
+#%%
 
 colors = ['#2C3E50','#E74C3C','#3498DB','#2980B9']
 
@@ -98,13 +113,13 @@ _ = plot_fun(fast, arg = z, sub0 = sub0, xrange = X, ax = ax, label = r'$f^\ast$
 _ = plot_fun(fast1, arg = z, sub0 = sub0, xrange = X, ax = ax, label = r"$(f^\ast)'$", c=colors[2])
 _ = plot_fun(fast2, arg = z, sub0 = sub0, xrange = X, ax = ax, label = r"$(f^\ast)''$", c=colors[0])
 
-#ax.set_ylim(-2,2)
+ax.set_ylim(-10,10)
 ax.legend(loc = 'upper right')
 
 
 #%% plot objective of conjugate problem
 
-sub0 = {mu:0.5, b:0}
+sub0 = {mu:0.5, b:0, gamma:1., v: 1}
 Z = np.linspace(-2,2,20) # range of fixed z values
 U = np.linspace(-5,5,100) # xaxis
 pal = sns.color_palette("rocket", len(Z))
