@@ -58,7 +58,7 @@ initialize_solvers(f, phi)
 #%% parameter setup
 
 if setup == 1:
-    params_saga = {'n_epochs' : 150, 'alpha' : 17}
+    params_saga = {'n_epochs' : 150, 'alpha' : 17.}
     params_svrg = {'n_epochs' : 150, 'batch_size': 20, 'alpha': 500.}
     params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.07}
     params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 5., 'reduce_variance': True}
@@ -70,8 +70,8 @@ elif setup == 2:
     params_snspp = {'max_iter' : 300, 'batch_size': 20, 'sample_style': 'fast_increasing', 'alpha' : 3., 'reduce_variance': True}
 
 elif setup == 3:
-    params_saga = {'n_epochs' : 25, 'alpha' : 50}
-    params_svrg = {'n_epochs' : 10, 'batch_size': 10, 'alpha': 1300.}
+    params_saga = {'n_epochs' : 25, 'alpha' : 45.}
+    params_svrg = {'n_epochs' : 10, 'batch_size': 10, 'alpha': 1200.}
     #params_svrg = {'n_epochs' : 10, 'batch_size': 100, 'alpha': 20000.}
     params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.06}   
     params_snspp = {'max_iter' : 250, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 12.5, 'reduce_variance': True}
@@ -239,10 +239,10 @@ if save:
 #P = allP[-1]
 
 fig,ax = plt.subplots(2, 2,  figsize = (7,5))
-Q.plot_path(ax = ax[0,0], xlabel = False)
-Q1.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
-Q2.plot_path(ax = ax[1,0])
-P.plot_path(ax = ax[1,1], ylabel = False)
+allQ[0].plot_path(ax = ax[0,0], xlabel = False)
+allQ1[0].plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
+allQ2[0].plot_path(ax = ax[1,0])
+allP[0].plot_path(ax = ax[1,1], ylabel = False)
 
 for a in ax.ravel():
     a.set_ylim(-2., 2.)
