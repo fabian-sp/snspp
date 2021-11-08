@@ -4,6 +4,7 @@ author: Fabian Schaipp
 import numpy as np
 from numba import njit
 
+
 @njit()
 def matdot(Y,X):
     """
