@@ -163,9 +163,9 @@ class NuclearNorm:
         self.lambda1 = lambda1
         
     def eval(self, X):
-        _,S,_ = np.linalg.svd(X, full_matrices = False)
-        
-        return S.sum()#self.lambda1 * np.linalg.norm(X, 'nuc')
+        # for numba, some options of svd are not available
+        _,S,_ = np.linalg.svd(X, full_matrices = False)       
+        return self.lambda1 * S.sum()  #self.lambda1 * np.linalg.norm(X, 'nuc')
     
     def prox(self, X, alpha):
         """

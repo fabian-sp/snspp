@@ -16,6 +16,11 @@ def matdot(Y,X):
         
     return res
 
+# slower
+# @njit()
+# def matdot2(Y,X):
+#     return np.trace(Y.T @ X)
+
 @njit()
 def multiple_matdot(A,X):
     (p,q,m) = A.shape

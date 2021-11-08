@@ -52,7 +52,7 @@ class mat_lsq:
         Z = np.zeros(self.N)
         
         for i in np.arange(self.N):
-            Z[i] = mat_inner(self.A[:,:,i],X)
+            Z[i] = matdot(self.A[:,:,i],X)
         
         return (1/self.N) * np.linalg.norm(Z - self.b)**2      
     
