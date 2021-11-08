@@ -81,6 +81,7 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
     
     sub_iter = 0
     converged = False
+    U_new = None
     
     residual = list()
     norm_dir = list()
@@ -146,7 +147,12 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
 
     # step 3: backtracking line search
         
-        U_old, _ = Ueval(xi_sub, f, phi, x, alpha, S, subA, hat_d)
+        # U_old is the last U_new
+        if sub_iter > 0:
+            U_old = U_new
+        else:
+            U_old, _ = Ueval(xi_sub, f, phi, x, alpha, S, subA, hat_d)
+        
         beta = 1.
         U_new, z = Ueval(xi_sub + beta*d, f, phi, x, alpha, S, subA, hat_d)
            
