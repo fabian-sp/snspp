@@ -13,10 +13,10 @@ from ..solver.spp_solver import sampler, batch_size_constructor, get_default_new
 from ..helper.utils import stop_scikit_saga
 
 def get_default_spp_params():
-    de = {'alpha': 1., 'max_iter': 100, 'batch_size': 10, 'sample_style': 'constant', 'reduce_variance': False,\
-           'm_iter': 10, 'newton_params': get_default_newton_params()}
+    p = {'alpha': 1., 'max_iter': 100, 'batch_size': 10, 'sample_style': 'constant', 'reduce_variance': False,\
+           'm_iter': 10, 'tol_sub': 1e-3, 'newton_params': get_default_newton_params()}
     
-    return de
+    return p
 
 def get_xi_start_point(f):
     if f.name == 'mat_squared':
@@ -179,7 +179,7 @@ def stochastic_prox_point(f, phi, X0, xi = None, tol = 1e-3, params = dict(), ve
         ## Solve subproblem
         #########################################################
         X_t, xi, this_ssn = solve_subproblem(f, phi, X_t, xi, alpha_t, A, S, \
-                                             newton_params = params['newton_params'],\
+                                             tol = params['tol_sub'], newton_params = params['newton_params'],\
                                              reduce_variance = reduce_variance, xi_tilde = xi_tilde, full_g = full_g,\
                                              verbose = verbose)
                                              
@@ -283,7 +283,7 @@ def calc_AUA(phi, Z, alpha, subA):
     
     return res
     
-def solve_subproblem(f, phi, X, xi, alpha, A, S, newton_params = None, reduce_variance = False, xi_tilde = None, full_g = None, verbose = True):
+def solve_subproblem(f, phi, X, xi, alpha, A, S, tol = 1e-3, newton_params = None, reduce_variance = False, xi_tilde = None, full_g = None, verbose = True):
     """
     m: vector with all dimensions m_i, i = 1,..,N   
     """
@@ -330,7 +330,7 @@ def solve_subproblem(f, phi, X, xi, alpha, A, S, newton_params = None, reduce_va
         rhs = -1. * (f.gstar_vec(xi_sub, S) - multiple_matdot(subA, phi.prox(Z, alpha)))
     
         residual.append(np.linalg.norm(rhs))
-        if np.linalg.norm(rhs) <= newton_params['eps']:
+        if np.linalg.norm(rhs) <= tol:
             converged = True
             break
             
