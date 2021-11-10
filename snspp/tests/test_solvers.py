@@ -13,7 +13,7 @@ from snspp.helper.data_generation import lasso_test, logreg_test
 from snspp.solver.opt_problem import problem
 
 
-N = 100
+N = 1000
 n = 20
 k = 5
 l1 = 1e-3
@@ -109,7 +109,7 @@ def test_snspp_lasso():
     return
 
 def test_snspp_logreg():
-    params = {'max_iter' : 2000, 'alpha': 10., 'reduce_variance': True}
+    params = {'max_iter' : 2000, 'alpha': 1., 'reduce_variance': True}
     
     f, phi, x_sk = create_test_instance(prob = 'logreg')
     P = template_test(f, phi, x_sk, params, 'snspp')
@@ -130,13 +130,13 @@ def test_snspp_general():
     
     l1 = 1e-3
     
-    xsol, A, b, f, phi, A_test, b_test = lasso_test(N, n, k, l1, block = True, dist = 'ortho')
+    xsol, A, b, f, phi, A_test, b_test = lasso_test(100, n, k, l1, block = True, dist = 'ortho')
     params = {'max_iter' : 500, 'alpha': 15., 'reduce_variance': False}
     
     P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
     P.solve(solver = 'snspp')
     
-    sk = Lasso(alpha = l1*f.N/(2*f.A.shape[0]), fit_intercept = False, tol = 1e-8, max_iter = 10000, selection = 'cyclic')
+    sk = Lasso(alpha = l1*f.N/(2*f.A.shape[0]), fit_intercept = False, tol = 1e-12, max_iter = 1000, selection = 'cyclic')
     sk.fit(A,b)
 
     obj1 = f.eval(P.x)+phi.eval(P.x)

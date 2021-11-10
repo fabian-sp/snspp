@@ -1,8 +1,8 @@
-#%%
-from nuclear import NuclearNorm
-from utils import multiple_matdot, matdot
-from mat_loss import mat_lsq
-from mat_spp import solve_subproblem
+import numpy as np
+import matplotlib.pyplot as plt
+from snspp.matopt.nuclear import NuclearNorm
+from snspp.matopt.mat_loss import mat_lsq
+from snspp.matopt.mat_spp import stochastic_prox_point, solve_subproblem
 
 p = 20
 q = 30
@@ -19,7 +19,7 @@ for i in np.arange(N):
     
 X = np.random.randn(p,q)
     
-phi = NuclearNorm(0.1)
+phi = NuclearNorm(1.)
 
 Y = phi.prox(X, 0.1)
 Y = phi.jacobian_prox(X, np.zeros_like(X), 0.1)
@@ -27,19 +27,20 @@ Y = phi.jacobian_prox(X, np.zeros_like(X), 0.1)
 f = mat_lsq(A, b)
 
 
+
+params = {'alpha': 1.}
+X0 = np.random.randn(p,q)
+
+f.eval(X0)
+
+X, info = stochastic_prox_point(f, phi, X0, xi = None, tol = 1e-4, params = params, verbose = True, measure = True)
+
+plt.plot(info['objective'])
+
+#%%
 xi = np.ones(N)*1000
 S = np.arange(50, dtype = int)
 reduce_variance = False
 alpha = 0.1
-
-def get_default_newton_params():
-    
-    params = {'tau': .9, 'eta' : 1e-5, 'rho': .5, 'mu': .4, 'eps': 1e-3, \
-              'cg_max_iter': 12, 'max_iter': 20}
-    
-    return params
-
-newton_params = get_default_newton_params()
-
 
 new_X, xi, info = solve_subproblem(f, phi, X, xi, alpha, A, S, newton_params = newton_params, reduce_variance = False, xi_tilde = None, full_g = None, verbose = True)
