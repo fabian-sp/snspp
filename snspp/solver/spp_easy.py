@@ -24,10 +24,10 @@ def Ueval(xi_sub, f, phi, x, alpha, S, subA, hat_d):
 
 
     
-def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, reduce_variance = False, xi_tilde = None, full_g = None, verbose = True):
+def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, tol = 1e-3, newton_params = None, reduce_variance = False, xi_tilde = None, full_g = None, verbose = True):
     """
     This function solves the subproblem in each SNSPP iteration. 
-    The stopping criterion is reached when the norm of the gradient is below ``newton_params['eps']`` or when the maximum number of iterations is reached.
+    The stopping criterion is reached when the norm of the gradient is below ``tol`` or when the maximum number of iterations is reached.
     
     Parameters
     ----------
@@ -47,6 +47,8 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
         Input matrix.
     S : array
         Mini-batch (should be sorted and has possibly duplicate entries).
+    tol : float, optional
+        Tolerance for stopping. The default is 1e-3.
     newton_params : dict, optional
         Parameters for the semismooth Newton method for the subproblem. See ``get_default_newton_params()`` in ``/spp_solver.py`` for the default values.
     reduce_variance : boolean, optional
@@ -108,7 +110,7 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, newton_params = None, redu
         rhs = -1. * (f.gstar_vec(xi_sub, S) - subA @ phi.prox(z, alpha))
               
         residual.append(np.linalg.norm(rhs))
-        if np.linalg.norm(rhs) <= newton_params['eps']:
+        if np.linalg.norm(rhs) <= tol:
             converged = True
             break
         

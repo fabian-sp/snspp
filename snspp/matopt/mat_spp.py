@@ -12,8 +12,8 @@ from .utils import multiple_matdot, matdot
 from ..solver.spp_solver import sampler, batch_size_constructor, get_default_newton_params, check_newton_params
 from ..helper.utils import stop_scikit_saga
 
-def get_default_spp_params():
-    p = {'alpha': 1., 'max_iter': 100, 'batch_size': 10, 'sample_style': 'constant', 'reduce_variance': False,\
+def get_default_spp_params(N):
+    p = {'alpha': 1., 'max_iter': 100, 'batch_size': max(int(N*0.05),1), 'sample_style': 'constant', 'reduce_variance': False,\
            'm_iter': 10, 'tol_sub': 1e-3, 'newton_params': get_default_newton_params()}
     
     return p
@@ -105,9 +105,8 @@ def stochastic_prox_point(f, phi, X0, xi = None, tol = 1e-3, params = dict(), ve
     #########################################################
     ## Set parameters
     #########################################################
-    params_def = get_default_spp_params()
-    params_def.update(params)
-    params = params_def.copy()
+    params_def = get_default_spp_params(f.N)
+    params.update({k:v for k,v in params_def.items() if k not in params.keys()})
     
     # initialize step size
     alpha_t = params['alpha']

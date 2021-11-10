@@ -80,9 +80,15 @@ def get_xi_start_point(f):
     
 #%% functions for parameter handling
 
+def get_default_spp_params(N):
+    p = {'alpha': 1., 'max_iter': 100, 'batch_size': max(int(N*0.05),1), 'sample_style': 'constant', 'reduce_variance': False,\
+           'm_iter': 10, 'tol_sub': 1e-3, 'newton_params': get_default_newton_params()}
+    
+    return p
+
 def get_default_newton_params():
     
-    params = {'tau': .9, 'eta' : 1e-5, 'rho': .5, 'mu': .4, 'eps': 1e-3, \
+    params = {'tau': .9, 'eta' : 1e-5, 'rho': .5, 'mu': .4, \
               'cg_max_iter': 12, 'max_iter': 20}
     
     return params
@@ -93,8 +99,6 @@ def check_newton_params(newton_params):
     assert newton_params['eta'] > 0 and newton_params['eta'] < 1
     assert newton_params['tau'] > 0 and newton_params['tau'] <= 1
     assert newton_params['rho'] > 0 and newton_params['rho'] < 1
-    
-    assert newton_params['eps'] >= 0
     
     return
 
@@ -146,7 +150,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
             * ``batch_size``: int, batch size.
             * ``alpha``: float, step size of the algorithm.
             * ``reduce_variance``: boolean. Whether to use VR or not (default = True).
-            * ``m_iter``: int, number of iteration for inner loop (if VR is used).
+            * ``m_iter``: int, number of iteration for inner loop (if VR is used). The default is 10.
+            * ``tol_sub``: float, tolerance for subproblems. The default is 1e-3.
             * ``newton_params``: parameters for the semismooth Newton method for the subproblem. See ``get_default_newton_params`` for the default values.
             * ``sample_style``: str, can be 'constant' or 'fast_increasing'. THe latter will increase the batch size over the first iterations which can be more efficient.
             
@@ -185,35 +190,11 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     #########################################################
     ## Set parameters
     #########################################################
-    if 'alpha' not in params.keys():
-        alpha = 1.
-    else:
-        alpha = params['alpha']
+    params_def = get_default_spp_params(f.N)
+    params.update({k:v for k,v in params_def.items() if k not in params.keys()})
+    
     # initialize step size
-    alpha_t = alpha
-    
-    if 'max_iter' not in params.keys():    
-        params['max_iter'] = 100
-    else:
-        assert type(params['max_iter']) == int, "Max. iter needs to be integer"
-        
-    if 'batch_size' not in params.keys():    
-        params['batch_size'] = max(int(f.N/4), 1)
-    
-    if 'sample_style' not in params.keys():    
-        params['sample_style'] = 'constant'
-    
-    if 'reduce_variance' not in params.keys():    
-        params['reduce_variance'] = True
-    elif params['reduce_variance'] == False:
-        warnings.warn("Variance reduction is deactivated. This leads to suboptimal performance. Consider setting the parameter 'reduce_variance' to True.")
-    
-    # length of inner loop
-    if 'm_iter' not in params.keys():    
-        params['m_iter'] = 10
-     
-    if 'newton_params' not in params.keys():
-        params['newton_params'] = get_default_newton_params()
+    alpha_t = params['alpha']
     
     #########################################################
     ## Sample style
@@ -274,9 +255,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         S = sampler(f.N, batch_size[iter_t], replace = True)
         #S = cyclic_batch(f.N, batch_size, iter_t)
         
-        #params['newton_params']['eps'] =  min(1e-3, 1e-1/(iter_t+1)**(1.1))
-        params['newton_params']['eps'] =  1e-3
-        
         # variance reduction boolean
         reduce_variance = params['reduce_variance'] and (iter_t > vr_min_iter)
         
@@ -285,12 +263,12 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #########################################################
         if not is_easy:
             x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, f.m, S, \
-                                             newton_params = params['newton_params'],\
+                                             tol = params['tol_sub'], newton_params = params['newton_params'],\
                                              reduce_variance = reduce_variance, xi_tilde = xi_tilde,\
                                              verbose = verbose)
         else:
             x_t, xi, this_ssn = solve_subproblem_easy(f, phi, x_t, xi, alpha_t, A, S, \
-                                             newton_params = params['newton_params'],\
+                                             tol = params['tol_sub'], newton_params = params['newton_params'],\
                                              reduce_variance = reduce_variance, xi_tilde = xi_tilde, full_g = full_g,\
                                              verbose = verbose)
                                              
@@ -346,7 +324,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         # if reduce_variance, use constant step size, else use decreasing step size
         # set new alpha_t, +1 for next iter and +1 as indexing starts at 0
         if f.convex and not params['reduce_variance']:
-             alpha_t = alpha/(iter_t + 2)**(0.51)
+             alpha_t = params['alpha']/(iter_t + 2)**(0.51)
         
         
     if eta > tol:
@@ -400,7 +378,7 @@ def Ueval(xi_stack, f, phi, x, alpha, S, sub_dims, subA, hat_d):
     return res.squeeze()
 
 
-def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce_variance = False, xi_tilde = None, verbose = True):
+def solve_subproblem(f, phi, x, xi, alpha, A, m, S, tol = 1e-3, newton_params = None, reduce_variance = False, xi_tilde = None, verbose = True):
     """
     see ``solve_subproblem_easy()`` in ``./spp_easy.py`` for a documentation.
     """
@@ -469,7 +447,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, newton_params = None, reduce
         rhs = -1. * (np.hstack([f.gstar(xi[i], i) for i in S]) - subA @ phi.prox(z, alpha))
         
         residual.append(np.linalg.norm(rhs))
-        if np.linalg.norm(rhs) <= newton_params['eps']:
+        if np.linalg.norm(rhs) <= tol:
             converged = True
             break
         
