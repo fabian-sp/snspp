@@ -13,15 +13,13 @@ def matdot(Y,X):
         
     return res
 
-
-# slower
-@njit(parallel = True)
-def matdot2(Y,X):
-    (p,q) = X.shape
-    res = 0
-    for j in prange(q):
-        res += np.dot(Y[:,j], X[:,j])
-    return res
+# @njit(parallel = True)
+# def matdot2(Y,X):
+#     (p,q) = X.shape
+#     res = 0
+#     for j in prange(q):
+#         res += np.dot(Y[:,j], X[:,j])
+#     return res
 
 @njit(parallel = True)
 def multiple_matdot(A,X):
@@ -32,3 +30,12 @@ def multiple_matdot(A,X):
          res[j] = matdot(A[:,:,j], X)
          
     return res
+
+@njit()
+def compute_full_xi(f, X):
+    xi = np.zeros(f.N)
+    for i in np.arange(f.N):
+        xi[i] = f.g(matdot(f.A[i,:,:], X))
+        
+    return xi
+
