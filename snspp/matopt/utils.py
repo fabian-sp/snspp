@@ -4,18 +4,15 @@ author: Fabian Schaipp
 import numpy as np
 from numba import njit, prange
 
-
 @njit()
 def matdot(Y,X):
     """
     calculates <Y,X> = Tr(Y.T @ X)
     """
-    (p,q) = X.shape
-    res = 0
-    for j in np.arange(q):
-        res += np.dot(Y[:,j], X[:,j])
+    res = np.sum(Y*X)
         
     return res
+
 
 # slower
 @njit(parallel = True)

@@ -44,14 +44,25 @@ P.solve(solver = 'sgd')
 
 print("Objective value: ", f.eval(P.x) + phi.eval(P.x))
 
+#%% solve with SNSPP
+
+params = {'max_iter' : 300, 'batch_size': 80, 'sample_style': 'fast_increasing', \
+          'alpha' : 4., 'reduce_variance': False}
+    
+P2 = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
+P2.solve(solver = 'snspp')
+
+#P.plot_path()
+
+print("Objective value: ", f.eval(P2.x) + phi.eval(P2.x))
+
 #%% solve with truncated SGD (COMPOSITE)
 
-params_sgd = {'n_epochs': 600, 'batch_size': 10, 'alpha': 1., 'style': 'polyak'}
+params_sgd = {'n_epochs': 600, 'batch_size': 50, 'alpha': 1., 'style': 'polyak'}
 
 P1 = problem(f, phi, tol = 1e-5, params = params_sgd, verbose = True, measure = True)
 P1.solve(solver = 'sgd')
 
-P1.plot_objective(runtime = False, psi_star = psi_star, log_scale = True)
 #P1.plot_path()
 
 print("Objective value: ", f.eval(P1.x) + phi.eval(P1.x))
@@ -59,8 +70,9 @@ print("Objective value: ", f.eval(P1.x) + phi.eval(P1.x))
 #%%
 fig, ax = plt.subplots()
 
-P.plot_objective(ax = ax, runtime = False, psi_star = psi_star, log_scale = True, marker = '<', label = "truncated")
-P1.plot_objective(ax = ax, runtime = False, psi_star = psi_star, log_scale = True, label = "truncated composite")
+P.plot_objective(ax = ax, runtime = False, psi_star = psi_star, log_scale = True, label = "")
+P1.plot_objective(ax = ax, runtime = False, psi_star = psi_star, log_scale = True, ls = ':',label = " Polyak")
+P2.plot_objective(ax = ax, runtime = False, psi_star = psi_star, log_scale = True)
 
 #%%
 

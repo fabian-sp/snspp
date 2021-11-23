@@ -163,8 +163,10 @@ class problem:
             whether to plot number of evaluations as x-axis. The default is False.
         label : str, optional
             label for legend. The default is None.
-        marker : str, optional
-            markerstyle. The default is 'o'.
+        markersize : float, optional
+            markersize. The default is 3.
+        lw : float, optional
+            linewidth. The default is 0.4.
         ls : str, optional
             linestyle. The default is '-'.
         psi_star : float, optional
