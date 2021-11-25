@@ -9,15 +9,20 @@ from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-import scipy.special as sp
+from sklearn.datasets import make_low_rank_matrix
 from sklearn.preprocessing import PolynomialFeatures
 
+import scipy.special as sp
 from scipy.stats import ortho_group
 
 from .loss1 import lsq, block_lsq, logistic_loss
 from .loss2 import huber_loss
 from .regz import L1Norm
 from .tstudent import tstudent_loss
+
+from ..matopt.nuclear import NuclearNorm
+from ..matopt.mat_loss import mat_lsq
+from ..matopt.utils import multiple_matdot
 
 ############################################################################################
 ### Synthetic data
@@ -68,7 +73,7 @@ def create_A(N, n, dist = 'ortho', kappa = 1.):
             d = np.linspace(kappa, 1, N)
             A = U@np.diag(d)@Vh
             
-        print("Condition number of A:", np.linalg.cond(A) )
+        #print("Condition number of A:", np.linalg.cond(A) )
         
     elif dist == 'unif':
         A = np.random.rand(N,n)*2 - 1
@@ -207,9 +212,7 @@ def huber_test(N = 10, n = 20, k = 5, lambda1 = .1, mu = 1., noise = 0., kappa =
     """
     np.random.seed(seed)
     
-    m = np.ones(N, dtype = 'int')
-    
-    A = create_A(m.sum(), n, kappa = kappa, dist = dist)
+    A = create_A(N, n, kappa = kappa, dist = dist)
     
     # create true solution
     x = np.random.randn(k) 
@@ -217,7 +220,7 @@ def huber_test(N = 10, n = 20, k = 5, lambda1 = .1, mu = 1., noise = 0., kappa =
     np.random.shuffle(x)
     
     # create measurements
-    b = A @ x + noise*np.random.randn(m.sum())
+    b = A @ x + noise*np.random.randn(N)
     
     A = np.ascontiguousarray(A.astype('float64'))
     b = b.astype('float64')
@@ -233,6 +236,37 @@ def huber_test(N = 10, n = 20, k = 5, lambda1 = .1, mu = 1., noise = 0., kappa =
     f = huber_loss(A, b, mu_arr)
         
     return x, A, b, f, phi, A_test, b_test
+
+def lowrank_test(N = 10, p = 20, q = 30, r = 5, lambda1 = .1, noise = 0., kappa = 1., dist = 'ortho', seed = 23456):
+    """
+    noise: std. deviation of Gaussian noise added to measurements b
+    kappa: if not None, A is created such that is has condition sqrt(kappa)
+    """
+    np.random.seed(seed)
+    
+    A = np.zeros((p,q,N))
+    for j in np.arange(N):
+        A[:,:,j] = create_A(p, q, kappa = kappa, dist = dist)
+    
+    # create true solution
+    X = make_low_rank_matrix(p, q, effective_rank=r, tail_strength=0.5, random_state=23456)
+    
+    # create measurements
+    b = multiple_matdot(A, X) + noise*np.random.randn(N)
+    
+    A = np.ascontiguousarray(A.astype('float64'))
+    b = b.astype('float64')
+    
+    N_test = max(100,int(N*0.1))
+    A_test = np.zeros((p,q,N_test))
+    for j in np.arange(N_test):
+        A_test[:,:,j] = create_A(p, q, kappa = kappa, dist = dist)
+    b_test = multiple_matdot(A_test, X) + noise*np.random.randn(N_test)
+    
+    phi = NuclearNorm(lambda1) 
+    f = mat_lsq(A, b)
+        
+    return X, A, b, f, phi, A_test, b_test
 
 def poly_expand(A, d = 5):
 

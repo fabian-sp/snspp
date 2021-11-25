@@ -1,5 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+
+from snspp.helper.data_generation import lowrank_test
+
 from snspp.matopt.nuclear import NuclearNorm
 from snspp.matopt.mat_loss import mat_lsq
 from snspp.matopt.mat_spp import stochastic_prox_point, solve_subproblem
@@ -8,38 +11,33 @@ from snspp.matopt.utils import compute_full_xi
 p = 5
 q = 8
 N = 10
-
 r = 5
+l1 = 0.001
 
-A = np.zeros((p,q,N))
-b = np.random.randn(N)
-
-for i in np.arange(N):
-    A[:,:,i] = np.random.randn(p,q)
-    
-    
-X = np.random.randn(p,q)
-    
-phi = NuclearNorm(1.)
-
-Y = phi.prox(X, 0.1)
-Y = phi.jacobian_prox(X, np.zeros_like(X), 0.1)
-
-f = mat_lsq(A, b)
+Xhat, A, b, f, phi, _, _ = lowrank_test(N=N,p=p,q=q,r=r,lambda1=l1,noise=0)
 
 
-params = {'alpha': 1., 'batch_size': f.N, 'reduce_variance': True, 'max_iter' : 10}
+params = {'alpha': 1.1, 'batch_size': f.N, 'reduce_variance': True, 'max_iter' : 2000}
 X0 = np.zeros((p,q))
 X0 = np.random.randn(p,q)
 
+Y = phi.prox(Xhat, 1.)
+Y = phi.jacobian_prox(Xhat, np.zeros_like(X), 1.)
 
-f.eval(X0)
-xi = compute_full_xi(f, X0)
 
+f.eval(Xhat)
+phi.eval(Xhat)
+
+xi = compute_full_xi(f, Xhat)
 
 X, info = stochastic_prox_point(f, phi, X0, xi = None, tol = 1e-4, params = params, verbose = True, measure = True)
 
+fig = plt.subplots()
 plt.plot(info['objective'])
+
+fig,axs = plt.subplots(1,2)
+axs[0].imshow(Xhat)
+axs[1].imshow(X)
 
 #%%
 xi = np.ones(N)*1000
