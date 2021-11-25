@@ -4,11 +4,12 @@ author: Fabian Schaipp
 
 import numpy as np
 from numba import njit
+import numba
 from scipy.sparse.linalg import cg
 import warnings
 import time
 
-from .utils import multiple_matdot, matdot
+from .utils import multiple_matdot, matdot, compute_full_xi
 from ..solver.spp_solver import sampler, batch_size_constructor, get_default_newton_params, check_newton_params
 from ..helper.utils import stop_scikit_saga
 
@@ -185,16 +186,15 @@ def stochastic_prox_point(f, phi, X0, xi = None, tol = 1e-3, params = dict(), ve
         #########################################################
         ## Variance reduction
         #########################################################
-        # if params['reduce_variance']:
-        #     this_iter_vr = iter_t % params['m_iter'] == 0 and iter_t >= vr_min_iter
-        #     if this_iter_vr:
-                
-        #         xi_tilde = compute_full_xi(f, X_t, is_easy)
-        #         full_g = (1/f.N) * (A.T @ xi_tilde)
-                
-        #         # update xi
-        #         if f.convex:
-        #             xi = xi_tilde.copy()
+        if params['reduce_variance']:
+            this_iter_vr = iter_t % params['m_iter'] == 0 and iter_t >= vr_min_iter
+            if this_iter_vr:
+                xi_tilde = compute_full_xi(f, X_t)
+                full_g = (1/f.N) * np.dot(A, xi_tilde)
+                                
+                # update xi
+                if f.convex:
+                    xi = xi_tilde.copy()
         #         else:
         #             gammas = f.weak_conv(np.arange(f.N))
         #             xi = xi_tilde + gammas*(A@X_t)
@@ -241,7 +241,7 @@ def stochastic_prox_point(f, phi, X0, xi = None, tol = 1e-3, params = dict(), ve
     if verbose:   
         print(f"Stochastic ProxPoint terminated after {iter_t} iterations with accuracy {eta} and status {status}.")
     
-    info = {'objective': np.array(obj), 'iterates': np.vstack(X_hist), \
+    info = {'objective': np.array(obj), 'iterates': np.dstack(X_hist).transpose(2,0,1), \
             'xi_hist': xi_hist,\
             'step_sizes': np.array(step_sizes), 'samples' : S_hist, \
             'ssn_info': ssn_info, 'runtime': np.array(runtime),\
@@ -281,6 +281,22 @@ def calc_AUA(phi, Z, alpha, subA):
     np.fill_diagonal(res, d)
     
     return res
+
+# @njit(parallel = True)
+# def calc_AUA2(phi, Z, alpha, subA):
+#     (p,q,b) = subA.shape
+#     res = np.zeros((b,b))
+    
+#     for i in numba.prange(b):
+#         for j in numba.prange(b):
+#             res[i,j] = matdot(subA[:,:,i], phi.jacobian_prox(Z, subA[:,:,j], alpha))
+    
+#     # result is symmetric 
+#     d = np.diag(res)
+#     #res = res + res.T
+#     #np.fill_diagonal(res, d)
+    
+#     return res
     
 def solve_subproblem(f, phi, X, xi, alpha, A, S, tol = 1e-3, newton_params = None, reduce_variance = False, xi_tilde = None, full_g = None, verbose = True):
     """
@@ -310,7 +326,8 @@ def solve_subproblem(f, phi, X, xi, alpha, A, S, tol = 1e-3, newton_params = Non
     
     # compute var. reduction term
     if reduce_variance:
-        hat_d = (alpha/sample_size) * (subA.T @ xi_tilde[S]) - alpha * full_g    
+        hat_d = (alpha/sample_size) * np.dot(subA, xi_tilde[S]) - alpha * full_g    
+        #print(np.linalg.norm(hat_d))
     else:
         hat_d = 0.
         

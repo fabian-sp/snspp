@@ -33,9 +33,10 @@ def multiple_matdot(A,X):
 
 @njit()
 def compute_full_xi(f, X):
+    # computes nabla f_i(A_iX) \in R^n
     xi = np.zeros(f.N)
     for i in np.arange(f.N):
-        xi[i] = f.g(matdot(f.A[i,:,:], X))
+        xi[i] = f.g(matdot(f.A[:,:,i], X), i)
         
     return xi
 

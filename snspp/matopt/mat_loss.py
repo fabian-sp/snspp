@@ -7,7 +7,7 @@ from numba import int64, float32, float64, typeof
 from numba.typed import List
 from numba import njit
 
-from utils import matdot
+from .utils import matdot
 
 #%% squared loss
 
@@ -26,7 +26,7 @@ class mat_lsq:
     """ 
     f is the matrix-valued squared loss function (1/N) * ||AX-b||**2
     where A = linear operator from R^{pxq} \to R^N.
-    A has form (N,p,q) and A_iX = Tr(A[i,:,:].T @ X)
+    A has form (p,q,N) and A_iX = Tr(A[i,:,:].T @ X)
     
     each f_i is of the form y --> |y-b_i|**2
     
