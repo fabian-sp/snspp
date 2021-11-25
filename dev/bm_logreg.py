@@ -19,17 +19,17 @@ from snspp.helper.data_generation import  logreg_test
 
 #%% generate problem
 
-N = 2000
-n = 1000
+N = 6000
+n = 5000
 k = 20
 l1 = 0.01
 
-xsol, A, b, f, phi, _, _ = logreg_test(N, n, k, lambda1 = l1, noise = 0.1, kappa = 15., dist = 'ortho')
+xsol, A, b, f, phi, _, _ = logreg_test(N, n, k, lambda1 = l1, noise = 0.1, kappa = 15., dist = 'unif')
 
 
 initialize_solvers(f, phi)
 
-N_EPOCHS = 100
+N_EPOCHS = 20
 
 L = .25 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
 ALPHA = 1/(3*L)
@@ -50,6 +50,7 @@ rt_sk = end-start
 x_sk = sk.coef_.copy().squeeze()
 
 print("Objective of final iterate SCIKIT:", f.eval(x_sk)+phi.eval(x_sk))
+print("Runtime of SCIKIT:", rt_sk)
 
 #%% solve with copt
 # docs: https://github.com/openopt/copt/blob/master/copt/randomized.py
@@ -78,19 +79,21 @@ x_copt = result_saga.x
 rt_copt = end-start
 
 print("Objective of final iterate COPT:", f.eval(x_copt) +phi.eval(x_copt))
+print("Runtime of COPT:", rt_copt)
 
 #%% solve with snspp
 
 params_saga = {'n_epochs' : N_EPOCHS, 'alpha' : 1.}
 
 start = time.time()
-Q = problem(f, phi, tol = 0, params = params_saga, verbose = True, measure = False)
+Q = problem(f, phi, tol = 0, params = params_saga, verbose = False, measure = False)
 Q.solve(solver = 'saga')
 end = time.time()
 
 rt_snspp = end-start
 
-print("Objective of final iterate US:", f.eval(Q.x)+phi.eval(Q.x))
+print("Objective of final iterate SNSPP:", f.eval(Q.x)+phi.eval(Q.x))
+print("Runtime of SNSPP:", rt_snspp)
 
 #%% compare solutions
 

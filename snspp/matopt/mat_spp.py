@@ -327,7 +327,6 @@ def solve_subproblem(f, phi, X, xi, alpha, A, S, tol = 1e-3, newton_params = Non
     # compute var. reduction term
     if reduce_variance:
         hat_d = (alpha/sample_size) * np.dot(subA, xi_tilde[S]) - alpha * full_g    
-        #print(np.linalg.norm(hat_d))
     else:
         hat_d = 0.
         

@@ -8,21 +8,21 @@ from snspp.matopt.mat_loss import mat_lsq
 from snspp.matopt.mat_spp import stochastic_prox_point, solve_subproblem
 from snspp.matopt.utils import compute_full_xi
 
-p = 5
-q = 8
-N = 10
+p = 20
+q = 30
+N = 200
 r = 5
-l1 = 0.001
+l1 = 0.0001
 
 Xhat, A, b, f, phi, _, _ = lowrank_test(N=N,p=p,q=q,r=r,lambda1=l1,noise=0)
 
 
-params = {'alpha': 1.1, 'batch_size': f.N, 'reduce_variance': True, 'max_iter' : 2000}
+params = {'alpha': 0.7, 'batch_size': 20, 'reduce_variance': True, 'max_iter' : 200}
 X0 = np.zeros((p,q))
-X0 = np.random.randn(p,q)
+#X0 = np.random.randn(p,q)
 
 Y = phi.prox(Xhat, 1.)
-Y = phi.jacobian_prox(Xhat, np.zeros_like(X), 1.)
+Y = phi.jacobian_prox(Xhat, np.zeros_like(Xhat), 1.)
 
 
 f.eval(Xhat)
@@ -36,8 +36,8 @@ fig = plt.subplots()
 plt.plot(info['objective'])
 
 fig,axs = plt.subplots(1,2)
-axs[0].imshow(Xhat)
-axs[1].imshow(X)
+axs[0].imshow(Xhat, cmap = "coolwarm")
+axs[1].imshow(X, cmap = "coolwarm")
 
 #%%
 xi = np.ones(N)*1000
