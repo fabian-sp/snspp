@@ -58,13 +58,13 @@ if l1 == 1e-3:
     
     params_adagrad = {'n_epochs' : 80, 'batch_size': 20, 'alpha': 0.008}
     
-    params_snspp = {'max_iter' : 300, 'batch_size': 200, 'sample_style': 'constant', 'alpha' : 3.,\
+    params_snspp = {'max_iter' : 300, 'batch_size': 75, 'sample_style': 'constant', 'alpha' : 0.25,\
                     "reduce_variance": True}
     
     #params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(5,12,12), n_iter = 25)
     #params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(200, 500, 10), batch_range = np.array([50, 100,200]), n_iter = 40)
     #params_tuner(f, phi, solver = "adagrad", batch_range = np.array([20, 200, 500]))
-    #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(0.3, 4.5, 10), batch_range = np.array([50,100,200]), n_iter = 200)
+    #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(0.1, 0.7, 10), batch_range = np.array([50,75]), n_iter = 200)
 
 elif l1 == 1e-2:
     # params (l1=1e-2)
