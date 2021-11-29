@@ -71,7 +71,7 @@ params_snspp = {'max_iter' : 60, 'batch_size': 400, 'sample_style': 'fast_increa
 #params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(50, 80, 8), batch_range = np.array([50]))
 #params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(100, 400, 8), batch_range = np.array([300, 400]))
 #params_tuner(f, phi, solver = "adagrad", batch_range = np.array([50, 250, 500]))
-#params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(5,10, 10), batch_range = np.array([200, 400]))
+#params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(4,9, 10), batch_range = np.array([200, 400]))
 
 #%% solve with SAGA
 
