@@ -333,7 +333,7 @@ def get_gisette(lambda1 = 0.02, train_size = .8):
         
     return f, phi, X_train, y_train, X_test, y_test
 
-def get_sido(lambda1 = 0.02, train_size = .8):
+def get_sido(lambda1 = 0.02, train_size = .8, scale = True):
     # download from http://www.causality.inf.ethz.ch/challenge.php?page=datasets
     
     X = np.loadtxt('data/sido0/sido0_train.data')
@@ -349,6 +349,11 @@ def get_sido(lambda1 = 0.02, train_size = .8):
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
                                                         random_state = 1234)
     
+    if scale:
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.transform(X_test)
+        
     phi = L1Norm(lambda1) 
     f = logistic_loss(X_train, y_train)
         

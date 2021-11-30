@@ -25,7 +25,7 @@ from snspp.experiments.experiment_utils import params_tuner, plot_multiple, plot
 from sklearn.linear_model import LogisticRegression
 
 
-f, phi, X_train, y_train, X_test, y_test = get_sido(lambda1 = l1)
+f, phi, X_train, y_train, X_test, y_test = get_sido(lambda1 = l1, scale = False)
 
 print("Regularization parameter lambda:", phi.lambda1)
 
@@ -59,13 +59,13 @@ if l1 == 1e-3:
     
     params_adagrad = {'n_epochs' : 60, 'batch_size': 20, 'alpha': 0.008}
     
-    params_snspp = {'max_iter' : 300, 'batch_size': 50, 'sample_style': 'constant', 'alpha' : 0.3,\
+    params_snspp = {'max_iter' : 300, 'batch_size': 60, 'sample_style': 'constant', 'alpha' : 0.4,\
                     "reduce_variance": True}
         
     #params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(5,12,12), n_iter = 25)
     #params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(200, 500, 10), batch_range = np.array([50, 100,200]), n_iter = 40)
     #params_tuner(f, phi, solver = "adagrad", batch_range = np.array([20, 200, 500]))
-    #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(0.1, 0.6, 7), batch_range = np.array([50,100]), n_iter = 200)
+    #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(0.1, 0.6, 5), batch_range = np.array([50,75,100]), n_iter = 200)
 
 elif l1 == 1e-2:
     
@@ -75,7 +75,7 @@ elif l1 == 1e-2:
     
     params_adagrad = {'n_epochs' : 60, 'batch_size': 200, 'alpha': 0.06}
     
-    params_snspp = {'max_iter' : 300, 'batch_size': 100, 'sample_style': 'constant', 'alpha' : 1.7,\
+    params_snspp = {'max_iter' : 300, 'batch_size': 100, 'sample_style': 'constant', 'alpha' : 1.,\
                     "reduce_variance": True}
     #50,1.4
     #params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(5,15,10), n_iter = 20)
