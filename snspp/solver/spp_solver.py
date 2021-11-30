@@ -228,7 +228,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     # variance reduction
     if params['reduce_variance']:
         xi_tilde = None; full_g = None
-        vr_min_iter = 0
     else:
         xi_tilde = None; full_g = None; this_iter_vr = False
     
@@ -256,13 +255,13 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #S = cyclic_batch(f.N, batch_size, iter_t)
         
         # variance reduction boolean
-        reduce_variance = params['reduce_variance'] and (iter_t >= vr_min_iter)
+        reduce_variance = params['reduce_variance']
         
         #########################################################
         ## Variance reduction
         #########################################################
         if params['reduce_variance']:
-            this_iter_vr = iter_t % params['m_iter'] == 0 and iter_t >= vr_min_iter
+            this_iter_vr = iter_t % params['m_iter'] == 0
             if this_iter_vr:
                 xi_tilde = compute_full_xi(f, x_t, is_easy)
                 full_g = (1/f.N) * (A.T @ xi_tilde)
