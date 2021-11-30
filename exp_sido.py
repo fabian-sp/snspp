@@ -49,41 +49,40 @@ print("l1, psi(x*) = ", l1, psi_star)
 
 initialize_solvers(f, phi)
 
-#%% params (l1=1e-3)
+#%% params 
+
 if l1 == 1e-3:
     params_saga = {'n_epochs' : 20, 'alpha': 6.5}
     
-    params_svrg = {'n_epochs' : 30, 'batch_size': 50, 'alpha': 160.}
-    #params_svrg = {'n_epochs' : 30, 'batch_size': 100, 'alpha': 270.} # not much worse, but same batch as snspp
+    params_svrg = {'n_epochs' : 20, 'batch_size': 50, 'alpha': 160.}
+    #params_svrg = {'n_epochs' : 30, 'batch_size': 100, 'alpha': 270.} # not much worse
     
-    params_adagrad = {'n_epochs' : 80, 'batch_size': 20, 'alpha': 0.008}
+    params_adagrad = {'n_epochs' : 60, 'batch_size': 20, 'alpha': 0.008}
     
-    params_snspp = {'max_iter' : 300, 'batch_size': 75, 'sample_style': 'constant', 'alpha' : 0.25,\
+    params_snspp = {'max_iter' : 300, 'batch_size': 50, 'sample_style': 'constant', 'alpha' : 0.3,\
                     "reduce_variance": True}
-    
+        
     #params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(5,12,12), n_iter = 25)
     #params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(200, 500, 10), batch_range = np.array([50, 100,200]), n_iter = 40)
     #params_tuner(f, phi, solver = "adagrad", batch_range = np.array([20, 200, 500]))
-    #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(0.1, 0.7, 10), batch_range = np.array([50,75]), n_iter = 200)
+    #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(0.1, 0.6, 7), batch_range = np.array([50,100]), n_iter = 200)
 
 elif l1 == 1e-2:
-    # params (l1=1e-2)
     
     params_saga = {'n_epochs' : 20, 'alpha': 8.}
     
-    params_svrg = {'n_epochs' : 30, 'batch_size': 200, 'alpha': 500.}
+    params_svrg = {'n_epochs' : 20, 'batch_size': 200, 'alpha': 500.}
     
-    params_adagrad = {'n_epochs' : 80, 'batch_size': 200, 'alpha': 0.06}
+    params_adagrad = {'n_epochs' : 60, 'batch_size': 200, 'alpha': 0.06}
     
-    params_snspp = {'max_iter' : 300, 'batch_size': 200, 'sample_style': 'fast_increasing', 'alpha' : 20.,\
+    params_snspp = {'max_iter' : 300, 'batch_size': 100, 'sample_style': 'constant', 'alpha' : 1.7,\
                     "reduce_variance": True}
-        
+    #50,1.4
     #params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(5,15,10), n_iter = 20)
     #params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(400, 1000, 10), batch_range = np.array([50, 200]), n_iter = 30)
     #params_tuner(f, phi, solver = "adagrad", batch_range = np.array([20, 200, 500]))
-    #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(5, 40, 10), batch_range = np.array([20, 200]), n_iter = 80)
-    #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(1, 5, 10), batch_range = np.array([20]), n_iter = 80)
-
+    #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(1,4,6), batch_range = np.array([50, 100, 200]), n_iter = 150)
+    
 else:
     raise KeyError("Parameters not tuned for this value of l1.")
 #%% solve with SAGA
