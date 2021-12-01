@@ -88,7 +88,7 @@ elif problem_type in ["logreg", "gisette", "mnist"]:
 #%%
 
 def do_grid_run(f, phi, step_size_range, batch_size_range = None, psi_star = 0, psi_tol = 1e-3, n_rep = 5, \
-                solver = "snspp", solver_params = dict()):
+                solver = "snspp", x0 = None, solver_params = dict()):
     
     ALPHA = step_size_range.copy()
     
@@ -129,7 +129,7 @@ def do_grid_run(f, phi, step_size_range, batch_size_range = None, psi_star = 0, 
             for j_rep in np.arange(n_rep):
                 try:
                     # SOLVE
-                    P = problem(f, phi, tol = 1e-20, params = this_params, verbose = False, measure = True)
+                    P = problem(f, phi, x0 = x0, tol = 1e-20, params = this_params, verbose = False, measure = True)
                     P.solve(solver = solver)
                           
                     obj_arr = P.info['objective'].copy()

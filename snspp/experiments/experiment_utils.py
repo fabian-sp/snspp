@@ -244,7 +244,7 @@ def initialize_solvers(f, phi):
       
     return
 
-def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = None, n_iter = 50, relative = True):
+def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = None, n_iter = 50, x0 = None, relative = True):
     
     if alpha_range is None:
         if solver in ['saga', 'batch saga', 'svrg']:
@@ -288,7 +288,7 @@ def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = N
                 params["batch_size"] = b
             print(params)
             
-            Q = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)
+            Q = problem(f, phi, x0 = x0, tol = 1e-5, params = params, verbose = False, measure = True)
             
             try: 
                 Q.solve(solver = solver)
