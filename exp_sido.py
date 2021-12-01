@@ -60,7 +60,6 @@ if l1 == 1e-3:
     params_saga = {'n_epochs' : 20, 'alpha': 8.}
     
     params_svrg = {'n_epochs' : 20, 'batch_size': 50, 'alpha': 210.}
-    #params_svrg = {'n_epochs' : 30, 'batch_size': 100, 'alpha': 270.} # not much worse
     
     params_adagrad = {'n_epochs' : 60, 'batch_size': 20, 'alpha': 0.008}
     
@@ -74,13 +73,13 @@ if l1 == 1e-3:
 
 elif l1 == 1e-2:
     
-    params_saga = {'n_epochs' : 20, 'alpha': 8.}
+    params_saga = {'n_epochs' : 20, 'alpha': 11.}
     
-    params_svrg = {'n_epochs' : 20, 'batch_size': 200, 'alpha': 500.}
+    params_svrg = {'n_epochs' : 20, 'batch_size': 50, 'alpha': 570.}
     
-    params_adagrad = {'n_epochs' : 60, 'batch_size': 200, 'alpha': 0.06}
+    params_adagrad = {'n_epochs' : 60, 'batch_size': 200, 'alpha': 0.015}
     
-    params_snspp = {'max_iter' : 400, 'batch_size': 100, 'sample_style': 'constant', 'alpha' : 1.,\
+    params_snspp = {'max_iter' : 400, 'batch_size': 50, 'sample_style': 'constant', 'alpha' : 12.,\
                     "reduce_variance": True}
 
     # params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(5,15,10), n_iter = 20, x0 = x0)
