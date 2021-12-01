@@ -41,7 +41,6 @@ end = time.time()
 print(f"Computing time: {end-start} sec")
 
 x_sk = sk.coef_.copy().squeeze()
-
 #(np.sign(predict(X_test, x_sk)) == np.sign(y_test)).sum() / len(y_test)
 
 psi_star = f.eval(x_sk) + phi.eval(x_sk)
@@ -49,23 +48,29 @@ print("l1, psi(x*) = ", l1, psi_star)
 
 initialize_solvers(f, phi)
 
+# compute starting point
+sk0 = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-8, \
+                        solver = 'saga', max_iter = 1, verbose = 0).fit(X_train,y_train)
+x0 = sk0.coef_.squeeze()
+print("x0 max", x0.max())
+
 #%% params 
 
 if l1 == 1e-3:
-    params_saga = {'n_epochs' : 20, 'alpha': 6.5}
+    params_saga = {'n_epochs' : 20, 'alpha': 8.}
     
-    params_svrg = {'n_epochs' : 20, 'batch_size': 50, 'alpha': 160.}
+    params_svrg = {'n_epochs' : 20, 'batch_size': 50, 'alpha': 210.}
     #params_svrg = {'n_epochs' : 30, 'batch_size': 100, 'alpha': 270.} # not much worse
     
     params_adagrad = {'n_epochs' : 60, 'batch_size': 20, 'alpha': 0.008}
     
-    params_snspp = {'max_iter' : 400, 'batch_size': 60, 'sample_style': 'constant', 'alpha' : 0.4,\
+    params_snspp = {'max_iter' : 320, 'batch_size': 100, 'sample_style': 'constant', 'alpha' : 2.7,\
                     "reduce_variance": True}
         
-    #params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(5,12,12), n_iter = 25)
-    #params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(200, 500, 10), batch_range = np.array([50, 100,200]), n_iter = 40)
-    #params_tuner(f, phi, solver = "adagrad", batch_range = np.array([20, 200, 500]))
-    #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(0.1, 0.6, 5), batch_range = np.array([50,75,100]), n_iter = 200)
+    # params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(5,12,10), n_iter = 25, x0 = x0)
+    # params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(150, 400, 8), batch_range = np.array([50, 100]), n_iter = 20, x0 = x0)
+    # params_tuner(f, phi, solver = "adagrad", batch_range = np.array([20, 200, 500]), x0 = x0)
+    # params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(1., 4., 8), batch_range = np.array([50, 100]), n_iter = 200, x0 = x0)
 
 elif l1 == 1e-2:
     
@@ -77,17 +82,17 @@ elif l1 == 1e-2:
     
     params_snspp = {'max_iter' : 400, 'batch_size': 100, 'sample_style': 'constant', 'alpha' : 1.,\
                     "reduce_variance": True}
-    #50,1.4
-    #params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(5,15,10), n_iter = 20)
-    #params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(400, 1000, 10), batch_range = np.array([50, 200]), n_iter = 30)
-    #params_tuner(f, phi, solver = "adagrad", batch_range = np.array([20, 200, 500]))
-    #params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(1,4,6), batch_range = np.array([50, 100, 200]), n_iter = 150)
+
+    # params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(5,15,10), n_iter = 20, x0 = x0)
+    # params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(400, 1000, 8), batch_range = np.array([50, 200]), n_iter = 30, x0 = x0)
+    # params_tuner(f, phi, solver = "adagrad", batch_range = np.array([20, 200, 500]), x0 = x0)
+    # params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(1,10,8), batch_range = np.array([50, 200]), n_iter = 150, x0 = x0)
     
 else:
     raise KeyError("Parameters not tuned for this value of l1.")
 #%% solve with SAGA
 
-Q = problem(f, phi, tol = 1e-9, params = params_saga, verbose = True, measure = True)
+Q = problem(f, phi, x0 = x0, tol = 1e-9, params = params_saga, verbose = True, measure = True)
 
 Q.solve(solver = 'saga')
 
@@ -95,7 +100,7 @@ print(f.eval(Q.x) +phi.eval(Q.x))
 
 #%% solve with ADAGRAD
 
-Q1 = problem(f, phi, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
+Q1 = problem(f, phi, x0 = x0, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
 
 Q1.solve(solver = 'adagrad')
 
@@ -103,7 +108,7 @@ print(f.eval(Q1.x)+phi.eval(Q1.x))
 
 #%% solve with SVRG
 
-Q2 = problem(f, phi, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
+Q2 = problem(f, phi, x0 = x0, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
 
 Q2.solve(solver = 'svrg')
 
@@ -111,7 +116,7 @@ print(f.eval(Q2.x)+phi.eval(Q2.x))
 
 #%% solve with SNSPP
 
-P = problem(f, phi, tol = 1e-9, params = params_snspp, verbose = True, measure = True)
+P = problem(f, phi, x0 = x0, tol = 1e-9, params = params_snspp, verbose = True, measure = True)
 
 P.solve(solver = 'snspp')
 
@@ -129,7 +134,7 @@ K = 20
 allQ = list()
 for k in range(K):
     
-    Q_k = problem(f, phi, tol = 1e-16, params = params_saga, verbose = True, measure = True)
+    Q_k = problem(f, phi, x0 = x0, tol = 1e-16, params = params_saga, verbose = True, measure = True)
     Q_k.solve(solver = 'saga')
     allQ.append(Q_k)
 
@@ -138,7 +143,7 @@ for k in range(K):
 allQ1 = list()
 for k in range(K):
     
-    Q1_k = problem(f, phi, tol = 1e-16, params = params_adagrad, verbose = True, measure = True)
+    Q1_k = problem(f, phi, x0 = x0, tol = 1e-16, params = params_adagrad, verbose = True, measure = True)
     Q1_k.solve(solver = 'adagrad')
     allQ1.append(Q1_k)
 
@@ -147,7 +152,7 @@ for k in range(K):
 allQ2 = list()
 for k in range(K):
     
-    Q2_k = problem(f, phi, tol = 1e-16, params = params_svrg, verbose = True, measure = True)
+    Q2_k = problem(f, phi, x0 = x0, tol = 1e-16, params = params_svrg, verbose = True, measure = True)
     Q2_k.solve(solver = 'svrg')
     allQ2.append(Q2_k)
     
@@ -156,7 +161,7 @@ for k in range(K):
 allP = list()
 for k in range(K):
     
-    P_k = problem(f, phi, tol = 1e-16, params = params_snspp, verbose = False, measure = True)
+    P_k = problem(f, phi, x0 = x0, tol = 1e-16, params = params_snspp, verbose = False, measure = True)
     P_k.solve(solver = 'snspp')
     allP.append(P_k)
 
@@ -192,10 +197,10 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 3}
 
-#Q.plot_objective(ax = ax, ls = '--', **kwargs)
-#Q1.plot_objective(ax = ax, ls = '-.', **kwargs)
-#Q2.plot_objective(ax = ax, ls = '-.', **kwargs)
-#P.plot_objective(ax = ax, **kwargs)
+# Q.plot_objective(ax = ax, ls = '--', **kwargs)
+# Q1.plot_objective(ax = ax, ls = '-.', **kwargs)
+# Q2.plot_objective(ax = ax, ls = '-.', **kwargs)
+# P.plot_objective(ax = ax, **kwargs)
 
 
 plot_multiple(allQ, ax = ax , label = "saga", ls = '--', **kwargs)
