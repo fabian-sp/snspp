@@ -70,7 +70,7 @@ elif setup == 2:
     params_snspp = {'max_iter' : 300, 'batch_size': 20, 'sample_style': 'fast_increasing', 'alpha' : 3., 'reduce_variance': True}
 
 elif setup == 3:
-    params_saga = {'n_epochs' : 25, 'alpha' : 45.}
+    params_saga = {'n_epochs' : 25, 'alpha' : 40.}
     params_svrg = {'n_epochs' : 10, 'batch_size': 10, 'alpha': 1200.}
     #params_svrg = {'n_epochs' : 10, 'batch_size': 100, 'alpha': 20000.}
     params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.06}   

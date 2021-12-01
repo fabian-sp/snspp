@@ -52,8 +52,8 @@ params_svrg = {'n_epochs': 20, 'batch_size': 650, 'alpha': 50000.}
 
 params_adagrad = {'n_epochs' : 120, 'batch_size': int(f.N*0.05), 'alpha': 0.03}
 
-params_snspp = {'max_iter' : 70, 'batch_size': 650, 'sample_style': 'fast_increasing', \
-          'alpha' : 10., 'reduce_variance': True}
+params_snspp = {'max_iter' : 70, 'batch_size': 560, 'sample_style': 'fast_increasing', \
+          'alpha' : 6., 'reduce_variance': True}
     
     
 #params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(2e4, 6e4, 7), batch_range = np.array([100, 650]))
