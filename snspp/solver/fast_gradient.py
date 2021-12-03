@@ -13,6 +13,36 @@ import warnings
 from numba.typed import List
 from numba import njit
 
+def derive_L(f):
+    """
+    Given a loss f, calculates the L-smoothness constant.
+    """
+    
+    normA =  (np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A)**2).max()
+    
+    if f.name == 'squared':
+        L = 2 * normA   
+    elif f.name == 'logistic':
+        L = .25 * normA
+    elif f.name == 'tstudent':
+        L =  (2/f.v) * normA
+    else:
+        warnings.warn("For the given loss f, we could not determine the correct Lischitz smoothness constant. The default step size is maybe too large (divergence) or too small (slow convergence).")
+        L = 1e2
+    
+    return L
+
+def saga_theretical_step_size(L, reg = 0, N = 1):
+    
+    if reg > 0:
+        alpha_1 = 1/(2*(N*reg + L))
+    else:
+        alpha_1 = 0
+                
+    alpha = max(alpha_1, 1./(3*L))
+    
+    return alpha
+
 def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict(), verbose = False, measure = False):
     """
     fast implementation of first-order methods for problems of the form 
