@@ -266,7 +266,8 @@ res_svrg = do_grid_run(f, phi, step_size_range, batch_size_range = batch_size_ra
 
 #%% store (or load results)
 
-filename = f'stability_{problem_type}_l1_{str(l1).replace('.','')}_psistar_' + str(float(PSI_TOL)).split('.')[1]
+strl1 = str(l1).replace('.','')
+filename = f'stability_{problem_type}_l1_{strl1}_psistar_' + str(float(PSI_TOL)).split('.')[1]
 
 res_to_save = dict()
 res_to_save.update({'snspp': res_spp})
