@@ -344,7 +344,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
             'mean_hist': xmean_hist, 'xi_hist': xi_hist,\
             'step_sizes': np.array(step_sizes), 'samples' : S_hist, \
             'ssn_info': ssn_info, 'runtime': np.array(runtime),\
-            'evaluations': np.array(num_eval)
+            'evaluations': np.array(num_eval)/f.N
             }
         
     

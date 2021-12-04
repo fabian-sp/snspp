@@ -84,7 +84,7 @@ class problem:
         self.measure = measure
         
     
-    def solve(self, solver = 'snspp'):
+    def solve(self, solver = 'snspp', eval_x0 = False):
         
         self.solver = solver
         if self.x0 is None:
@@ -101,7 +101,13 @@ class problem:
                                                  verbose = self.verbose, measure = self.measure)        
         else:
             raise ValueError("Not a known solver option")
-            
+        
+        if eval_x0 and self.measure:
+            self.info['runtime'] = np.insert(self.info['runtime'], 0, 0)
+            psi0 = self.f.eval(self.x0) + self.phi.eval(self.x0)
+            self.info['objective'] = np.insert(self.info['objective'], 0, psi0)
+            self.info['iterates'] = np.vstack((self.x0, self.info['iterates']))
+    
         return
     
     def plot_path(self, ax = None, runtime = True, mean = False, xlabel = True, ylabel = True):

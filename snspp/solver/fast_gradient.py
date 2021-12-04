@@ -228,7 +228,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     
     info = {'objective': np.array(obj), 'iterates': x_hist, \
             'mean_hist': xmean_hist, 'step_sizes': np.array(step_sizes), \
-            'runtime': np.array(runtime), 'evaluations': num_eval}
+            'runtime': np.array(runtime), 'evaluations': num_eval/f.N}
 
     return x_t, x_mean, info
 
