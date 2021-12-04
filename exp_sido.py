@@ -19,7 +19,7 @@ import pandas as pd
 from snspp.solver.opt_problem import problem
 from snspp.helper.data_generation import get_sido
 from snspp.experiments.experiment_utils import params_tuner, plot_multiple, plot_multiple_error, initialize_solvers, eval_test_set,\
-                                                convert_to_dict
+                                                convert_to_dict, logreg_loss
 
 
 from sklearn.linear_model import LogisticRegression
@@ -167,10 +167,6 @@ for k in range(K):
 
 #%% eval test set loss
 
-def logreg_loss(x, A, b):
-    z = A@x
-    return np.log(1 + np.exp(-b*z)).mean()
-
 kwargs2 = {"A": X_test, "b": y_test}
 
 for P in allP: P.info['test_error'] = eval_test_set(X = P.info["iterates"], loss = logreg_loss, **kwargs2)
@@ -225,7 +221,6 @@ if save:
 
 #%% coeffcient plot
 
-#P = allP[-1]
 
 fig,ax = plt.subplots(2, 2,  figsize = (7,5))
 allQ[0].plot_path(ax = ax[0,0], xlabel = False)
@@ -271,22 +266,3 @@ fig.subplots_adjust(top=0.96,
 if save:
     fig.savefig(f'data/plots/exp_sido/l1_{l1}/error.pdf', dpi = 300)
 
-#%%
-def predict(A,x):
-    
-    h = np.exp(A@x)
-    odds = h/(1+h)    
-    y = (odds >= .5)*2 -1
-    
-    return y
-
-def sample_error(A, b, x):
-    
-    b_pred = predict(A,x)
-    return (np.sign(b_pred) == np.sign(b)).sum() / len(b)
-
-
-sample_error(X_test, y_test, x_sk)
-sample_error(X_test, y_test, Q.x)
-sample_error(X_test, y_test, Q1.x)
-sample_error(X_test, y_test, P.x)

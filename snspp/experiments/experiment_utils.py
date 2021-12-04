@@ -356,6 +356,31 @@ def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = N
             
     return res, current_best, alpha_range
 
+#%%%
+##########################################################################
+## Test error loss functions
+##########################################################################
+
+def logreg_loss(x, A, b):
+    """objective function of logistic regression"""
+    z = A@x
+    return np.log(1 + np.exp(-b*z)).mean()
+
+def logreg_predict(x, A):
+    h = np.exp(A@x)
+    odds = h/(1+h)    
+    y = (odds >= .5)*2 - 1
+    return y
+
+def logreg_accuracy(x, A, b):
+    """predicition accuracy = ratio of correctly labelled samples"""
+    y_pred = logreg_predict(x, A)
+    correct = (np.sign(b)==np.sign(y_pred)).sum()
+    return correct/len(b)
+
+def tstudent_loss(x, A, b, v):
+    z = A@x - b
+    return 1/A.shape[0] * np.log(1+ z**2/v).sum()
 
 #%%
 ##########################################################################

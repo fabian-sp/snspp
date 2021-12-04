@@ -20,7 +20,8 @@ import time
 from snspp.helper.data_generation import tstudent_test
 from snspp.solver.opt_problem import problem
 from snspp.experiments.experiment_utils import params_tuner, plot_multiple, initialize_solvers,\
-                                                eval_test_set, plot_test_error, plot_multiple_error, runtime_infos, convert_to_dict
+                                                eval_test_set, plot_test_error, plot_multiple_error, runtime_infos,\
+                                                convert_to_dict, tstudent_loss
 
 #%% load data
 
@@ -163,10 +164,6 @@ for k in range(K):
 
 #%% Test set evaluation
 
-def tstudent_loss(x, A, b, v):
-    z = A@x - b
-    return 1/A.shape[0] * np.log(1+ z**2/v).sum()
-
 kwargs2 = {"A": X_test, "b": y_test, "v": f.v}
 
 # eval loss of single problem
@@ -236,7 +233,6 @@ if save:
 
 #%% coeffcient plot
 
-#P = allP[-1]
 
 fig,ax = plt.subplots(2, 2,  figsize = (7,5))
 allQ[0].plot_path(ax = ax[0,0], xlabel = False)

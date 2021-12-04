@@ -14,7 +14,7 @@ import pandas as pd
 from snspp.solver.opt_problem import problem
 from snspp.helper.data_generation import get_mnist
 from snspp.experiments.experiment_utils import params_tuner, plot_multiple, plot_multiple_error, eval_test_set, initialize_solvers,\
-                                                convert_to_dict
+                                                convert_to_dict, logreg_loss
 
 from sklearn.linear_model import LogisticRegression
 
@@ -133,24 +133,8 @@ for k in range(K):
     P_k.solve(solver = 'snspp')
     allP.append(P_k)
 
-#%% solve with SSNSP (multiple times, no VR)
-
-# params1 = params_snspp.copy()
-# params1["reduce_variance"] = False
-
-# allP1 = list()
-# for k in range(K):
-    
-#     P_k = problem(f, phi, tol = 1e-7, params = params1, verbose = False, measure = True)
-#     P_k.solve(solver = 'snspp')
-#     allP1.append(P_k)
-
 
 #%% eval test set loss
-
-def logreg_loss(x, A, b):
-    z = A@x
-    return np.log(1 + np.exp(-b*z)).mean()
 
 kwargs2 = {"A": X_test, "b": y_test}
 
@@ -205,7 +189,6 @@ if save:
 
 #%% coefficent plot
 
-P = allP[-1]
 
 fig,ax = plt.subplots(2, 2,  figsize = (7,5))
 allQ[0].plot_path(ax = ax[0,0], xlabel = False)
@@ -250,24 +233,24 @@ if save:
     fig.savefig(f'data/plots/exp_mnist/error.pdf', dpi = 300)
     
 #%%
-def predict(A,x):
+# def predict(A,x):
     
-    h = np.exp(A@x)
-    odds = h/(1+h)    
-    y = (odds >= .5)*2 -1
+#     h = np.exp(A@x)
+#     odds = h/(1+h)    
+#     y = (odds >= .5)*2 -1
     
-    return y
+#     return y
 
-def sample_error(A, b, x):
+# def sample_error(A, b, x):
     
-    b_pred = predict(A,x)
-    return (np.sign(b_pred) == np.sign(b)).sum() / len(b)
+#     b_pred = predict(A,x)
+#     return (np.sign(b_pred) == np.sign(b)).sum() / len(b)
 
 
-sample_error(X_test, y_test, x_sk)
-sample_error(X_test, y_test, Q.x)
-sample_error(X_test, y_test, Q1.x)
-sample_error(X_test, y_test, P.x)
+# sample_error(X_test, y_test, x_sk)
+# sample_error(X_test, y_test, Q.x)
+# sample_error(X_test, y_test, Q1.x)
+# sample_error(X_test, y_test, P.x)
 
 
 

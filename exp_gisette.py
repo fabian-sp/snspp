@@ -28,7 +28,7 @@ import pandas as pd
 from snspp.solver.opt_problem import problem
 from snspp.helper.data_generation import get_gisette
 from snspp.experiments.experiment_utils import params_tuner, plot_multiple, plot_multiple_error, initialize_solvers, eval_test_set,\
-                                                convert_to_dict
+                                                convert_to_dict, logreg_loss
 
 
 from sklearn.linear_model import LogisticRegression
@@ -152,10 +152,6 @@ for k in range(K):
 
 
 #%% eval test set loss
-
-def logreg_loss(x, A, b):
-    z = A@x
-    return np.log(1 + np.exp(-b*z)).mean()
 
 kwargs2 = {"A": X_test, "b": y_test}
 
