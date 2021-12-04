@@ -128,7 +128,7 @@ class problem:
         coeffs = self.info['iterates'][-1,:]
         c = plt.cm.Blues(abs(coeffs)/max(abs(coeffs)))
         
-        if  not mean:
+        if not mean:
             to_plot = 'iterates'
             title_suffix = ''
         else:
@@ -151,12 +151,13 @@ class problem:
         
         if ylabel:
             ax.set_ylabel('Coefficient')
+        
         ax.set_title(self.solver + title_suffix)
         #ax.grid(axis = 'y', ls = '-', lw = .5)
         
         return
     
-    def plot_objective(self, ax = None, runtime = True, num_eval = False, label = None, markersize = 3, lw = 0.4, ls = '-', psi_star = 0, log_scale = False):
+    def plot_objective(self, ax = None, runtime = True, label = None, markersize = 3, lw = 0.4, ls = '-', psi_star = 0, log_scale = False):
         """
         
         Parameters
@@ -164,9 +165,7 @@ class problem:
         ax : matplotlib.axes, optional
             Axis where to plot. The default is None.
         runtime : bool, optional
-            whether to plot runtime as x-axis (other: num evaluations or iteration number). The default is True.
-        num_eval : bool, optional
-            whether to plot number of evaluations as x-axis. The default is False.
+            whether to plot runtime as x-axis (else: num evaluations). The default is True.
         label : str, optional
             label for legend. The default is None.
         markersize : float, optional
@@ -185,7 +184,6 @@ class problem:
         None.
 
         """
-        assert not(runtime and num_eval), "Only one of the two arguments for the x-axis can be set to True."
         
         plt.rcParams["font.family"] = "serif"
         plt.rcParams['font.size'] = 12
@@ -200,10 +198,8 @@ class problem:
         
         if runtime:
             x = self.info['runtime'].cumsum()
-        elif num_eval:
-            x = self.info['evaluations'].cumsum() / self.f.N
         else:
-            x = np.arange(len(self.info['objective']))
+            x = self.info['evaluations'].cumsum()
         
         y = self.info['objective'] - psi_star
         
@@ -220,22 +216,19 @@ class problem:
             c = color_dict["default"]
             marker = marker_dict["default"]
             
-        pt = ax.plot(x,y, marker = marker, ls = ls, label = label, markersize = markersize, c = c)
+        ax.plot(x,y, marker = marker, ls = ls, label = label, markersize = markersize, c = c)
         
         ax.legend()
         if runtime:
             ax.set_xlabel("Runtime [sec]", fontsize = 12)
-        elif num_eval:
-            ax.set_xlabel(r"Evaluations/$N$", fontsize = 12)
         else:
-            ax.set_xlabel("Iteration / epoch number", fontsize = 12)
+            ax.set_xlabel("Epoch", fontsize = 12)
         
         if psi_star == 0:
             ax.set_ylabel(r"$\psi(x^k)$", fontsize = 12)
         else:
             ax.set_ylabel(r"$\psi(x^k) - \psi^\star$", fontsize = 12)
-            
-        
+                
         ax.grid(ls = '-', lw = .5)
         
         if log_scale:
@@ -312,22 +305,3 @@ class problem:
         
         return fig
     
-    # def plot_samples(self):
-    #     assert 'samples' in self.info.keys(), "No sample information"
-        
-    #     tmpfun = lambda x: np.isin(np.arange(self.f.N), x)
-        
-    #     tmp = np.array([tmpfun(s) for s in self.info['samples']])
-    #     tmp2 = tmp.sum(axis=0)
-        
-    #     fig = plt.figure(figsize=(6, 6))
-    #     grid = plt.GridSpec(1, 10, wspace=0.4, hspace=0.3)
-    #     ax1 = fig.add_subplot(grid[:, :-3])
-    #     ax2 = fig.add_subplot(grid[:, -3:])
-        
-    #     sns.heatmap(tmp.T, square = False, annot = False, cmap = 'Blues', vmin = 0, vmax = tmp.max(), cbar = False, \
-    #                 xticklabels = [], ax = ax1)
-    #     sns.heatmap(tmp2[:,np.newaxis], square = False, annot = True, cmap = 'Blues', cbar = False, \
-    #                 xticklabels = [], yticklabels = [], ax = ax2)
-        
-    #     return

@@ -144,3 +144,17 @@ def test_snspp_general():
     assert_almost_equal(obj1, obj2, decimal = 4) 
     
     return
+
+#%%
+
+
+def test_plot_funs():
+    params = {'n_epochs' : 100, 'alpha': 1.}
+    
+    f, phi, x_sk = create_test_instance(prob = 'lasso')
+    Q = template_test(f, phi, x_sk, params, 'saga')
+    
+    Q.plot_objective(runtime = True)
+    Q.plot_objective(runtime = False)
+    
+    return

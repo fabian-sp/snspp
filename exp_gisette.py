@@ -28,7 +28,7 @@ import pandas as pd
 from snspp.solver.opt_problem import problem
 from snspp.helper.data_generation import get_gisette
 from snspp.experiments.experiment_utils import params_tuner, plot_multiple, initialize_solvers, eval_test_set,\
-                                                convert_to_dict, logreg_loss, logreg_accuracy
+                                                logreg_loss, logreg_accuracy
 
 from snspp.experiments.container import Experiment
 
@@ -110,7 +110,7 @@ P.solve(solver = 'snspp')
 #%%
 
 ###########################################################################
-# multiple execution and plotting
+# multiple execution
 ############################################################################
 
 K = 20
@@ -178,24 +178,23 @@ for k in range(K):
     allP.append(P_k)
 
 
-#%% eval test set loss
-
-# for P in allP: P.info['test_error'] = eval_test_set(X = P.info["iterates"], loss = logreg_loss, **kwargs2)
-# for Q in allQ: Q.info['test_error'] = eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2)
-# for Q in allQ1: Q.info['test_error'] = eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2)
-# for Q in allQ2: Q.info['test_error'] = eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2)
-    
-
 #%% coeffcient frame
 
 all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q1.x, Q2.x)).T, columns = ['scikit', 'spp', 'saga', 'adagrad', 'svrg'])
 
 Cont.save_to_disk(path = 'data/output/')
 
+#%%
+
+###########################################################################
+# plotting
+############################################################################
+
+xlim = (0, 5)
+
 #%% objective plot
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
-
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 3}
 
 #Q.plot_objective(ax = ax, ls = '--', **kwargs)
@@ -203,16 +202,15 @@ kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 3}
 #Q2.plot_objective(ax = ax, ls = '-.', **kwargs)
 #P.plot_objective(ax = ax, **kwargs)
 
+# plot_multiple(allQ, ax = ax , label = "saga", ls = '--', **kwargs)
+# plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', **kwargs)
+# plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', **kwargs)
+# plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
 
-plot_multiple(allQ, ax = ax , label = "saga", ls = '--', **kwargs)
-plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', **kwargs)
-plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', **kwargs)
-plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
+Cont.plot_objective(ax = ax, median = False **kwargs) 
 
-
-ax.set_xlim(-.1, 6)
-ax.set_ylim(1e-7,)
-
+ax.set_xlim(xlim)
+ax.set_ylim(1e-7,1e-1)
 ax.legend(fontsize = 10)
 
 fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
@@ -224,11 +222,12 @@ if save:
 
 P = allP[-1]
 
-fig,ax = plt.subplots(2, 2,  figsize = (7,5))
-allQ[0].plot_path(ax = ax[0,0], xlabel = False)
-allQ1[0].plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
-allQ2[0].plot_path(ax = ax[1,0])
-allP[0].plot_path(ax = ax[1,1], ylabel = False)
+fig,ax = plt.subplots(2, 2, figsize = (7,5))
+
+Q_k.plot_path(ax = ax[0,0], xlabel = False)
+Q1_k.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
+Q2_k.plot_path(ax = ax[1,0])
+P_k.plot_path(ax = ax[1,1], ylabel = False)
 
 for a in ax.ravel():
     a.set_ylim(-.5,.3)
@@ -238,21 +237,19 @@ plt.subplots_adjust(hspace = 0.33)
 if save:
     fig.savefig(f'data/plots/exp_gisette/coeff.pdf', dpi = 300)
 
-
 #%%
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
-
-kwargs = {"log_scale": False, "lw": 0.7, "markersize": 3, 'ls': '-'}
+kwargs = {"log_scale": False, "lw": 0.7, "markersize": 1., 'ls': '-'}
 
 # plot_multiple_error(allQ, ax = ax , label = "saga", ls = '--', **kwargs)
 # plot_multiple_error(allQ1, ax = ax , label = "adagrad", ls = '--', **kwargs)
 # plot_multiple_error(allQ2, ax = ax , label = "svrg", ls = '--', **kwargs)
 # plot_multiple_error(allP, ax = ax , label = "snspp", **kwargs)
 
-Cont.plot_error(error_key = 'test_loss', ax = ax, ylabel = 'Test loss', **kwargs) 
+Cont.plot_error(error_key = 'test_loss', ax = ax, median = True, ylabel = 'Test loss', **kwargs) 
 
-ax.set_xlim(-.1, 6)
-ax.set_ylim(0.32, 0.42)
+ax.set_xlim(xlim)
+ax.set_ylim(0.3, 0.4)
 ax.legend(fontsize = 10)
 
 fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)

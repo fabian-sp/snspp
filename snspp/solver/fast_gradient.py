@@ -213,9 +213,9 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     
     # compute number of gradient evaluations retrospectively
     # one entry in x_hist marks one epoch for all solvers (SVRG has full gradient additionally)
-    num_eval = np.ones(n_iter)*f.N
+    num_eval = np.ones(n_iter)
     if solver == 'svrg':
-        num_eval *= 2
+        num_eval *= 2.
     
     if eta > tol:
         status = 'max iterations reached'
@@ -228,7 +228,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     
     info = {'objective': np.array(obj), 'iterates': x_hist, \
             'mean_hist': xmean_hist, 'step_sizes': np.array(step_sizes), \
-            'runtime': np.array(runtime), 'evaluations': num_eval/f.N}
+            'runtime': np.array(runtime), 'evaluations': num_eval}
 
     return x_t, x_mean, info
 
