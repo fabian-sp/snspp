@@ -61,11 +61,11 @@ initialize_solvers(f, phi)
 
 params_saga = {'n_epochs' : 50, 'alpha': 5.5}
 
-params_svrg = {'n_epochs' : 50, 'batch_size': 50, 'alpha': 60.}
+params_svrg = {'n_epochs' : 40, 'batch_size': 50, 'alpha': 60.}
 
-params_adagrad = {'n_epochs' : 200, 'batch_size': 240, 'alpha': 0.028}
+params_adagrad = {'n_epochs' : 170, 'batch_size': 240, 'alpha': 0.028}
 
-params_snspp = {'max_iter' : 60, 'batch_size': 400, 'sample_style': 'fast_increasing', 'alpha' : 7.,\
+params_snspp = {'max_iter' : 100, 'batch_size': 400, 'sample_style': 'fast_increasing', 'alpha' : 7.,\
           "reduce_variance": True}
 
 #params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(4,8, 10))
