@@ -75,44 +75,6 @@ def eval_test_set(X, loss = list(), names = list(), kwargs = dict()):
         res[names[l]] = L
     return res
 
-def runtime_infos(list_of_P, name, suffix = ''):
-    """
-
-    Parameters
-    ----------
-    list_of_P : list
-        list of lists, each element is a collection of problem objects (multiple ruins of same solver).
-    name : str
-        name of the experiment.
-
-    Returns
-    -------
-    None.
-
-    """
-    rt_info = pd.DataFrame()
-    
-    for allP in list_of_P:
-        K = len(allP)
-        solver = allP[0].solver
-        
-        rt_array = np.vstack([allP[k].info["runtime"] for k in range(K)])
-        rt_std = rt_array.std(axis=0)
-        rt_mean = rt_array.mean(axis=0)
-        n_iter = rt_array.shape[1]
-        
-        rt_info.loc[solver, 'mean'] = rt_mean.mean()
-        rt_info.loc[solver, 'std'] = rt_std.mean()
-        rt_info.loc[solver, 'std/mean'] = (rt_std/rt_mean).mean()
-        
-        
-    path = f'data/plots/{name}/rt_info'+ suffix + '.csv'
-    rt_info.to_csv(path)
-    
-    return rt_info
-
-        
-
 ##########################################################################
 ## Fast gradient methods utils
 ##########################################################################
