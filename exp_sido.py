@@ -142,7 +142,7 @@ Cont = Experiment(name = 'exp_sido')
 allQ = list()
 for k in range(K):
     
-    Q_k = problem(f, phi, tol = 1e-9, params = params_saga, verbose = True, measure = True)
+    Q_k = problem(f, phi, x0 = x0, tol = 1e-9, params = params_saga, verbose = True, measure = True)
     Q_k.solve(solver = 'saga')
     
     Cont.store(Q_k, k)
@@ -156,7 +156,7 @@ for k in range(K):
 allQ1 = list()
 for k in range(K):
     
-    Q1_k = problem(f, phi, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
+    Q1_k = problem(f, phi, x0 = x0, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
     Q1_k.solve(solver = 'adagrad')
     
     Cont.store(Q1_k, k)
@@ -170,7 +170,7 @@ for k in range(K):
 allQ2 = list()
 for k in range(K):
     
-    Q2_k = problem(f, phi, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
+    Q2_k = problem(f, phi, x0 = x0, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
     Q2_k.solve(solver = 'svrg')
     
     Cont.store(Q2_k, k)
@@ -184,7 +184,7 @@ for k in range(K):
 allP = list()
 for k in range(K):
     
-    P_k = problem(f, phi, tol = 1e-9, params = params_snspp, verbose = False, measure = True)
+    P_k = problem(f, phi, x0 = x0, tol = 1e-9, params = params_snspp, verbose = False, measure = True)
     P_k.solve(solver = 'snspp')
     
     Cont.store(P_k, k)
