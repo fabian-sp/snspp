@@ -243,7 +243,7 @@ ax.legend(fontsize = 10)
 fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
 
 if save:
-    fig.savefig(f'data/plots/exp_gisette/error.pdf', dpi = 300)
+    fig.savefig(f'data/plots/exp_gisette/accuracy.pdf', dpi = 300)
 
 #%% coeffcient plot
 
