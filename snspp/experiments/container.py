@@ -102,7 +102,7 @@ class Experiment:
                 c = color_dict["default"]
                 marker = marker_dict["default"]
         
-            ax.plot(all_xax, y, marker = marker, ls = ls, markersize = markersize, color = c, label = s)
+            ax.plot(all_xax, y, marker = marker, ls = ls, lw = lw, markersize = markersize, color = c, label = s)
             
             # plot band of standard deviation
             if sigma > 0:

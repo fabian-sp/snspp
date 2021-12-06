@@ -27,7 +27,7 @@ import pandas as pd
 
 from snspp.solver.opt_problem import problem
 from snspp.helper.data_generation import get_gisette
-from snspp.experiments.experiment_utils import params_tuner, plot_multiple, initialize_solvers, eval_test_set,\
+from snspp.experiments.experiment_utils import params_tuner,  initialize_solvers, eval_test_set,\
                                                 logreg_loss, logreg_accuracy
 
 from snspp.experiments.container import Experiment
@@ -190,37 +190,62 @@ Cont.save_to_disk(path = 'data/output/')
 # plotting
 ############################################################################
 
-xlim = (0, 5)
+xlim = (0, 4)
 
 #%% objective plot
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
-kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 3}
+kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
 
 #Q.plot_objective(ax = ax, ls = '--', **kwargs)
 #Q1.plot_objective(ax = ax, ls = '-.', **kwargs)
 #Q2.plot_objective(ax = ax, ls = '-.', **kwargs)
 #P.plot_objective(ax = ax, **kwargs)
 
-# plot_multiple(allQ, ax = ax , label = "saga", ls = '--', **kwargs)
-# plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', **kwargs)
-# plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', **kwargs)
-# plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
-
-Cont.plot_objective(ax = ax, median = False **kwargs) 
+Cont.plot_objective(ax = ax, median = False, **kwargs) 
 
 ax.set_xlim(xlim)
 ax.set_ylim(1e-7,1e-1)
-ax.legend(fontsize = 10)
+ax.legend(fontsize = 10, loc = 'upper right')
 
 fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
 
 if save:
     fig.savefig(f'data/plots/exp_gisette/obj.pdf', dpi = 300)
 
-#%% coeffcient plot
+#%% test loss
 
-P = allP[-1]
+fig,ax = plt.subplots(figsize = (4.5, 3.5))
+kwargs = {"log_scale": False, "lw": 1., "markersize": 1.5, 'ls': '-'}
+
+Cont.plot_error(error_key = 'test_loss', ax = ax, median = True, ylabel = 'Test loss', **kwargs) 
+
+ax.set_xlim(xlim)
+ax.set_ylim(0.3, 0.4)
+ax.legend(fontsize = 10)
+
+fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
+
+if save:
+    fig.savefig(f'data/plots/exp_gisette/error.pdf', dpi = 300)
+
+#%% test accuracy
+
+fig,ax = plt.subplots(figsize = (4.5, 3.5))
+kwargs = {"log_scale": False, "lw": 1., "markersize": 1.5, 'ls': '-'}
+
+Cont.plot_error(error_key = 'test_accuracy', ax = ax, median = True, ylabel = 'Test accuracy', **kwargs) 
+
+ax.set_xlim(xlim)
+ax.set_ylim(0.6, 1.)
+ax.legend(fontsize = 10)
+
+fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
+
+if save:
+    fig.savefig(f'data/plots/exp_gisette/error.pdf', dpi = 300)
+
+#%% coeffcient plot
 
 fig,ax = plt.subplots(2, 2, figsize = (7,5))
 
@@ -236,27 +261,6 @@ plt.subplots_adjust(hspace = 0.33)
 
 if save:
     fig.savefig(f'data/plots/exp_gisette/coeff.pdf', dpi = 300)
-
-#%%
-fig,ax = plt.subplots(figsize = (4.5, 3.5))
-kwargs = {"log_scale": False, "lw": 0.7, "markersize": 1., 'ls': '-'}
-
-# plot_multiple_error(allQ, ax = ax , label = "saga", ls = '--', **kwargs)
-# plot_multiple_error(allQ1, ax = ax , label = "adagrad", ls = '--', **kwargs)
-# plot_multiple_error(allQ2, ax = ax , label = "svrg", ls = '--', **kwargs)
-# plot_multiple_error(allP, ax = ax , label = "snspp", **kwargs)
-
-Cont.plot_error(error_key = 'test_loss', ax = ax, median = True, ylabel = 'Test loss', **kwargs) 
-
-ax.set_xlim(xlim)
-ax.set_ylim(0.3, 0.4)
-ax.legend(fontsize = 10)
-
-fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
-
-if save:
-    fig.savefig(f'data/plots/exp_gisette/error.pdf', dpi = 300)
-
 
 
 

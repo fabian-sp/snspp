@@ -19,63 +19,6 @@ plt.rc('text', usetex=True)
 ## Plotting
 ##########################################################################
 
-def plot_multiple(allP, ax = None, label = "snspp", runtime = True, name = None, marker = 'o', markersize = 3, ls = '-', lw = 0.4, psi_star = 0, log_scale = False, sigma = 0):
- 
-  
-    if name is None:
-        name = label
-    
-    if ax is None:
-        fig, ax = plt.subplots()
-            
-    K = len(allP)
-    
-    for k in range(K):
-        assert allP[k].solver == label, "solver attribute and label are not matching!"
-    
-    all_obj = np.vstack([allP[k].info["objective"] for k in range(K)])
-    
-    all_obj = all_obj - psi_star
-    all_mean = all_obj.mean(axis=0)
-    all_std = all_obj.std(axis=0)
-    
-    if runtime:
-        all_xax = np.vstack([allP[k].info["runtime"] for k in range(K)]).mean(axis=0).cumsum()
-        #all_xax_std=np.vstack([allP[k].info["runtime"] for k in range(K)]).std(axis=0)
-    else: 
-        all_xax = np.vstack([allP[k].info["evaluations"] for k in range(K)]).mean(axis=0).cumsum() 
-        
-    try:
-        c = color_dict[label]
-        marker = marker_dict[label]
-    except:
-        c = color_dict["default"]
-        marker = marker_dict["default"]
-
-    ax.plot(all_xax, all_mean, marker = marker, ls = ls, markersize = markersize, color = c, label = name)
-    
-    # plot band of standard deviation
-    if sigma > 0:
-        ax.fill_between(all_xax, all_mean - sigma*all_std, all_mean+sigma*all_std, color = c, alpha = .5)
-    
-    ax.grid(ls = '-', lw = .5) 
-    
-    if runtime:
-        ax.set_xlabel("Runtime [sec]", fontsize = 12)
-    else:
-        ax.set_xlabel(r"Evaluations/$N$", fontsize = 12)
-    
-    if psi_star == 0:
-        ax.set_ylabel(r"$\psi(x^k)$", fontsize = 12)
-    else:
-        ax.set_ylabel(r"$\psi(x^k) - \psi^\star$", fontsize = 12)
-
-    if log_scale:
-        ax.set_yscale('log')
-            
-    return
-
-
 def plot_test_error(P, ax = None, runtime = True, name = None, markersize = 3, ls = '-', lw = 0.4, log_scale = True):
     
     if runtime:
