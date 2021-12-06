@@ -55,8 +55,8 @@ class Experiment:
             
         return
     
-    def save_to_disk(self, path = ''):           
-        np.save(path + self.name + '.npy', self.results)
+    def save_to_disk(self, path = '', path_suffix = ''):           
+        np.save(path + self.name + path_suffix +  '.npy', self.results)
         return
 
 #########################################################################

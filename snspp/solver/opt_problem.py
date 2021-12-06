@@ -84,7 +84,7 @@ class problem:
         self.measure = measure
         
     
-    def solve(self, solver = 'snspp', eval_x0 = False):
+    def solve(self, solver = 'snspp', eval_x0 = True):
         
         self.solver = solver
         if self.x0 is None:
@@ -107,6 +107,8 @@ class problem:
             psi0 = self.f.eval(self.x0) + self.phi.eval(self.x0)
             self.info['objective'] = np.insert(self.info['objective'], 0, psi0)
             self.info['iterates'] = np.vstack((self.x0, self.info['iterates']))
+    
+        assert  len(self.info['iterates']) == len(self.info['runtime']) == len(self.info['objective']), "Runtime + objective measurements and iterate history must be of same length for plotting."   
     
         return
     
