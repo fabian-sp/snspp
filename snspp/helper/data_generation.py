@@ -60,17 +60,17 @@ def create_A(N, n, dist = 'ortho', kappa = 1.):
     A : array of shape (N,n)
     """
     if dist == 'ortho':
-        #if N >= n:
-            # Q = ortho_group.rvs(N)
-            # d = np.linspace(kappa, 1, n)
-            # D = np.diag(d)
-            # A = Q[:,:n]@D
-        
-        A = 2*np.random.rand(N,n)-1
-        U,S,Vh = np.linalg.svd(A, full_matrices = False)
-        d = np.linspace(kappa, 1, min(N,n))
-        A = U@np.diag(d)@Vh
-            
+        if N >= n:
+            Q = ortho_group.rvs(N)
+            d = np.linspace(kappa, 1, n)
+            D = np.diag(d)
+            A = Q[:,:n]@D
+        else:
+            A = 2*np.random.rand(N,n)-1
+            U,S,Vh = np.linalg.svd(A, full_matrices = False)
+            d = np.linspace(kappa, 1, min(N,n))
+            A = U@np.diag(d)@Vh
+                
         #print("Condition number of A:", np.linalg.cond(A) )
         
     elif dist == 'unif':
