@@ -72,6 +72,14 @@ def test_svrg_lasso():
     
     return
 
+def test_sgd_lasso():
+    params = {'n_epochs' : 50, 'batch_size': 5}
+    
+    f, phi, x_sk = create_test_instance(prob = 'lasso')
+    template_test(f, phi, x_sk, params, 'sgd', assert_objective = False)
+    
+    return
+
 #%%
 
 def test_saga_logreg():
@@ -91,10 +99,18 @@ def test_adagrad_logreg():
     return
 
 def test_svrg_logreg():
-    params = {'n_epochs' : 1000, 'batch_size': 2}
+    params = {'n_epochs' : 1000, 'batch_size': 5}
     
     f, phi, x_sk = create_test_instance(prob = 'logreg')
     template_test(f, phi, x_sk, params, 'svrg')
+    
+    return
+
+def test_batch_saga_logreg():
+    params = {'n_epochs' : 1000, 'batch_size': 5}
+    
+    f, phi, x_sk = create_test_instance(prob = 'logreg')
+    template_test(f, phi, x_sk, params, 'batch-saga')
     
     return
 
@@ -142,5 +158,19 @@ def test_snspp_general():
     obj1 = f.eval(P.x)+phi.eval(P.x)
     obj2 = f.eval(sk.coef_)+phi.eval(sk.coef_)
     assert_almost_equal(obj1, obj2, decimal = 4) 
+    
+    return
+
+#%%
+
+
+def test_plot_funs():
+    params = {'n_epochs' : 100, 'alpha': 1.}
+    
+    f, phi, x_sk = create_test_instance(prob = 'lasso')
+    Q = template_test(f, phi, x_sk, params, 'saga')
+    
+    Q.plot_objective(runtime = True)
+    Q.plot_objective(runtime = False)
     
     return

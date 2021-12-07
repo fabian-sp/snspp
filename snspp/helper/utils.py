@@ -1,5 +1,6 @@
 import numpy as np
 from numba import njit
+import warnings
 
 ############################################################################################
 ### Stopping criteria
@@ -28,6 +29,23 @@ def stop_scikit_saga(x_t, x_old):
 ############################################################################################
 ### Useful functions for algorithms
 ############################################################################################
+
+def derive_L(f):
+    """
+    Given a loss f_i, calculates L := max L_i where f_i is L_i smooth. Does not account for A_i here!
+    """
+    
+    if f.name == 'squared':
+        L = 2    
+    elif f.name == 'logistic':
+        L = .25 
+    elif f.name == 'tstudent':
+        L =  (2/f.v) 
+    else:
+        warnings.warn("For the given loss f, we could not determine the correct Lischitz smoothness constant. The default step size is maybe too large (divergence) or too small (slow convergence).")
+        L = 1e2
+    
+    return L
 
 def compute_full_xi(f, x, is_easy = False):
     """

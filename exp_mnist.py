@@ -13,8 +13,10 @@ import pandas as pd
 
 from snspp.solver.opt_problem import problem
 from snspp.helper.data_generation import get_mnist
-from snspp.experiments.experiment_utils import params_tuner, plot_multiple, plot_multiple_error, eval_test_set, initialize_solvers,\
-                                                convert_to_dict
+from snspp.experiments.experiment_utils import params_tuner, initialize_solvers, eval_test_set,\
+                                                logreg_loss, logreg_accuracy
+
+from snspp.experiments.container import Experiment
 
 from sklearn.linear_model import LogisticRegression
 
@@ -48,11 +50,11 @@ initialize_solvers(f, phi)
 
 params_saga = {'n_epochs': 20, 'alpha': 55.}
 
-params_svrg = {'n_epochs': 20, 'batch_size': 650, 'alpha': 50000.}
+params_svrg = {'n_epochs': 15, 'batch_size': 650, 'alpha': 50000.}
 
-params_adagrad = {'n_epochs' : 120, 'batch_size': int(f.N*0.05), 'alpha': 0.03}
+params_adagrad = {'n_epochs' : 100, 'batch_size': int(f.N*0.05), 'alpha': 0.03}
 
-params_snspp = {'max_iter' : 70, 'batch_size': 560, 'sample_style': 'fast_increasing', \
+params_snspp = {'max_iter' : 120, 'batch_size': 560, 'sample_style': 'fast_increasing', \
           'alpha' : 6., 'reduce_variance': True}
     
     
@@ -93,17 +95,29 @@ P.solve(solver = 'snspp')
 #%%
 
 ###########################################################################
-# multiple execution and plotting
+# multiple execution
 ############################################################################
+
+K = 20
+
+kwargs2 = {"A": X_test, "b": y_test}
+loss = [logreg_loss, logreg_accuracy]
+names = ['test_loss', 'test_accuracy']
+
+Cont = Experiment(name = 'exp_mnist')
 
 #%% solve with SAGA (multiple times)
 
-K = 20
 allQ = list()
 for k in range(K):
     
     Q_k = problem(f, phi, tol = 1e-9, params = params_saga, verbose = True, measure = True)
     Q_k.solve(solver = 'saga')
+    
+    Cont.store(Q_k, k)
+    err_k = eval_test_set(X = Q_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
+    Cont.store_by_key(res = err_k, label = Q_k.solver, k = k)
+    
     allQ.append(Q_k)
 
 #%% solve with ADAGRAD (multiple times)
@@ -113,6 +127,11 @@ for k in range(K):
     
     Q1_k = problem(f, phi, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
     Q1_k.solve(solver = 'adagrad')
+    
+    Cont.store(Q1_k, k)
+    err_k = eval_test_set(X = Q1_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
+    Cont.store_by_key(res = err_k, label = Q1_k.solver, k = k)
+    
     allQ1.append(Q1_k)
 
 #%% solve with SVRG (multiple times)
@@ -122,6 +141,11 @@ for k in range(K):
     
     Q2_k = problem(f, phi, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
     Q2_k.solve(solver = 'svrg')
+    
+    Cont.store(Q2_k, k)
+    err_k = eval_test_set(X = Q2_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
+    Cont.store_by_key(res = err_k, label = Q2_k.solver, k = k)
+    
     allQ2.append(Q2_k)
     
 #%% solve with SSNSP (multiple times, VR)
@@ -131,87 +155,92 @@ for k in range(K):
     
     P_k = problem(f, phi, tol = 1e-9, params = params_snspp, verbose = False, measure = True)
     P_k.solve(solver = 'snspp')
+    
+    Cont.store(P_k, k)
+    err_k = eval_test_set(X = P_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
+    Cont.store_by_key(res = err_k, label = P_k.solver, k = k)
+    
     allP.append(P_k)
 
-#%% solve with SSNSP (multiple times, no VR)
-
-# params1 = params_snspp.copy()
-# params1["reduce_variance"] = False
-
-# allP1 = list()
-# for k in range(K):
-    
-#     P_k = problem(f, phi, tol = 1e-7, params = params1, verbose = False, measure = True)
-#     P_k.solve(solver = 'snspp')
-#     allP1.append(P_k)
-
-
-#%% eval test set loss
-
-def logreg_loss(x, A, b):
-    z = A@x
-    return np.log(1 + np.exp(-b*z)).mean()
-
-kwargs2 = {"A": X_test, "b": y_test}
-
-for P in allP: P.info['test_error'] = eval_test_set(X = P.info["iterates"], loss = logreg_loss, **kwargs2)
-for Q in allQ: Q.info['test_error'] = eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2)
-for Q in allQ1: Q.info['test_error'] = eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2)
-for Q in allQ2: Q.info['test_error'] = eval_test_set(X = Q.info["iterates"], loss = logreg_loss, **kwargs2)
-    
 #%% coeffcient frame
 
-all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q1.x)).T, columns = ['scikit', 'spp', 'saga', 'adagrad'])
+all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q1.x, Q2.x)).T, columns = ['scikit', 'spp', 'saga', 'adagrad', 'svrg'])
 
-res_to_save = dict()
-res_to_save.update(convert_to_dict(allQ))
-res_to_save.update(convert_to_dict(allQ1))
-res_to_save.update(convert_to_dict(allQ2))
-res_to_save.update(convert_to_dict(allP))
+Cont.save_to_disk(path = 'data/output/')
 
-np.save('data/output/exp_mnist.npy', res_to_save)
+#%%
+
+###########################################################################
+# plotting
+############################################################################
+
+xlim = (0, 3)
 
 #%% objective plot
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
-kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 0.4, "markersize": 3}
+kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
 
 #Q.plot_objective(ax = ax, ls = '--', **kwargs)
 #Q1.plot_objective(ax = ax, ls = '-.', **kwargs)
 #Q2.plot_objective(ax = ax, ls = '-.', **kwargs)
 #P.plot_objective(ax = ax, **kwargs)
 
+Cont.plot_objective(ax = ax, median = False, **kwargs) 
 
-plot_multiple(allQ, ax = ax , label = "saga", ls = '--', **kwargs)
-plot_multiple(allQ1, ax = ax , label = "adagrad", ls = '--', **kwargs)
-plot_multiple(allQ2, ax = ax , label = "svrg", ls = '--', **kwargs)
-plot_multiple(allP, ax = ax , label = "snspp", **kwargs)
+ax.set_xlim(xlim)
+ax.set_ylim(1e-7,1e-1)
 
-ax.set_xlim(-.1,4)
-ax.set_ylim(1e-7,)
+ax.legend(fontsize = 10, loc = 'upper right')
 
-ax.legend()
-
-fig.subplots_adjust(top=0.96,
-                    bottom=0.14,
-                    left=0.165,
-                    right=0.965,
-                    hspace=0.2,
-                    wspace=0.2)
+fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
 
 if save:
     fig.savefig(f'data/plots/exp_mnist/obj.pdf', dpi = 300)
 
+
+#%% test loss
+
+fig,ax = plt.subplots(figsize = (4.5, 3.5))
+kwargs = {"log_scale": False, "lw": 1., "markersize": 1.5, 'ls': '-'}
+
+Cont.plot_error(error_key = 'test_loss', ax = ax, median = True, ylabel = 'Test loss', **kwargs) 
+
+ax.set_xlim(xlim)
+ax.set_ylim(0.45, 0.5)
+ax.legend(fontsize = 10)
+
+fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
+
+if save:
+    fig.savefig(f'data/plots/exp_mnist/error.pdf', dpi = 300)
+
+#%% test accuracy
+
+fig,ax = plt.subplots(figsize = (4.5, 3.5))
+kwargs = {"log_scale": False, "lw": 1., "markersize": 1.5, 'ls': '-'}
+
+Cont.plot_error(error_key = 'test_accuracy', ax = ax, median = True, ylabel = 'Test accuracy', **kwargs) 
+
+ax.set_xlim(xlim)
+ax.set_ylim(0.6, 1.)
+ax.legend(fontsize = 10)
+
+fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
+
+if save:
+    fig.savefig(f'data/plots/exp_mnist/accuracy.pdf', dpi = 300)
+
+
 #%% coefficent plot
 
-P = allP[-1]
+fig,ax = plt.subplots(2, 2, figsize = (7,5))
 
-fig,ax = plt.subplots(2, 2,  figsize = (7,5))
-allQ[0].plot_path(ax = ax[0,0], xlabel = False)
-allQ1[0].plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
-allQ2[0].plot_path(ax = ax[1,0])
-allP[0].plot_path(ax = ax[1,1], ylabel = False)
+Q_k.plot_path(ax = ax[0,0], xlabel = False)
+Q1_k.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
+Q2_k.plot_path(ax = ax[1,0])
+P_k.plot_path(ax = ax[1,1], ylabel = False)
 
 for a in ax.ravel():
     a.set_ylim(-.25,.25)
@@ -221,53 +250,25 @@ plt.subplots_adjust(hspace = 0.33)
 if save:
     fig.savefig(f'data/plots/exp_mnist/coeff.pdf', dpi = 300)
 
-
-
-
 #%%
-fig,ax = plt.subplots(figsize = (4.5, 3.5))
-
-kwargs = {"lw": 1, "markersize": 3}
-
-plot_multiple_error(allQ, ax = ax , label = "saga", ls = '--', **kwargs)
-plot_multiple_error(allQ1, ax = ax , label = "adagrad", ls = '--', **kwargs)
-plot_multiple_error(allQ2, ax = ax , label = "svrg", ls = '--', **kwargs)
-plot_multiple_error(allP, ax = ax , label = "snspp", **kwargs)
-
-ax.set_xlim(-.1,4)
-ax.set_ylim(0.46, 0.48)
-ax.legend(fontsize = 10)
-
-fig.subplots_adjust(top=0.96,
-                    bottom=0.14,
-                    left=0.165,
-                    right=0.965,
-                    hspace=0.2,
-                    wspace=0.2)
-
-
-if save:
-    fig.savefig(f'data/plots/exp_mnist/error.pdf', dpi = 300)
+# def predict(A,x):
     
-#%%
-def predict(A,x):
+#     h = np.exp(A@x)
+#     odds = h/(1+h)    
+#     y = (odds >= .5)*2 -1
     
-    h = np.exp(A@x)
-    odds = h/(1+h)    
-    y = (odds >= .5)*2 -1
-    
-    return y
+#     return y
 
-def sample_error(A, b, x):
+# def sample_error(A, b, x):
     
-    b_pred = predict(A,x)
-    return (np.sign(b_pred) == np.sign(b)).sum() / len(b)
+#     b_pred = predict(A,x)
+#     return (np.sign(b_pred) == np.sign(b)).sum() / len(b)
 
 
-sample_error(X_test, y_test, x_sk)
-sample_error(X_test, y_test, Q.x)
-sample_error(X_test, y_test, Q1.x)
-sample_error(X_test, y_test, P.x)
+# sample_error(X_test, y_test, x_sk)
+# sample_error(X_test, y_test, Q.x)
+# sample_error(X_test, y_test, Q1.x)
+# sample_error(X_test, y_test, P.x)
 
 
 
