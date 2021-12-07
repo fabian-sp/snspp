@@ -17,6 +17,8 @@ if len(sys.argv) > 1:
     save = sys.argv[1]
 else:
     save = False
+    
+
 
 #%%
 
@@ -119,7 +121,13 @@ kwargs2 = {"A": X_test, "b": y_test}
 loss = [logreg_loss, logreg_accuracy]
 names = ['test_loss', 'test_accuracy']
 
+
 Cont = Experiment(name = 'exp_gisette')
+
+Cont.params = {'saga':params_saga, 'svrg': params_svrg, 'adagrad':params_adagrad, 'snspp':params_snspp}
+Cont.psi_star = psi_star
+
+#Cont.read_from_disk(path='data/output/')
 
 #%% solve with SAGA (multiple times)
 

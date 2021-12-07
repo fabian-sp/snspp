@@ -32,7 +32,10 @@ class Experiment:
         
         self.name = name
         self.solvers = list()
+        self.params = dict()
         self.results = dict()
+        
+        self.psi_star = None
         
     def store(self, P = problem, k = 0, suffix = ''):
         
@@ -52,15 +55,38 @@ class Experiment:
         return
     
     def store_by_key(self, res = dict(), label = '', k = 0):
+        """
+        stores additional results, e.g. test set evaluations
         
+        res: dict with resulty, e.g. key = 'test_loss'
+        label: solver to which the results belong, needs to match the ones from self.store()
+        k: run index (for multiple runs)
+        """
         for key, val in res.items():
             assert key not in self.results[label][k].keys()
             self.results[label][k][key] = val
             
         return
     
-    def save_to_disk(self, path = '', path_suffix = ''):           
-        np.save(path + self.name + path_suffix +  '.npy', self.results)
+    def save_to_disk(self, path = '', path_suffix = ''):   
+        
+        to_save = dict()
+        to_save['psi_star'] = self.psi_star
+        to_save['params'] = self.params
+        to_save['results'] = self.results
+        
+        
+        np.save(path + self.name + path_suffix +  '.npy', to_save)
+        return
+    
+    def read_from_disk(self, path = '', path_suffix = ''):           
+        from_save = np.load(path + self.name + path_suffix +  '.npy', allow_pickle = True)[()]
+        
+        self.results = from_save['results']
+        self.psi_star = from_save['psi_star']
+        self.params = from_save['params']
+        self.solvers = self.results.keys(
+            )
         return
 
 #########################################################################
