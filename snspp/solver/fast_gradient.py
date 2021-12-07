@@ -29,8 +29,8 @@ def saga_svrg_theoretical_step_size(f):
     
     """
                 
-    normA =  (np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A)**2).max()
-    L = derive_L(f) * normA
+    normA_max =  (np.linalg.norm(f.A, axis = 1)**2).max()
+    L = derive_L(f) * normA_max
     alpha = 1./(3*L)
     
     return alpha

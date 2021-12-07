@@ -4,7 +4,7 @@ author: Fabian Schaipp
 
 import numpy as np
 from ..helper.utils import block_diag, stop_scikit_saga
-from ..helper.utils import compute_full_xi, compute_x_mean_hist
+from ..helper.utils import compute_full_xi, compute_x_mean_hist, derive_L
 from .spp_easy import solve_subproblem_easy
 
 from scipy.sparse.linalg import cg
@@ -64,6 +64,28 @@ def cyclic_batch(N, batch_size, t):
 
 #%%
 
+def snspp_theoretical_step_size(f, b, m, eta = 0.5):
+    """
+    see paper for details
+    """  
+    normA =  np.linalg.norm(f.A, axis = 1)**2
+    
+    if not f.convex:
+        M = f.weak_conv(np.arange(f.N)).max() * normA.max()
+    else:
+        M = 0
+    
+    L_i = derive_L(f)
+    L = L_i * normA.mean()
+    tildeL = L_i * normA.max()
+    
+    term1 = 2*L+M
+    term2 = (1+m/np.sqrt(2*b))*tildeL + max(M, L)
+    
+    a = (1/eta) * max(term1,term2)
+    return 1/a
+
+
 def get_xi_start_point(f):
     if f.name == 'logistic':
         xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(f.m[i]) for i in np.arange(f.N)]))
@@ -80,9 +102,13 @@ def get_xi_start_point(f):
     
 #%% functions for parameter handling
 
-def get_default_spp_params(N):
-    p = {'alpha': 1., 'max_iter': 100, 'batch_size': max(int(N*0.05),1), 'sample_style': 'constant', 'reduce_variance': False,\
-           'm_iter': 10, 'tol_sub': 1e-3, 'newton_params': get_default_newton_params()}
+def get_default_spp_params(f):
+    b = max(int(f.N*0.005),1)
+    m = 10
+    a = snspp_theoretical_step_size(f, b, m, 0.5)
+    
+    p = {'alpha': a, 'max_iter': 100, 'batch_size': b, 'sample_style': 'constant', 'reduce_variance': False,\
+           'm_iter': m, 'tol_sub': 1e-3, 'newton_params': get_default_newton_params()}
     
     return p
 
@@ -190,7 +216,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     #########################################################
     ## Set parameters
     #########################################################
-    params_def = get_default_spp_params(f.N)
+    params_def = get_default_spp_params(f)
     params.update({k:v for k,v in params_def.items() if k not in params.keys()})
     
     # initialize step size
@@ -349,6 +375,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         
     
     return x_t, x_mean, info
+
+
+
 
 #%% 
 # SOLVE SUBPROBLEM
@@ -529,46 +558,3 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, tol = 1e-3, newton_params = 
     
     
     return new_x, xi, info
-
-# def determine_alpha(f, batch_size, m_iter, Lb = None):
-#     """
-#     calculates the step size given by the theory.
-    
-#     v1-v5: free positive parameters
-#     m_iter: number of iter after which we compute full gradient
-#     Lb: can be given as a (lower bound) estimate from sampling
-#     """
-#     v1 = 1
-#     v2 = 1
-#     v3 = 1
-#     v4 = 1
-#     v5 = 1e-3
-#     theta = 1
-    
-#     gbar = f.weak_conv(np.arange(f.N)).max()
-#     normA = np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A)
-    
-#     if f.name == 'squared':
-#         L_i = 2.  
-#     elif f.name == 'logistic':
-#         L_i = .25 
-#     elif f.name == 'tstudent':
-#         L_i =  (2/f.v)
-#     else:
-#         raise ValueError("Unknown function, cannot determine Lipschitz constant!")
-    
-#     L = (1/f.N) * np.sum(normA**2 * L_i)
-#     if Lb is None:
-#         Lb = (normA**2).max() * L_i
-        
-#     Cb = gbar*(normA**2).max()
-    
-#     s1 = 2*(theta+L) + v3*Cb
-#     s2 = v5*Lb**2*m_iter*(m_iter+1)/(2*batch_size) + v4*Lb + L
-#     s3 = Lb/v4 + 1/v5 + Cb/v3 + 1/v1 + 1/v2
-        
-    
-#     print(s1,s2,s3)
-    
-#     return 1/max(s1,s2,s3)
-    
