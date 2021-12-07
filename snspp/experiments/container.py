@@ -79,7 +79,7 @@ class Experiment:
         np.save(path + self.name + path_suffix +  '.npy', to_save)
         return
     
-    def read_from_disk(self, path = '', path_suffix = ''):           
+    def load_from_disk(self, path = '', path_suffix = ''):           
         from_save = np.load(path + self.name + path_suffix +  '.npy', allow_pickle = True)[()]
         
         self.results = from_save['results']

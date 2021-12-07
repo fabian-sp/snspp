@@ -127,7 +127,7 @@ Cont = Experiment(name = 'exp_gisette')
 Cont.params = {'saga':params_saga, 'svrg': params_svrg, 'adagrad':params_adagrad, 'snspp':params_snspp}
 Cont.psi_star = psi_star
 
-#Cont.read_from_disk(path='data/output/')
+#Cont.load_from_disk(path='data/output/')
 
 #%% solve with SAGA (multiple times)
 
