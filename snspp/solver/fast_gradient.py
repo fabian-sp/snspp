@@ -2,7 +2,7 @@
 author: Fabian Schaipp
 """
 from ..helper.utils import compute_gradient_table, compute_batch_gradient, compute_batch_gradient_table, compute_xi_inner,\
-                            compute_x_mean_hist, stop_scikit_saga
+                            compute_x_mean_hist, stop_scikit_saga, derive_L
 
 from .sgd import sgd_loop
                             
@@ -13,33 +13,25 @@ import warnings
 from numba.typed import List
 from numba import njit
 
-def derive_L(f):
-    """
-    Given a loss f, calculates the L-smoothness constant.
-    """
-    
-    normA =  (np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A)**2).max()
-    
-    if f.name == 'squared':
-        L = 2 * normA   
-    elif f.name == 'logistic':
-        L = .25 * normA
-    elif f.name == 'tstudent':
-        L =  (2/f.v) * normA
-    else:
-        warnings.warn("For the given loss f, we could not determine the correct Lischitz smoothness constant. The default step size is maybe too large (divergence) or too small (slow convergence).")
-        L = 1e2
-    
-    return L
 
-def saga_theretical_step_size(L, reg = 0, N = 1):
+def saga_svrg_theoretical_step_size(f):
+    """
+    Theoretical step sies vary for varying assumptions on (strong) convexity. See
+    - Bach, Defazio 2014: SAGA: A Fast Incremental Gradient Method With Support for Non-Strongly Convex Composite Objectives
+    - Sra, Reddi 2016: Proximal Stochastic Methods for Nonsmooth Nonconvex Finite-Sum Optimization
+    - Xiao Zhang 2014: A Proximal Stochastic Gradient Method with Progressive Variance Reduction
     
-    if reg > 0:
-        alpha_1 = 1/(2*(N*reg + L))
-    else:
-        alpha_1 = 0
+    For simplicity, we simply take as step size
+    
+    alpha = 1/(3L)
+    
+    where L is a L-smoothness constant for all f_i(A_i .). This choice comes from the SAGA-paper.
+    
+    """
                 
-    alpha = max(alpha_1, 1./(3*L))
+    normA =  (np.apply_along_axis(np.linalg.norm, axis = 1, arr = f.A)**2).max()
+    L = derive_L(f) * normA
+    alpha = 1./(3*L)
     
     return alpha
 
@@ -66,7 +58,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     
     x_t = x0.copy().astype('float64')
 
-    # initialize object for storing all gradients 
+    # initialize object for storing all gradients (used for SAGA)
     gradients = compute_gradient_table(f, x_t).astype('float64')
     assert gradients.shape == (N,n)
     
@@ -84,21 +76,27 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     elif solver == 'adagrad':
         if 'delta' not in params.keys():    
             params['delta'] = 1e-12
-        if 'batch_size' not in params.keys():    
-            params['batch_size'] = max(int(f.N * 0.01), 1)
-    
+           
     elif solver == 'sgd':
-        if 'batch_size' not in params.keys():    
-            params['batch_size'] = max(int(f.N * 0.01), 1)
         if 'style' not in params.keys(): 
             params['style'] = 'vanilla'
-        
+        if 'beta' not in params.keys(): 
+            params['beta'] = 0.51
         assert params['style'] in ['vanilla', 'polyak']
+    
+    #########################################################
+    ## Batch size
+    #########################################################
+    if solver in ['adagrad', 'svrg', 'sgd', 'batch-saga']:
+        if 'batch_size' not in params.keys():    
+            params['batch_size'] = max(int(f.N * 0.005), 1)
+        
+        if solver == 'svrg':
+            m_iter = int(N/params['batch_size']) 
             
     #########################################################
-    ## Step size + batch size
+    ## Step size 
     #########################################################
-    # see Defazio et al. 2014 for (convex) SAGA step size and Sra, Reddi et al 2016 for minibatch SAGA and PROX-SVRG step size
     if 'alpha' not in params.keys():
         if solver == 'adagrad':
             alpha_0 = 0.001
@@ -108,41 +106,15 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     else:
         alpha_0 = params['alpha']
     
-    # for SAGA/SVRG we use the theoretical step size * alpha_0
     #########################################################
     ## SAGA/SVRG
     #########################################################
-    if solver in ['saga', 'batch saga', 'svrg']:
-        if f.name == 'squared':
-            L = 2 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()    
-        elif f.name == 'logistic':
-            L = .25 * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
-        elif f.name == 'tstudent':
-            L =  (2/f.v) * (np.apply_along_axis(np.linalg.norm, axis = 1, arr = A)**2).max()
-        else:
-            warnings.warn("We could not determine the correct Lischitz smoothness constant! The default step size is maybe too large (divergence) or too small (slow convergence).")
-            L = 1e2
+    
+    # for SAGA/SVRG we use the theoretical step size * alpha_0
+    if solver in ['saga', 'batch-saga', 'svrg']:
+        alpha_th = saga_svrg_theoretical_step_size(f)
+        alpha = alpha_0 * alpha_th
         
-        if solver == 'saga':
-            # if we regularize, f_i is strongly-convex and we can use a larger step size (see Defazio et al.)
-            if params['reg'] > 0:
-                alpha_1 = 1/(2*(f.N*params['reg'] + L))
-            else:
-                alpha_1 = 0
-                
-            alpha = alpha_0 * max(alpha_1, 1./(3*L))
-            
-        elif solver == 'batch saga':
-            if 'batch_size' not in params.keys():    
-                params['batch_size'] = int(f.N**(2/3))
-            alpha = alpha_0 * 1./(5*L)
-        
-        elif solver == 'svrg':
-            if 'batch_size' not in params.keys():    
-                params['batch_size'] = 1
-            alpha = alpha_0 * 1./(3*L)
-            m_iter = int(N/params['batch_size']) 
-            
     #########################################################
     ## ADAGRAD
     #########################################################
@@ -155,15 +127,12 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     #########################################################
     elif solver == 'sgd':
         alpha = alpha_0
-        if 'beta' not in params.keys(): 
-            params['beta'] = 0.51
-            
+                  
     alpha = np.float64(alpha)  
     
     if verbose :
         print(f"Step size of {solver}: ", alpha)
-    
-     
+       
     #########################################################
     ## Main loop
     #########################################################
@@ -172,8 +141,7 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     if solver == 'saga':
         # run SAGA with batch size 1
         x_t, x_hist, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['reg'])     
-    elif solver == 'batch saga':
-        # run SAGA with batch size n^(2/3)
+    elif solver == 'batch-saga':
         x_t, x_hist, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['batch_size'])
     elif solver == 'svrg':
         x_t, x_hist, step_sizes, eta  = svrg_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter)

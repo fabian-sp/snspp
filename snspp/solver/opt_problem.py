@@ -15,10 +15,10 @@ from .fast_gradient import stochastic_gradient
 #sns.set()
 #sns.set_context("paper")
 
-color_dict = {"svrg": "#002A4A", "saga": "#FFB03B", "batch saga": "#BF842C", "adagrad" : "#B64926", \
+color_dict = {"svrg": "#002A4A", "saga": "#FFB03B", "batch-saga": "#BF842C", "adagrad" : "#B64926", \
               "snspp": "#468966", "default": "#142B40"}
 
-marker_dict = {"svrg": "<", "saga": ">", "batch saga": ">", "adagrad" : "D", \
+marker_dict = {"svrg": "<", "saga": ">", "batch-saga": ">", "adagrad" : "D", \
           "snspp": "o", "default": "+"}
 
 class problem:
@@ -36,7 +36,7 @@ class problem:
     For the case that each :math:`f_i` has scalar output, several classical algorithms are implemented:
         
         * SGD: mini-batch stochastic proximal gradient descent.
-        * SAGA: available also with mini-batches using ``solver = batch saga``.
+        * SAGA: available also with mini-batches using ``solver = batch-saga``.
         * SVRG
         * ADAGRAD
         * SNSPP: stochastic proximal point (with or without variance reduction).
@@ -93,16 +93,18 @@ class problem:
         if solver == 'snspp':
             self.x, self.xavg, self.info = stochastic_prox_point(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
                          verbose = self.verbose, measure = self.measure)
-        elif solver == 'saga slow':
-            self.x, self.xavg, self.info =  saga(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
-                                                 verbose = self.verbose, measure = self.measure)
-        elif solver in ['saga', 'batch saga', 'svrg', 'adagrad', 'sgd']:
+        # elif solver == 'saga slow':
+        #     self.x, self.xavg, self.info =  saga(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
+        #                                          verbose = self.verbose, measure = self.measure)
+        elif solver in ['saga', 'batch-saga', 'svrg', 'adagrad', 'sgd']:
             self.x, self.xavg, self.info =  stochastic_gradient(self.f, self.phi, self.x0, solver = self.solver, tol = self.tol, params = self.params, \
                                                  verbose = self.verbose, measure = self.measure)        
         else:
             raise ValueError("Not a known solver option")
         
+        # evaluate at starting point
         if eval_x0 and self.measure:
+            self.info['evaluations'] = np.insert(self.info['evaluations'], 0, 0)
             self.info['runtime'] = np.insert(self.info['runtime'], 0, 0)
             psi0 = self.f.eval(self.x0) + self.phi.eval(self.x0)
             self.info['objective'] = np.insert(self.info['objective'], 0, psi0)

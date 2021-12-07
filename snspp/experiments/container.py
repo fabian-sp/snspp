@@ -15,15 +15,19 @@ plt.rc('text', usetex=True)
 
 class Experiment:
     """
-        
+    A container object to store experiment results. Structure of ``self.results``
+    
+    self.results[<solver>][<k>] is a dictionary with keys
+    
+    - runtime (per iteration/epoch)
+    - objective
+    - number of (gradient) evaluations
+    
+    Additional info can be added via ``self.store_by_key``, for measurements not directly relate to optimization, e.g. test error or out of sample accuracy per iterate.
+    
     """
     def __init__(self, name = ''):
         """
-
-        Returns
-        -------
-        None.
-
         """
         
         self.name = name

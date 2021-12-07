@@ -104,10 +104,9 @@ def initialize_solvers(f, phi):
 def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = None, n_iter = 50, x0 = None, relative = True):
     
     if alpha_range is None:
-        if solver in ['saga', 'batch saga', 'svrg']:
+        if solver in ['saga', 'batch-saga', 'svrg']:
             # for SAGA/SVRG, input for alpha is multiplied with theoretical stepsize --> choose larger than 1
-            alpha_range = np.logspace(0, 2, 10)
-    
+            alpha_range = np.logspace(0, 2, 10)   
         else:
             alpha_range = np.logspace(-3, -1, 10)
     
