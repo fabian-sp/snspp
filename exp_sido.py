@@ -137,6 +137,10 @@ names = ['test_loss', 'test_accuracy']
 
 Cont = Experiment(name = 'exp_sido')
 
+Cont.params = {'saga':params_saga, 'svrg': params_svrg, 'adagrad':params_adagrad, 'snspp':params_snspp}
+Cont.psi_star = psi_star
+
+
 #%% solve with SAGA (multiple times)
 
 allQ = list()

@@ -108,7 +108,7 @@ def get_default_spp_params(f):
     a = snspp_theoretical_step_size(f, b, m, 0.5)
     
     p = {'alpha': a, 'max_iter': 100, 'batch_size': b, 'sample_style': 'constant', 'reduce_variance': False,\
-           'm_iter': m, 'tol_sub': 1e-3, 'newton_params': get_default_newton_params()}
+           'm_iter': m, 'vr_skip': 0, 'tol_sub': 1e-3, 'newton_params': get_default_newton_params()}
     
     return p
 
@@ -281,13 +281,13 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #S = cyclic_batch(f.N, batch_size, iter_t)
         
         # variance reduction boolean
-        reduce_variance = params['reduce_variance']
+        reduce_variance = params['reduce_variance'] and (iter_t >= params['vr_skip'])
         
         #########################################################
         ## Variance reduction
         #########################################################
         if params['reduce_variance']:
-            this_iter_vr = iter_t % params['m_iter'] == 0
+            this_iter_vr = iter_t % params['m_iter'] == params['vr_skip']
             if this_iter_vr:
                 xi_tilde = compute_full_xi(f, x_t, is_easy)
                 full_g = (1/f.N) * (A.T @ xi_tilde)

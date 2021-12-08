@@ -97,6 +97,9 @@ print("f(x_t) = ", f.eval(Q.x))
 print("phi(x_t) = ", phi.eval(Q.x))
 print("psi(x_t) = ", f.eval(Q.x) + phi.eval(Q.x))
 
+# use the last objective of SAGA as surrogate optimal value / plot only psi(x^k)
+psi_star = f.eval(Q.x)+phi.eval(Q.x)
+#psi_star = 0
 
 #%% solve with SVRG
 
@@ -140,6 +143,10 @@ loss = [tstudent_loss]
 names = ['test_loss']
 
 Cont = Experiment(name = f'exp_tstudent_N_{N}_n_{n}')
+
+Cont.params = {'saga':params_saga, 'svrg': params_svrg, 'adagrad':params_adagrad, 'snspp':params_snspp}
+Cont.psi_star = psi_star
+
 
 #%% solve with SAGA (multiple times)
 
@@ -216,10 +223,6 @@ else:
     xlim = (0, 1.5)
 
 #%% plot objective
-
-# use the last objective of SAGA as surrogate optimal value / plot only psi(x^k)
-psi_star = f.eval(Q.x)+phi.eval(Q.x)
-#psi_star = 0
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
