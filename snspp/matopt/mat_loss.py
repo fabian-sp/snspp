@@ -37,9 +37,20 @@ class mat_lsq:
         self.name = 'mat_squared'
         self.convex = True
         
+        # nuclear norm needs p <= q
+        # Tr(A_i^TX) = Tr(A_iX^T)
+        if A.shape[0] > A.shape[1]:
+            A = A.transpose(1,0,2)
+        
+        assert A.shape[0] <= A.shape[1]
+        
+        self.p = A.shape[0]
+        self.q = A.shape[1]
+        
         self.b = b
         self.A = A
         self.N = len(b)
+        
         self.m = np.repeat(1,self.N)
         
         return
