@@ -1,7 +1,6 @@
 """
-author: Fabian Schaipp
+@author: Fabian Schaipp
 """
-
 
 import numpy as np
 from numba import njit
@@ -20,6 +19,12 @@ def softt(v, rho):
     # equivalent:
     #np.maximum(0, v-rho) - np.maximum(0, -v-rho)
     return np.sign(v) * np.maximum(np.abs(v) - rho, 0.)    
+
+@njit()
+def deriv_softt(v, rho):
+    """ returns element of subdifferential of the soft threshholding operator"""  
+    u = 1.*(np.abs(v) > rho) # 1. makes bool to float
+    return u 
 
 @njit()
 def smooth_softt(v, rho, eps):
@@ -57,55 +62,58 @@ def deriv_eps_smooth_softt(v, rho, eps):
     return val1*ix1 + val2*ix2 + val3*ix3 + val4*ix4            
   
 @njit()  
-def smooth_prox(Y, rho, eps = 1e-3):
-    """smoothed proximal operator of the nuclear norm"""
+def prox_nuclear(Y, rho, eps = 1e-3):
+    """
+    (smoothed) proximal operator of the nuclear norm
+    uses the smoothing oft soft-thresholding with Huber if eps>0
+    """
     
     (p,q) = Y.shape
     U,S,Vt = np.linalg.svd(Y, full_matrices=False)
-    S_bar = smooth_softt(S, rho, eps) 
     
+    if eps > 0:
+        S_bar = smooth_softt(S, rho, eps) 
+    else:
+        S_bar = softt(S, rho) 
+        
     return (U*S_bar)@Vt
 
 @njit()
 def construct_gamma(v1, v2, rho, eps):
     """
     v1, v2 vector of sg. values
+    if v2 is copy of v1, we can save computations. In this case, specify v2 as vector of nan
     """
     p1 = len(v1)
+    if eps > 0:
+        s_v1 = smooth_softt(v1, rho, eps)
+        ds_v1 = deriv_smooth_softt(v1, rho, eps)
+    else:
+        s_v1 = softt(v1, rho)
+        ds_v1 = deriv_softt(v1, rho)
+    
     if np.all(np.isnan(v2)):
         v2 = v1.copy()
-        p2 = p1
-    else:
-        p2 = len(v2)
-    
-    #Gam2 = np.zeros((p,p))
-    s_v1 = smooth_softt(v1, rho, eps)
-    ds_v1 = deriv_smooth_softt(v1, rho, eps)
-    
-    if np.all(np.isnan(v2)):
         s_v2 = s_v1.copy()
     else:
-        s_v2 = smooth_softt(v2, rho, eps)
+        if eps > 0:
+            s_v2 = smooth_softt(v2, rho, eps)
+        else:
+            s_v2 = softt(v2, rho)
+            
+    p2 = len(v2)
         
-    # for i in np.arange(p):
-    #     for j in np.arange(start=i+1,stop=p):
-    #         Gam2[i,j] = (s_v[i]-s_v[j])/(v[i]-v[j])
-    
     # np.tile not supported by numba    
-    # h1 = np.tile(s_v1, (p2,1)).T - np.tile(s_v2, (p1,1))
-    # h2 = np.tile(v1, (p2,1)).T - np.tile(v2, (p1,1))
-    # h3 = np.tile(ds_v1, (p2,1)).T
-    
     h1 = tile(s_v1, p2).T - tile(s_v2, p1)
-    h2 = tile(v1, p2).T - tile(v2, p1)
+    h2 = tile(v1, p2).T   - tile(v2, p1)
     h3 = tile(ds_v1, p2).T
+    
     # ixx are indices where v_i == v_j --> use derivative at these indices
     ixx = (h2 == 0)
     # avoid nans from dividing by zero
-    Gam = h3*ixx + (1-ixx)*(h1/(1e-8+h2))
+    Gam = h3*ixx + (1-ixx)*(h1/(1e-12+h2))
         
-    if np.all(np.isnan(v2)):
-        assert np.all(Gam == Gam.T)
+    #assert np.all(Gam == Gam.T)
     
     return Gam
 
@@ -115,9 +123,14 @@ def tile(v, q):
     return np.repeat(v,q).reshape(p,q).T
 
 @njit()    
-def smooth_prox_jacobian(Y, rho, eps, tau, H):
+def prox_nuclear_jacobian(Y, rho, eps, tau, H):
+    """
+    Jacobian of the (smoothed) proximal operator of the nuclear norm
+    uses the smoothing oft soft-thresholding with Huber if eps>0
+    """
     (p,q) = Y.shape
     assert H.shape == (p,q)
+    assert q>=p, "only possible for q>=p"
     
     U,S,Vt = np.linalg.svd(Y)
     
@@ -125,8 +138,8 @@ def smooth_prox_jacobian(Y, rho, eps, tau, H):
     #tmp = U @ np.hstack((np.diag(S),np.zeros((p,q-p)))) @ Vt
     #assert np.allclose(Y,tmp)
 
-    V1 = Vt.T[:,:p]
-    V2 = Vt.T[:,p:]
+    V1T = Vt[:p,:]
+    V2T = Vt[p:,:]
     
     fullH = U.T@H@Vt.T
     H1 = fullH[:,:p]
@@ -135,18 +148,24 @@ def smooth_prox_jacobian(Y, rho, eps, tau, H):
     Hs = (H1+H1.T)/2
     Ha = (H1-H1.T)/2
     
-    D = np.diag(deriv_eps_smooth_softt(S, rho, eps))
-    tmp = np.ones_like(S)*np.nan
-    Gam_aa = construct_gamma(v1 = S, v2 = tmp, rho = rho, eps = eps)
-    Gam_ay = construct_gamma(v1 = S, v2 = -S, rho = rho, eps = eps)
-    Gam_ab = construct_gamma(v1 = S, v2 = np.zeros(q-p), rho = rho, eps = eps)
+    if eps > 0:
+        D = np.diag(deriv_eps_smooth_softt(S, rho, eps))
+
+    Gam_aa = construct_gamma(v1 = S, v2 = np.ones_like(S)*np.nan, rho = rho, eps = eps)
+    Gam_ay = construct_gamma(v1 = S, v2 = -S,                     rho = rho, eps = eps)
+    Gam_ab = construct_gamma(v1 = S, v2 = np.zeros(q-p),          rho = rho, eps = eps)
     
-    term1 = U@(Gam_aa*Hs + Gam_ay*Ha + tau*D) @ V1.T
-    term2 = U @ (Gam_ab*H2) @ V2.T
+    if eps > 0:
+        term1 = (Gam_aa*Hs + Gam_ay*Ha + tau*D) @ V1T
+    else:
+        term1 = (Gam_aa*Hs + Gam_ay*Ha) @ V1T
     
-    return term1 + term2
+    term2 = (Gam_ab*H2) @ V2T
+    
+    return U @ (term1 + term2)
 
 #%%
+
 spec_l1 = [
     ('name', typeof('abc')),
     ('lambda1', float64)
@@ -155,12 +174,13 @@ spec_l1 = [
 @jitclass(spec_l1)
 class NuclearNorm:
     """
-    class for the regularizer x --> lambda1 ||X||_\star
+    class for the regularizer X --> lambda1 ||X||_\star
     """
     def __init__(self, lambda1):
         assert lambda1 > 0 
         self.name = 'nuclear_norm'
         self.lambda1 = lambda1
+        self.eps = 1e-5
         
     def eval(self, X):
         # for numba, some options of svd are not available
@@ -169,41 +189,46 @@ class NuclearNorm:
     
     def prox(self, X, alpha):
         """
-        calculates prox_{alpha*phi}(x)
+        calculates prox_{alpha*phi}(X)
         """
         assert alpha > 0
         l = alpha * self.lambda1
-        return smooth_prox(X, l, eps = 1e-3)
+        return prox_nuclear(X, l, eps = self.eps)
     
 
     def jacobian_prox(self, X, H, alpha):
         assert alpha > 0
         l = alpha * self.lambda1
         
-        return smooth_prox_jacobian(X, l, eps = 1e-3, tau = 1e-3, H = H)
+        return prox_nuclear_jacobian(X, l, eps = self.eps, tau = 1e-5, H = H)
     
-    def moreau(self, x, alpha):
+    def moreau(self, X, alpha):
         assert alpha > 0
-        z = self.prox(x, alpha)
-        return alpha*self.eval(z) + .5 * np.linalg.norm(z-x)**2
+        Z = self.prox(X, alpha)
+        return alpha*self.eval(Z) + .5 * np.linalg.norm(Z-X)**2
     
     
 #%% tests
 
-# p = 10
-# q = 20
+p = 100
+q = 200
 
-# Y = np.random.randn(p,q)
-# v = np.random.randn(p)
-# eps = 1e-5
-# rho = 1e-5
+Y = np.random.randn(p,q)
+U,S,Vt = np.linalg.svd(Y)
+v = np.random.randn(p)
+eps = 1e-5
+rho = S[-5]
 
-# v1 = np.random.randn(p)
-# v2 = np.random.randn(p+2)
+v1 = np.random.randn(p)
+v2 = np.random.randn(p+2)
 
-# H = np.random.randn(p,q)
-# tau = 0.01
+H = np.random.randn(p,q)
+tau = 0.01
 
+
+Z1 = prox_nuclear_jacobian(Y, rho, 1e-5, 1e-5, H)
+
+Z2 = prox_nuclear_jacobian(Y, rho, 0., 0., H)
 
 
 # x = np.linspace(-1,1,1000)
