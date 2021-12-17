@@ -1,0 +1,44 @@
+{
+  "instance": {
+    "dataset": "gisette",
+    "N": 0,
+    "n": 0,
+    "k": 0,
+    "l1": 0.05
+  },
+  "solvers": {
+    "snspp": {
+      "alpha_min": -2,
+      "alpha_max": 2,
+      "n_alpha": 20,
+      "batch": 1,
+      "params": {
+        "max_iter": 230,
+        "sample_style": "constant",
+        "reduce_variance": true
+      }
+    },
+    "svrg": {
+      "alpha_min": -2,
+      "alpha_max": 2,
+      "n_alpha": 20,
+      "batch": 1,
+      "params": {
+        "n_epochs": 55
+      }
+    },
+    "saga": {
+      "alpha_min": -2,
+      "alpha_max": 2,
+      "n_alpha": 20,
+      "batch": 1,
+      "params": {
+        "n_epochs": 55
+      }
+    }
+  },
+  "PSI_TOL": 0.0001,
+  "Y_MAX": 8,
+  "N_REP": 5,
+  "START": 0
+}
