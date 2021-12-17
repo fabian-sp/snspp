@@ -210,25 +210,25 @@ class NuclearNorm:
     
 #%% tests
 
-p = 100
-q = 200
+# p = 100
+# q = 200
 
-Y = np.random.randn(p,q)
-U,S,Vt = np.linalg.svd(Y)
-v = np.random.randn(p)
-eps = 1e-5
-rho = S[-5]
+# Y = np.random.randn(p,q)
+# U,S,Vt = np.linalg.svd(Y)
+# v = np.random.randn(p)
+# eps = 1e-5
+# rho = S[-5]
 
-v1 = np.random.randn(p)
-v2 = np.random.randn(p+2)
+# v1 = np.random.randn(p)
+# v2 = np.random.randn(p+2)
 
-H = np.random.randn(p,q)
-tau = 0.01
+# H = np.random.randn(p,q)
+# tau = 0.01
 
 
-Z1 = prox_nuclear_jacobian(Y, rho, 1e-5, 1e-5, H)
+# Z1 = prox_nuclear_jacobian(Y, rho, 1e-5, 1e-5, H)
 
-Z2 = prox_nuclear_jacobian(Y, rho, 0., 0., H)
+# Z2 = prox_nuclear_jacobian(Y, rho, 0., 0., H)
 
 
 # x = np.linspace(-1,1,1000)

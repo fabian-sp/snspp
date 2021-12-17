@@ -60,7 +60,7 @@ def compute_psi_star(setup, f, phi, A, b):
     psi_star = f.eval(xsol) + phi.eval(xsol)
     print("Optimal value: ", psi_star)
  
-    return psi_star
+    return psi_star, xsol
 
 def compute_x0(setup, f, phi):
     assert setup["start"] >= 0

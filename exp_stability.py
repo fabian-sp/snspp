@@ -5,9 +5,8 @@ from sklearn.linear_model import Lasso, LogisticRegression
 
 
 from snspp.helper.data_generation import lasso_test, logreg_test, get_gisette, get_mnist
-from snspp.experiments.experiment_utils import load_stability_results
 from snspp.experiments.stability_utils import load_setup, create_instance, compute_psi_star, compute_x0, create_alpha_range,\
-                                                do_grid_run, plot_result
+                                                do_grid_run, plot_result, load_stability_results
 
 #%%
 
@@ -16,7 +15,7 @@ results = dict()
 
 setup = load_setup(setup_id)
 f, phi, A, b = create_instance(setup)
-psi_star = compute_psi_star(setup, f, phi, A, b)
+psi_star, xsol = compute_psi_star(setup, f, phi, A, b)
 x0 = compute_x0(setup, f, phi)
 
 #%%
@@ -26,7 +25,6 @@ solvers = list(setup["solvers"].keys())
 for s in solvers:
     
     params = setup["solvers"][s]["params"]
-    step_size_range = np.logspace(-2,2,20)
     batch_size_range = setup["solvers"][s]["batch"]
     step_size_range = create_alpha_range(setup, s)
     
