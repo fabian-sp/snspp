@@ -1,0 +1,45 @@
+{
+  "instance": {
+  	"loss": "logistic",
+    "dataset": "mnist",
+    "N": 0,
+    "n": 0,
+    "k": 0,
+    "l1": 0.02
+  },
+  "solvers": {
+    "snspp": {
+      "alpha_min": -2,
+      "alpha_max": 2,
+      "n_alpha": 20,
+      "batch": [0.005,0.01,0.05],
+      "params": {
+        "max_iter": 180,
+        "sample_style": "constant",
+        "reduce_variance": true
+      }
+    },
+    "svrg": {
+      "alpha_min": -0,
+      "alpha_max": 6,
+      "n_alpha": 25,
+      "batch": [0.005,0.01,0.05],
+      "params": {
+        "n_epochs": 30
+      }
+    },
+    "saga": {
+      "alpha_min": -1,
+      "alpha_max": 3,
+      "n_alpha": 20,
+      "batch": [],
+      "params": {
+        "n_epochs": 30
+      }
+    }
+  },
+  "psi_tol": 0.0001,
+  "y_max": 25,
+  "n_rep": 5,
+  "start": 0
+}
