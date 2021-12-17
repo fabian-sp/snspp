@@ -1,5 +1,6 @@
 {
   "instance": {
+  	"loss": "logistic",
     "dataset": "gisette",
     "N": 0,
     "n": 0,
@@ -11,7 +12,7 @@
       "alpha_min": -2,
       "alpha_max": 2,
       "n_alpha": 20,
-      "batch": 1,
+      "batch": [0.005,0.01,0.05],
       "params": {
         "max_iter": 230,
         "sample_style": "constant",
@@ -19,26 +20,26 @@
       }
     },
     "svrg": {
-      "alpha_min": -2,
-      "alpha_max": 2,
-      "n_alpha": 20,
-      "batch": 1,
+      "alpha_min": -0,
+      "alpha_max": 6,
+      "n_alpha": 25,
+      "batch": [0.005,0.01,0.05],
       "params": {
         "n_epochs": 55
       }
     },
     "saga": {
-      "alpha_min": -2,
-      "alpha_max": 2,
+      "alpha_min": -1,
+      "alpha_max": 3,
       "n_alpha": 20,
-      "batch": 1,
+      "batch": [],
       "params": {
         "n_epochs": 55
       }
     }
   },
-  "PSI_TOL": 0.0001,
-  "Y_MAX": 8,
-  "N_REP": 5,
-  "START": 0
+  "psi_tol": 0.0001,
+  "y_max": 8,
+  "n_rep": 5,
+  "start": 0
 }

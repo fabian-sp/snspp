@@ -5,7 +5,6 @@ import numpy as np
 import json
 import matplotlib.pyplot as plt
 import seaborn as sns
-import time
 
 from sklearn.linear_model import Lasso, LogisticRegression
 
@@ -13,16 +12,14 @@ from snspp.helper.data_generation import lasso_test, logreg_test, get_gisette, g
 from snspp.solver.opt_problem import problem, color_dict, marker_dict
 from snspp.experiments.experiment_utils import initialize_solvers
 
-setup_id = 'gisette1'
-
 def load_setup(setup_id = ''):
     
-    f = open('data/setups/' + setup_id + '.json',)
-    setup = json.load(f)
+    file = open('data/setups/' + setup_id + '.json',)
+    setup = json.load(file)
 
     return setup
 
-def create_instance(setup = dict()):
+def create_instance(setup):
     
     if setup['instance']['dataset'] == "lasso":
         xsol, A, b, f, phi, _, _ = lasso_test(setup['instance']['N'], setup['instance']['n'], setup['instance']['k'], setup['instance']['l1'], \
@@ -40,10 +37,40 @@ def create_instance(setup = dict()):
     
     initialize_solvers(f, phi)
 
-    return f, phi
+    return f, phi, A, b
 
+def compute_psi_star(setup, f, phi, A, b):
+    
+    if setup['instance']['loss'] == "logistic":
+        sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-20, \
+                            solver = 'saga', max_iter = 200, verbose = 1)
+        sk.fit(A, b)
+        xsol = sk.coef_.copy().squeeze()
+    elif setup['instance']['loss'] == "squared":
+        sk = Lasso(alpha = phi.l1/2, fit_intercept = False, tol = 1e-20, selection = 'cyclic', max_iter = 1e5)
+        sk.fit(f.A,b)
+        xsol = sk.coef_.copy().squeeze()
+        
+    elif setup['instance']['loss'] == "tstudent":
+        orP = problem(f, phi, tol = 1e-20, params = {'n_epochs': 200}, verbose = False, measure = False)
+        orP.solve(solver = 'saga')
+        xsol = orP.x.copy()
+        
+    psi_star = f.eval(xsol) + phi.eval(xsol)
+    print("Optimal value: ", psi_star)
+        
+    
+    return psi_star
 
+def create_alpha_range(setup, solver):
+    
+    amin = setup["solvers"][solver]["alpha_min"]
+    amax = setup["solvers"][solver]["alpha_max"]
+    n_ = setup["solvers"][solver]["n_alpha"]
+    
+    return np.logspace(amin, amax, n_)
 
+    
 #%% MAIN FUNCTION
 
 def do_grid_run(f, phi, step_size_range, batch_size_range = [], psi_star = 0, psi_tol = 1e-3, n_rep = 5, \
@@ -146,6 +173,10 @@ def do_grid_run(f, phi, step_size_range, batch_size_range = [], psi_star = 0, ps
 
 #%% PLOTTING
 
+plt.rcParams["font.family"] = "serif"
+plt.rcParams['font.size'] = 12
+plt.rcParams['axes.linewidth'] = 1
+plt.rc('text', usetex=True)
 
 def plot_result(res, ax = None, replace_inf = 10., sigma = 0., psi_tol = 1e-3):
     
