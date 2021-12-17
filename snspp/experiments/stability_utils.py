@@ -35,6 +35,7 @@ def create_instance(setup):
     elif setup['instance']['dataset'] == "mnist":
         f, phi, A, b, _, _ = get_mnist(lambda1 = setup['instance']['l1'])
     
+    # IMPORTANT: Initialize numba
     initialize_solvers(f, phi)
 
     return f, phi, A, b
@@ -58,9 +59,24 @@ def compute_psi_star(setup, f, phi, A, b):
         
     psi_star = f.eval(xsol) + phi.eval(xsol)
     print("Optimal value: ", psi_star)
-        
-    
+ 
     return psi_star
+
+def compute_x0(setup, f, phi):
+    assert setup["start"] >= 0
+    
+    if setup["start"] == 0:
+        x0 = None
+    # compute setup['start'] many epochs for starting point
+    else:        
+        Q = problem(f, phi, tol = 1e-20, params = {'n_epochs': setup["start"]}, verbose = False, measure = False)
+        Q.solve(solver = 'saga')
+        x0 = Q.x.copy()
+        
+        psi0 = f.eval(x0) + phi.eval(x0)
+        print("psi(x0) = ", psi0)
+            
+    return x0
 
 def create_alpha_range(setup, solver):
     
@@ -223,3 +239,15 @@ def plot_result(res, ax = None, replace_inf = 10., sigma = 0., psi_tol = 1e-3):
     ax.set_title(rf'Convergence = objective less than {1+psi_tol}$\psi^\star$')
 
     return ax
+
+#%%
+##########################################################################
+## Store and read
+##########################################################################
+    
+def load_stability_results(setup_id):
+    
+    tmp = np.load(f'data/output/exp_stability_'+setup_id+'.npy', allow_pickle = True)
+    res = tmp[()]
+
+    return res

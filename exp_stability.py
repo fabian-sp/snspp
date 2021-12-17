@@ -6,7 +6,7 @@ from sklearn.linear_model import Lasso, LogisticRegression
 
 from snspp.helper.data_generation import lasso_test, logreg_test, get_gisette, get_mnist
 from snspp.experiments.experiment_utils import load_stability_results
-from snspp.experiments.stability_utils import load_setup, create_instance, compute_psi_star, create_alpha_range,\
+from snspp.experiments.stability_utils import load_setup, create_instance, compute_psi_star, compute_x0, create_alpha_range,\
                                                 do_grid_run, plot_result
 
 #%%
@@ -17,7 +17,7 @@ results = dict()
 setup = load_setup(setup_id)
 f, phi, A, b = create_instance(setup)
 psi_star = compute_psi_star(setup, f, phi, A, b)
-
+x0 = compute_x0(setup, f, phi)
 
 #%%
 
@@ -31,7 +31,7 @@ for s in solvers:
     step_size_range = create_alpha_range(setup, s)
     
     this_res = do_grid_run(f, phi, step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
-                           psi_tol = setup["psi_tol"], n_rep = setup["n_rep"], solver = s, solver_params = params)
+                           psi_tol = setup["psi_tol"], n_rep = setup["n_rep"], solver = s, solver_params = params, x0 = x0)
     
     
     results.update({s: this_res})
