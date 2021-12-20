@@ -14,7 +14,7 @@
       "n_alpha": 10,
       "batch": [0.005,0.01,0.05],
       "params": {
-        "max_iter": 180,
+        "max_iter": 400,
         "sample_style": "constant",
         "reduce_variance": true
       }
@@ -25,7 +25,7 @@
       "n_alpha": 10,
       "batch": [0.005,0.01,0.05],
       "params": {
-        "n_epochs": 30
+        "n_epochs": 20
       }
     },
     "saga": {
@@ -34,7 +34,7 @@
       "n_alpha": 20,
       "batch": [],
       "params": {
-        "n_epochs": 30
+        "n_epochs": 20
       }
     }
   },
