@@ -7,8 +7,9 @@
     "k": 10,
     "l1": 0.01
   },
-  "solvers": {
+  "methods": {
     "snspp": {
+      "solver": "snspp",
       "alpha_min": -2,
       "alpha_max": 2,
       "n_alpha": 10,
@@ -20,6 +21,7 @@
       }
     },
     "svrg": {
+      "solver": "svrg",
       "alpha_min": -0,
       "alpha_max": 6,
       "n_alpha": 10,
@@ -29,6 +31,7 @@
       }
     },
     "saga": {
+      "solver": "saga",
       "alpha_min": -1,
       "alpha_max": 3,
       "n_alpha": 10,

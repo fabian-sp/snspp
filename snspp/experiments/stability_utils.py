@@ -81,11 +81,11 @@ def compute_x0(setup, f, phi):
             
     return x0
 
-def create_alpha_range(setup, solver):
+def create_alpha_range(setup, method):
     
-    amin = setup["solvers"][solver]["alpha_min"]
-    amax = setup["solvers"][solver]["alpha_max"]
-    n_ = setup["solvers"][solver]["n_alpha"]
+    amin = setup["methods"][method]["alpha_min"]
+    amax = setup["methods"][method]["alpha_max"]
+    n_ = setup["methods"][method]["n_alpha"]
     
     return np.logspace(amin, amax, n_)
 
@@ -197,7 +197,7 @@ plt.rcParams['font.size'] = 12
 plt.rcParams['axes.linewidth'] = 1
 plt.rc('text', usetex=True)
 
-def plot_result(res, ax = None, replace_inf = 10., sigma = 0., psi_tol = 1e-3):
+def plot_result(res, ax = None, replace_inf = 10., sigma = 0., psi_tol = 1e-3, label = None):
     
     K,L = res['runtime'].shape
     rt = res['runtime'].copy()
@@ -206,6 +206,9 @@ def plot_result(res, ax = None, replace_inf = 10., sigma = 0., psi_tol = 1e-3):
     if ax is None:
         fig, ax = plt.subplots(figsize = (7,5))
     
+    if label is None:
+        label =  res['solver']
+        
     try:
         color = color_dict[res["solver"]]
         marker = marker_dict[res["solver"]]
@@ -219,13 +222,14 @@ def plot_result(res, ax = None, replace_inf = 10., sigma = 0., psi_tol = 1e-3):
         rt[k,:][~res['converged'][k,:]] = replace_inf
         rt_std[k,:][~res['converged'][k,:]] = 0 
         
-        if K == 1:
-            label = res['solver']
-        else:
-            label = res['solver'] + ", " + rf"$b =  N \cdot${res['batch_size'][k]} "
         
+        if K > 1:
+            legend_label = label + ", " + rf"$b =  N \cdot${res['batch_size'][k]} "
+        else:
+            legend_label = label
+            
         ax.plot(res['step_size'], rt[k,:], c = colors[k], linestyle = '-', marker = marker, markersize = 4,\
-                label = label)
+                label = legend_label)
         
         # add standard dev of runtime
         if sigma > 0.:

@@ -1,16 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from sklearn.linear_model import Lasso, LogisticRegression
-
-
-from snspp.helper.data_generation import lasso_test, logreg_test, get_gisette, get_mnist
 from snspp.experiments.stability_utils import load_setup, create_instance, compute_psi_star, compute_x0, create_alpha_range,\
                                                 do_grid_run, plot_result, load_stability_results
 
 #%%
 
-setup_id = 'gisette1'
+setup_id = 'logreg1'
 results = dict()
 
 setup = load_setup(setup_id)
@@ -20,19 +16,20 @@ x0 = compute_x0(setup, f, phi)
 
 #%%
 
-solvers = list(setup["solvers"].keys())
+methods = list(setup["methods"].keys())
 
-for s in solvers:
+for mt in methods:
     
-    params = setup["solvers"][s]["params"]
-    batch_size_range = setup["solvers"][s]["batch"]
-    step_size_range = create_alpha_range(setup, s)
+    params = setup["methods"][mt]["params"]
+    batch_size_range = setup["methods"][mt]["batch"]
+    step_size_range = create_alpha_range(setup, mt)
     
     this_res = do_grid_run(f, phi, step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
-                           psi_tol = setup["psi_tol"], n_rep = setup["n_rep"], solver = s, solver_params = params, x0 = x0)
+                           psi_tol = setup["psi_tol"], n_rep = setup["n_rep"], solver = setup["methods"][mt]["solver"],\
+                           solver_params = params, x0 = x0)
     
     
-    results.update({s: this_res})
+    results.update({mt: this_res})
         
 
 #%% store (or load results)
@@ -48,16 +45,15 @@ SIGMA = 1. # plot 2SIGMA band around the mean
 
 fig, ax = plt.subplots(figsize = (7,5))
 
-for s in solvers:
-    plot_result(results[s], ax = ax, replace_inf = setup["y_max"], sigma = SIGMA, psi_tol = setup["psi_tol"])
+for mt in methods:
+    plot_result(results[mt], ax = ax, replace_inf = setup["y_max"], sigma = SIGMA, psi_tol = setup["psi_tol"])
     
 
 annot_y = setup["y_max"] * 0.9 # y value for annotation
-
 ax.hlines(annot_y , ax.get_xlim()[0], ax.get_xlim()[1], 'grey', ls = '-')
-ax.annotate("no convergence", (ax.get_xlim()[0]*1.1, annot_y+0.3), color = "grey", fontsize = 14)
+ax.annotate("no convergence", (ax.get_xlim()[0]*1.5, annot_y*1.02), color = "grey", fontsize = 14)
 
-ax.set_ylim(-1e-3,)
+ax.set_ylim(0,)
 
 if save:
     fig.savefig('data/plots/exp_other/stability_'+setup_id+'.pdf', dpi = 300)
