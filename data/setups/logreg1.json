@@ -1,0 +1,48 @@
+{
+  "instance": {
+  	"loss": "logistic",
+    "dataset": "logreg",
+    "N": 200,
+    "n": 100,
+    "k": 10,
+    "l1": 0.01
+  },
+  "methods": {
+    "snspp": {
+      "solver": "snspp",
+      "alpha_min": -2,
+      "alpha_max": 2,
+      "n_alpha": 10,
+      "batch": [0.005,0.01,0.05],
+      "params": {
+        "max_iter": 200,
+        "sample_style": "constant",
+        "reduce_variance": true
+      }
+    },
+    "svrg": {
+      "solver": "svrg",
+      "alpha_min": -0,
+      "alpha_max": 6,
+      "n_alpha": 10,
+      "batch": [0.005,0.01,0.05],
+      "params": {
+        "n_epochs": 30
+      }
+    },
+    "saga": {
+      "solver": "saga",
+      "alpha_min": -1,
+      "alpha_max": 3,
+      "n_alpha": 10,
+      "batch": [],
+      "params": {
+        "n_epochs": 30
+      }
+    }
+  },
+  "psi_tol": 0.001,
+  "y_max": 25,
+  "n_rep": 3,
+  "start": 0
+}

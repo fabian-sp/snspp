@@ -331,7 +331,7 @@ def get_gisette(lambda1 = 0.02, train_size = .8):
         
     return f, phi, X_train, y_train, X_test, y_test
 
-def get_sido(lambda1 = 0.02, train_size = .8, scale = True):
+def get_sido(lambda1 = 0.02, train_size = .8, scale = False):
     # download from http://www.causality.inf.ethz.ch/challenge.php?page=datasets
     
     X = np.loadtxt('data/sido0/sido0_train.data')
