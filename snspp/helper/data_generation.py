@@ -17,7 +17,7 @@ from scipy.stats import ortho_group
 
 from .loss1 import lsq, block_lsq, logistic_loss
 from .loss2 import huber_loss
-from .regz import L1Norm
+from .regz import L1Norm, Zero, Ridge
 from .tstudent import tstudent_loss
 
 from ..matopt.nuclear import NuclearNorm
@@ -357,11 +357,37 @@ def get_sido(lambda1 = 0.02, train_size = .8, scale = False):
         
     return f, phi, X_train, y_train, X_test, y_test
 
+# dataset with only two features, serves well for visualization
+def get_fourclass(lambda1 = 0.001, reg = None, train_size = .99):
+    # download from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/fourclass_scale
+    
+    X,y = load_from_txt('fourclass') 
+    np.nan_to_num(X, copy = False)
+    
+    assert np.all(np.isin(y,[-1,1]))
+    
+    X = X.astype('float64')
+    y = y.astype('float64')
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+                                                        random_state = 1234)
+    
+    if reg is None:
+        phi = Zero() 
+    elif reg == 'l1':
+        phi = L1Norm(lambda1)
+    elif reg == 'l2':
+        phi = Ridge(lambda1)
+        
+    f = logistic_loss(X_train, y_train)
+        
+    return f, phi, X_train, y_train, X_test, y_test
+
 ############################################################################################
 ################## REGRESSION
 
 def get_triazines(lambda1 = 0.01, train_size = .8, v = 1, poly = 0, noise = 0):
-    # dowloand from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/regression/triazines_scale
+    # download from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/regression/triazines_scale
     assert v > 0
     
     X,y = load_from_txt('triazines') 
@@ -398,11 +424,11 @@ def load_from_txt(name):
         response/class labels.
 
     """
-    with open(f'data/{name}.txt', 'r') as f:
+    with open(f'data/libsvm/{name}.txt', 'r') as file:
             
         data = []
         labels = []
-        for line in f:
+        for line in file:
             
             tmp = line.split(' ')
             label = float(tmp[0])# use int() for classification datasets
@@ -410,10 +436,11 @@ def load_from_txt(name):
             
             keys = []
             vals = []
+            
             for f in feat:
                 if f == '\n':
                     continue
-                f.split(':')
+
                 keys.append(f.split(':')[0])
                 vals.append(float(f.split(':')[1]))
             
