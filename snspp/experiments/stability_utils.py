@@ -8,7 +8,7 @@ import seaborn as sns
 
 from sklearn.linear_model import Lasso, LogisticRegression
 
-from snspp.helper.data_generation import lasso_test, logreg_test, get_gisette, get_mnist, get_sido
+from snspp.helper.data_generation import tstudent_test, logreg_test, get_gisette, get_mnist, get_sido
 from snspp.solver.opt_problem import problem, color_dict, marker_dict
 from snspp.experiments.experiment_utils import initialize_solvers
 
@@ -21,12 +21,12 @@ def load_setup(setup_id = ''):
 
 def create_instance(setup):
     
-    if setup['instance']['dataset'] == "lasso":
-        xsol, A, b, f, phi, _, _ = lasso_test(setup['instance']['N'], setup['instance']['n'], setup['instance']['k'], setup['instance']['l1'], \
-                                              noise = 0.1, kappa = 15., dist = 'ortho')
+    if setup['instance']['dataset'] == "tstudent":
+        _, A, b, f, phi, _, _ = tstudent_test(setup['instance']['N'], setup['instance']['n'], setup['instance']['k'], setup['instance']['l1'], \
+                                              v = 1, noise = 0.1, kappa = 15., dist = 'ortho')
 
     elif setup['instance']['dataset'] == "logreg":
-        xsol, A, b, f, phi, _, _ = logreg_test(setup['instance']['N'], setup['instance']['n'], setup['instance']['k'], lambda1 = setup['instance']['l1'],\
+        _, A, b, f, phi, _, _ = logreg_test(setup['instance']['N'], setup['instance']['n'], setup['instance']['k'], lambda1 = setup['instance']['l1'],\
                                                noise = 0.1, kappa = 15., dist = 'ortho')
     
     elif setup['instance']['dataset'] == "gisette":
