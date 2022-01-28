@@ -6,7 +6,7 @@ from snspp.experiments.stability_utils import load_setup, create_instance, compu
 
 #%%
 
-setup_id = 'logreg1'
+setup_id = 'tstudent2'
 results = dict()
 
 setup = load_setup(setup_id)
