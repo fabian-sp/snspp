@@ -42,7 +42,7 @@ def batch_size_constructor(t, a, b, M, cutoff = 18):
     c2 = np.log(a)   
     y = np.exp(c1* np.minimum(t, cutoff) +c2).astype(int)
     
-    return y
+    return np.maximum(y, 1).astype(int)
 
 def cyclic_batch(N, batch_size, t):
     """
