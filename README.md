@@ -1,6 +1,10 @@
 # SNSPP
 
+Code associated to A. Milzarek, F. Schaipp, M. Ulbrich, *A semismooth Newton Stochastic Proximal Point metod with variance reduction*.
+The graphs in the paper can be reproduced with the files in `experiments/`.
+
 ## Introduction
+
 This is a Python package for solving problems of the form
 
 <img src="https://latex.codecogs.com/gif.latex?\min_xf(x)+\varphi(x)" title="problem formulation"/>
@@ -11,16 +15,25 @@ where the first part of the objective has the special form
 
 This problem structure is common in statistical learning problems: each summand of `f` is the loss at one data sample and `phi` is a regularizer.
 
+## Getting started
+
 Install via 
+
+    python setup.py
+
+or in order to install in developer mode via
 
     python setup.py clean --all develop clean --all
 
-## Functions as classes
+
+## Functionality
+
 For all solvers of this packages, `f` and `phi` have to be instances of a class. As the solvers need certain information on the involved functions `f` and `phi`, these classes need to have several methods and attributes implemented.
 
 We list the methods and attributes that these objects need to have for the algorithms. This is relevant only if you want to solve problems which functions that are not yet implemented. For a list of implemented functions, see below.
 
 ### Loss functions `f`
+
 Methods:
 * `eval(x)`: evaluates the function at `x`.
 * `f(x, i)`: evaluates `f_i` at `x`. Note that here `x` is typically a scalar.
@@ -51,30 +64,29 @@ A detailled documentation of how the above methods are intended is given for `L1
 ### Examples
 
 The package already contains the following losses
+
 * `logistic_loss`: the loss for logistic regression.
 * `lsq`: the squared loss.
 * `tstudent_loss`: loss for regression with Student-t residuals.
 * `huber_loss`: the Huber loss function.
 * `squared_hinge_loss`: the squared hinge loss.
 
-The definitions for these classes can be found in `snspp/helper/loss1`, `snspp/helper/loss2` and `snspp/helper/tstudent`. 
-
 and regularizers
 * `L1Norm`: the l1-norm.
 * `Ridge`: the squared l2-norm (known from ridge regression). 
 * `Zero`: the constant zero function for unregularized problems.
 
-The definitions for these classes can be found in `snspp/helper/regz`.
+For examples of loss functions, see `snspp/helper/loss1`, `snspp/helper/loss2` and `snspp/helper/tstudent`. 
+For examples of regularizers, see `snspp/helper/regz`.
 
 Note that for optimal performance `f` and `phi` should be [Numba jitted classes](https://numba.pydata.org/numba-doc/dev/user/jitclass.html).
 
 
 ## First-order methods
+
 The package also contains fast implementations of AdaGrad [1], SVRG [2] and SAGA [3]. These algorithms do not need all of the methods listed above. In general, only `eval` for evaluation (which is not actually used for the algorithm) and `g` for computing gradients is needed for `f`. For `phi` we only need the `prox` method (and for AdaGrad a `adagrad_prox` method which computes the proximal operator wrt a custom norm).
 
 **Note:** The implementation of these algorithms is only available for Numba-jitted function classes.
-
-
 
 
 ## References 
