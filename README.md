@@ -1,7 +1,7 @@
 # SNSPP
 
-Code associated to A. Milzarek, F. Schaipp, M. Ulbrich, *A semismooth Newton Stochastic Proximal Point metod with variance reduction*.
-The graphs in the paper can be reproduced with the files in `experiments/`.
+Code associated to A. Milzarek, F. Schaipp, M. Ulbrich, *A semismooth Newton Stochastic Proximal Point method with variance reduction*.
+The `SNSPP` method is implemented in `snspp/solver/spp_solver` and references therein. The graphs in the paper can be reproduced with the files in `experiments/`.
 
 ## Introduction
 
@@ -13,7 +13,7 @@ where the first part of the objective has the special form
 
 <img src="https://latex.codecogs.com/gif.latex?f(x)=\frac{1}{N}\sum_{i=1}^{N}f_i(A_ix)" title="f structure"/>
 
-This problem structure is common in statistical learning problems: each summand of `f` is the loss at one data sample and `phi` is a regularizer.
+This problem structure is common in statistical learning problems: each summand of `f` is the loss at one data sample and `phi` is a (convex), possibly nonsmooth regularizer.
 
 ## Getting started
 
