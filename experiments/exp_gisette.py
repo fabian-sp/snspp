@@ -107,7 +107,7 @@ P = problem(f, phi, tol = 1e-9, params = params_snspp, verbose = True, measure =
 P.solve(solver = 'snspp')
 
 #fig = P.plot_subproblem(M=20)
-#fig.savefig(f'data/plots/exp_gisette/subprob.pdf', dpi = 300)
+#fig.savefig(f'../data/plots/exp_gisette/subprob.pdf', dpi = 300)
 
 #%%
 
@@ -127,7 +127,7 @@ Cont = Experiment(name = 'exp_gisette')
 Cont.params = {'saga':params_saga, 'svrg': params_svrg, 'adagrad':params_adagrad, 'snspp':params_snspp}
 Cont.psi_star = psi_star
 
-#Cont.load_from_disk(path='data/output/')
+#Cont.load_from_disk(path='../data/output/')
 
 #%% solve with SAGA (multiple times)
 
@@ -190,7 +190,7 @@ for k in range(K):
 
 all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q1.x, Q2.x)).T, columns = ['scikit', 'spp', 'saga', 'adagrad', 'svrg'])
 
-Cont.save_to_disk(path = 'data/output/')
+Cont.save_to_disk(path = '../data/output/')
 
 #%%
 
@@ -219,7 +219,7 @@ ax.legend(fontsize = 10, loc = 'upper right')
 fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
 
 if save:
-    fig.savefig(f'data/plots/exp_gisette/obj.pdf', dpi = 300)
+    fig.savefig(f'../data/plots/exp_gisette/obj.pdf', dpi = 300)
 
 #%% test loss
 
@@ -235,7 +235,7 @@ ax.legend(fontsize = 10)
 fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
 
 if save:
-    fig.savefig(f'data/plots/exp_gisette/error.pdf', dpi = 300)
+    fig.savefig(f'../data/plots/exp_gisette/error.pdf', dpi = 300)
 
 #%% test accuracy
 
@@ -251,7 +251,7 @@ ax.legend(fontsize = 10)
 fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
 
 if save:
-    fig.savefig(f'data/plots/exp_gisette/accuracy.pdf', dpi = 300)
+    fig.savefig(f'../data/plots/exp_gisette/accuracy.pdf', dpi = 300)
 
 #%% coeffcient plot
 
@@ -268,7 +268,7 @@ for a in ax.ravel():
 plt.subplots_adjust(hspace = 0.33)
 
 if save:
-    fig.savefig(f'data/plots/exp_gisette/coeff.pdf', dpi = 300)
+    fig.savefig(f'../data/plots/exp_gisette/coeff.pdf', dpi = 300)
 
 
 

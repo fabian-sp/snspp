@@ -209,7 +209,7 @@ for k in range(K):
 
 all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x, Q2.x)).T, columns = ['sol', 'spp', 'saga', 'adagrad', 'svrg'])
 
-Cont.save_to_disk(path = 'data/output/')
+Cont.save_to_disk(path = '../data/output/')
 
 #%%
 
@@ -240,7 +240,7 @@ ax.legend(fontsize = 10, loc = 'upper right')
 
 fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
 if save:
-    fig.savefig(f'data/plots/exp_tstudent/obj_N_{N}_n_{n}.pdf', dpi = 300)
+    fig.savefig(f'../data/plots/exp_tstudent/obj_N_{N}_n_{n}.pdf', dpi = 300)
 
 #%% plot error
     
@@ -261,7 +261,7 @@ else:
 fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
 
 if save:
-    fig.savefig(f'data/plots/exp_tstudent/error_N_{N}_n_{n}.pdf', dpi = 300)
+    fig.savefig(f'../data/plots/exp_tstudent/error_N_{N}_n_{n}.pdf', dpi = 300)
 
 #%% coeffcient plot
 
@@ -278,5 +278,5 @@ for a in ax.ravel():
 plt.subplots_adjust(hspace = 0.33)
 
 if save:
-    fig.savefig(f'data/plots/exp_tstudent/coeff_N_{N}_n_{n}.pdf', dpi = 300)
+    fig.savefig(f'../data/plots/exp_tstudent/coeff_N_{N}_n_{n}.pdf', dpi = 300)
     
