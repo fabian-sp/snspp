@@ -15,7 +15,7 @@
       "n_alpha": 20,
       "batch": [0.005,0.01,0.05],
       "params": {
-        "max_iter": 230,
+        "max_iter": 260,
         "sample_style": "constant",
         "reduce_variance": true
       }
@@ -42,7 +42,7 @@
     }
   },
   "psi_tol": 0.0001,
-  "y_max": 8,
+  "y_max": 10,
   "n_rep": 5,
   "start": 0
 }
