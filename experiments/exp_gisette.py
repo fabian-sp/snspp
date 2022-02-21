@@ -2,13 +2,19 @@
 @author: Fabian Schaipp
 
 This runs the L1-Logistic Regression experiment on the Gisette dataset.
-For this to run, download the dataset. Then convert the .txt file to a .npy file by running the function (see snspp.data_generation.py)
+For running this, complete the following steps:
 
-X, y = load_from_txt('gisette')
+1) Download scaled gisette dataset from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#gisette
+2) Copy the extracted files to '../data/libsvm/'
+3) Convert the .txt file to a numpy array by running
+    
+    from snspp.data_generation import load_from_txt
+    X, y = load_from_txt('gisette')
 
-The returned arrays need to be saved in the directory 'data/gisette_X.npy' and 'data/gisette_y.npy' using
+4) Save the returned arrays in the directory 'data/gisette_X.npy' and 'data/gisette_y.npy' using
 
-np.save('data/gisette_X.npy', X)
+    np.save('data/gisette_X.npy', X)
+    np.save('data/gisette_y.npy', y)
 
 """
 import sys
