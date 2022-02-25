@@ -40,13 +40,12 @@ Methods:
 * `g(x,i)`: evaluates the derivative/gradient of `f_i` at `x`.
 * `fstar(x,i)`, `gstar(x,i)` and `Hstar(x,i)`: evaluates the Fenchel conjugate (its gradient/ its Hessian) of `f_i` at `x`.
 
-Note that `fstar` (and `gstar`, `Hstar`) evaluate each sample `i` individually. In many applications, `f_i` is identical for every `i` (up to data input). In this case, the performance is improved if vectorized methods are implemented, i.e. `fstar_vec(x,S)` which computes the conjugate at x for a batch of indices `S`. See `snspp/helper/lasso` for an example. 
-The algorithm detects automatically if vectorized methods are implemented, hence the function called for solving is the same in both cases.
+Note that `fstar` (and `gstar`, `Hstar`) evaluate each sample `i` individually. In many applications, `f_i` is identical for every `i` (up to data input). In this case, the performance is improved if vectorized methods are implemented, i.e. `fstar_vec(x,S)` which computes the conjugate at x for a batch of indices `S`. 
 
 
 Attributes:
 * `name`: name of `f`. This is needed e.g. to decide on starting points.
-* `convex`: boolean that indicates whether `f` is convex.
+* `convex`: boolean that indicates whether `f` is convex. This is needed for the `snspp` solver, see paper for details.
 
 ### Regularizer `phi`
 
@@ -67,7 +66,7 @@ The package already contains the following losses
 
 * `logistic_loss`: the loss for logistic regression.
 * `lsq`: the squared loss.
-* `tstudent_loss`: loss for regression with Student-t residuals.
+* `tstudent_loss`: loss for regression with Student-t residuals (example for a nonconvex loss).
 * `huber_loss`: the Huber loss function.
 * `squared_hinge_loss`: the squared hinge loss.
 
