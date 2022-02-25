@@ -14,7 +14,7 @@ from snspp.experiments.experiment_utils import initialize_solvers
 
 def load_setup(setup_id = ''):
     
-    file = open('data/setups/' + setup_id + '.json',)
+    file = open('../data/setups/' + setup_id + '.json',)
     setup = json.load(file)
 
     return setup
@@ -254,7 +254,7 @@ def plot_result(res, ax = None, replace_inf = 10., sigma = 0., psi_tol = 1e-3, l
     
 def load_stability_results(setup_id):
     
-    tmp = np.load(f'data/output/exp_stability_'+setup_id+'.npy', allow_pickle = True)
+    tmp = np.load(f'../data/output/exp_stability_'+setup_id+'.npy', allow_pickle = True)
     res = tmp[()]
 
     return res

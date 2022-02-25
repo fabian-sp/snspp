@@ -6,7 +6,7 @@ from snspp.experiments.stability_utils import load_setup, create_instance, compu
 
 #%%
 
-setup_id = 'tstudent2'
+setup_id = 'mnist1'
 results = dict()
 
 setup = load_setup(setup_id)
@@ -34,9 +34,9 @@ for mt in methods:
 
 #%% store (or load results)
 
-np.save('data/output/exp_stability_'+setup_id+'.npy', results)    
+np.save('../data/output/exp_stability_'+setup_id+'.npy', results)    
 
-#res_spp, res_saga, res_svrg = load_stability_results(problem_type, l1)
+#results = load_stability_results(setup_id)
 
 #%% plot runtime (until convergence) vs step size
 save = False
@@ -56,6 +56,6 @@ ax.annotate("no convergence", (ax.get_xlim()[0]*1.5, annot_y*1.02), color = "gre
 ax.set_ylim(0,)
 
 if save:
-    fig.savefig('data/plots/exp_other/stability_'+setup_id+'.pdf', dpi = 300)
+    fig.savefig('../data/plots/exp_other/stability_'+setup_id+'.pdf', dpi = 300)
 
 

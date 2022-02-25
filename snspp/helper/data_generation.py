@@ -310,11 +310,11 @@ def get_mnist(lambda1 = 0.02, train_size = .8, scale = True):
 
     return f, phi, X_train, y_train, X_test, y_test
 
-def get_gisette(lambda1 = 0.02, train_size = .8):
+def get_gisette(lambda1 = 0.02, train_size = .8, path_prefix = '../'):
     # download from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#gisette
     
-    X = np.load('data/gisette_X.npy')
-    y = np.load('data/gisette_y.npy')
+    X = np.load(path_prefix + 'data/gisette_X.npy')
+    y = np.load(path_prefix + 'data/gisette_y.npy')
     
     assert np.all(np.isin(y,[-1,1]))
     
@@ -331,11 +331,11 @@ def get_gisette(lambda1 = 0.02, train_size = .8):
         
     return f, phi, X_train, y_train, X_test, y_test
 
-def get_sido(lambda1 = 0.02, train_size = .8, scale = False):
+def get_sido(lambda1 = 0.02, train_size = .8, scale = False, path_prefix = '../'):
     # download from http://www.causality.inf.ethz.ch/challenge.php?page=datasets
     
-    X = np.loadtxt('data/sido0/sido0_train.data')
-    y = np.loadtxt('data/sido0/sido0_train.targets')
+    X = np.loadtxt(path_prefix + 'data/sido0/sido0_train.data')
+    y = np.loadtxt(path_prefix + 'data/sido0/sido0_train.targets')
     
     assert np.all(np.isin(y,[-1,1]))
     
@@ -358,10 +358,10 @@ def get_sido(lambda1 = 0.02, train_size = .8, scale = False):
     return f, phi, X_train, y_train, X_test, y_test
 
 # dataset with only two features, serves well for visualization
-def get_fourclass(lambda1 = 0.001, reg = None, train_size = .99):
+def get_fourclass(lambda1 = 0.001, reg = None, train_size = .99, path_prefix = '../'):
     # download from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/fourclass_scale
     
-    X,y = load_from_txt('fourclass') 
+    X,y = load_from_txt('fourclass', path_prefix) 
     np.nan_to_num(X, copy = False)
     
     assert np.all(np.isin(y,[-1,1]))
@@ -386,11 +386,11 @@ def get_fourclass(lambda1 = 0.001, reg = None, train_size = .99):
 ############################################################################################
 ################## REGRESSION
 
-def get_triazines(lambda1 = 0.01, train_size = .8, v = 1, poly = 0, noise = 0):
+def get_triazines(lambda1 = 0.01, train_size = .8, v = 1, poly = 0, noise = 0, path_prefix = '../'):
     # download from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/regression/triazines_scale
     assert v > 0
     
-    X,y = load_from_txt('triazines') 
+    X,y = load_from_txt('triazines', path_prefix) 
     y += noise*np.random.standard_t(v, size = len(y))
     
     X = X.astype('float64')
@@ -409,7 +409,7 @@ def get_triazines(lambda1 = 0.01, train_size = .8, v = 1, poly = 0, noise = 0):
     
 #%% for loading libsvm data from .txt-file
 
-def load_from_txt(name):
+def load_from_txt(name, path_prefix = ''):
     """
     Parameters
     ----------
@@ -424,7 +424,7 @@ def load_from_txt(name):
         response/class labels.
 
     """
-    with open(f'data/libsvm/{name}.txt', 'r') as file:
+    with open(path_prefix + f'data/libsvm/{name}.txt', 'r') as file:
             
         data = []
         labels = []
