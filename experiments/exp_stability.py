@@ -1,3 +1,10 @@
+"""
+@author: Fabian Schaipp
+
+Runs experiments for step size selection stability. A setup file is used to specify all the relevant parameters, see `../data/setups` for examples.
+
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
