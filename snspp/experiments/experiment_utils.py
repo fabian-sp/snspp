@@ -83,19 +83,19 @@ def initialize_solvers(f, phi):
     """
     initializes jitiing
     """
-    params = {'max_iter' : 15, 'batch_size': 20, 'alpha': 0.01, 'reduce_variance': True}  
+    params = {'max_iter' : 15, 'batch_size': 20, 'alpha': 1e-3, 'reduce_variance': True}  
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)   
     tmpP.solve(solver = 'snspp')
     
-    params = {'n_epochs' : 2}
+    params = {'n_epochs' : 2, 'alpha': 1e-5,}
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)
     tmpP.solve(solver = 'saga')
     
-    params = {'n_epochs' : 2}
+    params = {'n_epochs' : 2, 'batch_size': 20, 'alpha': 1e-5}
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)
     tmpP.solve(solver = 'svrg')
     
-    params = {'n_epochs' : 2, 'batch_size': 10, 'alpha': 0.01}  
+    params = {'n_epochs' : 2, 'batch_size': 20, 'alpha': 1e-5}  
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)   
     tmpP.solve(solver = 'adagrad')
       
