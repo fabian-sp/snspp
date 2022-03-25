@@ -187,9 +187,9 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
 
-#Q.plot_objective(ax = ax, ls = '--', **kwargs)
-#Q1.plot_objective(ax = ax, ls = '-.', **kwargs)
-#Q2.plot_objective(ax = ax, ls = '-.', **kwargs)
+#Q.plot_objective(ax = ax, **kwargs)
+#Q1.plot_objective(ax = ax, **kwargs)
+#Q2.plot_objective(ax = ax, **kwargs)
 #P.plot_objective(ax = ax, **kwargs)
 
 Cont.plot_objective(ax = ax, median = False, **kwargs) 
