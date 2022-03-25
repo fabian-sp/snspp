@@ -22,8 +22,8 @@
     },
     "svrg": {
       "solver": "svrg",
-      "alpha_min": -0,
-      "alpha_max": 6,
+      "alpha_min": -3,
+      "alpha_max": 1,
       "n_alpha": 25,
       "batch": [0.005,0.01,0.05],
       "params": {
@@ -32,8 +32,8 @@
     },
     "saga": {
       "solver": "saga",
-      "alpha_min": -1,
-      "alpha_max": 3,
+      "alpha_min": -5,
+      "alpha_max": -1,
       "n_alpha": 20,
       "batch": [],
       "params": {
