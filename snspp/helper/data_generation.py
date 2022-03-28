@@ -409,7 +409,7 @@ def get_triazines(lambda1 = 0.01, train_size = .8, v = 1, poly = 0, noise = 0, p
     
 #%% for loading libsvm data from .txt-file
 
-def load_from_txt(name, path_prefix = ''):
+def load_from_txt(name, path_prefix = '', as_numpy = True):
     """
     Parameters
     ----------
@@ -451,7 +451,10 @@ def load_from_txt(name, path_prefix = ''):
     print("Done reading")
                 
     y = np.array(labels)
-    X = pd.DataFrame(data).values.astype('float64')
-
+    if as_numpy:
+        X = pd.DataFrame(data).values.astype('float64')
+    else:
+        X = pd.DataFrame(data).astype('float64')
+        
     return X,y
         
