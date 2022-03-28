@@ -164,10 +164,10 @@ def test_snspp_general():
 
 
 def test_plot_funs():
-    params = {'n_epochs' : 100, 'alpha': 1.}
+    params = {'n_epochs' : 100, 'alpha': 1e-3}
     
     f, phi, x_sk = create_test_instance(prob = 'lasso')
-    Q = template_test(f, phi, x_sk, params, 'saga')
+    Q = template_test(f, phi, x_sk, params, 'saga', assert_objective=False)
     
     Q.plot_objective(runtime = True)
     Q.plot_objective(runtime = False)
