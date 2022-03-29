@@ -316,15 +316,24 @@ def get_gisette(lambda1 = 0.02, train_size = .8, path_prefix = '../'):
     X = np.load(path_prefix + 'data/gisette_X.npy')
     y = np.load(path_prefix + 'data/gisette_y.npy')
     
-    assert np.all(np.isin(y,[-1,1]))
+    assert np.all(np.isin(y, [-1,1]))
     
-    X = X.astype('float64')
-    y = y.astype('float64')
+    X_train = X.astype('float64')
+    y_train = y.astype('float64')
+    np.nan_to_num(X_train, copy = False)
     
-    np.nan_to_num(X, copy = False)
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+    #                                                     random_state = 1234)
+        
+    X_test = np.load(path_prefix + 'data/gisette_test_X.npy')
+    y_test = np.load(path_prefix + 'data/gisette_test_y.npy')
     
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
-                                                        random_state = 1234)
+    assert np.all(np.isin(y_test, [-1,1]))
+    
+    X_test = X_test.astype('float64')
+    y_test = y_test.astype('float64')
+    np.nan_to_num(X_test, copy = False)
+    
     
     phi = L1Norm(lambda1) 
     f = logistic_loss(X_train, y_train)
@@ -458,3 +467,16 @@ def load_from_txt(name, path_prefix = '', as_numpy = True):
         
     return X,y
         
+def prepare_gisette(path_prefix = ''):
+    
+    X_train, y_train = load_from_txt('gisette', path_prefix, as_numpy=False)
+    
+    X_test, y_test = load_from_txt('gisette_test', path_prefix, as_numpy=False)
+    
+    X_test = X_test.loc[:, X_train.columns]
+    assert X_test.shape[1] == X_train.shape[1]
+    
+    np.save('data/gisette_test_X.npy', X_test)
+    np.save('data/gisette_test_y.npy', y_test)
+    
+    return
