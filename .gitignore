@@ -2,5 +2,9 @@
 *.egg-info
 gisette_X.npy
 gisette_y.npy
+gisette_test_X.npy
+gisette_test_y.npy
 ssnal_elastic
 data/sido0
+data/libsvm/gisette.txt
+data/libsvm/gisette_test.txt
