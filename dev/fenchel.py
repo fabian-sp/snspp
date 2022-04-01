@@ -116,7 +116,8 @@ _ = plot_fun(fast2, arg = z, sub0 = sub0, xrange = X, ax = ax, label = r"$(f^\as
 ax.set_ylim(-5,10)
 ax.legend(loc = 'upper right')
 
-#fig.savefig('logistic.png', dpi=600)
+fig.tight_layout()
+#fig.savefig('logistic.pdf')
 
 #%% plot objective of conjugate problem
 
