@@ -1,6 +1,8 @@
 # SNSPP
 
 Code associated with A. Milzarek, F. Schaipp, M. Ulbrich, *A semismooth Newton Stochastic Proximal Point algorithm with Variance Reduction*.
+As the code is continuously developped, see the version of the paper submission in the branch `paper-submitted`.  
+
 The `SNSPP` method is implemented in [`snspp/solver/spp_solver`](/snspp/solver/spp_solver.py) and references therein. The graphs in the paper can be reproduced with the files in `experiments/`.
 
 ## Introduction
