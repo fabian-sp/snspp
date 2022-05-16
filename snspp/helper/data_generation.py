@@ -322,17 +322,17 @@ def get_gisette(lambda1 = 0.02, train_size = .8, path_prefix = '../'):
     y_train = y.astype('float64')
     np.nan_to_num(X_train, copy = False)
     
-    # X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
-    #                                                     random_state = 1234)
+    X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, train_size = train_size,\
+                                                        random_state = 1234)
         
-    X_test = np.load(path_prefix + 'data/gisette_test_X.npy')
-    y_test = np.load(path_prefix + 'data/gisette_test_y.npy')
+    # X_test = np.load(path_prefix + 'data/gisette_test_X.npy')
+    # y_test = np.load(path_prefix + 'data/gisette_test_y.npy')
     
-    assert np.all(np.isin(y_test, [-1,1]))
+    # assert np.all(np.isin(y_test, [-1,1]))
     
-    X_test = X_test.astype('float64')
-    y_test = y_test.astype('float64')
-    np.nan_to_num(X_test, copy = False)
+    # X_test = X_test.astype('float64')
+    # y_test = y_test.astype('float64')
+    # np.nan_to_num(X_test, copy = False)
     
     
     phi = L1Norm(lambda1) 
