@@ -6,15 +6,12 @@ For running this, complete the following steps:
 
 1) Download scaled gisette dataset from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#gisette
 2) Copy the extracted files to '../data/libsvm/'
-3) Convert the .txt file to a numpy array by running
+3) Set the working directory as the parent of this file (i.e. os.chdir('..')) and run
     
-    from snspp.data_generation import load_from_txt
-    X, y = load_from_txt('gisette')
+    from snspp.data_generation import prepare_gisette
+    prepare_gisette(path_prefix = '')
 
-4) Save the returned arrays in the directory 'data/gisette_X.npy' and 'data/gisette_y.npy' using
-
-    np.save('data/gisette_X.npy', X)
-    np.save('data/gisette_y.npy', y)
+4) You should now see 'data/gisette_X.npy' and 'data/gisette_y.npy'.
 
 """
 import sys

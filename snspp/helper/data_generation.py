@@ -322,9 +322,11 @@ def get_gisette(lambda1 = 0.02, train_size = .8, path_prefix = '../'):
     y_train = y.astype('float64')
     np.nan_to_num(X_train, copy = False)
     
+    # use only train set and split
     X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, train_size = train_size,\
                                                         random_state = 1234)
-        
+    
+    # use original train and test set split (caveat: test set has additional features)
     # X_test = np.load(path_prefix + 'data/gisette_test_X.npy')
     # y_test = np.load(path_prefix + 'data/gisette_test_y.npy')
     
@@ -467,16 +469,24 @@ def load_from_txt(name, path_prefix = '', as_numpy = True):
         
     return X,y
         
-def prepare_gisette(path_prefix = ''):
+def prepare_gisette(path_prefix = '', test=False):
+    """
+    function to create gisette npy files from libsvm download.
+    Test set has features which are not in train set --> they get deleted.
+    """
+    X_train, y_train = load_from_txt('gisette', path_prefix, as_numpy=False)    
     
-    X_train, y_train = load_from_txt('gisette', path_prefix, as_numpy=False)
+    if test:
+        X_test, y_test = load_from_txt('gisette_test', path_prefix, as_numpy=False)
     
-    X_test, y_test = load_from_txt('gisette_test', path_prefix, as_numpy=False)
+        X_test = X_test.loc[:, X_train.columns]
+        assert X_test.shape[1] == X_train.shape[1]
     
-    X_test = X_test.loc[:, X_train.columns]
-    assert X_test.shape[1] == X_train.shape[1]
-    
-    np.save('data/gisette_test_X.npy', X_test)
-    np.save('data/gisette_test_y.npy', y_test)
+    np.save('data/gisette_X.npy', X_train)
+    np.save('data/gisette_y.npy', y_train)
+
+    if test:
+        np.save('data/gisette_test_X.npy', X_test)
+        np.save('data/gisette_test_y.npy', y_test)
     
     return
