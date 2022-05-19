@@ -13,7 +13,7 @@ from snspp.experiments.stability_utils import load_setup, create_instance, compu
 
 #%%
 
-setup_id = 'gisette1'
+setup_id = 'mnist1'
 results = dict()
 
 setup = load_setup(setup_id)
