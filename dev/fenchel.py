@@ -107,15 +107,17 @@ X = np.linspace(-.99,-1e-3,1000)
 
 colors = ['#2C3E50','#E74C3C','#3498DB','#2980B9']
 
-fig, ax = plt.subplots()        
+fig, ax = plt.subplots(figsize=(5,4))        
 _ = plot_fun(f, arg = z, sub0 = sub0, xrange = X, ax = ax, label = 'f', c= colors[3], ls = '--')
 _ = plot_fun(fast, arg = z, sub0 = sub0, xrange = X, ax = ax, label = r'$f^\ast$', c=colors[1])
 _ = plot_fun(fast1, arg = z, sub0 = sub0, xrange = X, ax = ax, label = r"$(f^\ast)'$", c=colors[2])
 _ = plot_fun(fast2, arg = z, sub0 = sub0, xrange = X, ax = ax, label = r"$(f^\ast)''$", c=colors[0])
 
-ax.set_ylim(-10,10)
+ax.set_ylim(-5,10)
 ax.legend(loc = 'upper right')
 
+fig.tight_layout()
+#fig.savefig('logistic.pdf')
 
 #%% plot objective of conjugate problem
 

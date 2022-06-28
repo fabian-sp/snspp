@@ -14,18 +14,18 @@ from numba.typed import List
 from numba import njit
 
 
-def saga_svrg_theoretical_step_size(f):
+def vr_default_step_size(f):
     """
-    Theoretical step sies vary for varying assumptions on (strong) convexity. See
+    Default step size for SVRG/SAGA. Theoretical step sizes vary for different assumptions on (strong) convexity. See
     - Bach, Defazio 2014: SAGA: A Fast Incremental Gradient Method With Support for Non-Strongly Convex Composite Objectives
     - Sra, Reddi 2016: Proximal Stochastic Methods for Nonsmooth Nonconvex Finite-Sum Optimization
     - Xiao Zhang 2014: A Proximal Stochastic Gradient Method with Progressive Variance Reduction
     
-    For simplicity, we simply take as step size
+    For simplicity, we simply take as default step size
     
     alpha = 1/(3L)
     
-    where L is a L-smoothness constant for all f_i(A_i .). This choice comes from the SAGA-paper.
+    where L is a L-smoothness constant for all f_i(A_i .). This choice comes from Bach, Defazio 2014.
     
     """
                 
@@ -98,36 +98,16 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     ## Step size 
     #########################################################
     if 'alpha' not in params.keys():
-        if solver == 'adagrad':
-            alpha_0 = 0.001
-            warnings.warn("Using a default step size for AdaGrad. This may lead to bad performance. A script for tuning the step size is contained in snspp/experiments/experimnet_utils. Provide a step size via params[\"alpha\"].")
+        if solver in ['adagrad', 'sgd']:
+            alpha = 1e-3
         else:
-            alpha_0 = 1.
-    else:
-        alpha_0 = params['alpha']
-    
-    #########################################################
-    ## SAGA/SVRG
-    #########################################################
-    
-    # for SAGA/SVRG we use the theoretical step size * alpha_0
-    if solver in ['saga', 'batch-saga', 'svrg']:
-        alpha_th = saga_svrg_theoretical_step_size(f)
-        alpha = alpha_0 * alpha_th
+            alpha = vr_default_step_size(f)
         
-    #########################################################
-    ## ADAGRAD
-    #########################################################
-    elif solver == 'adagrad':
-        # for ADAGRAD we use the step size alpha_0
-        alpha = alpha_0
-    
-    #########################################################
-    ## SGD
-    #########################################################
-    elif solver == 'sgd':
-        alpha = alpha_0
-                  
+        warnings.warn("Using a default step size. This may lead to divergence (if too big) or slow convergence (if too small). A script for tuning the step size is contained in snspp/experiments/experiment_utils. Provide a step size via params[\"alpha\"].")
+
+    else:
+        alpha = params['alpha']
+                      
     alpha = np.float64(alpha)  
     
     if verbose :

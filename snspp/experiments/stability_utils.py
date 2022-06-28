@@ -140,7 +140,6 @@ def do_grid_run(f, phi, step_size_range, batch_size_range = [], psi_star = 0, ps
                     obj_arr = P.info['objective'].copy()
                     
                     print(f"OBJECTIVE = {obj_arr[-1]}")
-                    this_alpha = P.info["step_sizes"][-1]
                     
                     if np.any(obj_arr <= psi_star *(1+psi_tol)):
                         stop = np.where(obj_arr <= psi_star *(1+psi_tol))[0][0]
@@ -167,22 +166,20 @@ def do_grid_run(f, phi, step_size_range, batch_size_range = [], psi_star = 0, ps
                     this_stop_iter.append(np.inf)
                     this_time.append(np.inf)
                     this_obj.append(np.inf)
-                    this_alpha = np.nan
-            
-            # set as CONVERGED if all repetiitions converged
+                    
+            # set as CONVERGED if all repetitions converged
             CONVERGED[k,l] = np.all(~np.isinf(this_stop_iter))
             OBJ[k,l] = np.mean(this_obj)
             RTIME[k,l] = np.mean(this_time)
             RT_STD[k,l] = np.std(this_time)
             NITER[k,l] = np.mean(this_stop_iter)
-            
-            # TO DO: fix if run into exception
-            ALPHA[l] = this_alpha
+
+        ALPHA[l] = this_params['alpha']
     
     CONVERGED = CONVERGED.astype(bool)     
     
     assert np.all(~np.isinf(RTIME) == CONVERGED), "Runtime and convergence arrays are incosistent!"
-    assert np.all(~np.isnan(ALPHA)), "actual step size not available"
+    assert np.all(~np.isnan(ALPHA)), "Step sizes contains nans!"
     
     results = {'step_size': ALPHA, 'batch_size': BATCH, 'objective': OBJ, 'runtime': RTIME, 'runtime_std': RT_STD,\
                'n_iter': NITER, 'converged': CONVERGED, 'solver': solver}

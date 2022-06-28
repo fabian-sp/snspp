@@ -12,7 +12,7 @@
       "solver": "snspp",
       "alpha_min": -2,
       "alpha_max": 2,
-      "n_alpha": 10,
+      "n_alpha": 15,
       "batch": [0.005,0.01,0.05],
       "params": {
         "max_iter": 200,
@@ -22,9 +22,9 @@
     },
     "svrg": {
       "solver": "svrg",
-      "alpha_min": -0,
-      "alpha_max": 6,
-      "n_alpha": 10,
+      "alpha_min": -2,
+      "alpha_max": 2,
+      "n_alpha": 15,
       "batch": [0.005,0.01,0.05],
       "params": {
         "n_epochs": 30
@@ -32,17 +32,17 @@
     },
     "saga": {
       "solver": "saga",
-      "alpha_min": -1,
-      "alpha_max": 3,
-      "n_alpha": 10,
+      "alpha_min": -3,
+      "alpha_max": 1,
+      "n_alpha": 15,
       "batch": [],
       "params": {
         "n_epochs": 30
       }
     }
   },
-  "psi_tol": 0.001,
-  "y_max": 25,
+  "psi_tol": 0.01,
+  "y_max": 5,
   "n_rep": 3,
   "start": 0
 }

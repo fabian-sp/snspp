@@ -83,38 +83,34 @@ def initialize_solvers(f, phi):
     """
     initializes jitiing
     """
-    params = {'max_iter' : 15, 'batch_size': 20, 'alpha': 0.01, 'reduce_variance': True}  
+    params = {'max_iter' : 15, 'batch_size': 20, 'alpha': 1e-3, 'reduce_variance': True}  
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)   
     tmpP.solve(solver = 'snspp')
     
-    params = {'n_epochs' : 2}
+    params = {'n_epochs' : 2, 'alpha': 1e-5,}
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)
     tmpP.solve(solver = 'saga')
     
-    params = {'n_epochs' : 2}
+    params = {'n_epochs' : 2, 'batch_size': 20, 'alpha': 1e-5}
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)
     tmpP.solve(solver = 'svrg')
     
-    params = {'n_epochs' : 2, 'batch_size': 10, 'alpha': 0.01}  
+    params = {'n_epochs' : 2, 'batch_size': 20, 'alpha': 1e-5}  
     tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)   
     tmpP.solve(solver = 'adagrad')
       
     return
 
-def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = None, n_iter = 50, x0 = None, relative = True):
+def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = None, n_iter = 50, x0 = None, n_rep = 3, relative = True):
     
     if alpha_range is None:
-        if solver in ['saga', 'batch-saga', 'svrg']:
-            # for SAGA/SVRG, input for alpha is multiplied with theoretical stepsize --> choose larger than 1
-            alpha_range = np.logspace(0, 2, 10)   
-        else:
-            alpha_range = np.logspace(-3, -1, 10)
+        alpha_range = np.logspace(-4, 1, 11)
     
     if batch_range is None:
         if solver == 'saga':
             batch_range = np.array([1])
         else:
-            batches = np.array([0.01, 0.03, 0.05])
+            batches = np.array([0.005,0.01,0.05])
             batch_range = np.maximum(1, (f.N*batches).astype(int))
             
     all_time_min = np.inf
@@ -133,32 +129,34 @@ def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = N
     for b in batch_range:
         res[b] = dict()
         for al in alpha_range:
-            
+            this_rt = np.zeros(n_iter+1) # +1 as problem also contains strating point obj.
+            this_obj = np.zeros(n_iter+1)
             # update step size and batch size
-            if solver == 'snspp':
-                params["alpha"] = al
-            else:
-                params["alpha"] = al
-            
+            params["alpha"] = al                
             if solver != 'saga':
                 params["batch_size"] = b
+
             print(params)
             
-            Q = problem(f, phi, x0 = x0, tol = 1e-5, params = params, verbose = False, measure = True)
-            
-            try: 
-                Q.solve(solver = solver)
-            except:
-                Q.info = dict()
-                Q.info["runtime"] = np.nan*np.zeros(params["n_epochs"])
-                Q.info["objective"] = np.nan*np.zeros(params["n_epochs"])
+            for j in np.arange(n_rep):
+                Q = problem(f, phi, x0 = x0, tol = 1e-5, params = params, verbose = False, measure = True)
                 
+                try: 
+                    Q.solve(solver = solver)
+                    this_rt += Q.info["runtime"]
+                    this_obj += Q.info["objective"]
+                except:
+                    this_rt += np.nan*np.zeros(n_iter)
+                    this_obj += np.nan*np.zeros(n_iter)
+                    
             # store
-            res[b][al] = {'runtime': Q.info["runtime"], 'objective': Q.info["objective"]}
-            all_time_min = min(all_time_min, Q.info["objective"].min())
+            this_rt *= 1/n_rep
+            this_obj *= 1/n_rep
+            res[b][al] = {'runtime': this_rt, 'objective': this_obj}
+            all_time_min = min(all_time_min, this_obj.min())
             
             # update current best params if necessary
-            this_val = Q.info["objective"][-5:].mean()
+            this_val = this_obj[-1]
             if this_val <= current_best_val:
                 current_best = (b, al)
                 current_best_val = this_val
@@ -194,9 +192,9 @@ def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = N
     # legend for step sizes 
     g_leg = list()
     for i in range(len(alpha_range)):
-        g_leg.append(mpatches.Patch(color = colors[i], label = np.round(alpha_range[i], 3)))
+        g_leg.append(mpatches.Patch(color = colors[i], label = np.round(alpha_range[i], 5)))
         
-    plt.legend(handles = g_leg, title = "step size (al)", loc = 'upper right')
+    plt.legend(handles = g_leg, title = "step size", loc = 'upper right')
         
     # other stuff    
     ax.grid(ls = '-', lw = .5)

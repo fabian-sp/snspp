@@ -67,14 +67,14 @@ if setup == 1:
     params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 5., 'reduce_variance': True}
 
 elif setup == 2:
-    params_saga = {'n_epochs' : 50, 'alpha' : 2.5}
-    params_svrg = {'n_epochs' : 70, 'batch_size': 20, 'alpha': 100.}
+    params_saga = {'n_epochs' : 50, 'alpha' : 0.00498}
+    params_svrg = {'n_epochs' : 70, 'batch_size': 20, 'alpha': 0.19950}
     params_adagrad = {'n_epochs' : 150, 'batch_size': 20, 'alpha': 0.03}   
     params_snspp = {'max_iter' : 320, 'batch_size': 20, 'sample_style': 'fast_increasing', 'alpha' : 3., 'reduce_variance': True}
 
 elif setup == 3:
-    params_saga = {'n_epochs' : 25, 'alpha' : 40.}
-    params_svrg = {'n_epochs' : 10, 'batch_size': 10, 'alpha': 1200.}
+    params_saga = {'n_epochs' : 25, 'alpha' : 0.07730}
+    params_svrg = {'n_epochs' : 10, 'batch_size': 10, 'alpha': 2.31905}
     #params_svrg = {'n_epochs' : 10, 'batch_size': 100, 'alpha': 20000.}
     params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.06}   
     params_snspp = {'max_iter' : 250, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 12.5, 'reduce_variance': True}
@@ -227,9 +227,9 @@ else:
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
 
-#Q.plot_objective(ax = ax, ls = '--', **kwargs)
-#Q1.plot_objective(ax = ax, ls = '-.', **kwargs)
-#Q2.plot_objective(ax = ax, ls = '-.', **kwargs)
+#Q.plot_objective(ax = ax, **kwargs)
+#Q1.plot_objective(ax = ax, **kwargs)
+#Q2.plot_objective(ax = ax, **kwargs)
 #P.plot_objective(ax = ax, **kwargs)
 
 Cont.plot_objective(ax = ax, median = False, **kwargs) 

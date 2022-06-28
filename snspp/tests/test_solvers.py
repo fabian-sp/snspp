@@ -48,8 +48,7 @@ def template_test(f, phi, x_sk, params, solver, assert_objective = True):
 
 #%%
 def test_saga_lasso():
-    #params = dict()
-    params = {'n_epochs' : 1000, 'alpha': 1.}
+    params = {'n_epochs' : 1000, 'alpha': 1e-4}
     
     f, phi, x_sk = create_test_instance(prob = 'lasso')
     template_test(f, phi, x_sk, params, 'saga')
@@ -57,7 +56,7 @@ def test_saga_lasso():
     return
 
 def test_adagrad_lasso():
-    params = {'n_epochs' : 50}
+    params = {'n_epochs' : 50, 'alpha': 1e-3}
     
     f, phi, x_sk = create_test_instance(prob = 'lasso')
     template_test(f, phi, x_sk, params, 'adagrad', assert_objective = False)
@@ -65,7 +64,7 @@ def test_adagrad_lasso():
     return
 
 def test_svrg_lasso():
-    params = {'n_epochs' : 1000, 'batch_size': 2}
+    params = {'n_epochs' : 1000, 'batch_size': 2, 'alpha': 1e-3}
     
     f, phi, x_sk = create_test_instance(prob = 'lasso')
     template_test(f, phi, x_sk, params, 'svrg')
@@ -83,7 +82,7 @@ def test_sgd_lasso():
 #%%
 
 def test_saga_logreg():
-    params = {'n_epochs' : 1000, 'alpha': 1.}
+    params = {'n_epochs' : 1000, 'alpha': 1e-3}
     
     f, phi, x_sk = create_test_instance(prob = 'logreg')
     template_test(f, phi, x_sk, params, 'saga')
@@ -99,7 +98,7 @@ def test_adagrad_logreg():
     return
 
 def test_svrg_logreg():
-    params = {'n_epochs' : 1000, 'batch_size': 5}
+    params = {'n_epochs' : 1000, 'batch_size': 5, 'alpha': 5e-3}
     
     f, phi, x_sk = create_test_instance(prob = 'logreg')
     template_test(f, phi, x_sk, params, 'svrg')
@@ -107,7 +106,7 @@ def test_svrg_logreg():
     return
 
 def test_batch_saga_logreg():
-    params = {'n_epochs' : 1000, 'batch_size': 5}
+    params = {'n_epochs' : 1000, 'batch_size': 5, 'alpha': 5e-3}
     
     f, phi, x_sk = create_test_instance(prob = 'logreg')
     template_test(f, phi, x_sk, params, 'batch-saga')
@@ -165,10 +164,10 @@ def test_snspp_general():
 
 
 def test_plot_funs():
-    params = {'n_epochs' : 100, 'alpha': 1.}
+    params = {'n_epochs' : 100, 'alpha': 1e-3}
     
     f, phi, x_sk = create_test_instance(prob = 'lasso')
-    Q = template_test(f, phi, x_sk, params, 'saga')
+    Q = template_test(f, phi, x_sk, params, 'saga', assert_objective=False)
     
     Q.plot_objective(runtime = True)
     Q.plot_objective(runtime = False)
