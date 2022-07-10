@@ -17,7 +17,8 @@
       "params": {
         "max_iter": 400,
         "sample_style": "constant",
-        "reduce_variance": true
+        "reduce_variance": true,
+        "measure_freq": 10
       }
     },
     "svrg": {
