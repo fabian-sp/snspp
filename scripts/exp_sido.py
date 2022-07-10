@@ -1,5 +1,12 @@
 """
 @author: Fabian Schaipp
+
+This runs the L1-Logistic Regression experiment on the Sido0 dataset.
+For running this, complete the following steps:
+
+1) Download Sido0 dataset from http://www.causality.inf.ethz.ch/challenge.php?page=datasets#cont
+2) Extract the files to the directory ../data/sido0 (relative to the path of this file)
+    
 """
 import sys
 

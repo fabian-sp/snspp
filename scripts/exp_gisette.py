@@ -5,10 +5,10 @@ This runs the L1-Logistic Regression experiment on the Gisette dataset.
 For running this, complete the following steps:
 
 1) Download scaled gisette dataset from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#gisette
-2) Copy the extracted files to '../data/libsvm/'
+2) Copy and rename the extracted file to '../data/libsvm/gisette.txt' 
 3) Set the working directory as the parent of this file (i.e. os.chdir('..')) and run
     
-    from snspp.data_generation import prepare_gisette
+    from snspp.helper.data_generation import prepare_gisette
     prepare_gisette(path_prefix = '')
 
 4) You should now see 'data/gisette_X.npy' and 'data/gisette_y.npy'.
