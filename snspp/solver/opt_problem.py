@@ -79,7 +79,7 @@ class problem:
         
         self.x0 = x0
         self.tol = tol
-        self.params = params
+        self.params = params.copy()
         self.verbose = verbose
         self.measure = measure
         
@@ -91,13 +91,11 @@ class problem:
             self.x0 = np.zeros(self.n)
         
         if solver == 'snspp':
-            self.x, self.xavg, self.info = stochastic_prox_point(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
+            self.x, self.info = stochastic_prox_point(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
                          verbose = self.verbose, measure = self.measure)
-        # elif solver == 'saga slow':
-        #     self.x, self.xavg, self.info =  saga(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
-        #                                          verbose = self.verbose, measure = self.measure)
+
         elif solver in ['saga', 'batch-saga', 'svrg', 'adagrad', 'sgd']:
-            self.x, self.xavg, self.info =  stochastic_gradient(self.f, self.phi, self.x0, solver = self.solver, tol = self.tol, params = self.params, \
+            self.x, self.info =  stochastic_gradient(self.f, self.phi, self.x0, solver = self.solver, tol = self.tol, params = self.params, \
                                                  verbose = self.verbose, measure = self.measure)        
         else:
             raise ValueError("Not a known solver option")

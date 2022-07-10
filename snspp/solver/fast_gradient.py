@@ -2,7 +2,7 @@
 author: Fabian Schaipp
 """
 from ..helper.utils import compute_gradient_table, compute_batch_gradient, compute_batch_gradient_table, compute_xi_inner,\
-                            compute_x_mean_hist, stop_scikit_saga, derive_L
+                            stop_scikit_saga, derive_L
 
 from .sgd import sgd_loop
                             
@@ -141,13 +141,6 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
     #########################################################
     x_hist = np.vstack(x_hist)
     n_iter = x_hist.shape[0]
-    
-    # compute x_mean retrospectivly (disabled)
-    if False:
-        xmean_hist = compute_x_mean_hist(np.vstack(x_hist))
-        x_mean = xmean_hist[-1,:].copy()
-    else:
-        xmean_hist = None; x_mean = None
         
     # evaluate objective at x_t after every epoch
     obj = list()
@@ -175,10 +168,10 @@ def stochastic_gradient(f, phi, x0, solver = 'saga', tol = 1e-3, params = dict()
         print(f"{name} status: {status}")
     
     info = {'objective': np.array(obj), 'iterates': x_hist, \
-            'mean_hist': xmean_hist, 'step_sizes': np.array(step_sizes), \
+            'step_sizes': np.array(step_sizes), \
             'runtime': np.array(runtime), 'evaluations': num_eval}
 
-    return x_t, x_mean, info
+    return x_t, info
 
 #%%
 @njit()

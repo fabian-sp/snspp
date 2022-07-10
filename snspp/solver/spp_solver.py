@@ -4,7 +4,7 @@ author: Fabian Schaipp
 
 import numpy as np
 from ..helper.utils import block_diag, stop_scikit_saga
-from ..helper.utils import compute_full_xi, compute_x_mean_hist, derive_L
+from ..helper.utils import compute_full_xi, derive_L
 from .spp_easy import solve_subproblem_easy
 
 from scipy.sparse.linalg import cg
@@ -108,7 +108,8 @@ def get_default_spp_params(f):
     a = snspp_theoretical_step_size(f, b, m, 0.5)
     
     p = {'alpha': a, 'max_iter': 100, 'batch_size': b, 'sample_style': 'constant', 'reduce_variance': False,\
-           'm_iter': m, 'vr_skip': 0, 'tol_sub': 1e-3, 'newton_params': get_default_newton_params()}
+        'm_iter': m, 'tol_sub': 1e-3, 'newton_params': get_default_newton_params(),\
+        'vr_skip': 0, 'measure_freq': 1}
     
     return p
 
@@ -248,8 +249,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     x_hist = list(); xi_hist = list()
     step_sizes = list()
     obj = list()
-    ssn_info = list(); S_hist = list()
+    ssn_info = list();
     runtime = list(); num_eval = list()
+    sub_runtime = list()
     
     # variance reduction
     if params['reduce_variance']:
@@ -288,6 +290,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #########################################################
         if params['reduce_variance']:
             this_iter_vr = iter_t % params['m_iter'] == params['vr_skip']
+            
+            # recompute full gradient
             if this_iter_vr:
                 xi_tilde = compute_full_xi(f, x_t, is_easy)
                 full_g = (1/f.N) * (A.T @ xi_tilde)
@@ -306,6 +310,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #########################################################
         ## Solve subproblem
         #########################################################
+        sub_start = time.time()
         if not is_easy:
             x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, f.m, S, \
                                              tol = params['tol_sub'], newton_params = params['newton_params'],\
@@ -316,10 +321,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
                                              tol = params['tol_sub'], newton_params = params['newton_params'],\
                                              reduce_variance = reduce_variance, xi_tilde = xi_tilde, full_g = full_g,\
                                              verbose = verbose)
-                                             
-          
-       
-                    
+        
+        sub_end = time.time()                                     
+                
         #stop criterion
         eta = stop_scikit_saga(x_t, x_old)
         
@@ -329,15 +333,18 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         # we only measure runtime of the iteration, excluding computation of the objective
         end = time.time()
         runtime.append(end-start)
+        sub_runtime.append(sub_end-sub_start)
         num_eval.append(this_ssn['evaluations'].sum() + int(this_iter_vr) * f.N)
 
         if measure:
-            f_t = f.eval(x_t.astype('float64')) 
-            phi_t = phi.eval(x_t)
+            # recompute objective every <measure_freq> iter
+            if iter_t % params['measure_freq'] == 0:  
+                f_t = f.eval(x_t.astype('float64')) 
+                phi_t = phi.eval(x_t)
+            
             obj.append(f_t+phi_t)
         
         step_sizes.append(alpha_t)
-        S_hist.append(S)
         xi_hist.append(xi.copy())
         
           
@@ -352,6 +359,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         if f.convex and not params['reduce_variance']:
              alpha_t = params['alpha']/(iter_t + 2)**(0.51)
         
+    assert np.all(np.array(runtime)>=0), "Measure negative runtime"
+    assert np.all(np.array(runtime)-np.array(sub_runtime)>=0), "Measure negative runtime"
         
     if eta > tol:
         status = 'max iterations reached'    
@@ -360,22 +369,18 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         print(f"Stochastic ProxPoint terminated after {iter_t} iterations with accuracy {eta}")
         print(f"Stochastic ProxPoint status: {status}")
     
-    if False:
-        xmean_hist = compute_x_mean_hist(np.vstack(x_hist))
-        x_mean = xmean_hist[-1,:].copy()
-    else:
-        xmean_hist = None; x_mean = None
         
-    info = {'objective': np.array(obj), 'iterates': np.vstack(x_hist), \
-            'mean_hist': xmean_hist, 'xi_hist': xi_hist,\
-            'step_sizes': np.array(step_sizes), 'samples' : S_hist, \
-            'ssn_info': ssn_info, 'runtime': np.array(runtime),\
+    info = {'objective': np.array(obj), 'iterates': np.vstack(x_hist), 
+            'xi_hist': xi_hist,
+            'step_sizes': np.array(step_sizes),
+            'ssn_info': ssn_info, 
+            'runtime': np.array(runtime),
+            'sub_runtime': np.array(sub_runtime),
             'evaluations': np.array(num_eval)/f.N
             }
         
     
-    return x_t, x_mean, info
-
+    return x_t, info
 
 
 
