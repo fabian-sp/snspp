@@ -8,6 +8,7 @@ import pandas as pd
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from sklearn.datasets import load_svmlight_file
 
 from sklearn.datasets import make_low_rank_matrix
 from sklearn.preprocessing import PolynomialFeatures
@@ -366,6 +367,29 @@ def get_sido(lambda1 = 0.02, train_size = .8, scale = False, path_prefix = '../'
     phi = L1Norm(lambda1) 
     f = logistic_loss(X_train, y_train)
         
+    return f, phi, X_train, y_train, X_test, y_test
+
+def get_w8a(lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../'):
+    X, y = load_svmlight_file(path_prefix + 'data/libsvm/w8a')
+    assert np.all(np.isin(y,[-1,1]))
+    
+    X = X.toarray().astype('float64') # sparse to dense
+    y = y.astype('float64')
+    
+    np.nan_to_num(X, copy = False)
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+                                                        random_state = 1234)
+    
+    # is already scaled from -1 to 1 so not really needed
+    if scale:
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.transform(X_test)
+        
+    phi = L1Norm(lambda1) 
+    f = logistic_loss(X_train, y_train)
+    
     return f, phi, X_train, y_train, X_test, y_test
 
 # dataset with only two features, serves well for visualization
