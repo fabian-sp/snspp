@@ -369,36 +369,24 @@ def get_sido(lambda1 = 0.02, train_size = .8, scale = False, path_prefix = '../'
         
     return f, phi, X_train, y_train, X_test, y_test
 
-def get_rcv1(lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../'):
-    X, y = load_svmlight_file(path_prefix + 'data/libsvm/rcv1_train.binary')
-    assert np.all(np.isin(y,[-1,1]))
-    
-    X = X.toarray().astype('float64') # sparse to dense
-    y = y.astype('float64')
-    
-    np.nan_to_num(X, copy = False)
-    
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
-                                                        random_state = 1234)
-        
-    phi = L1Norm(lambda1) 
-    f = logistic_loss(X_train, y_train)
-    
-    return f, phi, X_train, y_train, X_test, y_test
+##############################
+## LIBSVM
 
-def get_w8a(lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../'):
-    X, y = load_svmlight_file(path_prefix + 'data/libsvm/w8a')
+libsvm_dict = {'rcv1': 'rcv1_train.binary', 'w8a': 'w8a', 'fourclass': 'fourclass_scale'}
+
+def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../'):
+    
+    X, y = load_svmlight_file(path_prefix + 'data/libsvm/' + libsvm_dict[name])
     assert np.all(np.isin(y,[-1,1]))
     
     X = X.toarray().astype('float64') # sparse to dense
     y = y.astype('float64')
-    
     np.nan_to_num(X, copy = False)
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
                                                         random_state = 1234)
     
-    # is already scaled from -1 to 1 so not really needed
+    # is often already scaled from -1 to 1 
     if scale:
         scaler = StandardScaler()
         X_train = scaler.fit_transform(X_train)
@@ -409,31 +397,71 @@ def get_w8a(lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../')
     
     return f, phi, X_train, y_train, X_test, y_test
 
-# dataset with only two features, serves well for visualization
-def get_fourclass(lambda1 = 0.001, reg = None, train_size = .99, path_prefix = '../'):
-    # download from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/fourclass_scale
+# def get_rcv1(lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../'):
+#     X, y = load_svmlight_file(path_prefix + 'data/libsvm/rcv1_train.binary')
+#     assert np.all(np.isin(y,[-1,1]))
     
-    X, y = load_svmlight_file(path_prefix + 'data/libsvm/fourclass_scale')
-    assert np.all(np.isin(y,[-1,1]))
+#     X = X.toarray().astype('float64') # sparse to dense
+#     y = y.astype('float64')
     
-    X = X.toarray().astype('float64') # sparse to dense
-    y = y.astype('float64')
+#     np.nan_to_num(X, copy = False)
     
-    np.nan_to_num(X, copy = False)
-    
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
-                                                        random_state = 1234)
-    
-    if reg is None:
-        phi = Zero() 
-    elif reg == 'l1':
-        phi = L1Norm(lambda1)
-    elif reg == 'l2':
-        phi = Ridge(lambda1)
+#     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+#                                                         random_state = 1234)
         
-    f = logistic_loss(X_train, y_train)
+#     phi = L1Norm(lambda1) 
+#     f = logistic_loss(X_train, y_train)
+    
+#     return f, phi, X_train, y_train, X_test, y_test
+
+# def get_w8a(lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../'):
+#     X, y = load_svmlight_file(path_prefix + 'data/libsvm/w8a')
+#     assert np.all(np.isin(y,[-1,1]))
+    
+#     X = X.toarray().astype('float64') # sparse to dense
+#     y = y.astype('float64')
+    
+#     np.nan_to_num(X, copy = False)
+    
+#     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+#                                                         random_state = 1234)
+    
+#     # is already scaled from -1 to 1 so not really needed
+#     if scale:
+#         scaler = StandardScaler()
+#         X_train = scaler.fit_transform(X_train)
+#         X_test = scaler.transform(X_test)
         
-    return f, phi, X_train, y_train, X_test, y_test
+#     phi = L1Norm(lambda1) 
+#     f = logistic_loss(X_train, y_train)
+    
+#     return f, phi, X_train, y_train, X_test, y_test
+
+# # dataset with only two features, serves well for visualization
+# def get_fourclass(lambda1 = 0.001, reg = None, train_size = .99, path_prefix = '../'):
+#     # download from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/fourclass_scale
+    
+#     X, y = load_svmlight_file(path_prefix + 'data/libsvm/fourclass_scale')
+#     assert np.all(np.isin(y,[-1,1]))
+    
+#     X = X.toarray().astype('float64') # sparse to dense
+#     y = y.astype('float64')
+    
+#     np.nan_to_num(X, copy = False)
+    
+#     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+#                                                         random_state = 1234)
+    
+#     if reg is None:
+#         phi = Zero() 
+#     elif reg == 'l1':
+#         phi = L1Norm(lambda1)
+#     elif reg == 'l2':
+#         phi = Ridge(lambda1)
+        
+#     f = logistic_loss(X_train, y_train)
+        
+#     return f, phi, X_train, y_train, X_test, y_test
 
 ############################################################################################
 ################## REGRESSION

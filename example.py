@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import time
 from sklearn.linear_model import Lasso, LogisticRegression
 
-from snspp.helper.data_generation import logreg_test, get_rcv1
+from snspp.helper.data_generation import logreg_test, get_libsvm
 from snspp.solver.opt_problem import problem
 from snspp.helper.regz import Zero
 
@@ -21,7 +21,7 @@ k = 5 # oracle nonzero elements
 l1 = .01 # l1 penalty
 
 xsol, A, b, f, phi, A_test, b_test = logreg_test(N, n, k, l1, noise = 0.1, kappa = 10., dist = 'ortho')
-#f, phi, A, b, _, _ = get_rcv1(lambda1 = 0.001, train_size = .8, path_prefix = '')
+#f, phi, A, b, _, _ = get_libsvm(name = "w8a", lambda1 = 0.001, train_size = .8, path_prefix = '')
 
 # for unregularized case:
 #phi = Zero()
