@@ -24,7 +24,7 @@ initialize_solvers(f, phi)
 batch_sizes = [1e-3, 5e-3, 1e-2, 2e-2, 5e-2]
 K = len(batch_sizes)
 
-params_snspp = {'max_iter' : 100, 'sample_style': 'constant', 'alpha' : 1., 'reduce_variance': True}
+params_snspp = {'max_iter' : 100, 'sample_style': 'constant', 'alpha' : 0.5, 'reduce_variance': True}
 
 res = dict()
 
@@ -50,6 +50,7 @@ fig, axs = plt.subplots(1,2,figsize = (7, 3), gridspec_kw=dict(width_ratios=[5,2
 ## first ax
 
 ax = axs[0]
+ax2 = ax.twinx()
 
 colors = sns.light_palette(color_dict['snspp'], K+1, reverse=False)
 colors = sns.cubehelix_palette(K, start=.5, rot=-.75, as_cmap=False)
@@ -58,9 +59,11 @@ for j,b in enumerate(batch_sizes):
     
     x = np.arange(len(res[b]['sub_runtime']))
     y = res[b]['sub_runtime']
+    y2 = res[b]['objective'][1:]
     mean_rt[b] = np.mean(y)
     
-    ax.plot(x,y, c=colors[j], lw=1, marker='o', markersize=5, markevery=(0,10), label=rf"$b/N={b}$ ")
+    ax.plot(x,y, c=colors[j], lw=1, marker='o', markersize=4, markevery=(0,20), label=rf"$b/N={b}$ ")
+    ax2.plot(x,y2, c=colors[j], ls='--', lw=2, marker='X', markersize=5, markevery=(5,10))
 
 ax.set_yscale('log')
 ax.set_xlabel('Iteration')
