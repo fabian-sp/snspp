@@ -369,6 +369,23 @@ def get_sido(lambda1 = 0.02, train_size = .8, scale = False, path_prefix = '../'
         
     return f, phi, X_train, y_train, X_test, y_test
 
+def get_rcv1(lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../'):
+    X, y = load_svmlight_file(path_prefix + 'data/libsvm/rcv1_train.binary')
+    assert np.all(np.isin(y,[-1,1]))
+    
+    X = X.toarray().astype('float64') # sparse to dense
+    y = y.astype('float64')
+    
+    np.nan_to_num(X, copy = False)
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+                                                        random_state = 1234)
+        
+    phi = L1Norm(lambda1) 
+    f = logistic_loss(X_train, y_train)
+    
+    return f, phi, X_train, y_train, X_test, y_test
+
 def get_w8a(lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../'):
     X, y = load_svmlight_file(path_prefix + 'data/libsvm/w8a')
     assert np.all(np.isin(y,[-1,1]))

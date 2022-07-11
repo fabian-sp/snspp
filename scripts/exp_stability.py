@@ -13,8 +13,6 @@ from snspp.experiments.stability_utils import load_setup, create_instance, compu
 
 #%%
 
-setup_id = 'mnist1'
-
 def run_stability(setup_id, save=False, load=False):
 
     results = dict()
@@ -79,7 +77,7 @@ def run_stability(setup_id, save=False, load=False):
 
 #%%
 
-setups = ['mnist1']
+setups = ['rcv1']
 
 for _s in setups:
     print(f"Running stability for {_s} \n \n")

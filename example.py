@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import time
 from sklearn.linear_model import Lasso, LogisticRegression
 
-from snspp.helper.data_generation import logreg_test, get_w8a
+from snspp.helper.data_generation import logreg_test, get_rcv1
 from snspp.solver.opt_problem import problem
 from snspp.helper.regz import Zero
 
@@ -21,7 +21,7 @@ k = 5 # oracle nonzero elements
 l1 = .01 # l1 penalty
 
 xsol, A, b, f, phi, A_test, b_test = logreg_test(N, n, k, l1, noise = 0.1, kappa = 10., dist = 'ortho')
-#f, phi, _, _, _, _ = get_w8a(lambda1 = 0.01, train_size = .8, path_prefix = '')
+#f, phi, A, b, _, _ = get_rcv1(lambda1 = 0.001, train_size = .8, path_prefix = '')
 
 # for unregularized case:
 #phi = Zero()
@@ -29,7 +29,7 @@ xsol, A, b, f, phi, A_test, b_test = logreg_test(N, n, k, l1, noise = 0.1, kappa
 #%% solve with SSNSP (run twice to compile numba)
 
 params = {'max_iter' : 50, 'batch_size': 100, 'sample_style': 'constant', \
-          'alpha' : 10., 'reduce_variance': True}
+          'alpha' : 1., 'reduce_variance': True}
 
 P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -54,7 +54,7 @@ info2 = Q.info.copy()
 
 #%% compare to scikit
 
-sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-5, solver = 'saga', max_iter = 700000, verbose = 1)
+sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-5, solver = 'saga', max_iter = 100, verbose = 1)
 sk.fit(A,b)
 
 x_sk = sk.coef_.copy().squeeze()
