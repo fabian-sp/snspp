@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import time
 from sklearn.linear_model import Lasso, LogisticRegression
 
-from snspp.helper.data_generation import logreg_test
+from snspp.helper.data_generation import logreg_test, get_w8a
 from snspp.solver.opt_problem import problem
 from snspp.helper.regz import Zero
 
@@ -21,6 +21,7 @@ k = 5 # oracle nonzero elements
 l1 = .01 # l1 penalty
 
 xsol, A, b, f, phi, A_test, b_test = logreg_test(N, n, k, l1, noise = 0.1, kappa = 10., dist = 'ortho')
+#f, phi, _, _, _, _ = get_w8a(lambda1 = 0.01, train_size = .8, path_prefix = '')
 
 # for unregularized case:
 #phi = Zero()

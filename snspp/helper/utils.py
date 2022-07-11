@@ -2,6 +2,9 @@ import numpy as np
 from numba import njit
 import warnings
 
+# logistic loss gradient norm at zero
+#np.linalg.norm(1/(2*f.N)*f.A.sum(axis=0))
+
 ############################################################################################
 ### Stopping criteria
 ############################################################################################

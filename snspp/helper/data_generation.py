@@ -396,13 +396,13 @@ def get_w8a(lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../')
 def get_fourclass(lambda1 = 0.001, reg = None, train_size = .99, path_prefix = '../'):
     # download from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/fourclass_scale
     
-    X,y = load_from_txt('fourclass', path_prefix) 
-    np.nan_to_num(X, copy = False)
-    
+    X, y = load_svmlight_file(path_prefix + 'data/libsvm/fourclass_scale')
     assert np.all(np.isin(y,[-1,1]))
     
-    X = X.astype('float64')
+    X = X.toarray().astype('float64') # sparse to dense
     y = y.astype('float64')
+    
+    np.nan_to_num(X, copy = False)
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
                                                         random_state = 1234)
