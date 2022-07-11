@@ -1,0 +1,49 @@
+{
+  "instance": {
+  	"loss": "logistic",
+    "dataset": "sido",
+    "N": 0,
+    "n": 0,
+    "k": 0,
+    "l1": 0.001
+  },
+  "methods": {
+    "snspp": {
+      "solver": "snspp",
+      "alpha_min": 0,
+      "alpha_max": 2,
+      "n_alpha": 15,
+      "batch": [0.005,0.01,0.05],
+      "params": {
+        "max_iter": 500,
+        "sample_style": "constant",
+        "reduce_variance": true,
+        "measure_freq": 10
+      }
+    },
+    "svrg": {
+      "solver": "svrg",
+      "alpha_min": -2,
+      "alpha_max": 1,
+      "n_alpha": 15,
+      "batch": [0.005,0.01,0.05],
+      "params": {
+        "n_epochs": 30
+      }
+    },
+    "saga": {
+      "solver": "saga",
+      "alpha_min": -3,
+      "alpha_max": 0,
+      "n_alpha": 15,
+      "batch": [],
+      "params": {
+        "n_epochs": 30
+      }
+    }
+  },
+  "psi_tol": 0.001,
+  "y_max": 30,
+  "n_rep": 5,
+  "start": 1
+}
