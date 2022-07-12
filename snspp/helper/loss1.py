@@ -53,8 +53,7 @@ class lsq:
     
     def eval(self, z):
         """
-        Method for evaluating :math:`f(x)`.
-        The array ``x`` should be the same type as A (we use float64).
+        Method for evaluating :math:`f(x)` where :math:`z=Ax`.
         """
         return (1/self.N) * np.linalg.norm(z - self.b)**2      
     
@@ -130,7 +129,7 @@ class logistic_loss:
     
     def eval(self, z):
         """
-        Method for evaluating :math:`f(x)`.
+        Method for evaluating :math:`f(x)` where :math:`z=Ax`.
         """
         y = np.log(1+ np.exp(-z)).sum()        
         return (1/self.N)*y
@@ -187,42 +186,42 @@ class logistic_loss:
     
 #%% only needed for testing
 
-# class block_lsq:
-#     """ 
-#     f is the squared loss function (1/N) * ||Ax-b||**2
-#     but with block-wise splits
-#     """
+class block_lsq:
+    """ 
+    f is the squared loss function (1/N) * ||Ax-b||**2
+    but with block-wise splits
+    """
     
-#     def __init__(self, A, b, m):
-#         self.name = 'squared'
-#         self.b = b
-#         self.A = A
-#         self.N = len(m)
-#         self.m = m
-#         self.ixx = np.repeat(np.arange(self.N), self.m)
-#         self.convex = True
+    def __init__(self, A, b, m):
+        self.name = 'squared'
+        self.b = b
+        self.A = A
+        self.N = len(m)
+        self.m = m
+        self.ixx = np.repeat(np.arange(self.N), self.m)
+        self.convex = True
         
-#     def eval(self, x):
-#         y = 0
-#         for i in np.arange(self.N):
-#             z_i = self.A[self.ixx == i, :] @ x
-#             y += self.f(z_i, i)
+    def eval(self, x):
+        y = 0
+        for i in np.arange(self.N):
+            z_i = self.A[self.ixx == i, :] @ x
+            y += self.f(z_i, i)
         
-#         return (1/self.N)*y
+        return (1/self.N)*y
 
-#     def f(self, x, i):
-#         return np.linalg.norm(x - self.b[self.ixx == i])**2
+    def f(self, x, i):
+        return np.linalg.norm(x - self.b[self.ixx == i])**2
     
-#     def g(self, x, i):
-#         return 2 * (x - self.b[self.ixx == i])
+    def g(self, x, i):
+        return 2 * (x - self.b[self.ixx == i])
     
-#     def fstar(self, x, i):
-#         return .25 * np.linalg.norm(x)**2 + np.sum(self.b[self.ixx == i] * x)
+    def fstar(self, x, i):
+        return .25 * np.linalg.norm(x)**2 + np.sum(self.b[self.ixx == i] * x)
     
-#     def gstar(self, x, i):
-#         return .5 * x + self.b[self.ixx == i]
+    def gstar(self, x, i):
+        return .5 * x + self.b[self.ixx == i]
     
-#     def Hstar(self, x, i):
-#         return .5 * np.eye(self.m[i])
+    def Hstar(self, x, i):
+        return .5 * np.eye(self.m[i])
 
 
