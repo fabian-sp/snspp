@@ -252,29 +252,30 @@ def lowrank_test(N = 10, p = 20, q = 30, r = 5, lambda1 = .1, noise = 0., kappa 
     """
     np.random.seed(seed)
     
-    A = np.zeros((p,q,N))
+    X = np.zeros((p,q,N))
     for j in np.arange(N):
-        A[:,:,j] = create_A(p, q, kappa = kappa, dist = dist)
+        X[:,:,j] = create_matrix(p, q, kappa = kappa, dist = dist)
     
     # create true solution
-    X = make_low_rank_matrix(p, q, effective_rank=r, tail_strength=0.5, random_state=23456)
+    beta = make_low_rank_matrix(p, q, effective_rank=r, tail_strength=0.5, random_state=23456)
     
     # create measurements
-    b = multiple_matdot(A, X) + noise*np.random.randn(N)
+    Y = multiple_matdot(X, beta) + noise*np.random.randn(N)
     
-    A = np.ascontiguousarray(A.astype('float64'))
-    b = b.astype('float64')
+    X_train = np.ascontiguousarray(X.astype('float64'))
+    Y_train = Y.astype('float64')
     
     N_test = max(100,int(N*0.1))
-    A_test = np.zeros((p,q,N_test))
+    X_test = np.zeros((p,q,N_test))
     for j in np.arange(N_test):
-        A_test[:,:,j] = create_A(p, q, kappa = kappa, dist = dist)
-    b_test = multiple_matdot(A_test, X) + noise*np.random.randn(N_test)
+        X_test[:,:,j] = create_matrix(p, q, kappa = kappa, dist = dist)
+    Y_test = multiple_matdot(X_test, beta) + noise*np.random.randn(N_test)
     
     phi = NuclearNorm(lambda1) 
-    f = mat_lsq(A, b)
+    f = mat_lsq(Y_train)
+    A = X_train.copy()
         
-    return X, A, b, f, phi, A_test, b_test
+    return f, phi, A, X_train, Y_train, X_test, Y_test, beta
 
 def poly_expand(A, d = 5):
 

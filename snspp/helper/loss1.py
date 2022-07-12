@@ -192,19 +192,21 @@ class block_lsq:
     but with block-wise splits
     """
     
-    def __init__(self, A, b, m):
+    def __init__(self, b, m):
         self.name = 'squared'
         self.b = b
-        self.A = A
         self.N = len(m)
         self.m = m
         self.ixx = np.repeat(np.arange(self.N), self.m)
         self.convex = True
         
-    def eval(self, x):
+    def eval(self, z):
+        """
+        z should be A@x
+        """
         y = 0
         for i in np.arange(self.N):
-            z_i = self.A[self.ixx == i, :] @ x
+            z_i = z[self.ixx == i]
             y += self.f(z_i, i)
         
         return (1/self.N)*y

@@ -8,7 +8,7 @@ from numba.typed import List
 from numba import njit
 
 @njit()
-def sgd_loop(f, phi, x_t, tol, alpha, beta, n_epochs, batch_size, style = 'vanilla'):
+def sgd_loop(f, phi, x_t, A, tol, alpha, beta, n_epochs, batch_size, style = 'vanilla'):
     """
     Parameters
     ----------
@@ -18,6 +18,8 @@ def sgd_loop(f, phi, x_t, tol, alpha, beta, n_epochs, batch_size, style = 'vanil
         regularizer.
     x_t : np.array
         starting point.
+    A : np.array
+        matrix for f
     tol : float
         tolerance for stop criterion.
     alpha : float
@@ -32,7 +34,6 @@ def sgd_loop(f, phi, x_t, tol, alpha, beta, n_epochs, batch_size, style = 'vanil
         Style of the SGD. Available options are:
             
             * 'vanilla': Vanilla Prox-SGD
-            * 'polyak': Prox-SGD with Polyak step size (experimental)
         
         The default is 'vanilla'.
     Returns
@@ -73,16 +74,9 @@ def sgd_loop(f, phi, x_t, tol, alpha, beta, n_epochs, batch_size, style = 'vanil
         S = np.random.randint(low = 0, high = f.N, size = batch_size)
         
         # mini-batch gradient step
-        g_t = compute_batch_gradient(f, x_t, S)
+        g_t = compute_batch_gradient(f, A, x_t, S)
         
-        if style == 'vanilla':
-        # vanilla SGD
-            alpha_t = alpha/(iter_t+1)**beta
-                        
-        elif style == 'polyak':              
-        # Polyak step size, prox step
-            gamma_t = alpha/(iter_t+1)**beta
-            alpha_t = np.minimum(gamma_t, (f.eval_batch(x_t, S))/np.linalg.norm(g_t)**2)  
+        alpha_t = alpha/(iter_t+1)**beta    
             
         w_t = x_t - alpha_t*g_t
         # compute prox step
@@ -97,9 +91,3 @@ def sgd_loop(f, phi, x_t, tol, alpha, beta, n_epochs, batch_size, style = 'vanil
             step_sizes.append(alpha_t)
 
     return x_t, x_hist, step_sizes, eta
-
-# # Polyak step size, no prox step
-#     gamma_t = alpha/(iter_t+1)**beta            
-#     u_t = phi.subg(x_t)            
-#     alpha_t = np.minimum(gamma_t, (f.eval_batch(x_t, S) + phi.eval(x_t))/np.linalg.norm(g_t + u_t)**2)  
-#     x_t = x_t - alpha_t* (g_t + u_t)

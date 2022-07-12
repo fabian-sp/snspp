@@ -45,7 +45,7 @@ def derive_L(f):
     elif f.name == 'tstudent':
         L =  (2/f.v) 
     else:
-        warnings.warn("For the given loss f, we could not determine the correct Lischitz smoothness constant. The default step size is maybe too large (divergence) or too small (slow convergence).")
+        warnings.warn("For the given loss f, we could not determine the correct Lipschitz smoothness constant. The default step size is maybe too large (divergence) or too small (slow convergence).")
         L = 1e2
     
     return L

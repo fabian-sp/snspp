@@ -164,6 +164,7 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
     phi : regularization function object
         This object describes the function :math:`\phi(x)`.
         See ``snspp/helper/regz.py`` for an example.
+    A : matrix for f
     x0 : array of shape (n,)
         Starting point. If no better guess is available, use zero.
     xi : array or dict, optional
