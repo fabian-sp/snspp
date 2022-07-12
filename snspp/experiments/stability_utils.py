@@ -38,7 +38,7 @@ def create_instance(setup):
     elif setup['instance']['dataset'] == "sido":
         f, phi, A, b, _, _ = get_sido(lambda1 = setup['instance']['l1'])
     
-    elif setup['instance']['dataset'] in ["rcv1", "w8a"]:
+    elif setup['instance']['dataset'] in ["rcv1", "w8a", "covtype"]:
         f, phi, A, b, _, _ = get_libsvm(name = setup['instance']['dataset'], lambda1 = setup['instance']['l1'])
         
     
