@@ -372,11 +372,16 @@ def get_sido(lambda1 = 0.02, train_size = .8, scale = False, path_prefix = '../'
 ##############################
 ## LIBSVM
 
-libsvm_dict = {'rcv1': 'rcv1_train.binary', 'w8a': 'w8a', 'fourclass': 'fourclass_scale'}
+libsvm_dict = {'rcv1': 'rcv1_train.binary', 'w8a': 'w8a', 'fourclass': 'fourclass_scale',
+               'covtype': 'covtype.libsvm.binary.scale'}
 
 def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../'):
     
     X, y = load_svmlight_file(path_prefix + 'data/libsvm/' + libsvm_dict[name])
+    
+    if name == 'covtype':
+        y[y==2] = -1
+    
     assert np.all(np.isin(y,[-1,1]))
     
     X = X.toarray().astype('float64') # sparse to dense
