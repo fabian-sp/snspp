@@ -41,7 +41,7 @@ for b in batch_sizes:
     
     
 #%%
-
+#psi_star =  0.552
 mean_rt = dict()
 
 fig, axs = plt.subplots(1,2,figsize = (7, 3), gridspec_kw=dict(width_ratios=[5,2]))
@@ -50,7 +50,7 @@ fig, axs = plt.subplots(1,2,figsize = (7, 3), gridspec_kw=dict(width_ratios=[5,2
 ## first ax
 
 ax = axs[0]
-ax2 = ax.twinx()
+#ax2 = ax.twinx()
 
 colors = sns.light_palette(color_dict['snspp'], K+1, reverse=False)
 colors = sns.cubehelix_palette(K, start=.5, rot=-.75, as_cmap=False)
@@ -59,13 +59,14 @@ for j,b in enumerate(batch_sizes):
     
     x = np.arange(len(res[b]['sub_runtime']))
     y = res[b]['sub_runtime']
-    y2 = res[b]['objective'][1:]
+    #y2 = res[b]['objective'][1:] - psi_star
     mean_rt[b] = np.mean(y)
     
     ax.plot(x,y, c=colors[j], lw=1, marker='o', markersize=4, markevery=(0,20), label=rf"$b/N={b}$ ")
-    ax2.plot(x,y2, c=colors[j], ls='--', lw=2, marker='X', markersize=5, markevery=(5,10))
+    #ax2.plot(x,y2, c=colors[j], ls='--', lw=2, marker='X', markersize=5, markevery=(5,10))
 
 ax.set_yscale('log')
+#ax2.set_yscale('log')
 ax.set_xlabel('Iteration')
 ax.set_ylabel('Subproblem runtime [sec]', fontsize=10)
 ax.legend(fontsize=8)
@@ -86,4 +87,7 @@ ax.set_ylim(_ylim)
 
 fig.tight_layout()
 
+
+if False:
+    fig.savefig('../data/plots/exp_mnist/batch_size.pdf')
 
