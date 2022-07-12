@@ -15,8 +15,7 @@ from numba import int64, float64, typeof
 spec = [
     ('name', typeof('abc')),
     ('convex', typeof(True)),
-    ('b', float64[:]),               
-    ('A', float64[:,:]),
+    ('b', float64[:]),
     ('N', int64), 
     ('m', int64[:]),
 ]
@@ -43,26 +42,21 @@ class lsq:
     
     """
     
-    def __init__(self, A, b):
+    def __init__(self, b):
         self.name = 'squared'
         self.convex = True 
         self.b = b
-        self.A = A
         self.N = len(b)
         self.m = np.repeat(1,self.N)
         
         return
     
-    def eval(self, x):
+    def eval(self, z):
         """
         Method for evaluating :math:`f(x)`.
         The array ``x`` should be the same type as A (we use float64).
         """
-        return (1/self.N) * np.linalg.norm(self.A@x - self.b)**2      
-    
-    # only for testing
-    def eval_batch(self, x, S):
-        return (1/len(S)) * np.linalg.norm(self.A[S,:]@x - self.b[S])**2 
+        return (1/self.N) * np.linalg.norm(z - self.b)**2      
     
     def f(self, x, i):
         """
@@ -99,11 +93,9 @@ spec_log = [
     ('name', typeof('abc')),
     ('convex', typeof(True)),
     ('b', float64[:]),               
-    ('A', float64[:,:]),
     ('N', int64), 
     ('m', int64[:]),
 ]
-        
 
 @jitclass(spec_log)
 class logistic_loss:
@@ -128,20 +120,18 @@ class logistic_loss:
     
     """
     
-    def __init__(self, A, b):
+    def __init__(self, b):
         self.name = 'logistic'
         self.convex = True   
         self.b = b
-        self.A = A * np.ascontiguousarray(self.b).reshape((-1,1))
         self.N = len(self.b)
         self.m = np.repeat(1,self.N)   
         return
     
-    def eval(self, x):
+    def eval(self, z):
         """
         Method for evaluating :math:`f(x)`.
         """
-        z = self.A@x
         y = np.log(1+ np.exp(-z)).sum()        
         return (1/self.N)*y
 
@@ -197,42 +187,42 @@ class logistic_loss:
     
 #%% only needed for testing
 
-class block_lsq:
-    """ 
-    f is the squared loss function (1/N) * ||Ax-b||**2
-    but with block-wise splits
-    """
+# class block_lsq:
+#     """ 
+#     f is the squared loss function (1/N) * ||Ax-b||**2
+#     but with block-wise splits
+#     """
     
-    def __init__(self, A, b, m):
-        self.name = 'squared'
-        self.b = b
-        self.A = A
-        self.N = len(m)
-        self.m = m
-        self.ixx = np.repeat(np.arange(self.N), self.m)
-        self.convex = True
+#     def __init__(self, A, b, m):
+#         self.name = 'squared'
+#         self.b = b
+#         self.A = A
+#         self.N = len(m)
+#         self.m = m
+#         self.ixx = np.repeat(np.arange(self.N), self.m)
+#         self.convex = True
         
-    def eval(self, x):
-        y = 0
-        for i in np.arange(self.N):
-            z_i = self.A[self.ixx == i, :] @ x
-            y += self.f(z_i, i)
+#     def eval(self, x):
+#         y = 0
+#         for i in np.arange(self.N):
+#             z_i = self.A[self.ixx == i, :] @ x
+#             y += self.f(z_i, i)
         
-        return (1/self.N)*y
+#         return (1/self.N)*y
 
-    def f(self, x, i):
-        return np.linalg.norm(x - self.b[self.ixx == i])**2
+#     def f(self, x, i):
+#         return np.linalg.norm(x - self.b[self.ixx == i])**2
     
-    def g(self, x, i):
-        return 2 * (x - self.b[self.ixx == i])
+#     def g(self, x, i):
+#         return 2 * (x - self.b[self.ixx == i])
     
-    def fstar(self, x, i):
-        return .25 * np.linalg.norm(x)**2 + np.sum(self.b[self.ixx == i] * x)
+#     def fstar(self, x, i):
+#         return .25 * np.linalg.norm(x)**2 + np.sum(self.b[self.ixx == i] * x)
     
-    def gstar(self, x, i):
-        return .5 * x + self.b[self.ixx == i]
+#     def gstar(self, x, i):
+#         return .5 * x + self.b[self.ixx == i]
     
-    def Hstar(self, x, i):
-        return .5 * np.eye(self.m[i])
+#     def Hstar(self, x, i):
+#         return .5 * np.eye(self.m[i])
 
 

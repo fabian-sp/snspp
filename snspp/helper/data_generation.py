@@ -16,7 +16,7 @@ from sklearn.preprocessing import PolynomialFeatures
 import scipy.special as sp
 from scipy.stats import ortho_group
 
-from .loss1 import lsq, block_lsq, logistic_loss
+from .loss1 import lsq, logistic_loss
 from .loss2 import huber_loss
 from .regz import L1Norm, Zero, Ridge
 from .tstudent import tstudent_loss
@@ -136,38 +136,42 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = 1., dist
     np.random.seed(seed)
     
     N_test = max(100,int(N*0.1))
-    A = create_A(N+N_test, n, kappa = kappa, dist = dist)
+    X = create_A(N+N_test, n, kappa = kappa, dist = dist)
         
     # create true solution
-    x = np.random.randn(k) 
-    x = np.concatenate((x, np.zeros(n-k)))
-    np.random.shuffle(x)
+    beta = np.random.randn(k) 
+    beta = np.concatenate((beta, np.zeros(n-k)))
+    np.random.shuffle(beta)
     
-    h = np.exp(A@x)
+    h = np.exp(X@beta)
     odds = h/(1+h)
     
-    b = (odds >= .5)*2 -1
-    #b = np.random.binomial(1,p=odds)*2 - 1
+    y = (odds >= .5)*2 -1
+    #y = np.random.binomial(1,p=odds)*2 - 1
     
     if noise > 0:
         assert noise <= 1
         flip = np.random.binomial(n=1, p = noise, size = N+N_test)
         flip = (1 - flip * 2)      
         # flip signs (f in {-1,1})
-        b = b * flip
+        y = y * flip
      
-    A = np.ascontiguousarray(A.astype('float64'))
-    b = b.astype('float64')
-    x = x.astype('float64')
+    X = np.ascontiguousarray(X.astype('float64'))
+    y = y.astype('float64')
+    beta = beta.astype('float64')
+    
+    X_train = X[:N,:]
+    y_train = y[:N]
     
     phi = L1Norm(lambda1) 
-    f = logistic_loss(A[:N,:],b[:N])
+    f = logistic_loss(y_train)
+    A = X_train * y_train.reshape(-1,1) # logistic loss has a_i*b_i
     
     ##### TEST SET ############
-    A_test = A[N:,:]
-    b_test = b[N:]
+    X_test = X[N:,:]
+    y_test = y[N:]
     
-    return x, A[:N,:], b[:N], f, phi, A_test, b_test
+    return f, phi, A, X_train, y_train, X_test, y_test, beta
 
 def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 4., noise = 0.1, poly = 0, kappa = 1., dist = 'ortho', seed = 23456):
     
@@ -306,10 +310,11 @@ def get_mnist(lambda1 = 0.02, train_size = .8, scale = True):
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.transform(X_test)
     
+    A = X_train * y_train.reshape(-1,1) # logistic loss has a_i*b_i
     phi = L1Norm(lambda1) 
-    f = logistic_loss(X_train, y_train)
-
-    return f, phi, X_train, y_train, X_test, y_test
+    f = logistic_loss(y_train)
+    
+    return f, phi, A, X_train, y_train, X_test, y_test
 
 def get_gisette(lambda1 = 0.02, train_size = .8, path_prefix = '../'):
     # download from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#gisette
@@ -337,11 +342,11 @@ def get_gisette(lambda1 = 0.02, train_size = .8, path_prefix = '../'):
     # y_test = y_test.astype('float64')
     # np.nan_to_num(X_test, copy = False)
     
-    
+    A = X_train * y_train.reshape(-1,1) # logistic loss has a_i*b_i
     phi = L1Norm(lambda1) 
-    f = logistic_loss(X_train, y_train)
+    f = logistic_loss(y_train)
         
-    return f, phi, X_train, y_train, X_test, y_test
+    return f, phi, A, X_train, y_train, X_test, y_test
 
 def get_sido(lambda1 = 0.02, train_size = .8, scale = False, path_prefix = '../'):
     # download from http://www.causality.inf.ethz.ch/challenge.php?page=datasets
@@ -364,10 +369,12 @@ def get_sido(lambda1 = 0.02, train_size = .8, scale = False, path_prefix = '../'
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.transform(X_test)
         
+    A = X_train * y_train.reshape(-1,1) # logistic loss has a_i*b_i
     phi = L1Norm(lambda1) 
-    f = logistic_loss(X_train, y_train)
+    f = logistic_loss(y_train)
+    
         
-    return f, phi, X_train, y_train, X_test, y_test
+    return f, phi, A, X_train, y_train, X_test, y_test
 
 ##############################
 ## LIBSVM

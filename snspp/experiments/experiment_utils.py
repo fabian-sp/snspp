@@ -79,29 +79,29 @@ def eval_test_set(X, loss = list(), names = list(), kwargs = dict()):
 ## Fast gradient methods utils
 ##########################################################################
 
-def initialize_solvers(f, phi):
+def initialize_solvers(f, phi, A):
     """
     initializes jitiing
     """
     params = {'max_iter' : 15, 'batch_size': 20, 'alpha': 1e-3, 'reduce_variance': True}  
-    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)   
+    tmpP = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)   
     tmpP.solve(solver = 'snspp')
     
     params = {'n_epochs' : 2, 'alpha': 1e-5,}
-    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)
+    tmpP = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)
     tmpP.solve(solver = 'saga')
     
     params = {'n_epochs' : 2, 'batch_size': 20, 'alpha': 1e-5}
-    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)
+    tmpP = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)
     tmpP.solve(solver = 'svrg')
     
     params = {'n_epochs' : 2, 'batch_size': 20, 'alpha': 1e-5}  
-    tmpP = problem(f, phi, tol = 1e-5, params = params, verbose = False, measure = True)   
+    tmpP = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)   
     tmpP.solve(solver = 'adagrad')
       
     return
 
-def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = None, n_iter = 50, x0 = None, n_rep = 3, relative = True):
+def params_tuner(f, phi, A, solver = 'adagrad', alpha_range = None, batch_range = None, n_iter = 50, x0 = None, n_rep = 3, relative = True):
     
     if alpha_range is None:
         alpha_range = np.logspace(-4, 1, 11)
@@ -139,7 +139,7 @@ def params_tuner(f, phi, solver = 'adagrad', alpha_range = None, batch_range = N
             print(params)
             
             for j in np.arange(n_rep):
-                Q = problem(f, phi, x0 = x0, tol = 1e-5, params = params, verbose = False, measure = True)
+                Q = problem(f, phi, A, x0 = x0, tol = 1e-5, params = params, verbose = False, measure = True)
                 
                 try: 
                     Q.solve(solver = solver)

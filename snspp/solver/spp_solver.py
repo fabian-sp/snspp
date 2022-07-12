@@ -64,11 +64,11 @@ def cyclic_batch(N, batch_size, t):
 
 #%%
 
-def snspp_theoretical_step_size(f, b, m, eta = 0.5):
+def snspp_theoretical_step_size(f, A, b, m, eta = 0.5):
     """
     see paper for details
     """  
-    normA =  np.linalg.norm(f.A, axis = 1)**2
+    normA =  np.linalg.norm(A, axis = 1)**2
     
     if not f.convex:
         M = f.weak_conv(np.arange(f.N)).max() * normA.max()
@@ -102,10 +102,10 @@ def get_xi_start_point(f):
     
 #%% functions for parameter handling
 
-def get_default_spp_params(f):
+def get_default_spp_params(f, A):
     b = max(int(f.N*0.005),1)
     m = 10
-    a = snspp_theoretical_step_size(f, b, m, 0.5)
+    a = snspp_theoretical_step_size(f, A, b, m, 0.5)
     
     p = {'alpha': a, 'max_iter': 100, 'batch_size': b, 'sample_style': 'constant', 'reduce_variance': False,\
         'm_iter': m, 'tol_sub': 1e-3, 'newton_params': get_default_newton_params(),\
@@ -132,7 +132,7 @@ def check_newton_params(newton_params):
 
 #%% main functions
 
-def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
+def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
     """
     This implements the semismooth Newton stochastic proximal point method (SNSPP) for solving 
     
@@ -200,7 +200,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     """    
     
-    A = f.A.copy()
     n = len(x0)
     assert n == A.shape[1], f"Starting point has wrong dimension {n} while matrices A_i have dimension {A.shape[1]}."
     
@@ -217,7 +216,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     #########################################################
     ## Set parameters
     #########################################################
-    params_def = get_default_spp_params(f)
+    params_def = get_default_spp_params(f, A)
     params.update({k:v for k,v in params_def.items() if k not in params.keys()})
     
     # initialize step size
@@ -293,7 +292,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
             
             # recompute full gradient
             if this_iter_vr:
-                xi_tilde = compute_full_xi(f, x_t, is_easy)
+                xi_tilde = compute_full_xi(f, A, x_t, is_easy)
                 full_g = (1/f.N) * (A.T @ xi_tilde)
                 
                 # update xi
@@ -339,7 +338,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         if measure:
             # recompute objective every <measure_freq> iter
             if iter_t % params['measure_freq'] == 0:  
-                f_t = f.eval(x_t.astype('float64')) 
+                f_t = f.eval(A@x_t) 
                 phi_t = phi.eval(x_t)
             
             obj.append(f_t+phi_t)
@@ -463,7 +462,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, tol = 1e-3, newton_params = 
     if reduce_variance:
         xi_stack_old = np.hstack([xi_tilde[i] for i in S])
         xi_full_old = np.hstack([xi_tilde[i] for i in range(f.N)])
-        hat_d =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)      
+        hat_d =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (A.T @ xi_full_old)      
     else:
         hat_d = 0.
     

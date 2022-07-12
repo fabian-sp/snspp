@@ -9,7 +9,6 @@ import seaborn as sns
 from matplotlib.lines import Line2D
 
 from .spp_solver import stochastic_prox_point
-from .saga import saga
 from .fast_gradient import stochastic_gradient
 
 #sns.set()
@@ -19,7 +18,7 @@ color_dict = {"svrg": "#002A4A", "saga": "#FFB03B", "batch-saga": "#BF842C", "ad
               "snspp": "#468966", "default": "#142B40"}
 
 marker_dict = {"svrg": "<", "saga": ">", "batch-saga": ">", "adagrad" : "D", \
-          "snspp": "o", "default": "+"}
+               "snspp": "o", "default": "+"}
 
 class problem:
     """
@@ -42,7 +41,7 @@ class problem:
         * SNSPP: stochastic proximal point (with or without variance reduction).
         
     """
-    def __init__(self, f, phi, x0 = None, tol = 1e-3, params = dict(), verbose = True, measure = True):
+    def __init__(self, f, phi, A, x0 = None, tol = 1e-3, params = dict(), verbose = True, measure = True):
         """
 
         Parameters
@@ -75,7 +74,8 @@ class problem:
         """
         self.f = f
         self.phi = phi
-        self.n = f.A.shape[1]
+        self.A = A
+        self.n = A.shape[1]
         
         self.x0 = x0
         self.tol = tol
@@ -91,12 +91,12 @@ class problem:
             self.x0 = np.zeros(self.n)
         
         if solver == 'snspp':
-            self.x, self.info = stochastic_prox_point(self.f, self.phi, self.x0, tol = self.tol, params = self.params, \
+            self.x, self.info = stochastic_prox_point(self.f, self.phi, self.A, self.x0, tol = self.tol, params = self.params, \
                          verbose = self.verbose, measure = self.measure)
 
         elif solver in ['saga', 'batch-saga', 'svrg', 'adagrad', 'sgd']:
-            self.x, self.info =  stochastic_gradient(self.f, self.phi, self.x0, solver = self.solver, tol = self.tol, params = self.params, \
-                                                 verbose = self.verbose, measure = self.measure)        
+            self.x, self.info =  stochastic_gradient(self.f, self.phi, self.A, self.x0, solver = self.solver, tol = self.tol, params = self.params, \
+                                                     verbose = self.verbose, measure = self.measure)        
         else:
             raise ValueError("Not a known solver option")
         
@@ -104,7 +104,8 @@ class problem:
         if eval_x0 and self.measure:
             self.info['evaluations'] = np.insert(self.info['evaluations'], 0, 0)
             self.info['runtime'] = np.insert(self.info['runtime'], 0, 0)
-            psi0 = self.f.eval(self.x0) + self.phi.eval(self.x0)
+            
+            psi0 = self.f.eval(self.A@self.x0) + self.phi.eval(self.x0)
             self.info['objective'] = np.insert(self.info['objective'], 0, psi0)
             self.info['iterates'] = np.vstack((self.x0, self.info['iterates']))
         
