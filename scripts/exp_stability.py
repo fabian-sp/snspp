@@ -18,9 +18,9 @@ def run_stability(setup_id, save=False, load=False):
     results = dict()
     
     setup = load_setup(setup_id)
-    f, phi, A, b = create_instance(setup)
-    psi_star, xsol = compute_psi_star(setup, f, phi, A, b)
-    x0 = compute_x0(setup, f, phi)
+    f, phi, A, X_train, y_train = create_instance(setup)
+    psi_star, xsol = compute_psi_star(setup, f, phi, A, X_train, y_train)
+    x0 = compute_x0(setup, f, phi, A)
     
     #################################################
     # run 
@@ -35,7 +35,7 @@ def run_stability(setup_id, save=False, load=False):
             batch_size_range = setup["methods"][mt]["batch"]
             step_size_range = create_alpha_range(setup, mt)
             
-            this_res = do_grid_run(f, phi, step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
+            this_res = do_grid_run(f, phi, A, step_size_range, batch_size_range = batch_size_range, psi_star = psi_star, \
                                    psi_tol = setup["psi_tol"], n_rep = setup["n_rep"], solver = setup["methods"][mt]["solver"],\
                                    solver_params = params, x0 = x0)
             

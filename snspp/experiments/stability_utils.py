@@ -22,65 +22,65 @@ def load_setup(setup_id = ''):
 def create_instance(setup):
     
     if setup['instance']['dataset'] == "tstudent":
-        _, A, b, f, phi, _, _ = tstudent_test(setup['instance']['N'], setup['instance']['n'], setup['instance']['k'], setup['instance']['l1'], \
+        f, phi, A, X_train, y_train, _, _, _ = tstudent_test(setup['instance']['N'], setup['instance']['n'], setup['instance']['k'], setup['instance']['l1'], \
                                               v = 1, noise = 0.1, kappa = 15., dist = 'ortho')
 
     elif setup['instance']['dataset'] == "logreg":
-        _, A, b, f, phi, _, _ = logreg_test(setup['instance']['N'], setup['instance']['n'], setup['instance']['k'], lambda1 = setup['instance']['l1'],\
+        f, phi, A, X_train, y_train, _, _, _ = logreg_test(setup['instance']['N'], setup['instance']['n'], setup['instance']['k'], lambda1 = setup['instance']['l1'],\
                                                noise = 0.1, kappa = 15., dist = 'ortho')
     
     elif setup['instance']['dataset'] == "gisette":
-        f, phi, A, b, _, _ = get_gisette(lambda1 = setup['instance']['l1'])
+        f, phi, A, X_train, y_train, _, _ = get_gisette(lambda1 = setup['instance']['l1'])
     
     elif setup['instance']['dataset'] == "mnist":
-        f, phi, A, b, _, _ = get_mnist(lambda1 = setup['instance']['l1'])
+        f, phi, A, X_train, y_train, _, _ = get_mnist(lambda1 = setup['instance']['l1'])
         
     elif setup['instance']['dataset'] == "sido":
-        f, phi, A, b, _, _ = get_sido(lambda1 = setup['instance']['l1'])
+        f, phi, A, X_train, y_train, _, _ = get_sido(lambda1 = setup['instance']['l1'])
     
     elif setup['instance']['dataset'] in ["rcv1", "w8a", "covtype"]:
         f, phi, A, b, _, _ = get_libsvm(name = setup['instance']['dataset'], lambda1 = setup['instance']['l1'])
         
     
     # IMPORTANT: Initialize numba
-    initialize_solvers(f, phi)
+    initialize_solvers(f, phi, A)
 
-    return f, phi, A, b
+    return f, phi, A, X_train, y_train
 
-def compute_psi_star(setup, f, phi, A, b):
+def compute_psi_star(setup, f, phi, A, X_train, y_train):
     
     if setup['instance']['loss'] == "logistic":
         sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-20, \
                             solver = 'saga', max_iter = 200, verbose = 1)
-        sk.fit(A, b)
+        sk.fit(X_train, y_train)
         xsol = sk.coef_.copy().squeeze()
     elif setup['instance']['loss'] == "squared":
         sk = Lasso(alpha = phi.l1/2, fit_intercept = False, tol = 1e-20, selection = 'cyclic', max_iter = 1e5)
-        sk.fit(f.A,b)
+        sk.fit(X_train, y_train)
         xsol = sk.coef_.copy().squeeze()
         
     elif setup['instance']['loss'] == "tstudent":
-        orP = problem(f, phi, tol = 1e-20, params = {'n_epochs': 200}, verbose = False, measure = False)
+        orP = problem(f, phi, A, tol = 1e-20, params = {'n_epochs': 200}, verbose = False, measure = False)
         orP.solve(solver = 'saga')
         xsol = orP.x.copy()
         
-    psi_star = f.eval(xsol) + phi.eval(xsol)
+    psi_star = f.eval(A@xsol) + phi.eval(xsol)
     print("Optimal value: ", psi_star)
  
     return psi_star, xsol
 
-def compute_x0(setup, f, phi):
+def compute_x0(setup, f, phi, A):
     assert setup["start"] >= 0
     
     if setup["start"] == 0:
         x0 = None
     # compute setup['start'] many epochs for starting point
     else:        
-        Q = problem(f, phi, tol = 1e-20, params = {'n_epochs': setup["start"]}, verbose = False, measure = False)
+        Q = problem(f, phi, A, tol = 1e-20, params = {'n_epochs': setup["start"]}, verbose = False, measure = False)
         Q.solve(solver = 'saga')
         x0 = Q.x.copy()
         
-        psi0 = f.eval(x0) + phi.eval(x0)
+        psi0 = f.eval(A@x0) + phi.eval(x0)
         print("psi(x0) = ", psi0)
             
     return x0
@@ -96,7 +96,7 @@ def create_alpha_range(setup, method):
     
 #%% MAIN FUNCTION
 
-def do_grid_run(f, phi, step_size_range, batch_size_range = [], psi_star = 0, psi_tol = 1e-3, n_rep = 5, \
+def do_grid_run(f, phi, A, step_size_range, batch_size_range = [], psi_star = 0, psi_tol = 1e-3, n_rep = 5, \
                 solver = "snspp", x0 = None, solver_params = dict()):
     
     ALPHA = step_size_range.copy()
@@ -138,7 +138,7 @@ def do_grid_run(f, phi, step_size_range, batch_size_range = [], psi_star = 0, ps
             for j_rep in np.arange(n_rep):
                 try:
                     # SOLVE
-                    P = problem(f, phi, x0 = x0, tol = 1e-20, params = this_params, verbose = False, measure = True)
+                    P = problem(f, phi, A, x0 = x0, tol = 1e-20, params = this_params, verbose = False, measure = True)
                     P.solve(solver = solver)
                           
                     obj_arr = P.info['objective'].copy()
