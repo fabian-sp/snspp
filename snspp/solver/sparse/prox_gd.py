@@ -104,7 +104,7 @@ def sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter
             
             # compute the gradient
             v_t = compute_batch_gradient(f, A, x_t, S)
-            g_tilde_S = (1/batch_size)
+            g_tilde_S = (1/batch_size) * np.vstack([A.row(i) for i in S]).T @ g_tilde[S]
             g_t = v_t - (1/batch_size) * full_g[S,:].sum(axis=0) + g_tilde
 
             w_t = x_t - alpha*g_t
