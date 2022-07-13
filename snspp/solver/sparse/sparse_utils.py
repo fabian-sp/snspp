@@ -39,11 +39,12 @@ def sparse_gradient_table(f, A, x):
     
     # initialize object for storing all gradients
     gradients = list()
-    z = (A@x).reshape(-1,1)
+    z = A@x
     for i in np.arange(f.N):
         tmp_i = f.g( z[i], i)
         gradients.append(tmp_i)
         
-    gradients = np.vstack(gradients)
+    gradients = np.stack(gradients)
     
     return gradients
+

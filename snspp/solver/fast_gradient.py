@@ -75,7 +75,7 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
         assert gradients.shape == (N,n)
     else:
         gradients = sparse_gradient_table(f, A, x_t).astype('float64')
-        assert gradients.shape == (N,1)
+        assert gradients.shape == (N,)
     
     if 'n_epochs' not in params.keys():    
         params['n_epochs'] = 50
@@ -136,23 +136,28 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     #########################################################
     start = time.time()
     
-    
-    if solver == 'saga':
-        # run SAGA with batch size 1
-        x_t, x_hist, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['reg'])     
-    elif solver == 'batch-saga':
-        x_t, x_hist, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['batch_size'])
-    elif solver == 'svrg':
-        x_t, x_hist, step_sizes, eta  = svrg_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter)
-    elif solver == 'adagrad':
-        x_t, x_hist, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, alpha, params['delta'] , params['n_epochs'], params['batch_size'])
-    elif solver == 'sgd':
-        x_t, x_hist, step_sizes, eta = sgd_loop(f, phi, x_t, A, tol, alpha, params['beta'], params['n_epochs'], params['batch_size'], \
-                                                params['style'])
-    else:
-        raise NotImplementedError("Not a known solver option!")
+    if not sparse_format:
+        if solver == 'saga':
+            # run SAGA with batch size 1
+            x_t, x_hist, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['reg'])     
+        elif solver == 'batch-saga':
+            x_t, x_hist, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['batch_size'])
+        elif solver == 'svrg':
+            x_t, x_hist, step_sizes, eta  = svrg_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter)
+        elif solver == 'adagrad':
+            x_t, x_hist, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, alpha, params['delta'] , params['n_epochs'], params['batch_size'])
+        elif solver == 'sgd':
+            x_t, x_hist, step_sizes, eta = sgd_loop(f, phi, x_t, A, tol, alpha, params['beta'], params['n_epochs'], params['batch_size'], \
+                                                    params['style'])
+        else:
+            raise NotImplementedError("Not a known solver option!")
 
-            
+    else:
+        print("Using sparse solver")
+        if solver == 'saga':
+            x_t, x_hist, step_sizes, eta  = sparse_saga_loop(f, phi, x_t, A_csr, N, tol, alpha, gradients, params['n_epochs'], params['reg'])     
+        else:
+            raise NotImplementedError("Not a known solver option!") 
             
     end = time.time()
     
