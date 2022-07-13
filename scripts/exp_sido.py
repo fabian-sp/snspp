@@ -59,7 +59,7 @@ initialize_solvers(f, phi, A)
 
 # compute starting point
 sk0 = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-8, \
-                        solver = 'saga', max_iter = 1, verbose = 0).fit(X_train,y_train)
+                         solver = 'saga', max_iter = 1, verbose = 0).fit(X_train,y_train)
 x0 = sk0.coef_.squeeze()
 print("x0 max", x0.max())
 
@@ -72,7 +72,7 @@ if l1 == 1e-3:
     
     params_adagrad = {'n_epochs' : 60, 'batch_size': 20, 'alpha': 0.008}
     
-    params_snspp = {'max_iter' : 320, 'batch_size': 100, 'sample_style': 'constant', 'alpha' : 2.7,\
+    params_snspp = {'max_iter' : 320, 'batch_size': 100, 'sample_style': 'constant', 'alpha' : 2.5,\
                     "reduce_variance": True}
         
     # params_tuner(f, phi, A, solver = "saga", alpha_range = np.linspace(5,12,10), n_iter = 25, x0 = x0)
@@ -82,7 +82,7 @@ if l1 == 1e-3:
 
 elif l1 == 1e-2:
     
-    params_saga = {'n_epochs' : 20, 'alpha': 0.01415}
+    params_saga = {'n_epochs' : 20, 'alpha': 0.0140}
     
     params_svrg = {'n_epochs' : 20, 'batch_size': 50, 'alpha': 0.73359}
     
