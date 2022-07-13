@@ -42,10 +42,10 @@ info = P.info.copy()
 
 #%% solve with SAGA (run twice to compile numba)
 
-params = {'n_epochs' : 100, 'alpha': 1.}
+params = {'n_epochs' : 2, 'alpha': 1e-3}
 
 Q = problem(f, phi, A, tol = 1e-5, params = params, verbose = True, measure = True)
-Q.solve(solver = 'svrg')
+Q.solve(solver = 'saga')
 
 Q.plot_path()
 Q.plot_objective()

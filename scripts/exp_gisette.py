@@ -60,7 +60,7 @@ x_sk = sk.coef_.copy().squeeze()
 
 psi_star = f.eval(A@x_sk) + phi.eval(x_sk)
 print("psi(x*) = ", psi_star)
-initialize_solvers(f, phi)
+initialize_solvers(f, phi, A)
 
 #%% params
 

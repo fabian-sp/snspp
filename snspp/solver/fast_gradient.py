@@ -5,7 +5,9 @@ from ..helper.utils import compute_gradient_table, compute_batch_gradient, compu
                             stop_scikit_saga, derive_L
 
 from .sgd import sgd_loop
-                            
+from .sparse.sparse_utils import create_csr, sparse_gradient_table                         
+from .sparse.prox_gd import sparse_saga_loop
+
 import numpy as np                           
 import time
 import warnings
@@ -60,14 +62,20 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     # check whether A is in sparse format
     if isinstance(A, csr_matrix):
         sparse_format = True
+        A_csr = create_csr(A)
     else:
         sparse_format = False
+
     
     x_t = x0.copy().astype('float64')
 
     # initialize object for storing all gradients (used for SAGA)
-    gradients = compute_gradient_table(f, A, x_t).astype('float64')
-    assert gradients.shape == (N,n)
+    if not sparse_format:
+        gradients = compute_gradient_table(f, A, x_t).astype('float64')
+        assert gradients.shape == (N,n)
+    else:
+        gradients = sparse_gradient_table(f, A, x_t).astype('float64')
+        assert gradients.shape == (N,1)
     
     if 'n_epochs' not in params.keys():    
         params['n_epochs'] = 50
@@ -128,6 +136,7 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     #########################################################
     start = time.time()
     
+    
     if solver == 'saga':
         # run SAGA with batch size 1
         x_t, x_hist, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['reg'])     
@@ -142,7 +151,9 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
                                                 params['style'])
     else:
         raise NotImplementedError("Not a known solver option!")
-    
+
+            
+            
     end = time.time()
     
     if verbose:

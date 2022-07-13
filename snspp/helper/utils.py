@@ -70,7 +70,7 @@ def compute_full_xi(f, A, x, is_easy = False):
             z = (A@x).reshape(-1,1).astype('float64')
             xi = sparse_xi_inner(f, z).squeeze()
     else:
-        # this option is only used for the very general case of uneqal m
+        # this option is only used for the very general case of unequal m
         dims = np.repeat(np.arange(f.N),f.m)
         vals = list()
         for i in np.arange(f.N):
@@ -100,21 +100,18 @@ def compute_gradient_table(f, A, x):
     returns: array of shape Nxn
     """
     
-    dims = np.repeat(np.arange(f.N),f.m)
+    assert f.m.max() == 1, "Refactor this for m>1"
 
     # initialize object for storing all gradients
     gradients = list()
+    z = (A@x).reshape(-1,1)
     for i in np.arange(f.N):
-        if f.m.max() == 1:
-            A_i = A[[i],:].copy()
-        else:
-            A_i =  A[dims == i].copy()
-        tmp_i = A_i.T @ f.g( A_i @ x, i)
+        tmp_i = f.g( z[i], i)
         gradients.append(tmp_i)
         
     gradients = np.vstack(gradients)
     
-    return np.ascontiguousarray(gradients)
+    return np.ascontiguousarray(A * gradients)
 
 
 # needed for ADAGRAD + SVRG
