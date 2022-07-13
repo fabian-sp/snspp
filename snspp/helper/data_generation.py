@@ -293,7 +293,7 @@ def poly_expand(A, d = 5):
 def get_mnist(lambda1 = 0.02, train_size = .8, scale = True):
 
     # Load data from https://www.openml.org/d/554
-    X, y0 = fetch_openml('mnist_784', version=1, return_X_y=True, as_frame= False)
+    X, y0 = fetch_openml('mnist_784', version=1, return_X_y=True, as_frame=False)
     y0 = y0.astype('float64')
     y = y0.copy()
     

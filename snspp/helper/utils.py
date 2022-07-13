@@ -2,6 +2,10 @@ import numpy as np
 from numba import njit
 import warnings
 
+from scipy.sparse.csr import csr_matrix
+
+from ..solver.sparse.sparse_utils import sparse_xi_inner
+
 # logistic loss gradient norm at zero
 #np.linalg.norm(1/(2*f.N)*A.sum(axis=0))
 
@@ -58,8 +62,15 @@ def compute_full_xi(f, A, x, is_easy = False):
     if not is_easy: return dictionary where each value is array of size (m_i,)
     """
     if is_easy:
-        xi = compute_xi_inner(f, A, x).squeeze() 
+        if not isinstance(A, csr_matrix):
+            # used in SNSPP with np.array
+            xi = compute_xi_inner(f, A, x).squeeze() 
+        else:
+            # used in SNSPP with csr
+            z = (A@x).reshape(-1,1).astype('float64')
+            xi = sparse_xi_inner(f, z).squeeze()
     else:
+        # this option is only used for the very general case of uneqal m
         dims = np.repeat(np.arange(f.N),f.m)
         vals = list()
         for i in np.arange(f.N):
