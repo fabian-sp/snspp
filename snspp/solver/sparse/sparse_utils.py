@@ -23,10 +23,10 @@ def create_csr(A):
 @njit()
 def sparse_xi_inner(f, z):
     
-    vals = np.zeros((f.N,1))
+    vals = np.zeros(f.N,)
     
     for i in np.arange(f.N):
-        vals[i,:] = f.g(z[i,:], i)
+        vals[i] = f.g(z[i], i)
     
     return vals
 

@@ -67,8 +67,8 @@ def compute_full_xi(f, A, x, is_easy = False):
             xi = compute_xi_inner(f, A, x).squeeze() 
         else:
             # used in SNSPP with csr
-            z = (A@x).reshape(-1,1).astype('float64')
-            xi = sparse_xi_inner(f, z).squeeze()
+            z = (A@x).astype('float64')
+            xi = sparse_xi_inner(f, z)
     else:
         # this option is only used for the very general case of unequal m
         dims = np.repeat(np.arange(f.N),f.m)

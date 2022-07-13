@@ -9,7 +9,7 @@ import warnings
 from numba.typed import List
 from numba import njit
 
-from scipy.sparse.csr import sparse_xi_inner
+from .sparse_utils import sparse_xi_inner
 
 from ...helper.utils import stop_scikit_saga
 
@@ -73,7 +73,11 @@ def sparse_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg):
 
 
 #%%
-@njit()
+# from snspp.solver.sparse.sparse_utils import *
+# A_csr=create_csr(A)
+# z=A_csr.mult_vec(x_t)
+
+#@njit()
 def sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter):
     
     # initialize for diagnostics
@@ -90,17 +94,17 @@ def sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter
         if eta < tol:
             break
         
-        full_g = sparse_xi_inner(f, A, x_t).reshape(-1)
-        g_tilde = (1/N) * full_g.sum(axis=0)
+        z_t = A.mult_vec(x_t)
+        full_g = sparse_xi_inner(f, z_t)
+        g_tilde = (1/N) * A.transpose().mult_vec(full_g)
 
-        
         for t in np.arange(m_iter):
             
             S = np.random.randint(low = 0, high = N, size = batch_size)
             
             # compute the gradient
             v_t = compute_batch_gradient(f, A, x_t, S)
-            g_tilde_S = 
+            g_tilde_S = (1/batch_size)
             g_t = v_t - (1/batch_size) * full_g[S,:].sum(axis=0) + g_tilde
 
             w_t = x_t - alpha*g_t
