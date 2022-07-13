@@ -21,14 +21,14 @@ k = 5 # oracle nonzero elements
 l1 = .01 # l1 penalty
 
 f, phi, A, X_train, y_train, _, _, beta = logreg_test(N, n, k, l1, noise = 0.1, kappa = 10., dist = 'ortho')
-#f, phi, A, b, _, _ = get_libsvm(name = "covtype", lambda1 = 0.001, train_size = .8, path_prefix = '')
+f, phi, A, X_train, y_train, _, _ = get_libsvm(name = "covtype", lambda1 = 0.001, train_size = .8, path_prefix = '')
 
 # for unregularized case:
 #phi = Zero()
 
 #%% solve with SSNSP (run twice to compile numba)
 
-params = {'max_iter' : 50, 'batch_size': 100, 'sample_style': 'constant', \
+params = {'max_iter' : 100, 'batch_size': 100, 'sample_style': 'constant', \
           'alpha' : 1., 'reduce_variance': True}
 
 P = problem(f, phi, A, tol = 1e-5, params = params, verbose = True, measure = True)

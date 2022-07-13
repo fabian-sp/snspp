@@ -8,6 +8,7 @@ from ..helper.utils import compute_full_xi, derive_L
 from .spp_easy import solve_subproblem_easy
 
 from scipy.sparse.linalg import cg
+from scipy.sparse.csr import csr_matrix
 import time
 import warnings
 
@@ -67,6 +68,8 @@ def cyclic_batch(N, batch_size, t):
 def snspp_theoretical_step_size(f, A, b, m, eta = 0.5):
     """
     see paper for details
+    
+    should not be used when A is large!
     """  
     normA =  np.linalg.norm(A, axis = 1)**2
     
@@ -105,7 +108,7 @@ def get_xi_start_point(f):
 def get_default_spp_params(f, A):
     b = max(int(f.N*0.005),1)
     m = 10
-    a = snspp_theoretical_step_size(f, A, b, m, 0.5)
+    a = 1. # snspp_theoretical_step_size(f, A, b, m, 0.5)
     
     p = {'alpha': a, 'max_iter': 100, 'batch_size': b, 'sample_style': 'constant', 'reduce_variance': False,\
         'm_iter': m, 'tol_sub': 1e-3, 'newton_params': get_default_newton_params(),\
@@ -208,6 +211,12 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
     is_easy = (f.m.max() == 1) and callable(getattr(f, "fstar_vec", None))
     if verbose:
         print("Have easy version of the subproblem?", is_easy)
+    
+    # check whether A is in sparse format
+    if isinstance(A, csr_matrix):
+        sparse_format = True
+    else:
+        sparse_format = False
     
     x_t = x0.copy()
     

@@ -13,6 +13,8 @@ import warnings
 from numba.typed import List
 from numba import njit
 
+from scipy.sparse.csr import csr_matrix
+
 
 def vr_default_step_size(f, A):
     """
@@ -54,6 +56,12 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     assert np.all(f.m==1), "These implementations are restricted to the case m_i = 1, use SNSPP if not the case"
     N = len(f.m)
     assert n == A.shape[1], "wrong dimensions"
+    
+    # check whether A is in sparse format
+    if isinstance(A, csr_matrix):
+        sparse_format = True
+    else:
+        sparse_format = False
     
     x_t = x0.copy().astype('float64')
 
@@ -100,8 +108,11 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
         if solver in ['adagrad', 'sgd']:
             alpha = 1e-3
         else:
-            alpha = vr_default_step_size(f, A)
-        
+            if not sparse_format:
+                alpha = vr_default_step_size(f, A)
+            else:
+                alpha = 1e-3
+                
         warnings.warn("Using a default step size. This may lead to divergence (if too big) or slow convergence (if too small). A script for tuning the step size is contained in snspp/experiments/experiment_utils. Provide a step size via params[\"alpha\"].")
 
     else:
@@ -295,7 +306,7 @@ def svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter):
         
         if eta < tol:
             break
-        #full_g = compute_batch_gradient_table(f, x_t, np.arange(N))  
+        
         full_g = A * compute_xi_inner(f, A, x_t)
         g_tilde = (1/N) * full_g.sum(axis=0)
 

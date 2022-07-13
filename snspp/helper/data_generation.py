@@ -397,9 +397,9 @@ def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix
     
     assert np.all(np.isin(y,[-1,1]))
     
-    X = X.toarray().astype('float64') # sparse to dense
+    #X = X.toarray().astype('float64') # sparse to dense
     y = y.astype('float64')
-    np.nan_to_num(X, copy = False)
+    #np.nan_to_num(X, copy = False)
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
                                                         random_state = 1234)
@@ -409,11 +409,12 @@ def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix
         scaler = StandardScaler()
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.transform(X_test)
-        
-    phi = L1Norm(lambda1) 
-    f = logistic_loss(X_train, y_train)
     
-    return f, phi, X_train, y_train, X_test, y_test
+    A = X_train.multiply(y_train.reshape(-1,1)).tocsr() # logistic loss has a_i*b_i
+    phi = L1Norm(lambda1) 
+    f = logistic_loss(y_train)
+    
+    return f, phi, A, X_train, y_train, X_test, y_test
 
 
 ############################################################################################
