@@ -7,6 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
+from scipy.sparse.csr import csr_matrix
 
 from ..solver.opt_problem import problem, color_dict, marker_dict
 
@@ -83,10 +84,15 @@ def initialize_solvers(f, phi, A):
     """
     initializes jitiing
     """
-    params = {'max_iter' : 15, 'batch_size': 20, 'alpha': 0.1, 'reduce_variance': True}  
-    tmpP = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)   
-    tmpP.solve(solver = 'snspp')
-    
+    try:
+        params = {'max_iter' : 15, 'batch_size': 20, 'alpha': 1., 'reduce_variance': True}  
+        tmpP = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)   
+        tmpP.solve(solver = 'snspp')
+    except:
+        params = {'max_iter' : 15, 'batch_size': 20, 'alpha': 0.1, 'reduce_variance': True}  
+        tmpP = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)   
+        tmpP.solve(solver = 'snspp')
+        
     params = {'n_epochs' : 2, 'alpha': 1e-5,}
     tmpP = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)
     tmpP.solve(solver = 'saga')
@@ -95,9 +101,10 @@ def initialize_solvers(f, phi, A):
     tmpP = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)
     tmpP.solve(solver = 'svrg')
     
-    params = {'n_epochs' : 2, 'batch_size': 20, 'alpha': 1e-5}  
-    tmpP = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)   
-    tmpP.solve(solver = 'adagrad')
+    if not isinstance(A, csr_matrix):
+        params = {'n_epochs' : 2, 'batch_size': 20, 'alpha': 1e-5}  
+        tmpP = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)   
+        tmpP.solve(solver = 'adagrad')
       
     return
 
