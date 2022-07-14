@@ -83,7 +83,7 @@ def initialize_solvers(f, phi, A):
     """
     initializes jitiing
     """
-    params = {'max_iter' : 15, 'batch_size': 20, 'alpha': 1e-3, 'reduce_variance': True}  
+    params = {'max_iter' : 15, 'batch_size': 20, 'alpha': 0.1, 'reduce_variance': True}  
     tmpP = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)   
     tmpP.solve(solver = 'snspp')
     
