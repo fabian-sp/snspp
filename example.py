@@ -52,6 +52,18 @@ Q.plot_objective()
 
 info2 = Q.info.copy()
 
+#%% solve with SVRG (run twice to compile numba)
+
+params = {'n_epochs' : 10, 'alpha': 1e-3, 'batch_size': 10}
+
+Q = problem(f, phi, A, tol = 1e-5, params = params, verbose = True, measure = True)
+Q.solve(solver = 'svrg')
+
+Q.plot_path()
+Q.plot_objective()
+
+info2 = Q.info.copy()
+
 #%% compare to scikit
 
 sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-5, solver = 'saga', max_iter = 100, verbose = 1)

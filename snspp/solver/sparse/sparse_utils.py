@@ -19,7 +19,7 @@ def create_csr(A):
 
     return A_csr
 
-
+# needed for SNSPP and SVRG
 @njit()
 def sparse_xi_inner(f, z):
     
@@ -48,3 +48,31 @@ def sparse_gradient_table(f, A, x):
     
     return gradients
 
+
+# needed for ADAGRAD + SVRG
+@njit()
+def sparse_batch_gradient(f, A, x, S):
+    """
+    computes a vector of gradients at point x with mini batch S
+    returns: array of shape S
+    """   
+    
+    # initialize object for storing all gradients
+    gradients = np.zeros(len(S))
+        
+    for j, i in enumerate(S):
+        z_i = A.row(i) @ x
+        tmp_i = f.g(z_i, i)
+        gradients[j] = tmp_i
+    
+    return gradients
+
+# needed for SVRG
+@njit()
+def get_rows(A, S):
+    A_S = np.zeros((len(S), A.ncols))
+    
+    for i in S:
+        A_S[i,:] = A.row(i)
+    
+    return A_S

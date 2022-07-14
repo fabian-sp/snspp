@@ -6,7 +6,7 @@ from ..helper.utils import compute_gradient_table, compute_batch_gradient, compu
 
 from .sgd import sgd_loop
 from .sparse.sparse_utils import create_csr, sparse_gradient_table                         
-from .sparse.prox_gd import sparse_saga_loop
+from .sparse.prox_gd import sparse_saga_loop, sparse_svrg_loop
 
 import numpy as np                           
 import time
@@ -151,11 +151,13 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
                                                     params['style'])
         else:
             raise NotImplementedError("Not a known solver option!")
-
+    
+    # sparse solvers
     else:
-        print("Using sparse solver")
         if solver == 'saga':
-            x_t, x_hist, step_sizes, eta  = sparse_saga_loop(f, phi, x_t, A_csr, N, tol, alpha, gradients, params['n_epochs'], params['reg'])     
+            x_t, x_hist, step_sizes, eta  = sparse_saga_loop(f, phi, x_t, A_csr, N, tol, alpha, gradients, params['n_epochs'], params['reg'])
+        elif solver == 'svrg':
+            x_t, x_hist, step_sizes, eta  = sparse_svrg_loop(f, phi, x_t, A_csr, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter)
         else:
             raise NotImplementedError("Not a known solver option!") 
             

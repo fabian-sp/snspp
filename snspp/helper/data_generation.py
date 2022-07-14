@@ -15,6 +15,7 @@ from sklearn.preprocessing import PolynomialFeatures
 
 import scipy.special as sp
 from scipy.stats import ortho_group
+from scipy.sparse.csr import csr_matrix
 
 from .loss1 import lsq, logistic_loss, block_lsq
 from .loss2 import huber_loss
@@ -388,7 +389,7 @@ def get_sido(lambda1 = 0.02, train_size = .8, scale = False, path_prefix = '../'
 libsvm_dict = {'rcv1': 'rcv1_train.binary', 'w8a': 'w8a', 'fourclass': 'fourclass_scale',
                'covtype': 'covtype.libsvm.binary.scale'}
 
-def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../'):
+def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../', sparse_format=True):
     
     X, y = load_svmlight_file(path_prefix + 'data/libsvm/' + libsvm_dict[name])
     
@@ -397,9 +398,12 @@ def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix
     
     assert np.all(np.isin(y,[-1,1]))
     
-    #X = X.toarray().astype('float64') # sparse to dense
+    # convert to dense if desired
+    if isinstance(X, csr_matrix) and not sparse_format:
+      X = X.toarray().astype('float64') # sparse to dense
+      np.nan_to_num(X, copy = False)
+    
     y = y.astype('float64')
-    #np.nan_to_num(X, copy = False)
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
                                                         random_state = 1234)
