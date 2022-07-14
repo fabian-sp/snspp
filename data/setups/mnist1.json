@@ -18,7 +18,7 @@
         "max_iter": 250,
         "sample_style": "constant",
         "reduce_variance": true,
-        "measure_freq": 10
+        "measure_freq": 1
       }
     },
     "svrg": {
