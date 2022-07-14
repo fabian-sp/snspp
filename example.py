@@ -42,7 +42,7 @@ info = P.info.copy()
 
 #%% solve with SAGA (run twice to compile numba)
 
-params = {'n_epochs' : 10, 'alpha': 1e-3}
+params = {'n_epochs' : 10, 'alpha': 1.}
 
 Q = problem(f, phi, A, tol = 1e-5, params = params, verbose = True, measure = True)
 Q.solve(solver = 'saga')
@@ -66,7 +66,7 @@ info2 = Q.info.copy()
 
 #%% compare to scikit
 
-sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-10, solver = 'saga', max_iter = 10, verbose = 1)
+sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-10, solver = 'saga', max_iter = 30, verbose = 1)
 sk.fit(X_train, y_train)
 
 x_sk = sk.coef_.copy().squeeze()
