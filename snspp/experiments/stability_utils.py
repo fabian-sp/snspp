@@ -39,7 +39,7 @@ def create_instance(setup):
         f, phi, A, X_train, y_train, _, _ = get_sido(lambda1 = setup['instance']['l1'])
     
     elif setup['instance']['dataset'] in ["rcv1", "w8a", "covtype"]:
-        f, phi, A, b, _, _ = get_libsvm(name = setup['instance']['dataset'], lambda1 = setup['instance']['l1'])
+        f, phi, A, X_train, y_train, _, _ = get_libsvm(name = setup['instance']['dataset'], lambda1 = setup['instance']['l1'])
         
     
     # IMPORTANT: Initialize numba
