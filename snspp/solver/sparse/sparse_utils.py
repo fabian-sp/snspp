@@ -69,10 +69,10 @@ def sparse_batch_gradient(f, A, x, S):
 
 # needed for SVRG
 @njit()
-def get_rows(A, S):
+def compute_AS(A, S):
     A_S = np.zeros((len(S), A.ncols))
     
-    for i in S:
-        A_S[i,:] = A.row(i)
+    for j,i in enumerate(S):
+        A_S[j,:] = A.row(i)
     
     return A_S

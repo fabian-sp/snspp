@@ -9,7 +9,7 @@ import warnings
 from numba.typed import List
 from numba import njit
 
-from .sparse_utils import sparse_xi_inner, sparse_batch_gradient, get_rows
+from .sparse_utils import sparse_xi_inner, sparse_batch_gradient, compute_AS
 
 from ...helper.utils import stop_scikit_saga
 
@@ -79,7 +79,7 @@ def sparse_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg):
 #S = np.random.randint(low = 0, high = f.N, size = 10)
 # z=A_csr.mult_vec(x_t)
 
-@njit()
+#@njit()
 def sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter):
     
     # initialize for diagnostics
@@ -105,7 +105,7 @@ def sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter
             S = np.random.randint(low = 0, high = N, size = batch_size)
             
             # compute the gradient
-            A_S = get_rows(A, S)
+            A_S = compute_AS(A, S)
             v_t = sparse_batch_gradient(f, A, x_t, S)
             
             g_S = (1/batch_size) * A_S.T @ (v_t - full_g[S])
