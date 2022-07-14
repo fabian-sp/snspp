@@ -89,18 +89,16 @@ def snspp_theoretical_step_size(f, A, b, m, eta = 0.5):
     return 1/a
 
 
-def get_xi_start_point(f):
-    if f.name == 'logistic':
-        xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(f.m[i]) for i in np.arange(f.N)]))
-    elif f.name == 'tstudent':
-        xi = dict(zip(np.arange(f.N), [np.ones(f.m[i]) for i in np.arange(f.N)]))
-    elif f.name == 'huber':
-        xi = dict(zip(np.arange(f.N), [np.zeros(f.m[i]) for i in np.arange(f.N)]))
-    elif f.name == 'pseudohuber':
-        xi = dict(zip(np.arange(f.N), [np.zeros(f.m[i]) for i in np.arange(f.N)]))
+def get_xi_start_point(f, is_easy):
+    if is_easy:        
+        if f.name == 'logistic':
+            xi =  -.5 * np.ones(f.N)
+        elif f.name == 'tstudent':
+            xi = np.ones(f.N)
+        else: 
+            xi = np.zeros(f.N)
     else:
         xi = dict(zip(np.arange(f.N), [np.zeros(f.m[i]) for i in np.arange(f.N)]))
-
     return xi
     
 #%% functions for parameter handling
@@ -248,11 +246,10 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
     ## Initialization
     #########################################################
     if xi is None:
-        xi = get_xi_start_point(f)
+        xi = get_xi_start_point(f, is_easy)
     
     # for easy problems, xi is an array (and not a dict), because we can index it faster
     if is_easy:
-        xi = np.hstack(list(xi.values()))
         assert xi.shape== (f.N,)
     
     x_hist = list(); xi_hist = list()
