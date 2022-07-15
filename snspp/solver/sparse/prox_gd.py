@@ -78,7 +78,7 @@ def sparse_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg):
 #S = np.random.randint(low = 0, high = f.N, size = 10)
 # z=A_csr.mult_vec(x_t)
 
-#@njit()
+@njit()
 def sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter):
     
     # initialize for diagnostics

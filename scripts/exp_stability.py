@@ -22,6 +22,8 @@ def run_stability(setup_id, save=False, load=False):
     psi_star, xsol = compute_psi_star(setup, f, phi, A, X_train, y_train)
     x0 = compute_x0(setup, f, phi, A)
     
+    results['psi_star'] = psi_star
+    
     #################################################
     # run 
     #################################################
@@ -77,7 +79,7 @@ def run_stability(setup_id, save=False, load=False):
 
 #%%
 
-setups = ['rcv1']
+setups = ['covtype1', 'sido1']
 
 for _s in setups:
     print(f"Running stability for {_s} \n \n")

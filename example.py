@@ -21,7 +21,7 @@ k = 5 # oracle nonzero elements
 l1 = .01 # l1 penalty
 
 f, phi, A, X_train, y_train, _, _, beta = logreg_test(N, n, k, l1, noise = 0.1, kappa = 10., dist = 'ortho')
-f, phi, A, X_train, y_train, _, _ = get_libsvm(name = "covtype", lambda1 = 0.001, train_size = .8, path_prefix = '')
+f, phi, A, X_train, y_train, _, _ = get_libsvm(name = "rcv1", lambda1 = 0.001, train_size = .8, path_prefix = '')
 
 # for unregularized case:
 #phi = Zero()
@@ -42,7 +42,7 @@ info = P.info.copy()
 
 #%% solve with SAGA (run twice to compile numba)
 
-params = {'n_epochs' : 10, 'alpha': 1.}
+params = {'n_epochs' : 10, 'alpha': 1e-3}
 
 Q = problem(f, phi, A, tol = 1e-5, params = params, verbose = True, measure = True)
 Q.solve(solver = 'saga')
@@ -54,7 +54,7 @@ info2 = Q.info.copy()
 
 #%% solve with SVRG (run twice to compile numba)
 
-params = {'n_epochs' : 4, 'alpha': 1., 'batch_size': 300}
+params = {'n_epochs' : 10, 'alpha': 1., 'batch_size': 300}
 
 Q = problem(f, phi, A, tol = 1e-5, params = params, verbose = True, measure = True)
 Q.solve(solver = 'svrg')
@@ -66,7 +66,7 @@ info2 = Q.info.copy()
 
 #%% compare to scikit
 
-sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-10, solver = 'saga', max_iter = 30, verbose = 1)
+sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-10, solver = 'saga', max_iter = 10, verbose = 1)
 sk.fit(X_train, y_train)
 
 x_sk = sk.coef_.copy().squeeze()
