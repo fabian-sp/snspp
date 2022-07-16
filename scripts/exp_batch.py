@@ -61,22 +61,23 @@ from matplotlib.lines import Line2D
 
 res2 = list()
 
-fig, axs = plt.subplots(1,2,figsize = (8, 3), gridspec_kw=dict(width_ratios=[4,2]))
+fig, axs = plt.subplots(1,2,figsize = (8, 3.5), gridspec_kw=dict(width_ratios=[4,2]))
 
 ##############################
 ## first ax
 
 ax = axs[0]
 
-colors = sns.light_palette(color_dict['snspp'], K+1, reverse=False)
-colors = sns.cubehelix_palette(K, start=.5, rot=-.75, as_cmap=False)
-#colors = sns.color_palette("rocket", K)
+#colors = sns.light_palette(color_dict['snspp'], K+1, reverse=False)
+#colors = sns.cubehelix_palette(K, start=.5, rot=-.75, as_cmap=False)
+colors = ["#abc9c8", "#72aeb6", "#4692b0", "#2f70a1", "#134b73", "#0a3351"]
+colors = ["#abc9c8", "#72aeb6", "#4692b0",  "#134b73"]
 
 lss = ['-', '--', ':']
 lw = 2.
 
-batch_handles = [Line2D([0], [0], color=c, lw=lw) for c in colors] 
-step_handles = [Line2D([0], [0], color='darkgray', ls=ls, lw=lw) for ls in lss] 
+batch_handles = [Line2D([0], [0], color=colors[j], lw=lw) for j in range(len(batch_sizes))] 
+step_handles = [Line2D([0], [0], color='darkgray', ls=_ls, lw=lw) for _ls in lss] 
 
 labels = [rf"$b/N={b}$" for b in batch_sizes] + [rf"$\alpha={a}$" for a in step_sizes]
 
@@ -95,7 +96,7 @@ for _k,_v in res.items():
     l = step_sizes.index(a)
     
     #ax.plot(y, c=colors[j], ls = lss[l], lw=1, marker='o', markersize=4, markevery=(0,20))
-    ax.plot(y2, c=colors[j], ls = lss[l], lw=lw, marker='s', markersize=5, markevery=(l,20), alpha=0.8)
+    ax.plot(y2, c=colors[j], ls = lss[l], lw=lw, marker='s', markersize=5, markevery=(4*j,20), alpha=0.99)
 
 ax.set_yscale('log')
 ax.set_xlabel('Iteration')
