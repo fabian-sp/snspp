@@ -77,3 +77,32 @@ def compute_AS(A, S):
         A_S[j,:] = A.row(i)
     
     return A_S
+
+#%% tick wrapper
+
+def solve_with_tick(f, phi, A, alpha, n_epochs, tol, verbose):
+    
+    assert f.name == 'logistic'
+    assert phi.name == '1norm'
+    
+    tick = tickLogReg(fit_intercept=False, penalty='l1', C=1/phi.lambda1, solver='svrg', step=alpha,
+                      max_iter=n_epochs, tol=tol,
+                      verbose=verbose, record_every=1, print_every=1)
+
+    # A = X_train*y_train, y_train in {-1,1}
+    y_train = f.b  
+    X_train = A.multiply(y_train.reshape(-1,1)).tocsr()
+    tick.fit(X_train, y_train)
+    
+    x_hist = tick._solver_obj.history.values['x']
+    x = x_hist[-1]
+    
+    rt = tick._solver_obj.history.last_values['time']
+    
+    eta = np.inf
+    step_sizes = alpha*np.ones(n_epochs)
+    return x, x_hist, step_sizes, eta, rt
+
+
+
+

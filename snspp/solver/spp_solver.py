@@ -255,6 +255,7 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
     x_hist = list(); xi_hist = list()
     step_sizes = list()
     obj = list()
+    fnat = list(); _fnat = 1.
     ssn_info = list();
     runtime = list(); num_eval = list()
     sub_runtime = list()
@@ -302,6 +303,10 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
                 xi_tilde = compute_full_xi(f, A, x_t, is_easy)
                 full_g = (1/f.N) * (A.T @ xi_tilde)
                 
+                _fnat = np.linalg.norm(x_t - phi.prox(x_t-full_g, 1.))
+                if verbose:
+                    print(_fnat)
+        
                 # update xi
                 if f.convex:
                     xi = xi_tilde.copy()
@@ -311,20 +316,22 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
                         xi = xi_tilde + gammas*(A@x_t)
                     else:
                         raise KeyError("Variance reduction for nonconvex problems is only available if all m_i=1.")
-        #########################################################
-             
+        
+        #########################################################             
         #########################################################
         ## Solve subproblem
         #########################################################
+        _tol = params['tol_sub']# _fnat * 0.1 
+        
         sub_start = time.time()
         if not is_easy:
             x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, f.m, S, \
-                                             tol = params['tol_sub'], newton_params = params['newton_params'],\
+                                             tol = _tol, newton_params = params['newton_params'],\
                                              reduce_variance = reduce_variance, xi_tilde = xi_tilde,\
                                              verbose = verbose)
         else:
             x_t, xi, this_ssn = solve_subproblem_easy(f, phi, x_t, xi, alpha_t, A, S, \
-                                             tol = params['tol_sub'], newton_params = params['newton_params'],\
+                                             tol = _tol, newton_params = params['newton_params'],\
                                              reduce_variance = reduce_variance, xi_tilde = xi_tilde, full_g = full_g,\
                                              verbose = verbose)
         
@@ -349,6 +356,7 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
                 phi_t = phi.eval(x_t)
             
             obj.append(f_t+phi_t)
+            fnat.append(_fnat)
         
         step_sizes.append(alpha_t)
         xi_hist.append(xi.copy())
@@ -376,7 +384,8 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
         print(f"Stochastic ProxPoint status: {status}")
     
         
-    info = {'objective': np.array(obj), 'iterates': np.vstack(x_hist), 
+    info = {'objective': np.array(obj), 'iterates': np.vstack(x_hist),
+            'fnat': np.array(fnat),
             'xi_hist': xi_hist,
             'step_sizes': np.array(step_sizes),
             'ssn_info': ssn_info, 

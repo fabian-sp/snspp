@@ -5,7 +5,7 @@ from ..helper.utils import compute_gradient_table, compute_batch_gradient, compu
                             stop_scikit_saga, derive_L
 
 from .sgd import sgd_loop
-from .sparse.sparse_utils import create_csr, sparse_gradient_table                         
+from .sparse.sparse_utils import create_csr, sparse_gradient_table, solve_with_tick                         
 from .sparse.prox_gd import sparse_saga_loop, sparse_svrg_loop
 
 import numpy as np                           
@@ -158,10 +158,15 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
             x_t, x_hist, step_sizes, eta  = sparse_saga_loop(f, phi, x_t, A_csr, N, tol, alpha, gradients, params['n_epochs'], params['reg'])
         elif solver == 'svrg':
             x_t, x_hist, step_sizes, eta  = sparse_svrg_loop(f, phi, x_t, A_csr, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter)
+        elif solver == 'tick-svrg':
+            x_t, x_hist, step_sizes, eta, rt  = solve_with_tick(f, phi, A, alpha, params['n_epochs'], tol, verbose)
         else:
             raise NotImplementedError("Not a known solver option!") 
             
     end = time.time()
+    
+    if solver == 'tick-svrg':
+        end = start + rt # tick measures runtime
     
     if verbose:
         print(f"{name} main loop finished after {end-start} sec")

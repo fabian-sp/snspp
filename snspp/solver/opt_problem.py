@@ -94,7 +94,7 @@ class problem:
             self.x, self.info = stochastic_prox_point(self.f, self.phi, self.A, self.x0, tol = self.tol, params = self.params, \
                          verbose = self.verbose, measure = self.measure)
 
-        elif solver in ['saga', 'batch-saga', 'svrg', 'adagrad', 'sgd']:
+        elif solver in ['saga', 'batch-saga', 'svrg', 'adagrad', 'sgd', 'tick-svrg']:
             self.x, self.info =  stochastic_gradient(self.f, self.phi, self.A, self.x0, solver = self.solver, tol = self.tol, params = self.params, \
                                                      verbose = self.verbose, measure = self.measure)        
         else:

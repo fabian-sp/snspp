@@ -21,15 +21,15 @@ k = 5 # oracle nonzero elements
 l1 = .01 # l1 penalty
 
 f, phi, A, X_train, y_train, _, _, beta = logreg_test(N, n, k, l1, noise = 0.1, kappa = 10., dist = 'ortho')
-f, phi, A, X_train, y_train, _, _ = get_libsvm(name = "rcv1", lambda1 = 0.001, train_size = .8, path_prefix = '')
+f, phi, A, X_train, y_train, _, _ = get_libsvm(name = "news20", lambda1 = 1e-5, train_size = .8, path_prefix = '')
 
 # for unregularized case:
 #phi = Zero()
 
 #%% solve with SSNSP (run twice to compile numba)
 
-params = {'max_iter' : 100, 'batch_size': 100, 'sample_style': 'constant', \
-          'alpha' : 100., 'reduce_variance': True}
+params = {'max_iter' : 50, 'batch_size': 250, 'sample_style': 'constant', \
+          'alpha' : 2500., 'reduce_variance': True, 'vr_skip': 1}
 
 P = problem(f, phi, A, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -54,10 +54,10 @@ info2 = Q.info.copy()
 
 #%% solve with SVRG (run twice to compile numba)
 
-params = {'n_epochs' : 10, 'alpha': 1., 'batch_size': 300}
+params = {'n_epochs' : 10, 'alpha': 4., 'batch_size': 300}
 
-Q = problem(f, phi, A, tol = 1e-5, params = params, verbose = True, measure = True)
-Q.solve(solver = 'svrg')
+Q = problem(f, phi, A, tol = 1e-50, params = params, verbose = True, measure = True)
+Q.solve(solver = 'tick-svrg')
 
 Q.plot_path()
 Q.plot_objective()

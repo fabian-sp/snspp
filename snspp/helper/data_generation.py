@@ -387,7 +387,8 @@ def get_sido(lambda1 = 0.02, train_size = .8, scale = False, path_prefix = '../'
 ## LIBSVM
 
 libsvm_dict = {'rcv1': 'rcv1_train.binary', 'w8a': 'w8a', 'fourclass': 'fourclass_scale',
-               'covtype': 'covtype.libsvm.binary.scale'}
+               'covtype': 'covtype.libsvm.binary.scale',
+               'news20': 'news20.binary'}
 
 def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../', sparse_format=True):
     
