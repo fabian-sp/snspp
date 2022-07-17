@@ -15,9 +15,11 @@ from .fast_gradient import stochastic_gradient
 #sns.set_context("paper")
 
 color_dict = {"svrg": "#002A4A", "saga": "#FFB03B", "batch-saga": "#BF842C", "adagrad" : "#B64926", \
+              "tick-svrg": "#002A4A",
               "snspp": "#468966", "default": "#142B40"}
 
 marker_dict = {"svrg": "<", "saga": ">", "batch-saga": ">", "adagrad" : "D", \
+               "tick-svrg": "<",
                "snspp": "o", "default": "+"}
 
 class problem:
