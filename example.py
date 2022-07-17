@@ -21,7 +21,7 @@ k = 5 # oracle nonzero elements
 l1 = .01 # l1 penalty
 
 f, phi, A, X_train, y_train, _, _, beta = logreg_test(N, n, k, l1, noise = 0.1, kappa = 10., dist = 'ortho')
-f, phi, A, X_train, y_train, _, _ = get_libsvm(name = "news20", lambda1 = 1e-5, train_size = .8, path_prefix = '')
+f, phi, A, X_train, y_train, _, _ = get_libsvm(name = "covtype", lambda1 = 1e-4, train_size = .8, path_prefix = '')
 
 # for unregularized case:
 #phi = Zero()
@@ -56,7 +56,7 @@ info2 = Q.info.copy()
 
 params = {'n_epochs' : 10, 'alpha': 4., 'batch_size': 300}
 
-Q = problem(f, phi, A, tol = 1e-50, params = params, verbose = True, measure = True)
+Q = problem(f, phi, A, tol = 1e-15, params = params, verbose = True, measure = True)
 Q.solve(solver = 'tick-svrg')
 
 Q.plot_path()
