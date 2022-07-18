@@ -5,7 +5,7 @@
     "N": 0,
     "n": 0,
     "k": 0,
-    "l1": 0.0001
+    "l1": 0.001
   },
   "methods": {
     "snspp": {
@@ -18,7 +18,7 @@
         "max_iter": 350,
         "sample_style": "constant",
         "reduce_variance": true,
-        "measure_freq": 10
+        "measure_freq": 1
       }
     },
     "tick-svrg": {
