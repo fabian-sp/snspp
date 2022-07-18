@@ -72,7 +72,7 @@ if l1 == 1e-3:
     
     params_adagrad = {'n_epochs' : 60, 'batch_size': 20, 'alpha': 0.008}
     
-    params_snspp = {'max_iter' : 320, 'batch_size': 100, 'sample_style': 'constant', 'alpha' : 2.5 ,\
+    params_snspp = {'max_iter' : 320, 'batch_size': 120, 'sample_style': 'constant', 'alpha' : 2.5 ,\
                     "reduce_variance": True}
         
     # params_tuner(f, phi, A, solver = "saga", alpha_range = np.linspace(5,12,10), n_iter = 25, x0 = x0)
