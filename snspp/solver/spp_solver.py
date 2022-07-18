@@ -320,12 +320,12 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
         #########################################################
         ## Solve subproblem
         #########################################################
-        if params['reduce_variance']:
-            _tol = min(params['tol_sub'], 1e-3)
-        else:
-            _tol = max(min(params['tol_sub']*_fnat, 1e-3), 1e-6)
+        # if params['reduce_variance']:
+        #     _tol = min(params['tol_sub'], 1e-3)
+        # else:
+        #     _tol = max(min(params['tol_sub']*_fnat, 1e-3), 1e-6)
         
-        #_tol = 1e-3
+        _tol = 1e-3
             
             
         sub_start = time.time()
@@ -341,15 +341,14 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
                                              verbose = verbose)
         
         sub_end = time.time()                                     
-                
+        # we only measure runtime of the iteration, excluding computation of the objective
+        end = time.time()
+        
         #stop criterion
         eta = stop_scikit_saga(x_t, x_old)
-        
         ssn_info.append(this_ssn)
         x_hist.append(x_t)
             
-        # we only measure runtime of the iteration, excluding computation of the objective
-        end = time.time()
         runtime.append(end-start)
         sub_runtime.append(sub_end-sub_start)
         num_eval.append(this_ssn['evaluations'].sum() + int(this_iter_vr) * f.N)

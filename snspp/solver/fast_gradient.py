@@ -93,11 +93,8 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
             params['delta'] = 1e-12
            
     elif solver == 'sgd':
-        if 'style' not in params.keys(): 
-            params['style'] = 'vanilla'
         if 'beta' not in params.keys(): 
             params['beta'] = 0.51
-        assert params['style'] in ['vanilla', 'polyak']
     
     #########################################################
     ## Batch size
@@ -134,7 +131,7 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     #########################################################
     ## Main loop
     #########################################################
-    start = time.time()
+    start1 = time.time()
     
     if not sparse_format:
         if solver == 'saga':
@@ -147,8 +144,7 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
         elif solver == 'adagrad':
             x_t, x_hist, runtime, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, alpha, params['delta'] , params['n_epochs'], params['batch_size'])
         elif solver == 'sgd':
-            x_t, x_hist, runtime, step_sizes, eta = sgd_loop(f, phi, x_t, A, tol, alpha, params['beta'], params['n_epochs'], params['batch_size'], \
-                                                    params['style'])
+            x_t, x_hist, runtime, step_sizes, eta = sgd_loop(f, phi, x_t, A, N, tol, alpha, params['beta'], params['n_epochs'], params['batch_size'])
         else:
             raise NotImplementedError("Not a known solver option!")
     
@@ -163,13 +159,13 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
         else:
             raise NotImplementedError("Not a known solver option!") 
             
-    end = time.time()
+    end1 = time.time()
     
     if solver == 'tick-svrg':
-        end = start + rt # tick measures runtime
+        end1 = start1 + rt # tick measures runtime
     
     if verbose:
-        print(f"{name} main loop finished after {end-start} sec")
+        print(f"{name} main loop finished after {end1-start1} sec")
     
     #########################################################
     x_hist = np.vstack(x_hist)
