@@ -70,7 +70,7 @@ copt_b = (y_train==1).astype(int)
 copt_f = LogLoss(X_train, copt_b)
 copt_phi = L1Norm(l1)
 
-ALPHA = Q.params['alpha']
+ALPHA = Q.info['step_sizes'][-1]
 
 start = time.time()
 result_saga = cp.minimize_saga(
@@ -96,5 +96,5 @@ print("Runtime of COPT:", rt_copt)
 #%% compare solutions
 
 
-np.linalg.norm(x_copt-x_sk)
-np.linalg.norm(Q.x-x_sk)
+np.linalg.norm(x_copt-x_sk)/np.linalg.norm(x_sk)
+np.linalg.norm(Q.x-x_sk)/np.linalg.norm(x_sk)

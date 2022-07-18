@@ -10,25 +10,15 @@
   "methods": {
     "snspp": {
       "solver": "snspp",
-      "alpha_min": 2,
-      "alpha_max": 4,
-      "n_alpha": 15,
-      "batch": [0.001,0.005,0.01],
-      "params": {
-        "max_iter": 250,
-        "sample_style": "constant",
-        "reduce_variance": true,
-        "measure_freq": 10
-      }
-    },
-    "svrg": {
-      "solver": "svrg",
-      "alpha_min": 0,
+      "alpha_min": 1,
       "alpha_max": 3,
       "n_alpha": 15,
       "batch": [0.001,0.005,0.01],
       "params": {
-        "n_epochs": 20
+        "max_iter": 350,
+        "sample_style": "constant",
+        "reduce_variance": true,
+        "measure_freq": 10
       }
     },
     "tick-svrg": {
@@ -38,7 +28,7 @@
       "n_alpha": 20,
       "batch": [],
       "params": {
-        "n_epochs": 20
+        "n_epochs": 25
       }
     }
   },
