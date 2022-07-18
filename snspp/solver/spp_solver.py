@@ -109,7 +109,7 @@ def get_default_spp_params(f, A):
     a = 1. # snspp_theoretical_step_size(f, A, b, m, 0.5)
     
     p = {'alpha': a, 'max_iter': 100, 'batch_size': b, 'sample_style': 'constant', 'reduce_variance': False,\
-        'm_iter': m, 'tol_sub': 1e-3, 'newton_params': get_default_newton_params(),\
+        'm_iter': m, 'tol_sub': 1e-1, 'newton_params': get_default_newton_params(),\
         'vr_skip': 0, 'measure_freq': 1}
     
     return p
@@ -215,6 +215,7 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
         sparse_format = True
     else:
         sparse_format = False
+        
     
     x_t = x0.copy()
     
@@ -304,7 +305,7 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
                 full_g = (1/f.N) * (A.T @ xi_tilde)
                 
                 _fnat = np.linalg.norm(x_t - phi.prox(x_t-full_g, 1.))
-        
+                print(_fnat)
                 # update xi
                 if f.convex:
                     xi = xi_tilde.copy()
@@ -319,11 +320,12 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
         #########################################################
         ## Solve subproblem
         #########################################################
-        # if params['reduce_variance']:
-        #     _tol = min(params['tol_sub'], 1e-3)
-        # else:
-        #     _tol = max(min(params['tol_sub']*_fnat, 1e-1), 1e-5)
-        _tol = params['tol_sub']
+        if params['reduce_variance']:
+            _tol = min(params['tol_sub'], 1e-3)
+        else:
+            _tol = max(min(params['tol_sub']*_fnat, 1e-3), 1e-6)
+        
+        #_tol = 1e-3
             
             
         sub_start = time.time()
