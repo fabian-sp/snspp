@@ -153,16 +153,13 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
         if solver == 'saga':
             x_t, x_hist, runtime, step_sizes, eta  = sparse_saga_loop(f, phi, x_t, A_csr, N, tol, alpha, gradients, params['n_epochs'], params['reg'])
         elif solver == 'svrg':
-            x_t, x_hist, step_sizes, eta  = sparse_svrg_loop(f, phi, x_t, A_csr, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter)
+            x_t, x_hist, runtime, step_sizes, eta  = sparse_svrg_loop(f, phi, x_t, A_csr, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter)
         elif solver == 'tick-svrg':
-            x_t, x_hist, step_sizes, eta, rt  = solve_with_tick(f, phi, A, alpha, params['n_epochs'], tol, verbose)
+            x_t, x_hist, runtime, step_sizes, eta  = solve_with_tick(f, phi, A, alpha, params['n_epochs'], tol, verbose)
         else:
             raise NotImplementedError("Not a known solver option!") 
             
     end1 = time.time()
-    
-    if solver == 'tick-svrg':
-        end1 = start1 + rt # tick measures runtime
     
     if verbose:
         print(f"{name} main loop finished after {end1-start1} sec")

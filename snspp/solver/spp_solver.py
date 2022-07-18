@@ -18,12 +18,12 @@ def sampler(N, size, replace = False):
     """
     samples a subset of {1,..,N} with/without replacement
     """
-    assert size <= N, "specified a bigger sample size than N"
+    if not replace:
+        S = np.random.choice(a = np.arange(N).astype('int'), p = (1/N)*np.ones(N), \
+                         size = int(size), replace=False)
+    else:
+        S = np.random.randint(low = 0, high = N, size = size)
     
-    S = np.random.choice(a = np.arange(N).astype('int'), p = (1/N) * np.ones(N), \
-                         size = int(size), replace = replace)
-    
-    S = S.astype('int')
     # sort S in order to avoid problems with indexing later on
     S = np.sort(S)
     
@@ -277,8 +277,6 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
     ## Main loop
     #########################################################
     for iter_t in np.arange(params['max_iter']):
-        
-        start = time.time()
             
         if eta <= tol:
             status = 'optimal'
@@ -286,6 +284,7 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
                 
         x_old = x_t.copy()
         
+        start = time.time()
         # sample and update
         S = sampler(f.N, batch_size[iter_t], replace = True)
         #S = cyclic_batch(f.N, batch_size, iter_t)
@@ -325,8 +324,7 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
         # else:
         #     _tol = max(min(params['tol_sub']*_fnat, 1e-3), 1e-6)
         
-        _tol = 1e-3
-            
+        _tol = 1e-3            
             
         sub_start = time.time()
         if not is_easy:

@@ -112,6 +112,7 @@ def sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter
         
         # store in each outer iteration
         x_hist.append(x_t)    
+        runtime.append(end-start)
         step_sizes.append(alpha)    
 
 

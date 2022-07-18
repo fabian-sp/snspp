@@ -97,11 +97,14 @@ def solve_with_tick(f, phi, A, alpha, n_epochs, tol, verbose):
     x_hist = tick._solver_obj.history.values['x']
     x = x_hist[-1]
     
-    rt = tick._solver_obj.history.last_values['time']
+    # tick gives back cumulative runtimes
+    cum_rt = np.array(tick._solver_obj.history.values['time'])
+    runtime = cum_rt.copy()
+    runtime[1:] = cum_rt[1:] - cum_rt[:-1]
     
     eta = np.inf
     step_sizes = alpha*np.ones(n_epochs)
-    return x, x_hist, step_sizes, eta, rt
+    return x, x_hist, runtime, step_sizes, eta
 
 
 
