@@ -200,7 +200,7 @@ def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 4., noise = 0.1, poly
     
     phi = L1Norm(lambda1) 
     f = tstudent_loss(y_train, v=v)
-    A = X_train.copy()
+    A = np.ascontiguousarray(X_train)
     
     ##### TEST SET ############
     X_test = X[N:,:]
