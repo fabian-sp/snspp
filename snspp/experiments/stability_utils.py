@@ -149,12 +149,12 @@ def do_grid_run(f, phi, A, step_size_range, batch_size_range = [], psi_star = 0,
                         stop = np.where(obj_arr <= psi_star *(1+psi_tol))[0][0]
                         
                         # account for possibility of reaching accuracy inside the epoch --> take lower bound for runtime
+                        # first entry is starting point
                         if solver != 'snspp':
-                            if stop > 0:
-                                stop -= 1
-                            else:
+                            if stop <= 1:
                                 print("Convergence during first EPOCH!")
-                        
+                            stop -= 1
+                            
                         this_stop_iter.append(stop)
                         _rt = P.info['runtime'].cumsum()[stop]
                         if solver == 'svrg':
