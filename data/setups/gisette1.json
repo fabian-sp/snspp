@@ -15,7 +15,7 @@
       "n_alpha": 20,
       "batch": [0.005,0.01,0.05],
       "params": {
-        "max_iter": 260,
+        "max_iter": 350,
         "sample_style": "constant",
         "reduce_variance": true,
         "measure_freq": 1
