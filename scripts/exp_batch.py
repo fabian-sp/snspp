@@ -33,11 +33,11 @@ psi_star = f.eval(A@x_sk) + phi.eval(x_sk)
 #%%
 
 step_sizes = [1e-1, 0.5, 1.]
-batch_sizes = [1e-3, 5e-3, 1e-2, 5e-2]
+batch_sizes = [1e-3, 5e-3, 1e-2, 2e-2]
 
 K = len(batch_sizes)
 
-params_snspp = {'max_iter' : 100, 'sample_style': 'constant', 'reduce_variance': True}
+params_snspp = {'max_iter' : 150, 'sample_style': 'constant', 'reduce_variance': True}
 
 res = dict()
 
@@ -69,7 +69,7 @@ fig, axs = plt.subplots(1,2,figsize = (8, 3.5), gridspec_kw=dict(width_ratios=[4
 ax = axs[0]
 
 #colors = sns.light_palette(color_dict['snspp'], K+1, reverse=False)
-#colors = ["#abc9c8", "#72aeb6", "#4692b0",  "#134b73"]
+colors = ["#abc9c8", "#72aeb6", "#4692b0",  "#134b73"]
 
 colors = np.array(["#c969a1", "#ce4441", "#ee8577", "#eb7926", "#ffbb44", "#859b6c", "#62929a", "#004f63", "#122451"])
 colors = colors[[1,3,5,7]]
@@ -81,7 +81,9 @@ for j,b in enumerate(batch_sizes):
 
 lss = ['-', '--', ':']
 lw = 2.
-markers = ['.', 's', 'P', '*']
+markers =['x', 's', 'P', '^']
+#markers = ['s', 's', 's', 's'] 
+
 
 batch_handles = [Line2D([0], [0], color=colors[j], lw=lw, marker=markers[j]) for j in range(len(batch_sizes))] 
 step_handles = [Line2D([0], [0], color='darkgray', ls=_ls, lw=lw) for _ls in lss] 
@@ -89,7 +91,7 @@ step_handles = [Line2D([0], [0], color='darkgray', ls=_ls, lw=lw) for _ls in lss
 labels = [rf"$b/N={b}$" for b in batch_sizes] + [rf"$\alpha={a}$" for a in step_sizes]
 
 ### plot
-plot_runtime_x = False
+plot_runtime_x = True
 for _k,_v in res.items():
     
     a,b = _k
@@ -104,19 +106,22 @@ for _k,_v in res.items():
     j = batch_sizes.index(b)
     l = step_sizes.index(a)
     
-    col = cpals[b][step_sizes.index(a)]
+    col = colors[batch_sizes.index(b)] #cpals[b][step_sizes.index(a)]
     
     if plot_runtime_x:
-        ax.plot(x, y2, c=col, ls = lss[l], lw=lw, marker=markers[j], markersize=6, markevery=(4*j,30), alpha=0.99)
+        ax.plot(x, y2, c=col, ls = lss[l], lw=lw, marker=markers[j], markersize=6, markevery=(1,20), alpha=0.9)
     else:
-        ax.plot(y2, c=col, ls = lss[l], lw=lw, marker=markers[j], markersize=6, markevery=(4*j,30), alpha=0.99)
+        ax.plot(y2, c=col, ls = lss[l], lw=lw, marker=markers[j], markersize=6, markevery=(4*j,20), alpha=0.9)
 
 ax.set_yscale('log')
+ax.set_ylim(1e-4, 1e0)
+
 if plot_runtime_x:
-    ax.set_xscale('log')
     ax.set_xlabel('Runtime [sec]')
+    ax.set_xlim(0,1)
 else:
     ax.set_xlabel('Iteration')
+    ax.set_xlim(0,100)
     
 ax.set_ylabel(r'$\psi(x^k)-\psi^\star$', fontsize=10)
 ax.legend(batch_handles+step_handles, labels, fontsize=8, ncol=2)

@@ -160,8 +160,12 @@ def do_grid_run(f, phi, A, step_size_range, batch_size_range = [], psi_star = 0,
                         if solver == 'svrg':
                             # for svrg, add time needed for full gradient 
                             # at the start of the inner loop
-                            _rt += P.info['runtime_fullg'][stop+1]
-                        
+                            # runtime has 0 at start for starting point
+                            if len(P.info['runtime']) > len(P.info['runtime_fullg']):
+                                _rt += P.info['runtime_fullg'][stop]
+                            else:
+                                _rt += P.info['runtime_fullg'][stop+1]
+                                
                         this_time.append(_rt)
                         this_obj.append(obj_arr[-1])
                         
