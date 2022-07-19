@@ -87,8 +87,10 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     if solver == 'saga':
         if 'reg' not in params.keys():    
             params['reg'] = 0.
-        if 'measure_frequency' not in params.keys():
-            params['measure_frequency'] = 1
+        if 'measure_freq' not in params.keys():
+            # one means measure once per epoch
+            # higher means higher frequency 
+            params['measure_freq'] = 1
     
     elif solver == 'adagrad':
         if 'delta' not in params.keys():    
@@ -138,7 +140,7 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     if not sparse_format:
         if solver == 'saga':
             # run SAGA with batch size 1
-            x_t, x_hist, runtime, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['reg'], params['measure_frequency'])     
+            x_t, x_hist, runtime, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['reg'], params['measure_freq'])     
         #elif solver == 'batch-saga':
         #    x_t, x_hist, runtime, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['batch_size'])
         elif solver == 'svrg':
@@ -153,7 +155,7 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     # sparse solvers
     else:
         if solver == 'saga':
-            x_t, x_hist, runtime, step_sizes, eta  = sparse_saga_loop(f, phi, x_t, A_csr, N, tol, alpha, gradients, params['n_epochs'], params['reg'])
+            x_t, x_hist, runtime, step_sizes, eta  = sparse_saga_loop(f, phi, x_t, A_csr, N, tol, alpha, gradients, params['n_epochs'], params['reg'], params['measure_freq'])
         elif solver == 'svrg':
             x_t, x_hist, runtime, runtime_fullg, step_sizes, eta  = sparse_svrg_loop(f, phi, x_t, A_csr, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter)
         elif solver == 'tick-svrg':

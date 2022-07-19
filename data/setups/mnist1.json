@@ -38,7 +38,8 @@
       "n_alpha": 20,
       "batch": [],
       "params": {
-        "n_epochs": 30
+        "n_epochs": 30,
+        "measure_freq": 10
       }
     }
   },
