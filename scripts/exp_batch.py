@@ -69,23 +69,32 @@ fig, axs = plt.subplots(1,2,figsize = (8, 3.5), gridspec_kw=dict(width_ratios=[4
 ax = axs[0]
 
 #colors = sns.light_palette(color_dict['snspp'], K+1, reverse=False)
-#colors = sns.cubehelix_palette(K, start=.5, rot=-.75, as_cmap=False)
-colors = ["#abc9c8", "#72aeb6", "#4692b0", "#2f70a1", "#134b73", "#0a3351"]
-colors = ["#abc9c8", "#72aeb6", "#4692b0",  "#134b73"]
+#colors = ["#abc9c8", "#72aeb6", "#4692b0",  "#134b73"]
+
+colors = np.array(["#c969a1", "#ce4441", "#ee8577", "#eb7926", "#ffbb44", "#859b6c", "#62929a", "#004f63", "#122451"])
+colors = colors[[1,3,5,7]]
+# one color per batch, brightness+ls for step size
+cpals = dict()
+
+for j,b in enumerate(batch_sizes):
+    cpals[b] = sns.light_palette(colors[j], 4, reverse=True)[:len(step_sizes)][::-1]    
 
 lss = ['-', '--', ':']
 lw = 2.
+markers = ['.', 's', 'P', '*']
 
-batch_handles = [Line2D([0], [0], color=colors[j], lw=lw) for j in range(len(batch_sizes))] 
+batch_handles = [Line2D([0], [0], color=colors[j], lw=lw, marker=markers[j]) for j in range(len(batch_sizes))] 
 step_handles = [Line2D([0], [0], color='darkgray', ls=_ls, lw=lw) for _ls in lss] 
 
 labels = [rf"$b/N={b}$" for b in batch_sizes] + [rf"$\alpha={a}$" for a in step_sizes]
 
 ### plot
+plot_runtime_x = False
 for _k,_v in res.items():
     
     a,b = _k
     
+    x = res[_k]['runtime'].cumsum()
     y = res[_k]['sub_runtime']
     y2 = res[_k]['objective'] - psi_star
     
@@ -95,12 +104,20 @@ for _k,_v in res.items():
     j = batch_sizes.index(b)
     l = step_sizes.index(a)
     
-    #ax.plot(y, c=colors[j], ls = lss[l], lw=1, marker='o', markersize=4, markevery=(0,20))
-    ax.plot(y2, c=colors[j], ls = lss[l], lw=lw, marker='s', markersize=5, markevery=(4*j,20), alpha=0.99)
+    col = cpals[b][step_sizes.index(a)]
+    
+    if plot_runtime_x:
+        ax.plot(x, y2, c=col, ls = lss[l], lw=lw, marker=markers[j], markersize=6, markevery=(4*j,30), alpha=0.99)
+    else:
+        ax.plot(y2, c=col, ls = lss[l], lw=lw, marker=markers[j], markersize=6, markevery=(4*j,30), alpha=0.99)
 
 ax.set_yscale('log')
-ax.set_xlabel('Iteration')
-#ax.set_ylabel('Subproblem runtime [sec]', fontsize=10)
+if plot_runtime_x:
+    ax.set_xscale('log')
+    ax.set_xlabel('Runtime [sec]')
+else:
+    ax.set_xlabel('Iteration')
+    
 ax.set_ylabel(r'$\psi(x^k)-\psi^\star$', fontsize=10)
 ax.legend(batch_handles+step_handles, labels, fontsize=8, ncol=2)
 
