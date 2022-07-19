@@ -14,7 +14,7 @@ from .sparse_utils import sparse_xi_inner, sparse_batch_gradient, compute_AS
 from ...helper.utils import stop_scikit_saga
 
 
-def sparse_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg):
+def sparse_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg, measure_freq):
     """
     shapes:
         
@@ -29,18 +29,22 @@ def sparse_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg):
     runtime= List()
     step_sizes = List()
     
+    # measure_freq = how many measurements per epoch
+    loop_length = int(N/measure_freq)
+    max_iter = int(N*n_epochs/loop_length)
+    
     eta = 1e10
     x_old = x_t
     
     g_sum = (1/N)*A.transpose().mult_vec(gradients)
     
-    for iter_t in np.arange(n_epochs):
+    for iter_t in np.arange(max_iter):
         
         if eta <= tol:
             break
              
         start = time.time()
-        x_t, g_sum = sparse_saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum)
+        x_t, g_sum = sparse_saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_length)
         end = time.time()
         
         # stop criterion
@@ -55,8 +59,8 @@ def sparse_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg):
     return x_t, x_hist, runtime, step_sizes, eta
 
 @njit()
-def sparse_saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum):
-    for iter_t in np.arange(N):
+def sparse_saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_length):
+    for iter_t in np.arange(loop_length):
         # sample, result is int!
         j = np.random.randint(low = 0, high = N, size = 1)[0]
         
@@ -87,6 +91,7 @@ def sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter
     # initialize for diagnostics
     x_hist = List()
     runtime = List()
+    runtime_fullg = List()
     step_sizes = List()
     
     eta = 1e10
@@ -103,8 +108,10 @@ def sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter
         z_t = A.mult_vec(x_t)
         full_g = sparse_xi_inner(f, z_t)
         g_tilde = (1/N) * A.transpose().mult_vec(full_g)
+        end1 = time.time()
+        
         x_t = sparse_svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, m_iter, full_g, g_tilde)
-        end = time.time()
+        end2 = time.time()
                
         # stop criterion
         eta = stop_scikit_saga(x_t, x_old)
@@ -112,11 +119,12 @@ def sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter
         
         # store in each outer iteration
         x_hist.append(x_t)    
-        runtime.append(end-start)
+        runtime.append(end2-start)
+        runtime_fullg.append(end1-start)
         step_sizes.append(alpha)    
 
 
-    return x_t, x_hist, runtime, step_sizes, eta
+    return x_t, x_hist, runtime, runtime_fullg, step_sizes, eta
 
 @njit()
 def sparse_svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, m_iter, full_g, g_tilde):

@@ -87,6 +87,8 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     if solver == 'saga':
         if 'reg' not in params.keys():    
             params['reg'] = 0.
+        if 'measure_frequency' not in params.keys():
+            params['measure_frequency'] = 1
     
     elif solver == 'adagrad':
         if 'delta' not in params.keys():    
@@ -136,11 +138,11 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     if not sparse_format:
         if solver == 'saga':
             # run SAGA with batch size 1
-            x_t, x_hist, runtime, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['reg'])     
+            x_t, x_hist, runtime, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['reg'], params['measure_frequency'])     
         #elif solver == 'batch-saga':
         #    x_t, x_hist, runtime, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['batch_size'])
         elif solver == 'svrg':
-            x_t, x_hist, runtime, step_sizes, eta  = svrg_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter)
+            x_t, x_hist, runtime, runtime_fullg, step_sizes, eta  = svrg_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter)
         elif solver == 'adagrad':
             x_t, x_hist, runtime, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, alpha, params['delta'] , params['n_epochs'], params['batch_size'])
         elif solver == 'sgd':
@@ -153,7 +155,7 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
         if solver == 'saga':
             x_t, x_hist, runtime, step_sizes, eta  = sparse_saga_loop(f, phi, x_t, A_csr, N, tol, alpha, gradients, params['n_epochs'], params['reg'])
         elif solver == 'svrg':
-            x_t, x_hist, runtime, step_sizes, eta  = sparse_svrg_loop(f, phi, x_t, A_csr, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter)
+            x_t, x_hist, runtime, runtime_fullg, step_sizes, eta  = sparse_svrg_loop(f, phi, x_t, A_csr, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter)
         elif solver == 'tick-svrg':
             x_t, x_hist, runtime, step_sizes, eta  = solve_with_tick(f, phi, A, alpha, params['n_epochs'], tol, verbose)
         else:
@@ -193,11 +195,15 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     info = {'objective': np.array(obj), 'iterates': x_hist, \
             'step_sizes': np.array(step_sizes), \
             'runtime': np.array(runtime), 'evaluations': num_eval}
-
+    
+    # for svrg also store runtime of full gradient computation
+    if solver == 'svrg':
+        info['runtime_fullg'] = np.array(runtime_fullg)
+        
     return x_t, info
 
 #%%
-def saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg):
+def saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg, measure_freq):
     
     # initialize for diagnostics
     runtime = List()
@@ -208,14 +214,17 @@ def saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg):
     x_old = x_t
     g_sum = (1/N)*gradients.sum(axis = 0)
     
+    # measure_freq = how many measurements per epoch
+    loop_length = int(N/measure_freq)
+    max_iter = int(N*n_epochs/loop_length)
     
-    for iter_t in np.arange(n_epochs):
+    for iter_t in np.arange(max_iter):
         
         if eta <= tol:
             break
         
         start = time.time()
-        x_t, g_sum = saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum)
+        x_t, g_sum = saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_length)
         end = time.time()
     
         runtime.append(end-start)
@@ -228,9 +237,9 @@ def saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg):
     return x_t, x_hist, runtime, step_sizes, eta
 
 @njit()
-def saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum):
+def saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_length):
         
-    for iter_t in np.arange(N):
+    for iter_t in np.arange(loop_length):
                      
         # sample, result is ARRAY!
         j = np.random.randint(low = 0, high = N, size = 1)
@@ -317,6 +326,7 @@ def svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter):
     # initialize for diagnostics
     x_hist = List()
     runtime = List()
+    runtime_fullg = List()
     step_sizes = List()
     
     eta = 1e10
@@ -330,10 +340,12 @@ def svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter):
             break
         
         start = time.time()
-        full_g = A * compute_xi_inner(f, A, x_t)
+        full_g = A * compute_xi_inner(f, A@x_t)
         g_tilde = (1/N) * full_g.sum(axis=0)
+        end1 = time.time()
+        
         x_t = svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, m_iter, full_g, g_tilde)
-        end = time.time()
+        end2 = time.time()
         
         
         # stop criterion
@@ -341,10 +353,11 @@ def svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter):
         x_old = x_t
         # store in each outer iteration
         x_hist.append(x_t)    
-        runtime.append(end-start)
+        runtime.append(end2-start)
+        runtime_fullg.append(end1-start)
         step_sizes.append(alpha)    
 
-    return x_t, x_hist, runtime, step_sizes, eta
+    return x_t, x_hist, runtime, runtime_fullg, step_sizes, eta
 
 @njit()
 def svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, m_iter, full_g, g_tilde):
