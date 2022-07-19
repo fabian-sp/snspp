@@ -64,7 +64,7 @@ def compute_full_xi(f, A, x, is_easy = False):
     if is_easy:
         if not isinstance(A, csr_matrix):
             # used in SNSPP with np.array
-            xi = compute_xi_inner(f, A, x).squeeze() 
+            xi = compute_xi_inner(f, A@x).squeeze() 
         else:
             # used in SNSPP with csr
             z = (A@x).astype('float64')
@@ -82,13 +82,12 @@ def compute_full_xi(f, A, x, is_easy = False):
     return xi 
 
 @njit()
-def compute_xi_inner(f, A, x):
+def compute_xi_inner(f, z):
     
     vals = np.zeros((f.N,1))
     
     for i in np.arange(f.N):
-        A_i = np.ascontiguousarray(A[i,:]).reshape(1,-1)
-        vals[i,:] = f.g(A_i @ x, i)
+        vals[i,:] = f.g(z[i], i)
     
     return vals
             
@@ -127,7 +126,7 @@ def compute_batch_gradient(f, A, x, S):
         
     for i in S:
         # A_i needs shape (1,n)
-        A_i =  np.ascontiguousarray(A[i,:]).reshape(1,-1)
+        A_i =  (A[i,:]).reshape(1,-1)
         tmp_i = A_i.T @ f.g( A_i @ x, i)
         gradients += tmp_i
     

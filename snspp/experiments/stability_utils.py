@@ -156,7 +156,13 @@ def do_grid_run(f, phi, A, step_size_range, batch_size_range = [], psi_star = 0,
                                 print("Convergence during first EPOCH!")
                         
                         this_stop_iter.append(stop)
-                        this_time.append(P.info['runtime'].cumsum()[stop])
+                        _rt = P.info['runtime'].cumsum()[stop]
+                        if solver == 'svrg':
+                            # for svrg, add time needed for full gradient 
+                            # at the start of the inner loop
+                            _rt += P.info['runtime_fullg'][stop+1]
+                        
+                        this_time.append(_rt)
                         this_obj.append(obj_arr[-1])
                         
                         print(f"RUNTIME = {P.info['runtime'].cumsum()[stop]}")
