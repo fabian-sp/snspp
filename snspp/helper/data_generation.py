@@ -383,14 +383,14 @@ def get_sido(lambda1 = 0.02, train_size = .8, scale = False, path_prefix = '../'
         
     return f, phi, A, X_train, y_train, X_test, y_test
 
-def get_higgs(lambda1 = 0.02, train_size = .8, scale = False, path_prefix = '../'):
+def get_higgs(lambda1 = 0.01, train_size = .8, scale = True, path_prefix = '../'):
     # download from 
     
-    df = pd.read_csv(path_prefix + 'HIGGS.csv', header = None)
-    y = df.iloc[:,0]
-    X = df.iloc[:,1:]
+    df = pd.read_csv(path_prefix + 'data/HIGGS.csv', header=None)
+    y = df.iloc[:,0].values
+    X = df.iloc[:,1:].values
     
-    
+    # labels are in 0,1 format
     y[y==0] = -1.
     
     assert np.all(np.isin(y,[-1,1]))
