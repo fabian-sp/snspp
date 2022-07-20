@@ -423,6 +423,7 @@ def get_higgs(lambda1 = 0.01, train_size = .8, scale = True, path_prefix = '../'
 
 libsvm_dict = {'rcv1': 'rcv1_train.binary', 'w8a': 'w8a', 'fourclass': 'fourclass_scale',
                'covtype': 'covtype.libsvm.binary.scale',
+               'realsim': 'real-sim',
                'news20': 'news20.binary'}
 
 def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../', sparse_format=True):

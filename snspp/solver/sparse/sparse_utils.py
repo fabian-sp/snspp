@@ -52,19 +52,16 @@ def sparse_gradient_table(f, A, x):
 
 # needed for ADAGRAD + SVRG
 @njit()
-def sparse_batch_gradient(f, A, x, S):
+def sparse_batch_gradient(f, z, S):
     """
     computes a vector of gradients at point x with mini batch S
     returns: array of shape S
     """   
-    
     # initialize object for storing all gradients
     gradients = np.zeros(len(S))
         
     for j, i in enumerate(S):
-        z_i = A.row(i) @ x
-        tmp_i = f.g(z_i, i)
-        gradients[j] = tmp_i
+        gradients[j] = f.g(z[j], i)
     
     return gradients
 

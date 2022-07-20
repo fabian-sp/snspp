@@ -146,12 +146,11 @@ def sparse_svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, m_iter, full_g, g_ti
         
         # compute the gradient
         A_S = compute_AS(A, S)
-        v_t = sparse_batch_gradient(f, A, x_t, S)
+        v_t = sparse_batch_gradient(f, A_S@x_t, S)
         
         g_S = (1/batch_size) * A_S.T @ (v_t - full_g[S])
-        g_t = g_S + g_tilde
 
-        w_t = x_t - alpha*g_t
+        w_t = x_t - alpha*(g_S + g_tilde)
         x_t = phi.prox(w_t, alpha)
         
     return x_t

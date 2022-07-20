@@ -18,7 +18,7 @@
         "max_iter": 400,
         "sample_style": "constant",
         "reduce_variance": true,
-        "measure_freq": 1
+        "measure_freq": 10
       }
     },
     "svrg": {
@@ -38,7 +38,7 @@
       "n_alpha": 15,
       "batch": [],
       "params": {
-        "n_epochs": 15,
+        "n_epochs": 20,
         "measure_freq": 20
       }
     }

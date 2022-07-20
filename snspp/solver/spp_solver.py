@@ -110,7 +110,8 @@ def get_default_spp_params(f, A):
     
     p = {'alpha': a, 'max_iter': 100, 'batch_size': b, 'sample_style': 'constant', 'reduce_variance': False,\
         'm_iter': m, 'tol_sub': 1e-1, 'newton_params': get_default_newton_params(),\
-        'vr_skip': 0, 'measure_freq': 1}
+        'vr_skip': 0, 
+        'measure_freq': 1, 'store_hist': True}
     
     return p
 
@@ -345,7 +346,6 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
         #stop criterion
         eta = stop_scikit_saga(x_t, x_old)
         ssn_info.append(this_ssn)
-        x_hist.append(x_t)
             
         runtime.append(end-start)
         sub_runtime.append(sub_end-sub_start)
@@ -361,7 +361,10 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
             fnat.append(_fnat)
         
         step_sizes.append(alpha_t)
-        xi_hist.append(xi.copy())
+        
+        if params['store_hist']:
+            xi_hist.append(xi.copy())
+            x_hist.append(x_t)
         
           
         if verbose and measure:
@@ -386,17 +389,19 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
         print(f"Stochastic ProxPoint status: {status}")
     
         
-    info = {'objective': np.array(obj), 'iterates': np.vstack(x_hist),
+    info = {'objective': np.array(obj),
             'fnat': np.array(fnat),
-            'xi_hist': xi_hist,
             'step_sizes': np.array(step_sizes),
             'ssn_info': ssn_info, 
             'runtime': np.array(runtime),
             'sub_runtime': np.array(sub_runtime),
             'evaluations': np.array(num_eval)/f.N
             }
-        
     
+    if params['store_hist']:
+        info['iterates'] = np.vstack(x_hist)
+        info['xi_hist'] = xi_hist
+     
     return x_t, info
 
 
