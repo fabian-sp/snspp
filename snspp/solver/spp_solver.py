@@ -301,7 +301,8 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
             
             # recompute full gradient
             if this_iter_vr:
-                xi_tilde = compute_full_xi(f, A, x_t, is_easy)
+                z_t = A@x_t
+                xi_tilde = compute_full_xi(f, z_t, is_easy)
                 full_g = (1/f.N) * (A.T @ xi_tilde)
                 
                 _fnat = 1. #np.linalg.norm(x_t - phi.prox(x_t-full_g, 1.))
@@ -312,7 +313,7 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
                 else:
                     if is_easy:
                         gammas = f.weak_conv(np.arange(f.N))
-                        xi = xi_tilde + gammas*(A@x_t)
+                        xi = xi_tilde + gammas*z_t
                     else:
                         raise KeyError("Variance reduction for nonconvex problems is only available if all m_i=1.")
         

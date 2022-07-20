@@ -2,9 +2,6 @@ import numpy as np
 from numba import njit
 import warnings
 
-from scipy.sparse.csr import csr_matrix
-
-from ..solver.sparse.sparse_utils import sparse_xi_inner
 
 # logistic loss gradient norm at zero
 #np.linalg.norm(1/(2*f.N)*A.sum(axis=0))
@@ -54,7 +51,7 @@ def derive_L(f):
     
     return L
 
-def compute_full_xi(f, A, x, is_easy = False):
+def compute_full_xi(f, z, is_easy = False):
     """
     needed for variance reduction
     
@@ -62,20 +59,15 @@ def compute_full_xi(f, A, x, is_easy = False):
     if not is_easy: return dictionary where each value is array of size (m_i,)
     """
     if is_easy:
-        if not isinstance(A, csr_matrix):
-            # used in SNSPP with np.array
-            xi = compute_xi_inner(f, A@x).squeeze() 
-        else:
-            # used in SNSPP with csr
-            z = (A@x).astype('float64')
-            xi = sparse_xi_inner(f, z)
+        xi = compute_xi_inner(f, z).squeeze() 
+        
     else:
         # this option is only used for the very general case of unequal m
         dims = np.repeat(np.arange(f.N),f.m)
         vals = list()
         for i in np.arange(f.N):
-            A_i =  A[dims == i].copy()
-            vals.append(f.g(A_i @ x, i))
+            z_i =  z[dims == i]
+            vals.append(f.g(z_i, i))
                  
         xi  = dict(zip(np.arange(f.N), vals))
     
