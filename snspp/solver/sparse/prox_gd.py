@@ -9,12 +9,12 @@ import warnings
 from numba.typed import List
 from numba import njit
 
-from .sparse_utils import sparse_xi_inner, sparse_batch_gradient, compute_AS
+from .sparse_utils import sparse_xi_inner, sparse_batch_gradient, compute_AS, create_csr, sparse_gradient_table
 
 from ...helper.utils import stop_scikit_saga
 
 
-def sparse_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg, measure_freq):
+def sparse_saga_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, reg, measure_freq):
     """
     shapes:
         
@@ -23,6 +23,8 @@ def sparse_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg, me
         g_j_diff (n,)
         
     """
+    # create sparse numba matrix
+    A_csr = create_csr(A)
     
     # initialize for diagnostics
     x_hist = List()
@@ -36,7 +38,10 @@ def sparse_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg, me
     eta = 1e10
     x_old = x_t
     
-    g_sum = (1/N)*A.transpose().mult_vec(gradients)
+    s0 = time.time()
+    gradients = sparse_xi_inner(f, A@x_t)
+    g_sum = (1/N)*(A.T @ gradients)
+    e0 = time.time()
     
     for iter_t in np.arange(max_iter):
         
@@ -44,7 +49,7 @@ def sparse_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg, me
             break
              
         start = time.time()
-        x_t, g_sum = sparse_saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_length)
+        x_t, g_sum = sparse_saga_epoch(f, phi, x_t, A_csr, N, alpha, gradients, reg, g_sum, loop_length)
         end = time.time()
         
         # stop criterion
@@ -53,7 +58,10 @@ def sparse_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg, me
             
         # store everything (at end of each epoch)
         x_hist.append(x_t)
-        runtime.append(end-start)
+        if iter_t == 0:
+            runtime.append(end-start+e0-s0)
+        else:
+            runtime.append(end-start)
         step_sizes.append(alpha)
         
     return x_t, x_hist, runtime, step_sizes, eta
@@ -65,11 +73,12 @@ def sparse_saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_leng
         j = np.random.randint(low = 0, high = N, size = 1)[0]
         
         # z_j should be array of dim m_j
-        z_j = A.row(j) @ x_t
+        A_j = A.row(j)
+        z_j = A_j @ x_t
         new_g_j = f.g(z_j, j)
             
         g_j = gradients[j]
-        g_j_diff = A.row(j) * (new_g_j - g_j) 
+        g_j_diff = A_j * (new_g_j - g_j) 
         
         w_t = (1 - alpha*reg)*x_t - alpha*(g_j_diff + g_sum)
         
@@ -88,6 +97,9 @@ def sparse_saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_leng
 
 def sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter):
     
+    # create sparse numba matrix
+    A_csr = create_csr(A)
+    
     # initialize for diagnostics
     x_hist = List()
     runtime = List()
@@ -105,12 +117,11 @@ def sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter
             break
         
         start = time.time()
-        z_t = A.mult_vec(x_t)
-        full_g = sparse_xi_inner(f, z_t)
-        g_tilde = (1/N) * A.transpose().mult_vec(full_g)
+        full_g = sparse_xi_inner(f, A@x_t)
+        g_tilde = (1/N) * (A.T@full_g)
         end1 = time.time()
         
-        x_t = sparse_svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, m_iter, full_g, g_tilde)
+        x_t = sparse_svrg_epoch(f, phi, x_t, A_csr, N, alpha, batch_size, m_iter, full_g, g_tilde)
         end2 = time.time()
                
         # stop criterion

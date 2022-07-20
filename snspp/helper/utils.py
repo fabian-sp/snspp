@@ -92,47 +92,42 @@ def compute_xi_inner(f, z):
     return vals
             
 
-# needed for initializing in SAGA (only used once and outside of main loop)
-def compute_gradient_table(f, A, x):
-    """
-    computes a table of gradients at point x
-    returns: array of shape Nxn
-    """
+# old
+# def compute_gradient_table(f, A, x):
+#     """
+#     computes a table of gradients at point x
+#     returns: array of shape Nxn
+#     """
     
-    assert f.m.max() == 1, "Refactor this for m>1"
+#     assert f.m.max() == 1, "Refactor this for m>1"
 
-    # initialize object for storing all gradients
-    gradients = list()
-    z = (A@x).reshape(-1,1)
-    for i in np.arange(f.N):
-        tmp_i = f.g( z[i], i)
-        gradients.append(tmp_i)
+#     # initialize object for storing all gradients
+#     gradients = list()
+#     z = (A@x).reshape(-1,1)
+#     for i in np.arange(f.N):
+#         tmp_i = f.g( z[i], i)
+#         gradients.append(tmp_i)
         
-    gradients = np.vstack(gradients)
+#     gradients = np.vstack(gradients)
     
-    return np.ascontiguousarray(A * gradients)
+#     return np.ascontiguousarray(A * gradients)
 
 
 # needed for ADAGRAD + SVRG
 @njit()
-def compute_batch_gradient(f, A, x, S):
+def compute_batch_gradient(f, z, S):
     """
     computes a table of gradients at point x with mini batch S
     returns: array of shape n
     """   
     
     # initialize object for storing all gradients
-    gradients = np.zeros_like(x)
+    gradients = np.zeros(len(S))
         
-    for i in S:
-        # A_i needs shape (1,n)
-        A_i =  (A[i,:]).reshape(1,-1)
-        tmp_i = A_i.T @ f.g( A_i @ x, i)
-        gradients += tmp_i
+    for j, i in enumerate(S):
+        gradients[j] = f.g( z[j], i)
     
-    g = (1/len(S))*gradients
-    
-    return g
+    return gradients
 
 
 # needed for mini-batch SAGA

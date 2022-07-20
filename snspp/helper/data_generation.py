@@ -1,6 +1,7 @@
 """
 @author: Fabian Schaipp
 """
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -385,6 +386,8 @@ def get_sido(lambda1 = 0.02, train_size = .8, scale = False, path_prefix = '../'
 
 def get_higgs(lambda1 = 0.01, train_size = .8, scale = True, path_prefix = '../'):
     # download from 
+    
+    warnings.warn("Loading higgs is highly memory intensive.")
     
     df = pd.read_csv(path_prefix + 'data/HIGGS.csv', header=None)
     y = df.iloc[:,0].values

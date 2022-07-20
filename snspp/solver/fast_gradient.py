@@ -1,11 +1,11 @@
 """
 author: Fabian Schaipp
 """
-from ..helper.utils import compute_gradient_table, compute_batch_gradient, compute_batch_gradient_table, compute_xi_inner,\
+from ..helper.utils import compute_batch_gradient, compute_batch_gradient_table, compute_xi_inner,\
                             stop_scikit_saga, derive_L
 
 from .sgd import sgd_loop
-from .sparse.sparse_utils import create_csr, sparse_gradient_table, solve_with_tick                         
+from .sparse.sparse_utils import solve_with_tick                         
 from .sparse.prox_gd import sparse_saga_loop, sparse_svrg_loop
 
 import numpy as np                           
@@ -62,7 +62,6 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     # check whether A is in sparse format
     if isinstance(A, csr_matrix):
         sparse_format = True
-        A_csr = create_csr(A)
     else:
         sparse_format = False
 
@@ -70,12 +69,12 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     x_t = x0.copy().astype('float64')
 
     # initialize object for storing all gradients (used for SAGA)
-    if not sparse_format:
-        gradients = compute_gradient_table(f, A, x_t).astype('float64')
-        assert gradients.shape == (N,n)
-    else:
-        gradients = sparse_gradient_table(f, A, x_t).astype('float64')
-        assert gradients.shape == (N,)
+    # if not sparse_format:
+    #     gradients = compute_gradient_table(f, A, x_t).astype('float64')
+    #     assert gradients.shape == (N,n)
+    # else:
+    #     gradients = sparse_gradient_table(f, A, x_t).astype('float64')
+    #     assert gradients.shape == (N,)
     
     if 'n_epochs' not in params.keys():    
         params['n_epochs'] = 50
@@ -140,7 +139,7 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     if not sparse_format:
         if solver == 'saga':
             # run SAGA with batch size 1
-            x_t, x_hist, runtime, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['reg'], params['measure_freq'])     
+            x_t, x_hist, runtime, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['reg'], params['measure_freq'])     
         #elif solver == 'batch-saga':
         #    x_t, x_hist, runtime, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['batch_size'])
         elif solver == 'svrg':
@@ -155,9 +154,9 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     # sparse solvers
     else:
         if solver == 'saga':
-            x_t, x_hist, runtime, step_sizes, eta  = sparse_saga_loop(f, phi, x_t, A_csr, N, tol, alpha, gradients, params['n_epochs'], params['reg'], params['measure_freq'])
+            x_t, x_hist, runtime, step_sizes, eta  = sparse_saga_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['reg'], params['measure_freq'])
         elif solver == 'svrg':
-            x_t, x_hist, runtime, runtime_fullg, step_sizes, eta  = sparse_svrg_loop(f, phi, x_t, A_csr, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter)
+            x_t, x_hist, runtime, runtime_fullg, step_sizes, eta  = sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter)
         elif solver == 'tick-svrg':
             x_t, x_hist, runtime, step_sizes, eta  = solve_with_tick(f, phi, A, alpha, params['n_epochs'], tol, verbose)
         else:
@@ -205,7 +204,7 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     return x_t, info
 
 #%%
-def saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg, measure_freq):
+def saga_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, reg, measure_freq):
     
     # initialize for diagnostics
     runtime = List()
@@ -214,7 +213,11 @@ def saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg, measure_f
     
     eta = 1e10
     x_old = x_t
+    
+    s0 = time.time()
+    gradients = A * compute_xi_inner(f, A@x_t)
     g_sum = (1/N)*gradients.sum(axis = 0)
+    e0 = time.time()
     
     # measure_freq = how many measurements per epoch
     loop_length = int(N/measure_freq)
@@ -229,7 +232,11 @@ def saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, reg, measure_f
         x_t, g_sum = saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_length)
         end = time.time()
     
-        runtime.append(end-start)
+        if iter_t == 0:
+            runtime.append(end-start+e0-s0)
+        else:
+            runtime.append(end-start)
+            
         eta = stop_scikit_saga(x_t, x_old)
         x_old = x_t
             
@@ -309,7 +316,8 @@ def adagrad_epoch(f, phi, x_t, A, N, alpha, delta, epoch_iter, batch_size, G):
         #S = np.random.choice(a = np.arange(N), size = batch_size, replace = True)
         
         # mini-batch gradient step
-        G_t = compute_batch_gradient(f, A, x_t, S)
+        A_S = A[S,:]
+        G_t = (1/batch_size) * (A_S.T @ compute_batch_gradient(f, A_S@x_t, S))
         G += G_t * G_t
         
         L_t = (1/alpha) * (delta + np.sqrt(G))
@@ -342,11 +350,11 @@ def svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter):
             break
         
         start = time.time()
-        full_g = A * compute_xi_inner(f, A@x_t)
-        g_tilde = (1/N) * full_g.sum(axis=0)
+        xis = compute_xi_inner(f, A@x_t).squeeze()
+        full_g = (1/N) * (A.T @ xis)
         end1 = time.time()
         
-        x_t = svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, m_iter, full_g, g_tilde)
+        x_t = svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, m_iter, xis, full_g)
         end2 = time.time()
         
         
@@ -362,7 +370,7 @@ def svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter):
     return x_t, x_hist, runtime, runtime_fullg, step_sizes, eta
 
 @njit()
-def svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, m_iter, full_g, g_tilde):
+def svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, m_iter, xis, full_g):
     
     for t in np.arange(m_iter):
             
@@ -371,8 +379,9 @@ def svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, m_iter, full_g, g_tilde):
         S = np.random.randint(low = 0, high = N, size = batch_size)
         
         # compute the gradient
-        v_t = compute_batch_gradient(f, A, x_t, S)
-        g_t = v_t - (1/batch_size) * full_g[S,:].sum(axis=0) + g_tilde
+        A_S = A[S,:]
+        v_t = compute_batch_gradient(f, A_S@x_t, S)
+        g_t = (1/batch_size) * A_S.T @ (v_t - xis[S]) + full_g
 
         w_t = x_t - alpha*g_t
         x_t = phi.prox(w_t, alpha)

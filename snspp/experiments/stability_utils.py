@@ -8,7 +8,7 @@ import seaborn as sns
 
 from sklearn.linear_model import Lasso, LogisticRegression
 
-from snspp.helper.data_generation import tstudent_test, logreg_test, get_gisette, get_mnist, get_sido, get_libsvm
+from snspp.helper.data_generation import tstudent_test, logreg_test, get_gisette, get_mnist, get_sido, get_libsvm, get_higgs
 from snspp.solver.opt_problem import problem, color_dict, marker_dict
 from snspp.experiments.experiment_utils import initialize_solvers
 
@@ -37,6 +37,9 @@ def create_instance(setup):
         
     elif setup['instance']['dataset'] == "sido":
         f, phi, A, X_train, y_train, _, _ = get_sido(lambda1 = setup['instance']['l1'])
+        
+    elif setup['instance']['dataset'] == "higgs":
+        f, phi, A, X_train, y_train, _, _ = get_higgs(lambda1 = setup['instance']['l1'])
     
     elif setup['instance']['dataset'] in ["rcv1", "w8a", "covtype"]:
         f, phi, A, X_train, y_train, _, _ = get_libsvm(name = setup['instance']['dataset'], lambda1 = setup['instance']['l1'])
