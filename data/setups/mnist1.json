@@ -28,7 +28,8 @@
       "n_alpha": 25,
       "batch": [0.005,0.01,0.05],
       "params": {
-        "n_epochs": 30
+        "n_epochs": 30,
+        "measure_freq": 10
       }
     },
     "saga": {
@@ -39,7 +40,7 @@
       "batch": [],
       "params": {
         "n_epochs": 30,
-        "measure_freq": 10
+        "measure_freq": 20
       }
     }
   },
