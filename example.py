@@ -21,7 +21,7 @@ k = 5 # oracle nonzero elements
 l1 = .01 # l1 penalty
 
 f, phi, A, X_train, y_train, _, _, beta = logreg_test(N, n, k, l1, noise = 0.1, kappa = 10., dist = 'ortho')
-f, phi, A, X_train, y_train, _, _ = get_libsvm(name = "rcv1", lambda1 = 1e-4, train_size = .8, path_prefix = '')
+f, phi, A, X_train, y_train, _, _ = get_libsvm(name = "covtype", lambda1 = 1e-4, train_size = .8, path_prefix = '')
 
 # for unregularized case:
 #phi = Zero()
@@ -54,10 +54,10 @@ info2 = Q.info.copy()
 
 #%% solve with SVRG (run twice to compile numba)
 
-params = {'n_epochs' : 10, 'alpha': 4., 'batch_size': 300}
+params = {'n_epochs' : 10, 'alpha': 4., 'batch_size': 20, 'measure_freq': 5}
 
 Q = problem(f, phi, A, tol = 1e-15, params = params, verbose = True, measure = True)
-Q.solve(solver = 'tick-svrg')
+Q.solve(solver = 'svrg')
 
 Q.plot_path()
 Q.plot_objective()

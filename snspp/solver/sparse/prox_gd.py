@@ -95,7 +95,7 @@ def sparse_saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_leng
 
 #%%
 
-def sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter):
+def sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter, measure_freq):
     
     # create sparse numba matrix
     A_csr = create_csr(A)
@@ -103,7 +103,6 @@ def sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter
     # initialize for diagnostics
     x_hist = List()
     runtime = List()
-    runtime_fullg = List()
     step_sizes = List()
     
     eta = 1e10
@@ -111,36 +110,45 @@ def sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter
     
     S_iter = int(n_epochs*N / (batch_size*m_iter))
     
+    assert m_iter >= measure_freq, "measuring frequency is too high"
+    loop_length = int(m_iter/measure_freq)
+    
     for s in np.arange(S_iter):
         
         if eta < tol:
             break
         
-        start = time.time()
+        s0 = time.time()
         full_g = compute_xi_inner(f, A@x_t).squeeze()
         g_tilde = (1/N) * (A.T@full_g)
-        end1 = time.time()
+        e0 = time.time()
         
-        x_t = sparse_svrg_epoch(f, phi, x_t, A_csr, N, alpha, batch_size, m_iter, full_g, g_tilde)
-        end2 = time.time()
-               
+        for j in np.arange(measure_freq):       
+            s1 = time.time()
+            x_t = sparse_svrg_epoch(f, phi, x_t, A_csr, N, alpha, batch_size, loop_length, full_g, g_tilde)
+            e1 = time.time()
+            
+            # store
+            x_hist.append(x_t)    
+            if j == 0:
+                runtime.append(e1-s1+e0-s0)
+            else:
+                runtime.append(e1-s1)
+                
         # stop criterion
         eta = stop_scikit_saga(x_t, x_old)
         x_old = x_t
         
         # store in each outer iteration
-        x_hist.append(x_t)    
-        runtime.append(end2-start)
-        runtime_fullg.append(end1-start)
         step_sizes.append(alpha)    
 
 
-    return x_t, x_hist, runtime, runtime_fullg, step_sizes, eta
+    return x_t, x_hist, runtime, step_sizes, eta
 
 @njit()
-def sparse_svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, m_iter, full_g, g_tilde):
+def sparse_svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, loop_length, full_g, g_tilde):
     
-    for t in np.arange(m_iter):
+    for t in np.arange(loop_length):
             
         S = np.random.randint(low = 0, high = N, size = batch_size)
         
