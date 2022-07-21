@@ -86,7 +86,7 @@ class problem:
         self.measure = measure
         
     
-    def solve(self, solver = 'snspp', eval_x0 = True):
+    def solve(self, solver = 'snspp', eval_x0 = True, store_hist = True):
         
         self.solver = solver
         if self.x0 is None:
@@ -94,7 +94,7 @@ class problem:
         
         if solver == 'snspp':
             self.x, self.info = stochastic_prox_point(self.f, self.phi, self.A, self.x0, tol = self.tol, params = self.params, \
-                         verbose = self.verbose, measure = self.measure)
+                         verbose = self.verbose, measure = self.measure, store_hist = store_hist)
 
         elif solver in ['saga', 'batch-saga', 'svrg', 'adagrad', 'sgd', 'tick-svrg']:
             self.x, self.info =  stochastic_gradient(self.f, self.phi, self.A, self.x0, solver = self.solver, tol = self.tol, params = self.params, \
@@ -109,11 +109,13 @@ class problem:
             
             psi0 = self.f.eval(self.A@self.x0) + self.phi.eval(self.x0)
             self.info['objective'] = np.insert(self.info['objective'], 0, psi0)
-            self.info['iterates'] = np.vstack((self.x0, self.info['iterates']))
+            if store_hist:
+                self.info['iterates'] = np.vstack((self.x0, self.info['iterates']))
         
         if self.measure:
-            assert len(self.info['iterates']) == len(self.info['runtime']) == len(self.info['objective']), "Runtime + objective measurements and iterate history must be of same length for plotting."   
-    
+            assert len(self.info['runtime']) == len(self.info['objective']), "Runtime + objective measurements must be of same length for plotting."   
+            if store_hist:
+                assert len(self.info['iterates']) == len(self.info['runtime']), "Runtime + objective measurements and iterate history must be of same length for plotting." 
         return
     
     def plot_path(self, ax = None, runtime = True, mean = False, xlabel = True, ylabel = True):

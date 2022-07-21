@@ -51,7 +51,8 @@ def sgd_epoch(f, phi, x_t, A, alpha_t, batch_size, epoch_iter):
         S = np.random.randint(low = 0, high = f.N, size = batch_size)
         
         # mini-batch gradient step
-        g_t = compute_batch_gradient(f, A, x_t, S)
+        A_S = A[S,:]
+        g_t = (1/batch_size) * (A_S.T @ compute_batch_gradient(f, A_S@x_t, S))
         
         w_t = x_t - alpha_t*g_t
         # compute prox step

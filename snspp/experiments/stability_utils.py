@@ -160,14 +160,6 @@ def do_grid_run(f, phi, A, step_size_range, batch_size_range = [], psi_star = 0,
                             
                         this_stop_iter.append(stop)
                         _rt = P.info['runtime'].cumsum()[stop]
-                        # if solver == 'svrg':
-                        #     # for svrg, add time needed for full gradient 
-                        #     # at the start of the inner loop
-                        #     # runtime has 0 at start for starting point
-                        #     if len(P.info['runtime']) > len(P.info['runtime_fullg']):
-                        #         _rt += P.info['runtime_fullg'][stop]
-                        #     else:
-                        #         _rt += P.info['runtime_fullg'][stop+1]
                                 
                         this_time.append(_rt)
                         this_obj.append(obj_arr[-1])
@@ -212,6 +204,16 @@ plt.rcParams["font.family"] = "serif"
 plt.rcParams['font.size'] = 12
 plt.rcParams['axes.linewidth'] = 1
 plt.rc('text', usetex=True)
+
+
+def get_ymax(results, methods):
+    ymax = 0.
+    for m in methods:
+        r = results[m].copy()
+        this_max = r['runtime'][r['converged']].max()
+        ymax = max(ymax, this_max)
+    
+    return 1.2*ymax
 
 def plot_result(res, ax = None, replace_inf = 10., sigma = 0., psi_tol = 1e-3, label = None):
     
@@ -258,7 +260,7 @@ def plot_result(res, ax = None, replace_inf = 10., sigma = 0., psi_tol = 1e-3, l
     
     ax.set_xscale('log')
     #ax.set_yscale('log')
-    ax.legend(loc = 'lower left', fontsize = 8)
+    ax.legend(loc = 'upper right', fontsize = 8)
     ax.set_title(rf'Convergence = objective less than {1+psi_tol}$\psi^\star$')
 
     return ax

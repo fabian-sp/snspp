@@ -111,7 +111,7 @@ def get_default_spp_params(f, A):
     p = {'alpha': a, 'max_iter': 100, 'batch_size': b, 'sample_style': 'constant', 'reduce_variance': False,\
         'm_iter': m, 'tol_sub': 1e-1, 'newton_params': get_default_newton_params(),\
         'vr_skip': 0, 
-        'measure_freq': 1, 'store_hist': True}
+        'measure_freq': 1}
     
     return p
 
@@ -134,7 +134,7 @@ def check_newton_params(newton_params):
 
 #%% main functions
 
-def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
+def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(), verbose = False, measure = False, store_hist = False):
     """
     This implements the semismooth Newton stochastic proximal point method (SNSPP) for solving 
     
@@ -190,7 +190,9 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
     measure : boolean, optional
         Whether to evaluate the objective after each itearion. The default is False.
         For the experiments, needs to be set to ``True``, for actual computation it is recommended to set this to ``False``.
-        
+    store_hist : boolean, optional
+        Whether to store iterate history. The default is False.
+
 
     Returns
     -------
@@ -363,7 +365,7 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
         
         step_sizes.append(alpha_t)
         
-        if params['store_hist']:
+        if store_hist:
             xi_hist.append(xi.copy())
             x_hist.append(x_t)
         
@@ -399,10 +401,10 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
             'evaluations': np.array(num_eval)/f.N
             }
     
-    if params['store_hist']:
+    if store_hist:
         info['iterates'] = np.vstack(x_hist)
         info['xi_hist'] = xi_hist
-     
+         
     return x_t, info
 
 

@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from snspp.experiments.stability_utils import load_setup, create_instance, compute_psi_star, compute_x0, create_alpha_range,\
-                                                do_grid_run, plot_result, load_stability_results
+                                                do_grid_run, plot_result, load_stability_results, get_ymax
 
 #%%
 
@@ -61,13 +61,15 @@ def run_stability(setup_id, save=False, load=False):
     
     fig, ax = plt.subplots(figsize = (7,5))
     
+    ymax = get_ymax(results, methods)
+    
     for mt in methods:
-        plot_result(results[mt], ax = ax, replace_inf = setup["y_max"], sigma = SIGMA, psi_tol = setup["psi_tol"])
+        plot_result(results[mt], ax = ax, replace_inf = ymax, sigma = SIGMA, psi_tol = setup["psi_tol"])
         
     
-    annot_y = setup["y_max"] * 0.9 # y value for annotation
+    annot_y = ymax * 1/1.1 # y value for annotation
     ax.hlines(annot_y , ax.get_xlim()[0], ax.get_xlim()[1], 'grey', ls = '-')
-    ax.annotate("no convergence", (ax.get_xlim()[0]*1.5, annot_y*1.02), color = "grey", fontsize = 14)
+    ax.annotate("no convergence", (ax.get_xlim()[0]*1.5, annot_y*1.02), color = "k", fontsize = 13)
     
     ax.set_ylim(0,)
     
