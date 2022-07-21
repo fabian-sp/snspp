@@ -66,7 +66,7 @@ print("x0 max", x0.max())
 #%% params 
 
 if l1 == 1e-3:
-    params_saga = {'n_epochs' : 20, 'alpha': 0.01029}
+    params_saga = {'n_epochs' : 30, 'alpha': 0.01029}
     
     params_svrg = {'n_epochs' : 30, 'batch_size': 50, 'alpha': 0.27027}
     
@@ -82,7 +82,7 @@ if l1 == 1e-3:
 
 elif l1 == 1e-2:
     
-    params_saga = {'n_epochs' : 20, 'alpha': 0.0140}
+    params_saga = {'n_epochs' : 30, 'alpha': 0.0140}
     
     params_svrg = {'n_epochs' : 30, 'batch_size': 50, 'alpha': 0.73359}
     

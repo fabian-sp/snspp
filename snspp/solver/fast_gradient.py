@@ -215,8 +215,8 @@ def saga_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, reg, measure_freq):
     x_old = x_t
     
     s0 = time.time()
-    gradients = A * compute_xi_inner(f, A@x_t)
-    g_sum = (1/N)*gradients.sum(axis = 0)
+    gradients = compute_xi_inner(f, A@x_t).squeeze()
+    g_sum = (1/N) * (A.T @ gradients)
     e0 = time.time()
     
     # measure_freq = how many measurements per epoch
@@ -250,21 +250,21 @@ def saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_length):
         
     for iter_t in np.arange(loop_length):
                      
-        # sample, result is ARRAY!
-        j = np.random.randint(low = 0, high = N, size = 1)
+        # sample, result is int!
+        j = np.random.randint(low = 0, high = N, size = 1)[0]
         
-        # compute the gradient, A_j is array of shape (1,n)
+        # compute the gradient, 
         A_j = A[j,:]
-        g = A_j.T @ f.g(A_j @ x_t, j)
-            
-        g_j = gradients[j,:].reshape(-1)
-        old_g = (-1)*g_j + g_sum
+        new_g_j =  f.g(np.dot(A_j, x_t), j)
         
-        w_t = (1 - alpha*reg)*x_t - alpha*(g + old_g)
+        g_j = gradients[j]
+        g_j_diff = A_j * (new_g_j - g_j) 
+        
+        w_t = (1 - alpha*reg)*x_t - alpha*(g_j_diff + g_sum)
         
         # store new gradient
-        gradients[j,:] = g
-        g_sum = g_sum - (1/N)*g_j + (1/N)*g
+        gradients[j] = new_g_j
+        g_sum += (1/N)*g_j_diff
         
         # compute prox step
         x_t = phi.prox(w_t, alpha)
