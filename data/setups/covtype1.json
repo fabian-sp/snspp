@@ -29,7 +29,7 @@
       "batch": [0.0001, 0.0005, 0.001],
       "params": {
         "n_epochs": 20,
-        "measure_freq": 20
+        "measure_freq": 50
       }
     },
     "saga": {

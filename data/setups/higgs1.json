@@ -10,7 +10,7 @@
   "methods": {
     "snspp": {
       "solver": "snspp",
-      "alpha_min": 0,
+      "alpha_min": -1,
       "alpha_max": 3,
       "n_alpha": 15,
       "batch": [1e-5, 5e-5],
@@ -23,24 +23,24 @@
     },
     "svrg": {
       "solver": "svrg",
-      "alpha_min": -2,
-      "alpha_max": 1,
+      "alpha_min": -3,
+      "alpha_max": 2,
       "n_alpha": 15,
       "batch": [1e-5, 5e-5],
       "params": {
         "n_epochs": 20,
-        "measure_freq": 20
+        "measure_freq": 100
       }
     },
     "saga": {
       "solver": "saga",
       "alpha_min": -3,
-      "alpha_max": 0,
+      "alpha_max": 1,
       "n_alpha": 15,
       "batch": [],
       "params": {
         "n_epochs": 20,
-        "measure_freq": 20
+        "measure_freq": 100
       }
     }
   },
