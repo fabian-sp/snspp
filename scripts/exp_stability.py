@@ -18,11 +18,11 @@ def run_stability(setup_id, save=False, load=False):
     results = dict()
     
     setup = load_setup(setup_id)
-    f, phi, A, X_train, y_train = create_instance(setup)
-    psi_star, xsol = compute_psi_star(setup, f, phi, A, X_train, y_train)
-    x0 = compute_x0(setup, f, phi, A)
-    
-    results['psi_star'] = psi_star
+    if not load:
+        f, phi, A, X_train, y_train = create_instance(setup)
+        psi_star, xsol = compute_psi_star(setup, f, phi, A, X_train, y_train)
+        x0 = compute_x0(setup, f, phi, A)
+        results['psi_star'] = psi_star
     
     #################################################
     # run 
