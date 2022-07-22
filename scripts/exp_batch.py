@@ -20,7 +20,7 @@ from sklearn.linear_model import LogisticRegression
 
 #%%
 
-dataset = 'news20'
+dataset = 'mnist'
 
 if dataset == "mnist":
     f, phi, A, X_train, y_train, _, _ = get_mnist()
@@ -124,7 +124,7 @@ for _k,_v in res.items():
     y2 = res[_k]['objective'] - psi_star
     
     obj = res[_k]['objective']
-    res2.append(dict(a=a, b=b, median_rt=np.median(y), obj_diff_std= (obj[1:]/obj[:-1]).std()))
+    res2.append(dict(a=a, b=b, mean_rt=np.mean(y), obj_diff_std= (obj[1:]/obj[:-1]).std()))
     
     j = batch_sizes.index(b)
     l = step_sizes.index(a)
@@ -146,7 +146,7 @@ else:
     ax.set_xlabel('Iteration')
     ax.set_xlim(0,100)
     
-ax.set_ylabel(r'$\psi(x^k)-\psi^\star$', fontsize=10)
+ax.set_ylabel(r'$\psi(x^k)-\psi^\star$', fontsize=12)
 ax.legend(batch_handles+step_handles, labels, fontsize=8, ncol=2)
 
 
@@ -156,15 +156,16 @@ df=pd.DataFrame(res2)
 
 ax = axs[1]
 
+
 ax.yaxis.tick_right()
 ax.yaxis.set_label_position("right")
 
-ax.plot(df.groupby('b')['median_rt'].median(), c='darkgray', lw = 3, marker='p', markersize=8, markeredgecolor='k', label = 'subproblem runtime/iter')
+ax.plot(df.groupby('b')['mean_rt'].mean(), c='darkgray', lw = 3, marker='p', markersize=8, markeredgecolor='k', label = 'subproblem runtime/iter')
 #ax.plot(res2.keys(), y2, c='steelblue', lw = 3, marker='s', markersize=6, markeredgecolor='k', label = r'st. dev. $\psi(x^{k+1})/\psi(x^k)$')
 
 ax.grid(ls = '-', lw = .5) 
 ax.set_xscale('log')
-ax.set_yscale('log')
+#ax.set_yscale('log')
 ax.set_xlabel(r'$b/N$')
 ax.set_ylabel('Subproblem runtime [sec]')
 
