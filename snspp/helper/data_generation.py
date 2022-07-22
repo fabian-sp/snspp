@@ -403,13 +403,20 @@ def get_higgs(lambda1 = 0.01, train_size = .8, scale = True, path_prefix = '../'
     
     np.nan_to_num(X, copy = False)
     
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+    if train_size is not None:
+        X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
                                                         random_state = 1234)
-    
+    else:
+        X_train = X
+        y_train = y
+        X_test = None
+        y_test = None
+        
     if scale:
         scaler = StandardScaler()
         X_train = scaler.fit_transform(X_train)
-        X_test = scaler.transform(X_test)
+        if X_test is not None:
+            X_test = scaler.transform(X_test)
         
     A = X_train * y_train.reshape(-1,1) # logistic loss has a_i*b_i
     phi = L1Norm(lambda1) 
@@ -423,10 +430,10 @@ def get_higgs(lambda1 = 0.01, train_size = .8, scale = True, path_prefix = '../'
 
 libsvm_dict = {'rcv1': 'rcv1_train.binary', 'w8a': 'w8a', 'fourclass': 'fourclass_scale',
                'covtype': 'covtype.libsvm.binary.scale',
-               'realsim': 'real-sim',
-               'news20': 'news20.binary'}
+               'news20': 'news20.binary',
+               'ijcnn': 'ijcnn1.tr'}
 
-def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../', sparse_format=True):
+def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../', poly=0):
     
     X, y = load_svmlight_file(path_prefix + 'data/libsvm/' + libsvm_dict[name])
     
@@ -434,22 +441,29 @@ def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix
         y[y==2] = -1
     
     assert np.all(np.isin(y,[-1,1]))
-    
-    # convert to dense if desired
-    if isinstance(X, csr_matrix) and not sparse_format:
-      X = X.toarray().astype('float64') # sparse to dense
-      np.nan_to_num(X, copy = False)
-    
+        
     y = y.astype('float64')
     
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
-                                                        random_state = 1234)
+    # polynomial feature expansion
+    if poly > 0:
+        X=poly_expand(X,poly)
     
+    if train_size is not None:
+        X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+                                                        random_state = 1234)
+    else:
+        X_train = X
+        y_train = y
+        X_test = None
+        y_test = None
+        
     # is often already scaled from -1 to 1 
     if scale:
         scaler = StandardScaler()
         X_train = scaler.fit_transform(X_train)
-        X_test = scaler.transform(X_test)
+        
+        if X_test is not None:
+            X_test = scaler.transform(X_test)
     
     A = X_train.multiply(y_train.reshape(-1,1)).tocsr() # logistic loss has a_i*b_i
     phi = L1Norm(lambda1) 

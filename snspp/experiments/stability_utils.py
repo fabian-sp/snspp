@@ -39,10 +39,10 @@ def create_instance(setup):
         f, phi, A, X_train, y_train, _, _ = get_sido(lambda1 = setup['instance']['l1'])
         
     elif setup['instance']['dataset'] == "higgs":
-        f, phi, A, X_train, y_train, _, _ = get_higgs(lambda1 = setup['instance']['l1'])
+        f, phi, A, X_train, y_train, _, _ = get_higgs(lambda1 = setup['instance']['l1'], train_size=None)
     
-    elif setup['instance']['dataset'] in ["rcv1", "w8a", "covtype"]:
-        f, phi, A, X_train, y_train, _, _ = get_libsvm(name = setup['instance']['dataset'], lambda1 = setup['instance']['l1'])
+    elif setup['instance']['dataset'] in ["rcv1", "covtype"]:
+        f, phi, A, X_train, y_train, _, _ = get_libsvm(name = setup['instance']['dataset'], lambda1 = setup['instance']['l1'], train_size=None)
         
     
     # IMPORTANT: Initialize numba
