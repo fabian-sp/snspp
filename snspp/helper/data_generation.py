@@ -1,6 +1,7 @@
 """
 @author: Fabian Schaipp
 """
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -15,8 +16,9 @@ from sklearn.preprocessing import PolynomialFeatures
 
 import scipy.special as sp
 from scipy.stats import ortho_group
+from scipy.sparse.csr import csr_matrix
 
-from .loss1 import lsq, block_lsq, logistic_loss
+from .loss1 import lsq, logistic_loss, block_lsq
 from .loss2 import huber_loss
 from .regz import L1Norm, Zero, Ridge
 from .tstudent import tstudent_loss
@@ -39,9 +41,9 @@ def standardize(A):
     
     return M
 
-def create_A(N, n, dist = 'ortho', kappa = 1.):
+def create_matrix(N, n, dist = 'ortho', kappa = 1.):
     """
-    method for creating a random matrix A
+    method for creating a random matrix
     
     Parameters
     ----------
@@ -50,37 +52,35 @@ def create_A(N, n, dist = 'ortho', kappa = 1.):
     n : int
         number of cols.
     dist : str, optional
-        * 'ortho': A = QD and columns of A are from random orthogonal group.
-        * 'unif': A has uniform entries between -1 and 1.
+        * 'ortho': B = QD and columns of B are from random orthogonal group.
+        * 'unif': B has uniform entries between -1 and 1.
         The default is 'ortho'.
     kappa : float, optional
-        Condition number of A. Only available for dist = 'ortho'. The default is 1.
+        Condition number of B. Only available for dist = 'ortho'. The default is 1.
 
     Returns
     -------
-    A : array of shape (N,n)
+    B : array of shape (N,n)
     """
     if dist == 'ortho':
         if N >= n:
             Q = ortho_group.rvs(N)
             d = np.linspace(kappa, 1, n)
             D = np.diag(d)
-            A = Q[:,:n]@D
+            B = Q[:,:n]@D
         else:
-            A = 2*np.random.rand(N,n)-1
-            U,S,Vh = np.linalg.svd(A, full_matrices = False)
+            B = 2*np.random.rand(N,n)-1
+            U,S,Vh = np.linalg.svd(B, full_matrices = False)
             d = np.linspace(kappa, 1, min(N,n))
-            A = U@np.diag(d)@Vh
+            B = U@np.diag(d)@Vh
                 
-        #print("Condition number of A:", np.linalg.cond(A) )
-        
     elif dist == 'unif':
-        A = np.random.rand(N,n)*2 - 1
+        B = np.random.rand(N,n)*2 - 1
     else:
         raise KeyError("Choose 'unif' or 'ortho' as input for argument dist.")
     
         
-    return A
+    return B
     
 
 def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., kappa = 1., dist = 'ortho', seed = 1234):
@@ -98,33 +98,33 @@ def lasso_test(N = 10, n = 20, k = 5, lambda1 = .1, block = False, noise = 0., k
     else:
         m = np.ones(N, dtype = 'int')
     
-    A = create_A(m.sum(), n, kappa = kappa, dist = dist)
+    X_train = create_matrix(m.sum(), n, kappa = kappa, dist = dist)
     
     # create true solution
-    x = np.random.randn(k) 
-    x = np.concatenate((x, np.zeros(n-k)))
-    np.random.shuffle(x)
+    beta = np.random.randn(k) 
+    beta = np.concatenate((beta, np.zeros(n-k)))
+    np.random.shuffle(beta)
     
     # create measurements
-    b = A @ x + noise*np.random.randn(m.sum())
+    y_train = X_train @ beta + noise*np.random.randn(m.sum())
     
-    A = np.ascontiguousarray(A.astype('float64'))
-    b = b.astype('float64')
-    x = x.astype('float64')
+    X_train = np.ascontiguousarray(X_train.astype('float64'))
+    y_train = y_train.astype('float64')
+    beta = beta.astype('float64')
     
     N_test = max(100,int(N*0.1))
-    A_test = create_A(N_test, n, kappa = kappa, dist = dist)
-    b_test = A_test @ x + noise*np.random.randn(N_test)
+    X_test = create_matrix(N_test, n, kappa = kappa, dist = dist)
+    y_test = X_test @ beta + noise*np.random.randn(N_test)
     
     
     phi = L1Norm(lambda1)    
     if block:
-        f = block_lsq(A, b, m)
+        f = block_lsq(y_train, m)
     else:
-        f = lsq(A, b)
-        
+        f = lsq(y_train)
+    A = X_train.copy()
 
-    return x, A, b, f, phi, A_test, b_test
+    return f, phi, A, X_train, y_train, X_test, y_test, beta
 
 def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = 1., dist = 'ortho', seed = 1234):
     """
@@ -136,69 +136,79 @@ def logreg_test(N = 10, n = 20, k = 5, lambda1 = .1, noise = 0, kappa = 1., dist
     np.random.seed(seed)
     
     N_test = max(100,int(N*0.1))
-    A = create_A(N+N_test, n, kappa = kappa, dist = dist)
+    X = create_matrix(N+N_test, n, kappa = kappa, dist = dist)
         
     # create true solution
-    x = np.random.randn(k) 
-    x = np.concatenate((x, np.zeros(n-k)))
-    np.random.shuffle(x)
+    beta = np.random.randn(k) 
+    beta = np.concatenate((beta, np.zeros(n-k)))
+    np.random.shuffle(beta)
     
-    h = np.exp(A@x)
+    h = np.exp(X@beta)
     odds = h/(1+h)
     
-    b = (odds >= .5)*2 -1
-    #b = np.random.binomial(1,p=odds)*2 - 1
+    y = (odds >= .5)*2 -1
+    #y = np.random.binomial(1,p=odds)*2 - 1
     
     if noise > 0:
         assert noise <= 1
         flip = np.random.binomial(n=1, p = noise, size = N+N_test)
         flip = (1 - flip * 2)      
         # flip signs (f in {-1,1})
-        b = b * flip
+        y = y * flip
      
-    A = np.ascontiguousarray(A.astype('float64'))
-    b = b.astype('float64')
-    x = x.astype('float64')
+    X = np.ascontiguousarray(X.astype('float64'))
+    y = y.astype('float64')
+    beta = beta.astype('float64')
+    
+    X_train = X[:N,:]
+    y_train = y[:N]
     
     phi = L1Norm(lambda1) 
-    f = logistic_loss(A[:N,:],b[:N])
+    f = logistic_loss(y_train)
+    A = X_train * y_train.reshape(-1,1) # logistic loss has a_i*b_i
     
     ##### TEST SET ############
-    A_test = A[N:,:]
-    b_test = b[N:]
+    X_test = X[N:,:]
+    y_test = y[N:]
     
-    return x, A[:N,:], b[:N], f, phi, A_test, b_test
+    return f, phi, A, X_train, y_train, X_test, y_test, beta
 
 def tstudent_test(N = 10, n = 20, k = 5, lambda1 = .1, v = 4., noise = 0.1, poly = 0, kappa = 1., dist = 'ortho', seed = 23456):
     
     np.random.seed(seed)
     
     N_test = max(100,int(N*0.1))
-    A = create_A(N+N_test, n, kappa = kappa, dist = dist)
+    X = create_matrix(N+N_test, n, kappa = kappa, dist = dist)
     
     if poly > 0:
-        A = poly_expand(A, d=poly)
-        k = int(A.shape[1]*k/n)
-        n = A.shape[1]
+        X = poly_expand(X, d=poly)
+        k = int(X.shape[1]*k/n)
+        n = X.shape[1]
     
     # create true solution
-    x = np.random.randn(k)
-    x = np.concatenate((x, np.zeros(n-k)))
-    np.random.shuffle(x)
+    beta = np.random.randn(k)
+    beta = np.concatenate((beta, np.zeros(n-k)))
+    np.random.shuffle(beta)
            
-    b = A@x + noise*np.random.standard_t(v, size = N+N_test)
+    y = X@beta + noise*np.random.standard_t(v, size = N+N_test)
      
-    A = np.ascontiguousarray(A.astype('float64'))
-    b = b.astype('float64')
-    x = x.astype('float64')
+    X = np.ascontiguousarray(X.astype('float64'))
+    y = y.astype('float64')
+    beta = beta.astype('float64')
+    
+    X_train = X[:N,:]
+    y_train = y[:N]
     
     phi = L1Norm(lambda1) 
-    f = tstudent_loss(A[:N,:],b[:N],v=v)
-        
-    A_test = A[N:,:]
-    b_test = b[N:]
+    f = tstudent_loss(y_train, v=v)
+    A = np.ascontiguousarray(X_train)
     
-    return x, A[:N,:], b[:N], f, phi, A_test, b_test
+    ##### TEST SET ############
+    X_test = X[N:,:]
+    y_test = y[N:]
+        
+    
+    return f, phi, A, X_train, y_train, X_test, y_test, beta
 
 def huber_test(N = 10, n = 20, k = 5, lambda1 = .1, mu = 1., noise = 0., kappa = 1., dist = 'ortho', seed = 23456):
     """
@@ -211,30 +221,31 @@ def huber_test(N = 10, n = 20, k = 5, lambda1 = .1, mu = 1., noise = 0., kappa =
     """
     np.random.seed(seed)
     
-    A = create_A(N, n, kappa = kappa, dist = dist)
+    X_train = create_matrix(N, n, kappa = kappa, dist = dist)
     
     # create true solution
-    x = np.random.randn(k) 
-    x = np.concatenate((x, np.zeros(n-k)))
-    np.random.shuffle(x)
+    beta = np.random.randn(k) 
+    beta = np.concatenate((beta, np.zeros(n-k)))
+    np.random.shuffle(beta)
     
     # create measurements
-    b = A @ x + noise*np.random.randn(N)
+    y_train = X_train @ beta + noise*np.random.randn(N)
     
-    A = np.ascontiguousarray(A.astype('float64'))
-    b = b.astype('float64')
-    x = x.astype('float64')
+    X_train = np.ascontiguousarray(X_train.astype('float64'))
+    y_train = y_train.astype('float64')
+    beta = beta.astype('float64')
     
     N_test = max(100,int(N*0.1))
-    A_test = create_A(N_test, n, kappa = kappa, dist = dist)
-    b_test = A_test @ x + noise*np.random.randn(N_test)
+    X_test = create_matrix(N_test, n, kappa = kappa, dist = dist)
+    y_test = X_test @ beta + noise*np.random.randn(N_test)
     
     
     phi = L1Norm(lambda1) 
     mu_arr = mu * np.ones(N) 
-    f = huber_loss(A, b, mu_arr)
-        
-    return x, A, b, f, phi, A_test, b_test
+    f = huber_loss(y_train, mu_arr)
+    A = X_train.copy()
+    
+    return f, phi, A, X_train, y_train, X_test, y_test, beta
 
 def lowrank_test(N = 10, p = 20, q = 30, r = 5, lambda1 = .1, noise = 0., kappa = 1., dist = 'ortho', seed = 23456):
     """
@@ -243,29 +254,30 @@ def lowrank_test(N = 10, p = 20, q = 30, r = 5, lambda1 = .1, noise = 0., kappa 
     """
     np.random.seed(seed)
     
-    A = np.zeros((p,q,N))
+    X = np.zeros((p,q,N))
     for j in np.arange(N):
-        A[:,:,j] = create_A(p, q, kappa = kappa, dist = dist)
+        X[:,:,j] = create_matrix(p, q, kappa = kappa, dist = dist)
     
     # create true solution
-    X = make_low_rank_matrix(p, q, effective_rank=r, tail_strength=0.5, random_state=23456)
+    beta = make_low_rank_matrix(p, q, effective_rank=r, tail_strength=0.5, random_state=23456)
     
     # create measurements
-    b = multiple_matdot(A, X) + noise*np.random.randn(N)
+    Y = multiple_matdot(X, beta) + noise*np.random.randn(N)
     
-    A = np.ascontiguousarray(A.astype('float64'))
-    b = b.astype('float64')
+    X_train = np.ascontiguousarray(X.astype('float64'))
+    Y_train = Y.astype('float64')
     
     N_test = max(100,int(N*0.1))
-    A_test = np.zeros((p,q,N_test))
+    X_test = np.zeros((p,q,N_test))
     for j in np.arange(N_test):
-        A_test[:,:,j] = create_A(p, q, kappa = kappa, dist = dist)
-    b_test = multiple_matdot(A_test, X) + noise*np.random.randn(N_test)
+        X_test[:,:,j] = create_matrix(p, q, kappa = kappa, dist = dist)
+    Y_test = multiple_matdot(X_test, beta) + noise*np.random.randn(N_test)
     
     phi = NuclearNorm(lambda1) 
-    f = mat_lsq(A, b)
+    f = mat_lsq(Y_train)
+    A = X_train.copy()
         
-    return X, A, b, f, phi, A_test, b_test
+    return f, phi, A, X_train, Y_train, X_test, Y_test, beta
 
 def poly_expand(A, d = 5):
 
@@ -283,7 +295,7 @@ def poly_expand(A, d = 5):
 def get_mnist(lambda1 = 0.02, train_size = .8, scale = True):
 
     # Load data from https://www.openml.org/d/554
-    X, y0 = fetch_openml('mnist_784', version=1, return_X_y=True)
+    X, y0 = fetch_openml('mnist_784', version=1, return_X_y=True, as_frame=False)
     y0 = y0.astype('float64')
     y = y0.copy()
     
@@ -306,10 +318,11 @@ def get_mnist(lambda1 = 0.02, train_size = .8, scale = True):
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.transform(X_test)
     
+    A = X_train * y_train.reshape(-1,1) # logistic loss has a_i*b_i
     phi = L1Norm(lambda1) 
-    f = logistic_loss(X_train, y_train)
-
-    return f, phi, X_train, y_train, X_test, y_test
+    f = logistic_loss(y_train)
+    
+    return f, phi, A, X_train, y_train, X_test, y_test
 
 def get_gisette(lambda1 = 0.02, train_size = .8, path_prefix = '../'):
     # download from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#gisette
@@ -337,11 +350,11 @@ def get_gisette(lambda1 = 0.02, train_size = .8, path_prefix = '../'):
     # y_test = y_test.astype('float64')
     # np.nan_to_num(X_test, copy = False)
     
-    
+    A = X_train * y_train.reshape(-1,1) # logistic loss has a_i*b_i
     phi = L1Norm(lambda1) 
-    f = logistic_loss(X_train, y_train)
+    f = logistic_loss(y_train)
         
-    return f, phi, X_train, y_train, X_test, y_test
+    return f, phi, A, X_train, y_train, X_test, y_test
 
 def get_sido(lambda1 = 0.02, train_size = .8, scale = False, path_prefix = '../'):
     # download from http://www.causality.inf.ethz.ch/challenge.php?page=datasets
@@ -364,18 +377,63 @@ def get_sido(lambda1 = 0.02, train_size = .8, scale = False, path_prefix = '../'
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.transform(X_test)
         
+    A = X_train * y_train.reshape(-1,1) # logistic loss has a_i*b_i
     phi = L1Norm(lambda1) 
-    f = logistic_loss(X_train, y_train)
+    f = logistic_loss(y_train)
+    
         
-    return f, phi, X_train, y_train, X_test, y_test
+    return f, phi, A, X_train, y_train, X_test, y_test
+
+def get_higgs(lambda1 = 0.01, train_size = .8, scale = True, path_prefix = '../'):
+    # download from 
+    
+    warnings.warn("Loading higgs is highly memory intensive.")
+    
+    df = pd.read_csv(path_prefix + 'data/HIGGS.csv', header=None)
+    y = df.iloc[:,0].values
+    X = df.iloc[:,1:].values
+    
+    # labels are in 0,1 format
+    y[y==0] = -1.
+    
+    assert np.all(np.isin(y,[-1,1]))
+    
+    X = X.astype('float64')
+    y = y.astype('float64')
+    
+    np.nan_to_num(X, copy = False)
+    
+    if train_size is not None:
+        X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+                                                        random_state = 1234)
+    else:
+        X_train = X
+        y_train = y
+        X_test = None
+        y_test = None
+        
+    if scale:
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        if X_test is not None:
+            X_test = scaler.transform(X_test)
+        
+    A = X_train * y_train.reshape(-1,1) # logistic loss has a_i*b_i
+    phi = L1Norm(lambda1) 
+    f = logistic_loss(y_train)
+    
+        
+    return f, phi, A, X_train, y_train, X_test, y_test
 
 ##############################
 ## LIBSVM
 
 libsvm_dict = {'rcv1': 'rcv1_train.binary', 'w8a': 'w8a', 'fourclass': 'fourclass_scale',
-               'covtype': 'covtype.libsvm.binary.scale'}
+               'covtype': 'covtype.libsvm.binary.scale',
+               'news20': 'news20.binary',
+               'ijcnn': 'ijcnn1.tr'}
 
-def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../'):
+def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../', poly=0):
     
     X, y = load_svmlight_file(path_prefix + 'data/libsvm/' + libsvm_dict[name])
     
@@ -383,49 +441,40 @@ def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix
         y[y==2] = -1
     
     assert np.all(np.isin(y,[-1,1]))
-    
-    X = X.toarray().astype('float64') # sparse to dense
+        
     y = y.astype('float64')
-    np.nan_to_num(X, copy = False)
     
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+    # polynomial feature expansion
+    if poly > 0:
+        X=poly_expand(X,poly)
+    
+    if train_size is not None:
+        X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
                                                         random_state = 1234)
-    
+    else:
+        X_train = X
+        y_train = y
+        X_test = None
+        y_test = None
+        
     # is often already scaled from -1 to 1 
     if scale:
         scaler = StandardScaler()
         X_train = scaler.fit_transform(X_train)
-        X_test = scaler.transform(X_test)
         
-    phi = L1Norm(lambda1) 
-    f = logistic_loss(X_train, y_train)
+        if X_test is not None:
+            X_test = scaler.transform(X_test)
     
-    return f, phi, X_train, y_train, X_test, y_test
+    A = X_train.multiply(y_train.reshape(-1,1)).tocsr() # logistic loss has a_i*b_i
+    phi = L1Norm(lambda1) 
+    f = logistic_loss(y_train)
+    
+    return f, phi, A, X_train, y_train, X_test, y_test
 
 
 ############################################################################################
 ################## REGRESSION
 
-def get_triazines(lambda1 = 0.01, train_size = .8, v = 1, poly = 0, noise = 0, path_prefix = '../'):
-    # download from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/regression/triazines_scale
-    assert v > 0
-    
-    X,y = load_from_txt('triazines', path_prefix) 
-    y += noise*np.random.standard_t(v, size = len(y))
-    
-    X = X.astype('float64')
-    y = y.astype('float64')
-    
-    if poly > 0:
-        X = poly_expand(X, d=poly)
-    
-    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
-                                                        random_state = 1234)
-    
-    phi = L1Norm(lambda1) 
-    f = tstudent_loss(X_train, y_train, v=v)
-    
-    return f, phi, X_train, y_train, X_test, y_test
     
 #%% for loading libsvm data from .txt-file
 

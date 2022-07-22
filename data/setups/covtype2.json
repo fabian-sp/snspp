@@ -1,21 +1,21 @@
 {
   "instance": {
   	"loss": "logistic",
-    "dataset": "gisette",
+    "dataset": "covtype",
     "N": 0,
     "n": 0,
     "k": 0,
-    "l1": 0.05
+    "l1": 0.001
   },
   "methods": {
     "snspp": {
       "solver": "snspp",
-      "alpha_min": -2,
-      "alpha_max": 2,
-      "n_alpha": 20,
-      "batch": [0.005,0.01,0.05],
+      "alpha_min": 0,
+      "alpha_max": 3,
+      "n_alpha": 15,
+      "batch": [0.0001, 0.0005, 0.001],
       "params": {
-        "max_iter": 350,
+        "max_iter": 500,
         "sample_style": "constant",
         "reduce_variance": true,
         "measure_freq": 1
@@ -23,29 +23,29 @@
     },
     "svrg": {
       "solver": "svrg",
-      "alpha_min": -3,
-      "alpha_max": 2,
-      "n_alpha": 25,
-      "batch": [0.005,0.01,0.05],
+      "alpha_min": -2,
+      "alpha_max": 1,
+      "n_alpha": 15,
+      "batch": [0.0001, 0.0005, 0.001],
       "params": {
-        "n_epochs": 55,
-        "measure_freq": 10
+        "n_epochs": 20,
+        "measure_freq": 100
       }
     },
     "saga": {
       "solver": "saga",
-      "alpha_min": -4,
+      "alpha_min": -3,
       "alpha_max": 0,
-      "n_alpha": 20,
+      "n_alpha": 15,
       "batch": [],
       "params": {
-        "n_epochs": 55,
-        "measure_freq": 20
+        "n_epochs": 20,
+        "measure_freq": 100
       }
     }
   },
   "psi_tol": 0.0001,
-  "y_max": 15,
+  "y_max": 20,
   "n_rep": 5,
   "start": 0
 }

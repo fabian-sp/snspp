@@ -129,7 +129,7 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, tol = 1e-3, newton_params 
         
         tmp = np.diag(tmp_d + eps_reg)           
         W = tmp + tmp2
-        assert not np.isnan(W).any(), "Something went wrong during construction of the Hessian"
+        #assert not np.isnan(W).any(), "Something went wrong during construction of the Hessian"
         
     # step2: solve Newton system
         use_cg = True
@@ -142,8 +142,8 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, tol = 1e-3, newton_params 
             chol,lower = cho_factor(W)
             d = cho_solve((chol,lower), rhs)
         
-        if not d@rhs > -1e-8:
-            warnings.warn(f"No descent direction, {d@rhs}")
+        #if not d@rhs > -1e-8:
+        #    warnings.warn(f"No descent direction, {d@rhs}")
         
         norm_dir.append(np.linalg.norm(d))
 

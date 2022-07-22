@@ -15,7 +15,6 @@ spec_tstud = [
     ('name', typeof('abc')),
     ('convex', typeof(True)),
     ('b', float64[:]),               
-    ('A', float64[:,:]),
     ('v', float64),
     ('N', int64), 
     ('m', int64[:]),
@@ -33,12 +32,11 @@ class tstudent_loss:
     
     """
     
-    def __init__(self, A, b, v):
+    def __init__(self, b, v):
         self.name = 'tstudent'
         self.convex = False
         
         self.b = b
-        self.A = np.ascontiguousarray(A)
         self.v = v
         self.N = len(self.b)
         self.m = np.repeat(1,self.N)
@@ -50,12 +48,11 @@ class tstudent_loss:
         # helper array to save yet computed results from self._zstar --> do not recompute in Hstar
         self.z = np.zeros(self.N)
         
-    def eval(self, x):
+    def eval(self, z):
         """
         method for evaluating f(x)
         """
-        z = self.A@x - self.b
-        y = np.log(1+ z**2/self.v).sum()
+        y = np.log(1+ (z-self.b)**2/self.v).sum()
          
         return (1/self.N)*y
 

@@ -15,8 +15,7 @@ from numba import int64, float64, typeof
 spec = [
     ('name', typeof('abc')),
     ('convex', typeof(True)),
-    ('b', float64[:]),               
-    ('A', float64[:,:]),
+    ('b', float64[:]),
     ('N', int64), 
     ('m', int64[:]),
 ]
@@ -43,26 +42,20 @@ class lsq:
     
     """
     
-    def __init__(self, A, b):
+    def __init__(self, b):
         self.name = 'squared'
         self.convex = True 
         self.b = b
-        self.A = A
         self.N = len(b)
         self.m = np.repeat(1,self.N)
         
         return
     
-    def eval(self, x):
+    def eval(self, z):
         """
-        Method for evaluating :math:`f(x)`.
-        The array ``x`` should be the same type as A (we use float64).
+        Method for evaluating :math:`f(x)` where :math:`z=Ax`.
         """
-        return (1/self.N) * np.linalg.norm(self.A@x - self.b)**2      
-    
-    # only for testing
-    def eval_batch(self, x, S):
-        return (1/len(S)) * np.linalg.norm(self.A[S,:]@x - self.b[S])**2 
+        return (1/self.N) * np.linalg.norm(z - self.b)**2      
     
     def f(self, x, i):
         """
@@ -99,11 +92,9 @@ spec_log = [
     ('name', typeof('abc')),
     ('convex', typeof(True)),
     ('b', float64[:]),               
-    ('A', float64[:,:]),
     ('N', int64), 
     ('m', int64[:]),
 ]
-        
 
 @jitclass(spec_log)
 class logistic_loss:
@@ -128,20 +119,18 @@ class logistic_loss:
     
     """
     
-    def __init__(self, A, b):
+    def __init__(self, b):
         self.name = 'logistic'
         self.convex = True   
         self.b = b
-        self.A = A * np.ascontiguousarray(self.b).reshape((-1,1))
         self.N = len(self.b)
         self.m = np.repeat(1,self.N)   
         return
     
-    def eval(self, x):
+    def eval(self, z):
         """
-        Method for evaluating :math:`f(x)`.
+        Method for evaluating :math:`f(x)` where :math:`z=Ax`.
         """
-        z = self.A@x
         y = np.log(1+ np.exp(-z)).sum()        
         return (1/self.N)*y
 
@@ -203,19 +192,21 @@ class block_lsq:
     but with block-wise splits
     """
     
-    def __init__(self, A, b, m):
+    def __init__(self, b, m):
         self.name = 'squared'
         self.b = b
-        self.A = A
         self.N = len(m)
         self.m = m
         self.ixx = np.repeat(np.arange(self.N), self.m)
         self.convex = True
         
-    def eval(self, x):
+    def eval(self, z):
+        """
+        z should be A@x
+        """
         y = 0
         for i in np.arange(self.N):
-            z_i = self.A[self.ixx == i, :] @ x
+            z_i = z[self.ixx == i]
             y += self.f(z_i, i)
         
         return (1/self.N)*y
