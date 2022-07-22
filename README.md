@@ -1,13 +1,13 @@
 # SNSPP
 
-Code associated with *A semismooth Newton Stochastic Proximal Point algorithm with Variance Reduction*. 
+Code associated with *A semismooth Newton Stochastic Proximal Point algorithm with Variance Reduction* [see paper](https://arxiv.org/abs/2204.00406). 
 
 The `SNSPP` method is implemented in [`snspp/solver/spp_solver`](/snspp/solver/spp_solver.py) and references therein.
 
 
 ## Introduction
 
-This is a Python package for solving problems of the form
+We aim for solving problems of the form
 
 <img src="https://latex.codecogs.com/gif.latex?\min_xf(x)+\varphi(x)" title="problem formulation"/>
 
@@ -28,15 +28,3 @@ or in order to install in developer mode via
     python setup.py clean --all develop clean --all
 
 
-
-## First-order methods
-
-The package also contains implementations of AdaGrad [1], SVRG [2] and SAGA [3]. 
-
-## References 
-
-* [1] J. Duchi, E. Hazan, and  Y. Singer, [Adaptive subgradient methods for online learning and stochastic optimization](https://www.jmlr.org/papers/volume12/duchi11a/duchi11a.pdf), J. Mach. Learn. Res., 12 (2011), pp. 2121–2159.
-
-* [2] S. J. Reddi, S. Sra, B. Poczos, and A. J. Smola, [Proximal stochastic methods for nonsmooth nonconvex finite-sum optimization](https://papers.nips.cc/paper/2016/hash/291597a100aadd814d197af4f4bab3a7-Abstract.html), in Advances in Neural Information Processing Systems 29, D. D. Lee, M. Sugiyama, U. V. Luxburg, I. Guyon, and R. Garnett, eds., Curran Associates, Inc., 2016, pp. 1145–1153.
-
-* [3] A. Defazio, F. Bach, and  S. Lacoste-Julien, [Saga: A fast incremental gradient method with support for non-strongly convex composite objectives](https://papers.nips.cc/paper/2014/file/ede7e2b6d13a41ddf9f4bdef84fdc737-Paper.pdf), in Advances in Neural Information Processing Systems, Z. Ghahramani, M. Welling, C. Cortes, N. Lawrence, and K. Q. Weinberger, eds., vol. 27, CurranAssociates, Inc., 2014, pp. 1646–1654.
