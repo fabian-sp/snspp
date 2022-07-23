@@ -52,7 +52,7 @@ def sgd_epoch(f, phi, x_t, A, alpha_t, batch_size, epoch_iter):
         
         # mini-batch gradient step
         A_S = A[S,:]
-        g_t = (1/batch_size) * (A_S.T @ compute_batch_gradient(f, A_S@x_t, S))
+        g_t = (1/batch_size) * (A_S.T @ f.g(A_S@x_t, S))
         
         w_t = x_t - alpha_t*g_t
         # compute prox step

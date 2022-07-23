@@ -62,9 +62,9 @@ class tstudent_loss:
         """
         return np.log(1+(x-self.b[i])**2/self.v)
     
-    def g(self, x, i):
+    def g(self, x, S):
         
-        a = x-self.b[i]
+        a = x-self.b[S]
         res = 2*a/(self.v+a**2)
         return res
        

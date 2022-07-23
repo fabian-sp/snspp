@@ -63,11 +63,11 @@ class lsq:
         """
         return (x - self.b[i])**2
     
-    def g(self, x, i):
+    def g(self, x, S):
         """
         Method for evaluating :math:`f_i'(x)`.
         """
-        return 2 * (x - self.b[i])
+        return 2 * (x - self.b[S])
     
     # these are actually never used (see vectorized versions below instead)
     def fstar(self, x, i):
@@ -140,7 +140,7 @@ class logistic_loss:
         """
         return np.log(1+np.exp(-x))   
     
-    def g(self, x, i):
+    def g(self, x, S):
         """
         Method for evaluating :math:`f_i'(x)`.
         """

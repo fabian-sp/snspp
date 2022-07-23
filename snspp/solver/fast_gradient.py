@@ -1,7 +1,7 @@
 """
 author: Fabian Schaipp
 """
-from ..helper.utils import compute_batch_gradient, compute_batch_gradient_table, compute_xi_inner,\
+from ..helper.utils import compute_batch_gradient_table, compute_xi_inner,\
                             stop_scikit_saga, derive_L
 
 from .sgd import sgd_loop
@@ -208,7 +208,7 @@ def saga_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, reg, measure_freq):
     x_old = x_t
     
     s0 = time.time()
-    gradients = compute_xi_inner(f, A@x_t).squeeze()
+    gradients = compute_xi_inner(f, A@x_t)
     g_sum = (1/N) * (A.T @ gradients)
     e0 = time.time()
     
@@ -310,7 +310,7 @@ def adagrad_epoch(f, phi, x_t, A, N, alpha, delta, epoch_iter, batch_size, G):
         
         # mini-batch gradient step
         A_S = A[S,:]
-        G_t = (1/batch_size) * (A_S.T @ compute_batch_gradient(f, A_S@x_t, S))
+        G_t = (1/batch_size) * (A_S.T @ f.g(A_S@x_t, S))
         G += G_t * G_t
         
         L_t = (1/alpha) * (delta + np.sqrt(G))
@@ -345,7 +345,7 @@ def svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter, measu
             break
         
         s0 = time.time()
-        xis = compute_xi_inner(f, A@x_t).squeeze()
+        xis = compute_xi_inner(f, A@x_t)
         full_g = (1/N) * (A.T @ xis)
         e0 = time.time()
 
@@ -380,7 +380,7 @@ def svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, loop_length, xis, full_g):
         
         # compute the gradient
         A_S = A[S,:]
-        v_t = compute_batch_gradient(f, A_S@x_t, S)
+        v_t = f.g(A_S@x_t, S)
         g_t = (1/batch_size) * A_S.T @ (v_t - xis[S]) + full_g
 
         w_t = x_t - alpha*g_t
