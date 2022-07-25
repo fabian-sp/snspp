@@ -24,23 +24,23 @@
     "svrg": {
       "solver": "svrg",
       "alpha_min": -3,
-      "alpha_max": 2,
+      "alpha_max": 1,
       "n_alpha": 15,
       "batch": [1e-5, 5e-5],
       "params": {
-        "n_epochs": 20,
-        "measure_freq": 100
+        "n_epochs": 10,
+        "measure_freq": 200
       }
     },
     "saga": {
       "solver": "saga",
       "alpha_min": -5,
-      "alpha_max": 1,
+      "alpha_max": 0,
       "n_alpha": 15,
       "batch": [],
       "params": {
-        "n_epochs": 10,
-        "measure_freq": 100
+        "n_epochs": 5,
+        "measure_freq": 200
       }
     }
   },
