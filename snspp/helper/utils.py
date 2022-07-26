@@ -4,7 +4,7 @@ import warnings
 
 
 # logistic loss gradient norm at zero
-#np.linalg.norm(1/(2*f.N)*A.sum(axis=0))
+#np.linalg.norm(1/(2*f.N)*A.sum(axis=0), np.inf)
 
 ############################################################################################
 ### Stopping criteria
