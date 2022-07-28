@@ -23,7 +23,7 @@
     },
     "svrg": {
       "solver": "svrg",
-      "alpha_min": -3,
+      "alpha_min": -4,
       "alpha_max": 1,
       "n_alpha": 15,
       "batch": [1e-5, 5e-5],
@@ -46,6 +46,6 @@
   },
   "psi_tol": 0.0001,
   "y_max": 30,
-  "n_rep": 2,
+  "n_rep": 5,
   "start": 0
 }
