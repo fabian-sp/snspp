@@ -63,17 +63,17 @@ def create_matrix(N, n, dist = 'ortho', kappa = 1.):
     B : array of shape (N,n)
     """
     if dist == 'ortho':
-        if N >= n:
-            Q = ortho_group.rvs(N)
-            d = np.linspace(kappa, 1, n)
-            D = np.diag(d)
-            B = Q[:,:n]@D
-        else:
-            B = 2*np.random.rand(N,n)-1
-            U,S,Vh = np.linalg.svd(B, full_matrices = False)
-            d = np.linspace(kappa, 1, min(N,n))
-            B = U@np.diag(d)@Vh
-                
+        # if N >= n:
+        #     Q = ortho_group.rvs(N)
+        #     d = np.linspace(kappa, 1, n)
+        #     D = np.diag(d)
+        #     B = Q[:,:n]@D
+        # else:
+        B = 2*np.random.rand(N,n)-1
+        U,S,Vh = np.linalg.svd(B, full_matrices = False)
+        d = np.linspace(kappa, 1, min(N,n))
+        B = U@np.diag(d)@Vh
+            
     elif dist == 'unif':
         B = np.random.rand(N,n)*2 - 1
     else:
@@ -365,8 +365,7 @@ def get_sido(lambda1 = 0.02, train_size = .8, scale = False, path_prefix = '../'
     assert np.all(np.isin(y,[-1,1]))
     
     X = X.astype('float64')
-    y = y.astype('float64')
-    
+    y = y.astype('float64')    
     np.nan_to_num(X, copy = False)
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
@@ -425,15 +424,59 @@ def get_higgs(lambda1 = 0.01, train_size = .8, scale = True, path_prefix = '../'
         
     return f, phi, A, X_train, y_train, X_test, y_test
 
+def get_poly(name = 'madelon', lambda1 = 0.01, train_size = None, scale = True, poly = 0, path_prefix = '../'):
+    # using libsvm dataset but with polynomial feature expansion
+    
+    warnings.warn("Doing polynomial expansion might be memory intensive.")   
+    X, y = load_svmlight_file(path_prefix + 'data/libsvm/' + libsvm_dict[name])
+    
+    assert np.all(np.isin(y,[-1,1]))
+    
+    # to dense (madelon is dense)
+    X = X.toarray()
+    y = y.astype('float64')    
+    np.nan_to_num(X, copy = False)
+    
+    # train/test
+    if train_size is not None:
+        X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+                                                        random_state = 1234)
+    else:
+        X_train = X
+        y_train = y
+        X_test = None
+        y_test = None
+    
+    # scaling
+    if scale:
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        if X_test is not None:
+            X_test = scaler.transform(X_test)
+    
+    # polynomial expansion (after scaling)
+    if poly > 0:
+        X_train = poly_expand(X_train, d=poly)
+        if train_size is not None:
+            X_test = poly_expand(X_test, d=poly)
+            
+    A = X_train * y_train.reshape(-1,1) # logistic loss has a_i*b_i
+    phi = L1Norm(lambda1) 
+    f = logistic_loss(y_train)
+            
+    return f, phi, A, X_train, y_train, X_test, y_test
+
 ##############################
 ## LIBSVM
 
-libsvm_dict = {'rcv1': 'rcv1_train.binary', 'w8a': 'w8a', 'fourclass': 'fourclass_scale',
+libsvm_dict = {'rcv1': 'rcv1_train.binary', 'w8a': 'w8a', 
+               'fourclass': 'fourclass_scale',
                'covtype': 'covtype.libsvm.binary.scale',
                'news20': 'news20.binary',
+               'madelon': 'madelon',
                'ijcnn': 'ijcnn1.tr'}
 
-def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../', poly=0):
+def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix = '../', dense = False):
     
     X, y = load_svmlight_file(path_prefix + 'data/libsvm/' + libsvm_dict[name])
     
@@ -444,9 +487,10 @@ def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix
         
     y = y.astype('float64')
     
-    # polynomial feature expansion
-    if poly > 0:
-        X=poly_expand(X,poly)
+    # convert to dense (not recommended)
+    if dense:
+        warnings.warn("Converting LIBSVM file to dense format. Not recommended if data is very sparse.")
+        X = X.toarray()
     
     if train_size is not None:
         X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
@@ -457,15 +501,20 @@ def get_libsvm(name, lambda1 = 0.01, train_size = .8, scale = False, path_prefix
         X_test = None
         y_test = None
         
-    # is often already scaled from -1 to 1 
-    if scale:
+    # is often already scaled from -1 to 1
+    # scaling should only be done when in dense format
+    if scale and dense:
         scaler = StandardScaler()
         X_train = scaler.fit_transform(X_train)
         
         if X_test is not None:
             X_test = scaler.transform(X_test)
     
-    A = X_train.multiply(y_train.reshape(-1,1)).tocsr() # logistic loss has a_i*b_i
+    if not dense:
+        A = X_train.multiply(y_train.reshape(-1,1)).tocsr() # logistic loss has a_i*b_i
+    else:
+        A = X_train * y_train.reshape(-1,1)
+        
     phi = L1Norm(lambda1) 
     f = logistic_loss(y_train)
     
