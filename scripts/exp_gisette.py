@@ -73,9 +73,6 @@ params_adagrad = {'n_epochs' : 170, 'batch_size': 240, 'alpha': 0.028}
 params_snspp = {'max_iter' : 100, 'batch_size': 400, 'sample_style': 'fast_increasing', 'alpha' : 7.,\
           "reduce_variance": True}
 
-#params_tuner(f, phi, A, solver = "saga", alpha_range = np.linspace(4,8, 10))
-#params_tuner(f, phi, A, solver = "svrg", alpha_range = np.linspace(50, 80, 8), batch_range = np.array([50]))
-#params_tuner(f, phi, A, solver = "svrg", alpha_range = np.linspace(100, 400, 8), batch_range = np.array([300, 400]))
 #params_tuner(f, phi, A, solver = "adagrad", batch_range = np.array([50, 250, 500]))
 #params_tuner(f, phi, A, solver = "snspp", alpha_range = np.linspace(4,9, 10), batch_range = np.array([200, 400]))
 
