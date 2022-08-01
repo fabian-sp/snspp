@@ -5,8 +5,8 @@ from ..helper.utils import compute_batch_gradient_table, compute_xi_inner,\
                             stop_scikit_saga, derive_L
 
 from .sgd import sgd_loop
-from .sparse.sparse_utils import solve_with_tick                         
-from .sparse.prox_gd import sparse_saga_loop, sparse_svrg_loop
+from .sparse.sparse_utils import solve_with_tick, create_csr                         
+from .sparse.prox_gd import sparse_svrg_epoch, sparse_saga_epoch
 
 import numpy as np                           
 import time
@@ -132,32 +132,24 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     #########################################################
     start1 = time.time()
     
-    if not sparse_format:
-        if solver == 'saga':
-            # run SAGA with batch size 1
-            x_t, x_hist, runtime, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['reg'], params['measure_freq'])     
-        #elif solver == 'batch-saga':
-        #    x_t, x_hist, runtime, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['batch_size'])
-        elif solver == 'svrg':
-            x_t, x_hist, runtime, step_sizes, eta  = svrg_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter, params['measure_freq'])
-        elif solver == 'adagrad':
-            x_t, x_hist, runtime, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, alpha, params['delta'] , params['n_epochs'], params['batch_size'])
-        elif solver == 'sgd':
-            x_t, x_hist, runtime, step_sizes, eta = sgd_loop(f, phi, x_t, A, N, tol, alpha, params['beta'], params['n_epochs'], params['batch_size'])
-        else:
-            raise NotImplementedError("Not a known solver option!")
-    
-    # sparse solvers
+    if solver == 'saga':
+        # run SAGA with batch size 1
+        x_t, x_hist, runtime, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['reg'], params['measure_freq'], sparse_format)     
+    #elif solver == 'batch-saga':
+    #    x_t, x_hist, runtime, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['batch_size'])
+    elif solver == 'svrg':
+        x_t, x_hist, runtime, step_sizes, eta  = svrg_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter, params['measure_freq'], sparse_format)
+    elif solver == 'adagrad':
+        assert sparse_format, "Adagrad currently only in dense format"
+        x_t, x_hist, runtime, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, alpha, params['delta'] , params['n_epochs'], params['batch_size'])
+    elif solver == 'sgd':
+        x_t, x_hist, runtime, step_sizes, eta = sgd_loop(f, phi, x_t, A, N, tol, alpha, params['beta'], params['n_epochs'], params['batch_size'])
+    elif solver == 'tick-svrg':
+        assert sparse_format
+        x_t, x_hist, runtime, step_sizes, eta  = solve_with_tick(f, phi, A, alpha, params['n_epochs'], tol, verbose)
     else:
-        if solver == 'saga':
-            x_t, x_hist, runtime, step_sizes, eta  = sparse_saga_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['reg'], params['measure_freq'])
-        elif solver == 'svrg':
-            x_t, x_hist, runtime, step_sizes, eta  = sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter, params['measure_freq'])
-        elif solver == 'tick-svrg':
-            x_t, x_hist, runtime, step_sizes, eta  = solve_with_tick(f, phi, A, alpha, params['n_epochs'], tol, verbose)
-        else:
-            raise NotImplementedError("Not a known solver option!") 
-            
+        raise NotImplementedError("Not a known solver option!")
+    
     end1 = time.time()
     
     if verbose:
@@ -197,13 +189,17 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     return x_t, info
 
 #%%
-def saga_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, reg, measure_freq):
+def saga_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, reg, measure_freq, sparse_format):
     
     # initialize for diagnostics
     runtime = List()
     x_hist = List()
     step_sizes = List()
     
+    # sparse format
+    if sparse_format:
+        A_csr = create_csr(A)
+        
     eta = 1e10
     x_old = x_t
     
@@ -221,9 +217,14 @@ def saga_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, reg, measure_freq):
         if eta <= tol:
             break
         
-        start = time.time()
-        x_t, g_sum = saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_length)
-        end = time.time()
+        if sparse_format:
+            start = time.time()
+            x_t, g_sum = sparse_saga_epoch(f, phi, x_t, A_csr, N, alpha, gradients, reg, g_sum, loop_length)
+            end = time.time()
+        else:    
+            start = time.time()
+            x_t, g_sum = saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_length)
+            end = time.time()
     
         if iter_t == 0:
             runtime.append(end-start+e0-s0)
@@ -324,12 +325,16 @@ def adagrad_epoch(f, phi, x_t, A, N, alpha, delta, epoch_iter, batch_size, G):
 
 #%%
 
-def svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter, measure_freq):
+def svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter, measure_freq, sparse_format):
     
     # initialize for diagnostics
     x_hist = List()
     runtime = List()
     step_sizes = List()
+    
+    # sparse format
+    if sparse_format:
+        A_csr = create_csr(A)
     
     eta = 1e10
     x_old = x_t
@@ -350,11 +355,17 @@ def svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter, measu
         e0 = time.time()
 
         # split up one inner lop in measure_freq parts        
-        for j in np.arange(measure_freq):        
-            s1 = time.time()
-            x_t = svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, loop_length, xis, full_g)
-            e1 = time.time()
+        for j in np.arange(measure_freq):   
             
+            if sparse_format:
+                s1 = time.time()
+                x_t = sparse_svrg_epoch(f, phi, x_t, A_csr, N, alpha, batch_size, loop_length, xis, full_g)
+                e1 = time.time()
+            else:    
+                s1 = time.time()
+                x_t = svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, loop_length, xis, full_g)
+                e1 = time.time()
+                
             # store
             x_hist.append(x_t)    
             if j == 0:

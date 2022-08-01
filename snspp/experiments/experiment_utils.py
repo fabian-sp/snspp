@@ -153,8 +153,8 @@ def params_tuner(f, phi, A, solver = 'adagrad', alpha_range = None, batch_range 
                     this_rt += Q.info["runtime"]
                     this_obj += Q.info["objective"]
                 except:
-                    this_rt += np.nan*np.zeros(n_iter)
-                    this_obj += np.nan*np.zeros(n_iter)
+                    this_rt += np.nan*np.zeros(n_iter+1)
+                    this_obj += np.nan*np.zeros(n_iter+1)
                     
             # store
             this_rt *= 1/n_rep
