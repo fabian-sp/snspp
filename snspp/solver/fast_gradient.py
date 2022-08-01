@@ -140,7 +140,7 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     elif solver == 'svrg':
         x_t, x_hist, runtime, step_sizes, eta  = svrg_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter, params['measure_freq'], sparse_format)
     elif solver == 'adagrad':
-        assert sparse_format, "Adagrad currently only in dense format"
+        assert not sparse_format, "Adagrad currently only in dense format"
         x_t, x_hist, runtime, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, alpha, params['delta'] , params['n_epochs'], params['batch_size'])
     elif solver == 'sgd':
         x_t, x_hist, runtime, step_sizes, eta = sgd_loop(f, phi, x_t, A, N, tol, alpha, params['beta'], params['n_epochs'], params['batch_size'])
