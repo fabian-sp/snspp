@@ -75,8 +75,6 @@ if l1 == 1e-3:
     params_snspp = {'max_iter' : 320, 'batch_size': 120, 'sample_style': 'constant', 'alpha' : 2.5 ,\
                     "reduce_variance": True}
         
-    # params_tuner(f, phi, A, solver = "saga", alpha_range = np.linspace(5,12,10), n_iter = 25, x0 = x0)
-    # params_tuner(f, phi, A, solver = "svrg", alpha_range = np.linspace(150, 400, 8), batch_range = np.array([50, 100]), n_iter = 20, x0 = x0)
     # params_tuner(f, phi, A, solver = "adagrad", batch_range = np.array([20, 200, 500]), x0 = x0)
     # params_tuner(f, phi, A, solver = "snspp", alpha_range = np.linspace(1., 4., 8), batch_range = np.array([50, 100]), n_iter = 200, x0 = x0)
 
@@ -91,8 +89,6 @@ elif l1 == 1e-2:
     params_snspp = {'max_iter' : 400, 'batch_size': 50, 'sample_style': 'constant', 'alpha' : 12.,\
                     "reduce_variance": True}
 
-    # params_tuner(f, phi, A, solver = "saga", alpha_range = np.linspace(5,15,10), n_iter = 20, x0 = x0)
-    # params_tuner(f, phi, A, solver = "svrg", alpha_range = np.linspace(400, 1000, 8), batch_range = np.array([50, 200]), n_iter = 30, x0 = x0)
     # params_tuner(f, phi, A, solver = "adagrad", batch_range = np.array([20, 200, 500]), x0 = x0)
     # params_tuner(f, phi, A, solver = "snspp", alpha_range = np.linspace(1,10,8), batch_range = np.array([50, 200]), n_iter = 150, x0 = x0)
     

@@ -27,15 +27,7 @@ from snspp.experiments.container import Experiment
 
 #%% load data
 
-if setup == 1:
-
-    l1 = 0.001
-    v = 1.
-    poly = 0
-    n = 5000; N = 6000; k = 20
-    noise = 0.1
-    
-elif setup == 2:
+if setup == 2:
     l1 = 0.001
     v = 1.
     poly = 0
@@ -60,13 +52,7 @@ initialize_solvers(f, phi, A)
 
 #%% parameter setup
 
-if setup == 1:
-    params_saga = {'n_epochs' : 150, 'alpha' : 17.}
-    params_svrg = {'n_epochs' : 150, 'batch_size': 20, 'alpha': 500.}
-    params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.07}
-    params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'constant', 'alpha' : 5., 'reduce_variance': True}
-
-elif setup == 2:
+if setup == 2:
     params_saga = {'n_epochs' : 50, 'alpha' : 0.00498}
     params_svrg = {'n_epochs' : 70, 'batch_size': 20, 'alpha': 0.19950}
     params_adagrad = {'n_epochs' : 150, 'batch_size': 20, 'alpha': 0.03}   
@@ -79,12 +65,6 @@ elif setup == 3:
     params_snspp = {'max_iter' : 250, 'batch_size': 10, 'sample_style': 'constant', 'alpha' : 12.5, 'reduce_variance': True}
 
 
-
-#params_tuner(f, phi, A, solver = "saga", alpha_range = np.linspace(2,10, 10), n_iter = 50)
-#params_tuner(f, phi, A, solver = "svrg", alpha_range = np.linspace(500, 1500, 10), batch_range = np.array([10,20]), n_iter = 150)
-#params_tuner(f, phi, A, solver = "svrg", alpha_range = np.linspace(50, 150, 10), batch_range = np.array([20,200]), n_iter = 70)
-
-#params_tuner(f, phi, A, solver = "adagrad", alpha_range = np.logspace(-3,0.5,8), batch_range = np.array([20, 50, 200]), n_iter = 80)
 #params_tuner(f, phi, A, solver = "snspp", alpha_range = np.linspace(1,10,10), batch_range = np.array([20,200]), n_iter = 100)
 
 #%% solve with SAGA
