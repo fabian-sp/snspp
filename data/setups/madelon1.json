@@ -43,6 +43,7 @@
     }
   },
   "psi_tol": 0.0001,
+  "max_iter_star": 500,
   "n_rep": 2,
   "start": 0
 }

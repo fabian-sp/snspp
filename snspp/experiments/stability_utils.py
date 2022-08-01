@@ -46,7 +46,7 @@ def create_instance(setup):
                                                      scale=True, poly=setup['instance']['poly'])
     
     elif setup['instance']['dataset'] in ["rcv1", "covtype"]:
-        f, phi, A, X_train, y_train, _, _ = get_libsvm(name = setup['instance']['dataset'], lambda1 = setup['instance']['l1'], train_size=None)
+        f, phi, A, X_train, y_train, _, _ = get_libsvm(name = setup['instance']['dataset'], lambda1 = setup['instance']['l1'], train_size=0.8)
         
     
     # IMPORTANT: Initialize numba
@@ -56,18 +56,20 @@ def create_instance(setup):
 
 def compute_psi_star(setup, f, phi, A, X_train, y_train):
     
+    _max_iter = setup.get("max_iter_star", 200)
+    
     if setup['instance']['loss'] == "logistic":
         sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-20, \
-                            solver = 'saga', max_iter = 200, verbose = 1)
+                            solver = 'saga', max_iter = _max_iter, verbose = 1)
         sk.fit(X_train, y_train)
         xsol = sk.coef_.copy().squeeze()
     elif setup['instance']['loss'] == "squared":
-        sk = Lasso(alpha = phi.l1/2, fit_intercept = False, tol = 1e-20, selection = 'cyclic', max_iter = 1e5)
+        sk = Lasso(alpha = phi.l1/2, fit_intercept = False, tol = 1e-20, selection = 'cyclic', max_iter = _max_iter)
         sk.fit(X_train, y_train)
         xsol = sk.coef_.copy().squeeze()
         
     elif setup['instance']['loss'] == "tstudent":
-        orP = problem(f, phi, A, tol = 1e-20, params = {'n_epochs': 200}, verbose = False, measure = False)
+        orP = problem(f, phi, A, tol = 1e-20, params = {'n_epochs': _max_iter}, verbose = False, measure = False)
         orP.solve(solver = 'saga')
         xsol = orP.x.copy()
         
