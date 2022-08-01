@@ -95,9 +95,6 @@ P = problem(f, phi, A, tol = 1e-9, params = params_snspp, verbose = True, measur
 
 P.solve(solver = 'snspp')
 
-#fig = P.plot_subproblem(M=20)
-#fig.savefig(f'../data/plots/exp_gisette/subprob.pdf', dpi = 300)
-
 #%%
 
 ###########################################################################
