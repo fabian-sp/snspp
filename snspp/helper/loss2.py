@@ -8,12 +8,10 @@ spec_log = [
     ('name', typeof('abc')),
     ('convex', typeof(True)),
     ('b', float64[:]),               
-    ('A', float64[:,:]),
     ('N', int64), 
     ('m', int64[:]),
 ]
         
-
 @jitclass(spec_log)
 class squared_hinge_loss:
     """ 
@@ -38,23 +36,21 @@ class squared_hinge_loss:
     
     """
     
-    def __init__(self, A, b):
+    def __init__(self, b):
         self.name = 'squared_hinge'
         self.convex = True
         
         self.b = b
-        self.A = A * np.ascontiguousarray(self.b).reshape((-1,1))
         self.N = len(self.b)
         self.m = np.repeat(1,self.N)
         
         return
     
-    def eval(self, x):
+    def eval(self, z):
         """
         Method for evaluating :math:`f(x)`.
         The array ``x`` should be the same type as A (we use float64).
         """
-        z = self.A@x
         y = (np.maximum(0,1-z)**2).sum()
          
         return (1/self.N)*y
@@ -65,7 +61,7 @@ class squared_hinge_loss:
         """
         return np.maximum(0,1-x)**2
     
-    def g(self, x, i):
+    def g(self, x, S):
         """
         Method for evaluating :math:`f_i'(x)`.
         """
@@ -111,8 +107,7 @@ class squared_hinge_loss:
 spec_log = [
     ('name', typeof('abc')),
     ('convex', typeof(True)),
-    ('b', float64[:]),               
-    ('A', float64[:,:]),
+    ('b', float64[:]), 
     ('mu', float64[:]),
     ('N', int64), 
     ('m', int64[:]),
@@ -146,24 +141,23 @@ class huber_loss:
         self.convex = True
         
         self.b = b
-        self.A = A * np.ascontiguousarray(self.b).reshape((-1,1))
         self.mu = mu
         self.N = len(self.b)
         self.m = np.repeat(1,self.N)
         
         return
     
-    def eval(self, x):
+    def eval(self, z):
         """
         Method for evaluating :math:`f(x)`.
         The array ``x`` should be the same type as A (we use float64).
         """
-        z = self.A@x
-        y = 0
-        for i in np.arange(self.N):
-            y += self.f(z[i],i)
-         
-        return (1/self.N)*y
+        
+        ixx = np.abs(z-self.b) <= self.mu
+        
+        t1 = ixx * (z-self.b)**2/(2*self.mu)
+        t2 = (1-ixx) * np.abs(z-self.b) - self.mu/2
+        return (1/self.N) * np.sum(t1+t2)
 
     def f(self, x, i):
         """
@@ -175,12 +169,12 @@ class huber_loss:
             y = np.abs(x-self.b[i]) - self.mu[i]/2
         return y
     
-    def g(self, x, i):
+    def g(self, x, S):
         """
         Method for evaluating :math:`f_i'(x)`.
         """
-        ixx = np.abs(x-self.b[i]) <= self.mu[i]
-        return (1-ixx)*np.sign(x-self.b[i])  + ixx*((x-self.b[i])/self.mu[i])
+        ixx = np.abs(x-self.b[S]) <= self.mu[S]
+        return (1-ixx)*np.sign(x-self.b[S])  + ixx*((x-self.b[S])/self.mu[S])
     
     # these are actually never used (see vectorized versions below instead)
     def fstar(self, X, i):
@@ -223,8 +217,7 @@ class huber_loss:
 spec_log = [
     ('name', typeof('abc')),
     ('convex', typeof(True)),
-    ('b', float64[:]),               
-    ('A', float64[:,:]),
+    ('b', float64[:]), 
     ('mu', float64[:]),
     ('N', int64), 
     ('m', int64[:]),
@@ -258,24 +251,19 @@ class pseudohuber_loss:
         self.convex = True
         
         self.b = b
-        self.A = A * np.ascontiguousarray(self.b).reshape((-1,1))
         self.mu = mu
         self.N = len(self.b)
         self.m = np.repeat(1,self.N)
         
         return
     
-    def eval(self, x):
+    def eval(self, z):
         """
         Method for evaluating :math:`f(x)`.
         The array ``x`` should be the same type as A (we use float64).
         """
-        z = self.A@x
-        y = 0
-        for i in np.arange(self.N):
-            y += self.f(z[i],i)
-         
-        return (1/self.N)*y
+        y = np.sqrt(self.mu**2 + (z-self.b)**2) - self.mu
+        return (1/self.N) * y.sum()
 
     def f(self, x, i):
         """
@@ -284,11 +272,11 @@ class pseudohuber_loss:
         y = np.sqrt(self.mu[i]**2 + (x-self.b[i])**2) - self.mu[i]
         return y
     
-    def g(self, x, i):
+    def g(self, x, S):
         """
         Method for evaluating :math:`f_i'(x)`.
         """
-        y = (x-self.b[i])/np.sqrt(self.mu[i]**2 + (x-self.b[i])**2)
+        y = (x-self.b[S])/np.sqrt(self.mu[S]**2 + (x-self.b[S])**2)
         return y
         
     def fstar_vec(self, x, S):

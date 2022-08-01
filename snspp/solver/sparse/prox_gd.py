@@ -9,7 +9,7 @@ import warnings
 from numba.typed import List
 from numba import njit
 
-from .sparse_utils import sparse_batch_gradient, compute_AS, create_csr, sparse_gradient_table
+from .sparse_utils import compute_AS, create_csr, sparse_gradient_table
 
 from ...helper.utils import stop_scikit_saga, compute_xi_inner
 
@@ -39,7 +39,7 @@ def sparse_saga_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, reg, measure_freq)
     x_old = x_t
     
     s0 = time.time()
-    gradients = compute_xi_inner(f, A@x_t).squeeze()
+    gradients = compute_xi_inner(f, A@x_t)
     g_sum = (1/N)*(A.T @ gradients)
     e0 = time.time()
     
@@ -119,7 +119,7 @@ def sparse_svrg_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, batch_size, m_iter
             break
         
         s0 = time.time()
-        full_g = compute_xi_inner(f, A@x_t).squeeze()
+        full_g = compute_xi_inner(f, A@x_t)
         g_tilde = (1/N) * (A.T@full_g)
         e0 = time.time()
         
@@ -154,7 +154,7 @@ def sparse_svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, loop_length, full_g,
         
         # compute the gradient
         A_S = compute_AS(A, S)
-        v_t = sparse_batch_gradient(f, A_S@x_t, S)
+        v_t = f.g(A_S@x_t, S)
         
         g_S = (1/batch_size) * A_S.T @ (v_t - full_g[S])
 

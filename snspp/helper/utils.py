@@ -4,7 +4,7 @@ import warnings
 
 
 # logistic loss gradient norm at zero
-#np.linalg.norm(1/(2*f.N)*A.sum(axis=0))
+#np.linalg.norm(1/(2*f.N)*A.sum(axis=0), np.inf)
 
 ############################################################################################
 ### Stopping criteria
@@ -59,7 +59,7 @@ def compute_full_xi(f, z, is_easy = False):
     if not is_easy: return dictionary where each value is array of size (m_i,)
     """
     if is_easy:
-        xi = compute_xi_inner(f, z).squeeze() 
+        xi = compute_xi_inner(f, z)
         
     else:
         # this option is only used for the very general case of unequal m
@@ -75,13 +75,7 @@ def compute_full_xi(f, z, is_easy = False):
 
 @njit()
 def compute_xi_inner(f, z):
-    
-    vals = np.zeros((f.N,1))
-    
-    for i in np.arange(f.N):
-        vals[i,:] = f.g(z[i], i)
-    
-    return vals
+    return f.g(z, np.arange(f.N))
             
 
 # old
