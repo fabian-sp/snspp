@@ -165,6 +165,7 @@ for k in range(K):
     P_k = problem(f, phi, A, tol = 1e-20, params = params_snspp, verbose = False, measure = True)
     P_k.solve(solver = 'snspp')
     
+    del P_k.info['xi_hist'] #memory heavy and not needed here
     Cont.store(P_k, k)
     err_k = eval_test_set(X = P_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
     Cont.store_by_key(res = err_k, label = P_k.solver, k = k)
@@ -184,7 +185,7 @@ Cont.save_to_disk(path = '../data/output/')
 # plotting
 ############################################################################
 
-xlim = (0, 0.8)
+xlim = (0, 0.7)
 
 #%% objective plot
 
@@ -249,7 +250,7 @@ Q2_k.plot_path(ax = ax[1,0])
 P_k.plot_path(ax = ax[1,1], ylabel = False)
 
 for a in ax.ravel():
-    a.set_ylim(-.5,.3)
+    a.set_ylim(-2., 2.5)
     
 plt.subplots_adjust(hspace = 0.33)
 
