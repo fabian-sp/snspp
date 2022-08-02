@@ -57,13 +57,13 @@ initialize_solvers(f, phi, A)
 
 #%% params
 
-params_saga = {'n_epochs' : 20, 'alpha': 0.01}
+params_saga = {'n_epochs' : 20, 'alpha': 0.01, 'measure_freq': 10}
 
-params_svrg = {'n_epochs' : 20, 'batch_size': 60, 'alpha': 0.37}
+params_svrg = {'n_epochs' : 10, 'batch_size': 50, 'alpha': 0.35, 'measure_freq': 10}
 
-params_adagrad = {'n_epochs' : 100, 'batch_size': 240, 'alpha': 0.028}
+params_adagrad = {'n_epochs' : 100, 'batch_size': 250, 'alpha': 0.1}
 
-params_snspp = {'max_iter' : 100, 'batch_size': 60, 'sample_style': 'constant', 'alpha' : 50.,\
+params_snspp = {'max_iter' : 200, 'batch_size': 50, 'sample_style': 'constant', 'alpha' : 45.,\
                 "reduce_variance": True}
 
 #params_tuner(f, phi, A, solver = "adagrad", batch_range = np.array([50, 250, 500]))
@@ -110,7 +110,7 @@ names = ['test_loss', 'test_accuracy']
 
 Cont = Experiment(name = 'exp_covtype')
 
-Cont.params = {'saga':params_saga, 'svrg': params_svrg, 'adagrad': params_adagrad, 'snspp': params_snspp}
+Cont.params = {'saga': params_saga, 'svrg': params_svrg, 'adagrad': params_adagrad, 'snspp': params_snspp}
 Cont.psi_star = psi_star
 
 #Cont.load_from_disk(path='../data/output/')
@@ -120,7 +120,7 @@ Cont.psi_star = psi_star
 allQ = list()
 for k in range(K):
     
-    Q_k = problem(f, phi, A, tol = 1e-9, params = params_saga, verbose = True, measure = True)
+    Q_k = problem(f, phi, A, tol = 1e-20, params = params_saga, verbose = True, measure = True)
     Q_k.solve(solver = 'saga')
     
     Cont.store(Q_k, k)
@@ -134,7 +134,7 @@ for k in range(K):
 allQ1 = list()
 for k in range(K):
     
-    Q1_k = problem(f, phi, A, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
+    Q1_k = problem(f, phi, A, tol = 1e-20, params = params_adagrad, verbose = True, measure = True)
     Q1_k.solve(solver = 'adagrad')
     
     Cont.store(Q1_k, k)
@@ -148,7 +148,7 @@ for k in range(K):
 allQ2 = list()
 for k in range(K):
     
-    Q2_k = problem(f, phi, A, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
+    Q2_k = problem(f, phi, A, tol = 0., params = params_svrg, verbose = True, measure = True)
     Q2_k.solve(solver = 'svrg')
     
     Cont.store(Q2_k, k)
@@ -162,7 +162,7 @@ for k in range(K):
 allP = list()
 for k in range(K):
     
-    P_k = problem(f, phi, A, tol = 1e-9, params = params_snspp, verbose = False, measure = True)
+    P_k = problem(f, phi, A, tol = 1e-20, params = params_snspp, verbose = False, measure = True)
     P_k.solve(solver = 'snspp')
     
     Cont.store(P_k, k)
@@ -184,17 +184,17 @@ Cont.save_to_disk(path = '../data/output/')
 # plotting
 ############################################################################
 
-xlim = (0, 4)
+xlim = (0, 0.8)
 
 #%% objective plot
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
 
-#Q.plot_objective(ax = ax, **kwargs)
-#Q1.plot_objective(ax = ax, **kwargs)
-#Q2.plot_objective(ax = ax, **kwargs)
-#P.plot_objective(ax = ax, **kwargs)
+# Q.plot_objective(ax = ax, **kwargs)
+# Q1.plot_objective(ax = ax, **kwargs)
+# Q2.plot_objective(ax = ax, **kwargs)
+# P.plot_objective(ax = ax, **kwargs)
 
 Cont.plot_objective(ax = ax, median = False, **kwargs) 
 
@@ -215,7 +215,7 @@ kwargs = {"log_scale": False, "lw": 1., "markersize": 1.5, 'ls': '-'}
 Cont.plot_error(error_key = 'test_loss', ax = ax, median = True, ylabel = 'Test loss', **kwargs) 
 
 ax.set_xlim(xlim)
-ax.set_ylim(0.3, 0.4)
+ax.set_ylim(0.58,)
 ax.legend(fontsize = 10)
 
 fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
@@ -231,7 +231,7 @@ kwargs = {"log_scale": False, "lw": 1., "markersize": 1.5, 'ls': '-'}
 Cont.plot_error(error_key = 'test_accuracy', ax = ax, median = True, ylabel = 'Test accuracy', **kwargs) 
 
 ax.set_xlim(xlim)
-ax.set_ylim(0.6, 1.)
+ax.set_ylim(0.58, )
 ax.legend(fontsize = 10)
 
 fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
