@@ -160,3 +160,25 @@ def sparse_svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, loop_length, full_g,
         x_t = phi.prox(w_t, alpha)
         
     return x_t
+
+#%%
+
+@njit()
+def sparse_adagrad_epoch(f, phi, x_t, A, N, alpha, delta, epoch_iter, batch_size, G):
+    for j in np.arange(epoch_iter):
+        # sample
+        S = np.random.randint(low = 0, high = N, size = batch_size)
+        
+        # mini-batch gradient step
+        A_S = compute_AS(A, S)
+        G_t = (1/batch_size) * (A_S.T @ f.g(A_S@x_t, S))
+        G += G_t * G_t
+        
+        L_t = (1/alpha) * (delta + np.sqrt(G))
+        
+        w_t = x_t - (1/L_t) * G_t
+        
+        # compute Adagrad prox step
+        x_t = phi.adagrad_prox(w_t, L_t)
+
+    return x_t, G

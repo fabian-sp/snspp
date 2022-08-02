@@ -18,6 +18,7 @@ n = 20
 k = 5
 l1 = 1e-3
 
+np.random.seed(123)
 
 def create_test_instance(prob = 'lasso'):
     if prob == 'lasso':
@@ -36,7 +37,7 @@ def create_test_instance(prob = 'lasso'):
 
 def template_test(f, phi, A, x_sk, params, solver, assert_objective = True):
     
-    Q = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)
+    Q = problem(f, phi, A, tol = 1e-20, params = params, verbose = False, measure = True)
     Q.solve(solver = solver)
     
     if assert_objective:
@@ -48,7 +49,7 @@ def template_test(f, phi, A, x_sk, params, solver, assert_objective = True):
 
 #%%
 def test_saga_lasso():
-    params = {'n_epochs' : 1000, 'alpha': 1e-4}
+    params = {'n_epochs' : 2000, 'alpha': 1e-2}
     
     f, phi, A, x_sk = create_test_instance(prob = 'lasso')
     template_test(f, phi, A, x_sk, params, 'saga')
@@ -64,7 +65,7 @@ def test_adagrad_lasso():
     return
 
 def test_svrg_lasso():
-    params = {'n_epochs' : 1000, 'batch_size': 2, 'alpha': 1e-3}
+    params = {'n_epochs' : 2000, 'batch_size': 10, 'alpha': 1e-2}
     
     f, phi, A, x_sk = create_test_instance(prob = 'lasso')
     template_test(f, phi, A, x_sk, params, 'svrg')
@@ -82,7 +83,7 @@ def test_sgd_lasso():
 #%%
 
 def test_saga_logreg():
-    params = {'n_epochs' : 1000, 'alpha': 1e-3}
+    params = {'n_epochs' : 2000, 'alpha': 1e-2}
     
     f, phi, A, x_sk = create_test_instance(prob = 'logreg')
     template_test(f, phi, A, x_sk, params, 'saga')
@@ -98,7 +99,7 @@ def test_adagrad_logreg():
     return
 
 def test_svrg_logreg():
-    params = {'n_epochs' : 1000, 'batch_size': 5, 'alpha': 5e-3}
+    params = {'n_epochs' : 2000, 'batch_size': 5, 'alpha': 1e-2}
     
     f, phi, A, x_sk = create_test_instance(prob = 'logreg')
     template_test(f, phi, A, x_sk, params, 'svrg')
@@ -124,7 +125,7 @@ def test_snspp_lasso():
     return
 
 def test_snspp_logreg():
-    params = {'max_iter' : 2000, 'alpha': 1., 'reduce_variance': True}
+    params = {'max_iter' : 2000, 'alpha': 2., 'reduce_variance': True}
     
     f, phi, A, x_sk = create_test_instance(prob = 'logreg')
     P = template_test(f, phi, A, x_sk, params, 'snspp')

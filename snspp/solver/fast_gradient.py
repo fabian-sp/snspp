@@ -6,7 +6,7 @@ from ..helper.utils import compute_batch_gradient_table, compute_xi_inner,\
 
 from .sgd import sgd_loop
 from .sparse.sparse_utils import solve_with_tick, create_csr                         
-from .sparse.prox_gd import sparse_svrg_epoch, sparse_saga_epoch
+from .sparse.prox_gd import sparse_svrg_epoch, sparse_saga_epoch, sparse_adagrad_epoch
 
 import numpy as np                           
 import time
@@ -140,8 +140,7 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     elif solver == 'svrg':
         x_t, x_hist, runtime, step_sizes, eta  = svrg_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter, params['measure_freq'], sparse_format)
     elif solver == 'adagrad':
-        assert not sparse_format, "Adagrad currently only in dense format"
-        x_t, x_hist, runtime, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, alpha, params['delta'] , params['n_epochs'], params['batch_size'])
+        x_t, x_hist, runtime, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, alpha, params['delta'] , params['n_epochs'], params['batch_size'], sparse_format)
     elif solver == 'sgd':
         x_t, x_hist, runtime, step_sizes, eta = sgd_loop(f, phi, x_t, A, N, tol, alpha, params['beta'], params['n_epochs'], params['batch_size'])
     elif solver == 'tick-svrg':
@@ -268,13 +267,17 @@ def saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_length):
 
 #%%
 
-def adagrad_loop(f, phi, x_t, A, N, tol, alpha, delta, n_epochs, batch_size):
+def adagrad_loop(f, phi, x_t, A, N, tol, alpha, delta, n_epochs, batch_size, sparse_format):
     
     # initialize for diagnostics
     x_hist = List()
     runtime = List()
     step_sizes = List()
     
+    # sparse format
+    if sparse_format:
+        A_csr = create_csr(A)
+        
     eta = 1e10
     x_old = x_t
     
@@ -287,10 +290,14 @@ def adagrad_loop(f, phi, x_t, A, N, tol, alpha, delta, n_epochs, batch_size):
         
         if eta <= tol:
             break
-        
-        start = time.time()
-        x_t, G = adagrad_epoch(f, phi, x_t, A, N, alpha, delta, epoch_iter, batch_size, G)
-        end = time.time()
+        if sparse_format:
+            start = time.time()
+            x_t, G = sparse_adagrad_epoch(f, phi, x_t, A_csr, N, alpha, delta, epoch_iter, batch_size, G)
+            end = time.time()
+        else:
+            start = time.time()
+            x_t, G = adagrad_epoch(f, phi, x_t, A, N, alpha, delta, epoch_iter, batch_size, G)
+            end = time.time()
         
         # stop criterion (at end of each epoch)
         eta = stop_scikit_saga(x_t, x_old)
