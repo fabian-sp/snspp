@@ -89,7 +89,8 @@ def compute_x0(setup, f, phi, A, X_train, y_train):
             sk0 = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-8, \
                                      solver = 'saga', max_iter = 1, verbose = 0).fit(X_train, y_train)
             x0 = sk0.coef_.squeeze()
-            
+        
+        # default step size should be identical to scikit (1/3L)
         else:
             Q = problem(f, phi, A, tol = 1e-20, params = {'n_epochs': setup["start"]}, verbose = False, measure = False)
             Q.solve(solver = 'saga')
