@@ -224,8 +224,11 @@ def get_ymax(results, methods):
     ymax = 0.
     for m in methods:
         r = results[m].copy()
-        this_max = r['runtime'][r['converged']].max()
-        ymax = max(ymax, this_max)
+        if not np.any(r['converged']):
+            pass
+        else:
+            this_max = r['runtime'][r['converged']].max()
+            ymax = max(ymax, this_max)
     
     return 1.2*ymax
 

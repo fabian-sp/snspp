@@ -13,7 +13,7 @@
       "n_alpha": 15,
       "batch": [0.01, 0.05],
       "params": {
-        "max_iter": 1500,
+        "max_iter": 2000,
         "sample_style": "constant",
         "reduce_variance": true,
         "measure_freq": 10
@@ -26,7 +26,7 @@
       "n_alpha": 15,
       "batch": [0.01, 0.05],
       "params": {
-        "n_epochs": 100,
+        "n_epochs": 500,
         "measure_freq": 10
       }
     },
@@ -37,13 +37,13 @@
       "n_alpha": 15,
       "batch": [],
       "params": {
-        "n_epochs": 100,
+        "n_epochs": 500,
         "measure_freq": 10
       }
     }
   },
   "psi_tol": 0.0001,
-  "max_iter_star": 2000,
-  "n_rep": 2,
+  "max_iter_star": 2500,
+  "n_rep": 5,
   "start": 0
 }
