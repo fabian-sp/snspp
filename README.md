@@ -1,8 +1,8 @@
 # SNSPP
 
-Code associated with *A semismooth Newton Stochastic Proximal Point algorithm with Variance Reduction* [(see paper)](https://arxiv.org/abs/2204.00406). 
+[![arXiv](https://img.shields.io/badge/arXiv-2011.00898-b31b1b.svg)](https://arxiv.org/abs/2204.00406)
 
-The `SNSPP` method is implemented in [`snspp/solver/spp_solver`](/snspp/solver/spp_solver.py) and references therein.
+`SNSPP` is a semismooth Newton stochastic proximal point method with variance reduction. The `SNSPP` method is implemented in [`snspp/solver/spp_solver`](/snspp/solver/spp_solver.py) and references therein.
 
 
 ## Introduction
