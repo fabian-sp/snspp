@@ -5,10 +5,10 @@ This runs the L1-Logistic Regression experiment on the Gisette dataset.
 For running this, complete the following steps:
 
 1) Download scaled gisette dataset from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary.html#gisette
-2) Copy the extracted files to '../data/libsvm/'
+2) Copy and rename the extracted file to '../data/libsvm/gisette.txt' 
 3) Set the working directory as the parent of this file (i.e. os.chdir('..')) and run
     
-    from snspp.data_generation import prepare_gisette
+    from snspp.helper.data_generation import prepare_gisette
     prepare_gisette(path_prefix = '')
 
 4) You should now see 'data/gisette_X.npy' and 'data/gisette_y.npy'.
@@ -40,7 +40,7 @@ from snspp.experiments.container import Experiment
 from sklearn.linear_model import LogisticRegression
 
 
-f, phi, X_train, y_train, X_test, y_test = get_gisette(lambda1 = 0.05)
+f, phi, A, X_train, y_train, X_test, y_test = get_gisette(lambda1 = 0.05)
 
 
 print("Regularization parameter lambda:", phi.lambda1)
@@ -58,54 +58,47 @@ print(f"Computing time: {end-start} sec")
 
 x_sk = sk.coef_.copy().squeeze()
 
-psi_star = f.eval(x_sk) + phi.eval(x_sk)
+psi_star = f.eval(A@x_sk) + phi.eval(x_sk)
 print("psi(x*) = ", psi_star)
-initialize_solvers(f, phi)
+initialize_solvers(f, phi, A)
 
 #%% params
 
-params_saga = {'n_epochs' : 50, 'alpha': 0.00152}
+params_saga = {'n_epochs' : 80, 'alpha': 0.00120}
 
-params_svrg = {'n_epochs' : 40, 'batch_size': 50, 'alpha': 0.01664}
+params_svrg = {'n_epochs' : 80, 'batch_size': 50, 'alpha': 0.01664}
 
 params_adagrad = {'n_epochs' : 170, 'batch_size': 240, 'alpha': 0.028}
 
 params_snspp = {'max_iter' : 100, 'batch_size': 400, 'sample_style': 'fast_increasing', 'alpha' : 7.,\
           "reduce_variance": True}
 
-#params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(4,8, 10))
-#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(50, 80, 8), batch_range = np.array([50]))
-#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(100, 400, 8), batch_range = np.array([300, 400]))
-#params_tuner(f, phi, solver = "adagrad", batch_range = np.array([50, 250, 500]))
-#params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(4,9, 10), batch_range = np.array([200, 400]))
+#params_tuner(f, phi, A, solver = "adagrad", batch_range = np.array([50, 250, 500]))
+#params_tuner(f, phi, A, solver = "snspp", alpha_range = np.linspace(4,9, 10), batch_range = np.array([200, 400]))
 
 #%% solve with SAGA
 
-Q = problem(f, phi, tol = 1e-9, params = params_saga, verbose = True, measure = True)
+Q = problem(f, phi, A, tol = 1e-9, params = params_saga, verbose = True, measure = True)
 
 Q.solve(solver = 'saga')
 
-print(f.eval(Q.x) +phi.eval(Q.x))
 
 #%% solve with ADAGRAD
 
-Q1 = problem(f, phi, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
+Q1 = problem(f, phi, A, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
 
 Q1.solve(solver = 'adagrad')
 
-print(f.eval(Q1.x)+phi.eval(Q1.x))
 
 #%% solve with SVRG
 
-Q2 = problem(f, phi, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
+Q2 = problem(f, phi, A, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
 
 Q2.solve(solver = 'svrg')
 
-print(f.eval(Q2.x)+phi.eval(Q2.x))
-
 #%% solve with SSNSP
 
-P = problem(f, phi, tol = 1e-9, params = params_snspp, verbose = True, measure = True)
+P = problem(f, phi, A, tol = 1e-9, params = params_snspp, verbose = True, measure = True)
 
 P.solve(solver = 'snspp')
 
@@ -137,7 +130,7 @@ Cont.psi_star = psi_star
 allQ = list()
 for k in range(K):
     
-    Q_k = problem(f, phi, tol = 1e-9, params = params_saga, verbose = True, measure = True)
+    Q_k = problem(f, phi, A, tol = 1e-9, params = params_saga, verbose = True, measure = True)
     Q_k.solve(solver = 'saga')
     
     Cont.store(Q_k, k)
@@ -151,7 +144,7 @@ for k in range(K):
 allQ1 = list()
 for k in range(K):
     
-    Q1_k = problem(f, phi, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
+    Q1_k = problem(f, phi, A, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
     Q1_k.solve(solver = 'adagrad')
     
     Cont.store(Q1_k, k)
@@ -165,7 +158,7 @@ for k in range(K):
 allQ2 = list()
 for k in range(K):
     
-    Q2_k = problem(f, phi, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
+    Q2_k = problem(f, phi, A, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
     Q2_k.solve(solver = 'svrg')
     
     Cont.store(Q2_k, k)
@@ -179,7 +172,7 @@ for k in range(K):
 allP = list()
 for k in range(K):
     
-    P_k = problem(f, phi, tol = 1e-9, params = params_snspp, verbose = False, measure = True)
+    P_k = problem(f, phi, A, tol = 1e-9, params = params_snspp, verbose = False, measure = True)
     P_k.solve(solver = 'snspp')
     
     Cont.store(P_k, k)

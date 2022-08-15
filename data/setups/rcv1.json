@@ -1,0 +1,39 @@
+{
+  "instance": {
+  	"loss": "logistic",
+    "dataset": "rcv1",
+    "N": 0,
+    "n": 0,
+    "k": 0,
+    "l1": 0.001
+  },
+  "methods": {
+    "snspp": {
+      "solver": "snspp",
+      "alpha_min": 1,
+      "alpha_max": 5,
+      "n_alpha": 25,
+      "batch": [0.001,0.005,0.01],
+      "params": {
+        "max_iter": 350,
+        "sample_style": "constant",
+        "reduce_variance": true,
+        "measure_freq": 1
+      }
+    },
+    "tick-svrg": {
+      "solver": "tick-svrg",
+      "alpha_min": -2,
+      "alpha_max": 3,
+      "n_alpha": 25,
+      "batch": [],
+      "params": {
+        "n_epochs": 25
+      }
+    }
+  },
+  "psi_tol": 0.0001,
+  "y_max": 5,
+  "n_rep": 5,
+  "start": 0
+}

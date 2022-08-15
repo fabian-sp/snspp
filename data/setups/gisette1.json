@@ -15,9 +15,10 @@
       "n_alpha": 20,
       "batch": [0.005,0.01,0.05],
       "params": {
-        "max_iter": 260,
+        "max_iter": 450,
         "sample_style": "constant",
-        "reduce_variance": true
+        "reduce_variance": true,
+        "measure_freq": 1
       }
     },
     "svrg": {
@@ -27,7 +28,8 @@
       "n_alpha": 25,
       "batch": [0.005,0.01,0.05],
       "params": {
-        "n_epochs": 55
+        "n_epochs": 55,
+        "measure_freq": 10
       }
     },
     "saga": {
@@ -37,12 +39,13 @@
       "n_alpha": 20,
       "batch": [],
       "params": {
-        "n_epochs": 55
+        "n_epochs": 55,
+        "measure_freq": 20
       }
     }
   },
   "psi_tol": 0.0001,
-  "y_max": 10,
+  "y_max": 15,
   "n_rep": 5,
   "start": 0
 }

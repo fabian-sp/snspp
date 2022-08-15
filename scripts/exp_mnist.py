@@ -21,7 +21,7 @@ from snspp.experiments.container import Experiment
 from sklearn.linear_model import LogisticRegression
 
 
-f, phi, X_train, y_train, X_test, y_test = get_mnist()
+f, phi, A, X_train, y_train, X_test, y_test = get_mnist()
 
 #plt.imshow(X_train[119,:].reshape(28,28))
 
@@ -41,56 +41,54 @@ print(f"Computing time: {end-start} sec")
 
 x_sk = sk.coef_.copy().squeeze()
 
-psi_star = f.eval(x_sk) + phi.eval(x_sk)
+psi_star = f.eval(A@x_sk) + phi.eval(x_sk)
 print("psi(x*) = ", psi_star)
 
-initialize_solvers(f, phi)
+initialize_solvers(f, phi, A)
 
 #%% params
 
-params_saga = {'n_epochs': 20, 'alpha': 0.00050}
+params_saga = {'n_epochs': 20, 'alpha': 0.00045}
 
 params_svrg = {'n_epochs': 15, 'batch_size': 650, 'alpha': 0.45583}
 
 params_adagrad = {'n_epochs' : 100, 'batch_size': int(f.N*0.05), 'alpha': 0.03}
 
-params_snspp = {'max_iter' : 120, 'batch_size': 560, 'sample_style': 'fast_increasing', \
-          'alpha' : 6., 'reduce_variance': True}
-    
-    
-#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(2e4, 6e4, 7), batch_range = np.array([100, 650]))
-#params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(50, 120, 8))
-#params_tuner(f, phi, solver = "adagrad", batch_range = np.array([100, 1000, 3000]))
+params_snspp = {'max_iter' : 120, 'batch_size': 280, 'sample_style': 'fast_increasing', \
+                'alpha' : 3., 'reduce_variance': True}
+        
+#params_tuner(f, phi, A, solver = "adagrad", batch_range = np.array([100, 1000, 3000]))
 
 #%% solve with SAGA
 
-Q = problem(f, phi, tol = 1e-9, params = params_saga, verbose = True, measure = True)
+Q = problem(f, phi, A, tol = 1e-9, params = params_saga, verbose = True, measure = True)
 
 Q.solve(solver = 'saga')
 
-print(f.eval(Q.x)+phi.eval(Q.x))
+print(f.eval(A@Q.x)+phi.eval(Q.x))
 
 #%% solve with ADAGRAD
 
-Q1 = problem(f, phi, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
+Q1 = problem(f, phi, A, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
 
 Q1.solve(solver = 'adagrad')
 
-print(f.eval(Q1.x)+phi.eval(Q1.x))
+print(f.eval(A@Q1.x)+phi.eval(Q1.x))
 
 #%% solve with SVRG
 
-Q2 = problem(f, phi, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
+Q2 = problem(f, phi, A, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
 
 Q2.solve(solver = 'svrg')
 
-print(f.eval(Q2.x)+phi.eval(Q2.x))
+print(f.eval(A@Q2.x)+phi.eval(Q2.x))
 
 #%% solve with SSNSP
 
-P = problem(f, phi, tol = 1e-9, params = params_snspp, verbose = True, measure = True)
+P = problem(f, phi, A, tol = 1e-9, params = params_snspp, verbose = True, measure = True)
 P.solve(solver = 'snspp')
 
+print(f.eval(A@P.x)+phi.eval(P.x))
 
 #%%
 
@@ -116,7 +114,7 @@ Cont.psi_star = psi_star
 allQ = list()
 for k in range(K):
     
-    Q_k = problem(f, phi, tol = 1e-9, params = params_saga, verbose = True, measure = True)
+    Q_k = problem(f, phi, A, tol = 1e-9, params = params_saga, verbose = True, measure = True)
     Q_k.solve(solver = 'saga')
     
     Cont.store(Q_k, k)
@@ -130,7 +128,7 @@ for k in range(K):
 allQ1 = list()
 for k in range(K):
     
-    Q1_k = problem(f, phi, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
+    Q1_k = problem(f, phi, A, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
     Q1_k.solve(solver = 'adagrad')
     
     Cont.store(Q1_k, k)
@@ -144,7 +142,7 @@ for k in range(K):
 allQ2 = list()
 for k in range(K):
     
-    Q2_k = problem(f, phi, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
+    Q2_k = problem(f, phi, A, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
     Q2_k.solve(solver = 'svrg')
     
     Cont.store(Q2_k, k)
@@ -158,7 +156,7 @@ for k in range(K):
 allP = list()
 for k in range(K):
     
-    P_k = problem(f, phi, tol = 1e-9, params = params_snspp, verbose = False, measure = True)
+    P_k = problem(f, phi, A, tol = 1e-9, params = params_snspp, verbose = False, measure = True)
     P_k.solve(solver = 'snspp')
     
     Cont.store(P_k, k)
@@ -187,10 +185,10 @@ fig,ax = plt.subplots(figsize = (4.5, 3.5))
 
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
 
-#Q.plot_objective(ax = ax, **kwargs)
-#Q1.plot_objective(ax = ax, **kwargs)
-#Q2.plot_objective(ax = ax, **kwargs)
-#P.plot_objective(ax = ax, **kwargs)
+# Q.plot_objective(ax = ax, **kwargs)
+# Q1.plot_objective(ax = ax, **kwargs)
+# Q2.plot_objective(ax = ax, **kwargs)
+# P.plot_objective(ax = ax, **kwargs)
 
 Cont.plot_objective(ax = ax, median = False, **kwargs) 
 
@@ -254,26 +252,6 @@ plt.subplots_adjust(hspace = 0.33)
 
 if save:
     fig.savefig(f'../data/plots/exp_mnist/coeff.pdf', dpi = 300)
-
-#%%
-# def predict(A,x):
-    
-#     h = np.exp(A@x)
-#     odds = h/(1+h)    
-#     y = (odds >= .5)*2 -1
-    
-#     return y
-
-# def sample_error(A, b, x):
-    
-#     b_pred = predict(A,x)
-#     return (np.sign(b_pred) == np.sign(b)).sum() / len(b)
-
-
-# sample_error(X_test, y_test, x_sk)
-# sample_error(X_test, y_test, Q.x)
-# sample_error(X_test, y_test, Q1.x)
-# sample_error(X_test, y_test, P.x)
 
 
 

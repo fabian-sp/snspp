@@ -1,0 +1,49 @@
+{
+  "instance": {
+  	"loss": "logistic",
+    "dataset": "madelon",
+    "poly": 2,
+    "l1": 0.02
+  },
+  "methods": {
+    "snspp": {
+      "solver": "snspp",
+      "alpha_min": -3,
+      "alpha_max": 0,
+      "n_alpha": 15,
+      "batch": [0.01, 0.05],
+      "params": {
+        "max_iter": 2000,
+        "sample_style": "constant",
+        "reduce_variance": true,
+        "measure_freq": 10
+      }
+    },
+    "svrg": {
+      "solver": "svrg",
+      "alpha_min": -4,
+      "alpha_max": -1,
+      "n_alpha": 15,
+      "batch": [0.01, 0.05],
+      "params": {
+        "n_epochs": 500,
+        "measure_freq": 10
+      }
+    },
+    "saga": {
+      "solver": "saga",
+      "alpha_min": -5,
+      "alpha_max": -2,
+      "n_alpha": 15,
+      "batch": [],
+      "params": {
+        "n_epochs": 500,
+        "measure_freq": 10
+      }
+    }
+  },
+  "psi_tol": 0.0001,
+  "max_iter_star": 2500,
+  "n_rep": 5,
+  "start": 0
+}

@@ -4,10 +4,11 @@ author: Fabian Schaipp
 
 import numpy as np
 from ..helper.utils import block_diag, stop_scikit_saga
-from ..helper.utils import compute_full_xi, compute_x_mean_hist, derive_L
+from ..helper.utils import compute_full_xi, derive_L
 from .spp_easy import solve_subproblem_easy
 
 from scipy.sparse.linalg import cg
+from scipy.sparse.csr import csr_matrix
 import time
 import warnings
 
@@ -17,12 +18,12 @@ def sampler(N, size, replace = False):
     """
     samples a subset of {1,..,N} with/without replacement
     """
-    assert size <= N, "specified a bigger sample size than N"
+    if not replace:
+        S = np.random.choice(a = np.arange(N).astype('int'), p = (1/N)*np.ones(N), \
+                         size = int(size), replace=False)
+    else:
+        S = np.random.randint(low = 0, high = N, size = size)
     
-    S = np.random.choice(a = np.arange(N).astype('int'), p = (1/N) * np.ones(N), \
-                         size = int(size), replace = replace)
-    
-    S = S.astype('int')
     # sort S in order to avoid problems with indexing later on
     S = np.sort(S)
     
@@ -64,11 +65,13 @@ def cyclic_batch(N, batch_size, t):
 
 #%%
 
-def snspp_theoretical_step_size(f, b, m, eta = 0.5):
+def snspp_theoretical_step_size(f, A, b, m, eta = 0.5):
     """
     see paper for details
+    
+    should not be used when A is large!
     """  
-    normA =  np.linalg.norm(f.A, axis = 1)**2
+    normA =  np.linalg.norm(A, axis = 1)**2
     
     if not f.convex:
         M = f.weak_conv(np.arange(f.N)).max() * normA.max()
@@ -86,29 +89,29 @@ def snspp_theoretical_step_size(f, b, m, eta = 0.5):
     return 1/a
 
 
-def get_xi_start_point(f):
-    if f.name == 'logistic':
-        xi = dict(zip(np.arange(f.N), [ -.5 * np.ones(f.m[i]) for i in np.arange(f.N)]))
-    elif f.name == 'tstudent':
-        xi = dict(zip(np.arange(f.N), [np.ones(f.m[i]) for i in np.arange(f.N)]))
-    elif f.name == 'huber':
-        xi = dict(zip(np.arange(f.N), [np.zeros(f.m[i]) for i in np.arange(f.N)]))
-    elif f.name == 'pseudohuber':
-        xi = dict(zip(np.arange(f.N), [np.zeros(f.m[i]) for i in np.arange(f.N)]))
+def get_xi_start_point(f, is_easy):
+    if is_easy:        
+        if f.name == 'logistic':
+            xi =  -.5 * np.ones(f.N)
+        elif f.name == 'tstudent':
+            xi = np.ones(f.N)
+        else: 
+            xi = np.zeros(f.N)
     else:
         xi = dict(zip(np.arange(f.N), [np.zeros(f.m[i]) for i in np.arange(f.N)]))
-
     return xi
     
 #%% functions for parameter handling
 
-def get_default_spp_params(f):
+def get_default_spp_params(f, A):
     b = max(int(f.N*0.005),1)
     m = 10
-    a = snspp_theoretical_step_size(f, b, m, 0.5)
+    a = 1. # snspp_theoretical_step_size(f, A, b, m, 0.5)
     
     p = {'alpha': a, 'max_iter': 100, 'batch_size': b, 'sample_style': 'constant', 'reduce_variance': False,\
-           'm_iter': m, 'vr_skip': 0, 'tol_sub': 1e-3, 'newton_params': get_default_newton_params()}
+        'm_iter': m, 'tol_sub': 1e-3, 'newton_params': get_default_newton_params(),\
+        'vr_skip': 0, 
+        'measure_freq': 1}
     
     return p
 
@@ -131,7 +134,7 @@ def check_newton_params(newton_params):
 
 #%% main functions
 
-def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), verbose = False, measure = False):
+def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(), verbose = False, measure = False, store_hist = False):
     """
     This implements the semismooth Newton stochastic proximal point method (SNSPP) for solving 
     
@@ -163,6 +166,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     phi : regularization function object
         This object describes the function :math:`\phi(x)`.
         See ``snspp/helper/regz.py`` for an example.
+    A : matrix for f
     x0 : array of shape (n,)
         Starting point. If no better guess is available, use zero.
     xi : array or dict, optional
@@ -186,7 +190,9 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     measure : boolean, optional
         Whether to evaluate the objective after each itearion. The default is False.
         For the experiments, needs to be set to ``True``, for actual computation it is recommended to set this to ``False``.
-        
+    store_hist : boolean, optional
+        Whether to store iterate history. The default is False.
+
 
     Returns
     -------
@@ -199,7 +205,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     
     """    
     
-    A = f.A.copy()
     n = len(x0)
     assert n == A.shape[1], f"Starting point has wrong dimension {n} while matrices A_i have dimension {A.shape[1]}."
     
@@ -207,6 +212,13 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     is_easy = (f.m.max() == 1) and callable(getattr(f, "fstar_vec", None))
     if verbose:
         print("Have easy version of the subproblem?", is_easy)
+    
+    # check whether A is in sparse format
+    if isinstance(A, csr_matrix):
+        sparse_format = True
+    else:
+        sparse_format = False
+        
     
     x_t = x0.copy()
     
@@ -216,7 +228,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     #########################################################
     ## Set parameters
     #########################################################
-    params_def = get_default_spp_params(f)
+    params_def = get_default_spp_params(f, A)
     params.update({k:v for k,v in params_def.items() if k not in params.keys()})
     
     # initialize step size
@@ -238,18 +250,19 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     ## Initialization
     #########################################################
     if xi is None:
-        xi = get_xi_start_point(f)
+        xi = get_xi_start_point(f, is_easy)
     
     # for easy problems, xi is an array (and not a dict), because we can index it faster
     if is_easy:
-        xi = np.hstack(list(xi.values()))
         assert xi.shape== (f.N,)
     
     x_hist = list(); xi_hist = list()
     step_sizes = list()
     obj = list()
-    ssn_info = list(); S_hist = list()
+    fnat = list(); _fnat = 1.
+    ssn_info = list();
     runtime = list(); num_eval = list()
+    sub_runtime = list()
     
     # variance reduction
     if params['reduce_variance']:
@@ -267,8 +280,6 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
     ## Main loop
     #########################################################
     for iter_t in np.arange(params['max_iter']):
-        
-        start = time.time()
             
         if eta <= tol:
             status = 'optimal'
@@ -276,6 +287,7 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
                 
         x_old = x_t.copy()
         
+        start = time.time()
         # sample and update
         S = sampler(f.N, batch_size[iter_t], replace = True)
         #S = cyclic_batch(f.N, batch_size, iter_t)
@@ -288,9 +300,14 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         #########################################################
         if params['reduce_variance']:
             this_iter_vr = iter_t % params['m_iter'] == params['vr_skip']
+            
+            # recompute full gradient
             if this_iter_vr:
-                xi_tilde = compute_full_xi(f, x_t, is_easy)
+                z_t = A@x_t
+                xi_tilde = compute_full_xi(f, z_t, is_easy)
                 full_g = (1/f.N) * (A.T @ xi_tilde)
+                
+                _fnat = 1. #np.linalg.norm(x_t - phi.prox(x_t-full_g, 1.))
                 
                 # update xi
                 if f.convex:
@@ -298,47 +315,59 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
                 else:
                     if is_easy:
                         gammas = f.weak_conv(np.arange(f.N))
-                        xi = xi_tilde + gammas*(A@x_t)
+                        xi = xi_tilde + gammas*z_t
                     else:
                         raise KeyError("Variance reduction for nonconvex problems is only available if all m_i=1.")
-        #########################################################
-             
+        
+        #########################################################             
         #########################################################
         ## Solve subproblem
         #########################################################
+        # if params['reduce_variance']:
+        #     _tol = min(params['tol_sub'], 1e-3)
+        # else:
+        #     _tol = max(min(params['tol_sub']*_fnat, 1e-3), 1e-6)
+        
+        _tol = params['tol_sub']        
+            
+        sub_start = time.time()
         if not is_easy:
             x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, f.m, S, \
-                                             tol = params['tol_sub'], newton_params = params['newton_params'],\
+                                             tol = _tol, newton_params = params['newton_params'],\
                                              reduce_variance = reduce_variance, xi_tilde = xi_tilde,\
                                              verbose = verbose)
         else:
             x_t, xi, this_ssn = solve_subproblem_easy(f, phi, x_t, xi, alpha_t, A, S, \
-                                             tol = params['tol_sub'], newton_params = params['newton_params'],\
+                                             tol = _tol, newton_params = params['newton_params'],\
                                              reduce_variance = reduce_variance, xi_tilde = xi_tilde, full_g = full_g,\
                                              verbose = verbose)
-                                             
-          
-       
-                    
-        #stop criterion
-        eta = stop_scikit_saga(x_t, x_old)
         
-        ssn_info.append(this_ssn)
-        x_hist.append(x_t)
-            
+        sub_end = time.time()                                     
         # we only measure runtime of the iteration, excluding computation of the objective
         end = time.time()
+        
+        #stop criterion
+        eta = stop_scikit_saga(x_t, x_old)
+        ssn_info.append(this_ssn)
+            
         runtime.append(end-start)
+        sub_runtime.append(sub_end-sub_start)
         num_eval.append(this_ssn['evaluations'].sum() + int(this_iter_vr) * f.N)
 
         if measure:
-            f_t = f.eval(x_t.astype('float64')) 
-            phi_t = phi.eval(x_t)
+            # recompute objective every <measure_freq> iter
+            if iter_t % params['measure_freq'] == 0:  
+                f_t = f.eval(A@x_t) 
+                phi_t = phi.eval(x_t)
+            
             obj.append(f_t+phi_t)
+            fnat.append(_fnat)
         
         step_sizes.append(alpha_t)
-        S_hist.append(S)
-        xi_hist.append(xi.copy())
+        
+        if store_hist:
+            xi_hist.append(xi.copy())
+            x_hist.append(x_t)
         
           
         if verbose and measure:
@@ -352,6 +381,8 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         if f.convex and not params['reduce_variance']:
              alpha_t = params['alpha']/(iter_t + 2)**(0.51)
         
+    assert np.all(np.array(runtime)>=0), "Measure negative runtime"
+    assert np.all(np.array(runtime)-np.array(sub_runtime)>=0), "Measure negative runtime"
         
     if eta > tol:
         status = 'max iterations reached'    
@@ -360,22 +391,21 @@ def stochastic_prox_point(f, phi, x0, xi = None, tol = 1e-3, params = dict(), ve
         print(f"Stochastic ProxPoint terminated after {iter_t} iterations with accuracy {eta}")
         print(f"Stochastic ProxPoint status: {status}")
     
-    if False:
-        xmean_hist = compute_x_mean_hist(np.vstack(x_hist))
-        x_mean = xmean_hist[-1,:].copy()
-    else:
-        xmean_hist = None; x_mean = None
         
-    info = {'objective': np.array(obj), 'iterates': np.vstack(x_hist), \
-            'mean_hist': xmean_hist, 'xi_hist': xi_hist,\
-            'step_sizes': np.array(step_sizes), 'samples' : S_hist, \
-            'ssn_info': ssn_info, 'runtime': np.array(runtime),\
+    info = {'objective': np.array(obj),
+            'fnat': np.array(fnat),
+            'step_sizes': np.array(step_sizes),
+            'ssn_info': ssn_info, 
+            'runtime': np.array(runtime),
+            'sub_runtime': np.array(sub_runtime),
             'evaluations': np.array(num_eval)/f.N
             }
-        
     
-    return x_t, x_mean, info
-
+    if store_hist:
+        info['iterates'] = np.vstack(x_hist)
+        info['xi_hist'] = xi_hist
+         
+    return x_t, info
 
 
 
@@ -458,7 +488,7 @@ def solve_subproblem(f, phi, x, xi, alpha, A, m, S, tol = 1e-3, newton_params = 
     if reduce_variance:
         xi_stack_old = np.hstack([xi_tilde[i] for i in S])
         xi_full_old = np.hstack([xi_tilde[i] for i in range(f.N)])
-        hat_d =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (f.A.T @ xi_full_old)      
+        hat_d =  (alpha/sample_size) * (subA.T @ xi_stack_old) - (alpha/f.N) * (A.T @ xi_full_old)      
     else:
         hat_d = 0.
     

@@ -27,15 +27,7 @@ from snspp.experiments.container import Experiment
 
 #%% load data
 
-if setup == 1:
-
-    l1 = 0.001
-    v = 1.
-    poly = 0
-    n = 5000; N = 6000; k = 20
-    noise = 0.1
-    
-elif setup == 2:
+if setup == 2:
     l1 = 0.001
     v = 1.
     poly = 0
@@ -52,81 +44,60 @@ elif setup == 3:
 
 #%%
 
-xsol, X_train, y_train, f, phi, X_test, y_test = tstudent_test(N = N, n = n, k = k, lambda1 = l1, v = v,\
-                                                               noise = noise, poly = poly, kappa = 15., dist = 'ortho')
+f, phi, A, X_train, y_train, X_test, y_test, xsol = tstudent_test(N = N, n = n, k = k, lambda1 = l1, v = v,\
+                                                                  noise = noise, poly = poly, kappa = 15., dist = 'ortho')
 
-print("psi(0) = ", f.eval(np.zeros(n)))
-initialize_solvers(f, phi)
+print("psi(0) = ", f.eval(np.zeros(f.N)))
+initialize_solvers(f, phi, A)
 
 #%% parameter setup
 
-if setup == 1:
-    params_saga = {'n_epochs' : 150, 'alpha' : 17.}
-    params_svrg = {'n_epochs' : 150, 'batch_size': 20, 'alpha': 500.}
-    params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.07}
-    params_snspp = {'max_iter' : 200, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 5., 'reduce_variance': True}
-
-elif setup == 2:
+if setup == 2:
     params_saga = {'n_epochs' : 50, 'alpha' : 0.00498}
     params_svrg = {'n_epochs' : 70, 'batch_size': 20, 'alpha': 0.19950}
     params_adagrad = {'n_epochs' : 150, 'batch_size': 20, 'alpha': 0.03}   
-    params_snspp = {'max_iter' : 320, 'batch_size': 20, 'sample_style': 'fast_increasing', 'alpha' : 3., 'reduce_variance': True}
+    params_snspp = {'max_iter' : 320, 'batch_size': 20, 'sample_style': 'constant', 'alpha' : 3., 'reduce_variance': True}
 
 elif setup == 3:
     params_saga = {'n_epochs' : 25, 'alpha' : 0.07730}
     params_svrg = {'n_epochs' : 10, 'batch_size': 10, 'alpha': 2.31905}
-    #params_svrg = {'n_epochs' : 10, 'batch_size': 100, 'alpha': 20000.}
     params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.06}   
-    params_snspp = {'max_iter' : 250, 'batch_size': 10, 'sample_style': 'fast_increasing', 'alpha' : 12.5, 'reduce_variance': True}
+    params_snspp = {'max_iter' : 250, 'batch_size': 10, 'sample_style': 'constant', 'alpha' : 12.5, 'reduce_variance': True}
 
 
-
-#params_tuner(f, phi, solver = "saga", alpha_range = np.linspace(2,10, 10), n_iter = 50)
-#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(500, 1500, 10), batch_range = np.array([10,20]), n_iter = 150)
-#params_tuner(f, phi, solver = "svrg", alpha_range = np.linspace(50, 150, 10), batch_range = np.array([20,200]), n_iter = 70)
-
-#params_tuner(f, phi, solver = "adagrad", alpha_range = np.logspace(-3,0.5,8), batch_range = np.array([20, 50, 200]), n_iter = 80)
-#params_tuner(f, phi, solver = "snspp", alpha_range = np.linspace(1,10,10), batch_range = np.array([20,200]), n_iter = 100)
+#params_tuner(f, phi, A, solver = "snspp", alpha_range = np.linspace(1,10,10), batch_range = np.array([20,200]), n_iter = 100)
 
 #%% solve with SAGA
 
-Q = problem(f, phi, tol = 1e-6, params = params_saga, verbose = True, measure = True)
+Q = problem(f, phi, A, tol = 1e-6, params = params_saga, verbose = True, measure = True)
 Q.solve(solver = 'saga')
 
-print("f(x_t) = ", f.eval(Q.x))
-print("phi(x_t) = ", phi.eval(Q.x))
-print("psi(x_t) = ", f.eval(Q.x) + phi.eval(Q.x))
+print("psi(x_t) = ", f.eval(A@Q.x) + phi.eval(Q.x))
 
 # use the last objective of SAGA as surrogate optimal value / plot only psi(x^k)
-psi_star = f.eval(Q.x)+phi.eval(Q.x)
+psi_star = f.eval(A@Q.x)+phi.eval(Q.x)
 #psi_star = 0
 
 #%% solve with SVRG
 
-Q2 = problem(f, phi, tol = 1e-6, params = params_svrg, verbose = True, measure = True)
+Q2 = problem(f, phi, A, tol = 1e-6, params = params_svrg, verbose = True, measure = True)
 Q2.solve(solver = 'svrg')
 
-print("f(x_t) = ", f.eval(Q2.x))
-print("phi(x_t) = ", phi.eval(Q2.x))
-print("psi(x_t) = ", f.eval(Q2.x) + phi.eval(Q2.x))
+print("psi(x_t) = ", f.eval(A@Q2.x) + phi.eval(Q2.x))
 
 #%% solve with ADAGRAD
 
-Q1 = problem(f, phi, tol = 1e-6, params = params_adagrad, verbose = True, measure = True)
+Q1 = problem(f, phi, A, tol = 1e-6, params = params_adagrad, verbose = True, measure = True)
 Q1.solve(solver = 'adagrad')
 
-print("f(x_t) = ", f.eval(Q1.x))
-print("phi(x_t) = ", phi.eval(Q1.x))
-print("psi(x_t) = ", f.eval(Q1.x) + phi.eval(Q1.x))
+print("psi(x_t) = ", f.eval(A@Q1.x) + phi.eval(Q1.x))
 
 #%% solve with SNSPP
 
-P = problem(f, phi, tol = 1e-6, params = params_snspp, verbose = True, measure = True)
+P = problem(f, phi, A, tol = 1e-6, params = params_snspp, verbose = True, measure = True)
 P.solve(solver = 'snspp')
 
-print("f(x_t) = ", f.eval(P.x))
-print("phi(x_t) = ", phi.eval(P.x))
-print("psi(x_t) = ", f.eval(P.x) + phi.eval(P.x))
+print("psi(x_t) = ", f.eval(A@P.x) + phi.eval(P.x))
 
 #fig = P.plot_subproblem(start = 0)
 
@@ -153,7 +124,7 @@ Cont.psi_star = psi_star
 allQ = list()
 for k in range(K):
     
-    Q_k = problem(f, phi, tol = 1e-19, params = params_saga, verbose = True, measure = True)
+    Q_k = problem(f, phi, A, tol = 1e-19, params = params_saga, verbose = True, measure = True)
     Q_k.solve(solver = 'saga')
     
     Cont.store(Q_k, k)
@@ -167,7 +138,7 @@ for k in range(K):
 allQ1 = list()
 for k in range(K):
     
-    Q1_k = problem(f, phi, tol = 1e-19, params = params_adagrad, verbose = True, measure = True)
+    Q1_k = problem(f, phi, A, tol = 1e-19, params = params_adagrad, verbose = True, measure = True)
     Q1_k.solve(solver = 'adagrad')
     
     Cont.store(Q1_k, k)
@@ -181,7 +152,7 @@ for k in range(K):
 allQ2 = list()
 for k in range(K):
     
-    Q2_k = problem(f, phi, tol = 1e-19, params = params_svrg, verbose = True, measure = True)
+    Q2_k = problem(f, phi, A, tol = 1e-19, params = params_svrg, verbose = True, measure = True)
     Q2_k.solve(solver = 'svrg')
     
     Cont.store(Q2_k, k)
@@ -195,7 +166,7 @@ for k in range(K):
 allP = list()
 for k in range(K):
     
-    P_k = problem(f, phi, tol = 1e-19, params = params_snspp, verbose = False, measure = True)
+    P_k = problem(f, phi, A, tol = 1e-19, params = params_snspp, verbose = False, measure = True)
     P_k.solve(solver = 'snspp')
     
     Cont.store(P_k, k)

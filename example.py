@@ -9,9 +9,10 @@ import matplotlib.pyplot as plt
 import time
 from sklearn.linear_model import Lasso, LogisticRegression
 
-from snspp.helper.data_generation import logreg_test
+from snspp.helper.data_generation import logreg_test, get_libsvm, get_poly
 from snspp.solver.opt_problem import problem
 from snspp.helper.regz import Zero
+from snspp.experiments.experiment_utils import logreg_accuracy
 
 #%% generate data
 
@@ -20,17 +21,19 @@ n = 50 # dimension
 k = 5 # oracle nonzero elements
 l1 = .01 # l1 penalty
 
-xsol, A, b, f, phi, A_test, b_test = logreg_test(N, n, k, l1, noise = 0.1, kappa = 10., dist = 'ortho')
+f, phi, A, X_train, y_train, _, _, beta = logreg_test(N, n, k, l1, noise = 0.1, kappa = 10., dist = 'ortho')
+f, phi, A, X_train, y_train, _, _ = get_libsvm(name = "covtype", lambda1 = 1e-3, train_size = None, scale = False, path_prefix = '')
+f, phi, A, X_train, y_train, _, _ = get_poly(name = "madelon", lambda1 = 0.02, train_size = None, poly = 2, scale = True, path_prefix = '')
 
 # for unregularized case:
 #phi = Zero()
 
 #%% solve with SSNSP (run twice to compile numba)
 
-params = {'max_iter' : 50, 'batch_size': 100, 'sample_style': 'constant', \
-          'alpha' : 10., 'reduce_variance': True}
+params = {'max_iter' : 10, 'batch_size': 100, 'sample_style': 'constant', \
+          'alpha' : 1e-2, 'reduce_variance': True, 'vr_skip': 0}
 
-P = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
+P = problem(f, phi, A, tol = 1e-5, params = params, verbose = True, measure = True)
 
 P.solve(solver = 'snspp')
 
@@ -41,9 +44,21 @@ info = P.info.copy()
 
 #%% solve with SAGA (run twice to compile numba)
 
-params = {'n_epochs' : 100, 'alpha': 1.}
+params = {'n_epochs' : 10, 'alpha': 1e-3}
 
-Q = problem(f, phi, tol = 1e-5, params = params, verbose = True, measure = True)
+Q = problem(f, phi, A, tol = 1e-5, params = params, verbose = True, measure = True)
+Q.solve(solver = 'saga')
+
+Q.plot_path()
+Q.plot_objective()
+
+info2 = Q.info.copy()
+
+#%% solve with SVRG (run twice to compile numba)
+
+params = {'n_epochs' : 10, 'alpha': 4., 'batch_size': 20, 'measure_freq': 5}
+
+Q = problem(f, phi, A, tol = 1e-15, params = params, verbose = True, measure = True)
 Q.solve(solver = 'svrg')
 
 Q.plot_path()
@@ -53,16 +68,17 @@ info2 = Q.info.copy()
 
 #%% compare to scikit
 
-sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-5, solver = 'saga', max_iter = 700000, verbose = 1)
-sk.fit(A,b)
+sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-20, solver = 'saga', max_iter = 100, verbose = 1)
+sk.fit(X_train, y_train)
 
 x_sk = sk.coef_.copy().squeeze()
 
-f.eval(x_sk) + phi.eval(x_sk)
+f.eval(A@x_sk) + phi.eval(x_sk)
+logreg_accuracy(x_sk, X_train, y_train)
 
 #%% compare solutions
 
-all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, x_sk)).T, columns = ['true', 'spp', 'saga', 'scikit'])
+all_x = pd.DataFrame(np.vstack((beta, P.x, Q.x, x_sk)).T, columns = ['true', 'spp', 'saga', 'scikit'])
 
 
 #%% convergence of the xi variables
