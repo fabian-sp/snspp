@@ -7,7 +7,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
-from scipy.sparse.csr import csr_matrix
 
 from ..solver.opt_problem import problem, color_dict, marker_dict
 
@@ -101,10 +100,9 @@ def initialize_solvers(f, phi, A):
     tmpP = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)
     tmpP.solve(solver = 'svrg')
     
-    if not isinstance(A, csr_matrix):
-        params = {'n_epochs' : 2, 'batch_size': 20, 'alpha': 1e-5}  
-        tmpP = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)   
-        tmpP.solve(solver = 'adagrad')
+    params = {'n_epochs' : 2, 'batch_size': 20, 'alpha': 1e-5}  
+    tmpP = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)   
+    tmpP.solve(solver = 'adagrad')
       
     return
 
@@ -153,8 +151,8 @@ def params_tuner(f, phi, A, solver = 'adagrad', alpha_range = None, batch_range 
                     this_rt += Q.info["runtime"]
                     this_obj += Q.info["objective"]
                 except:
-                    this_rt += np.nan*np.zeros(n_iter)
-                    this_obj += np.nan*np.zeros(n_iter)
+                    this_rt += np.nan*np.zeros(n_iter+1)
+                    this_obj += np.nan*np.zeros(n_iter+1)
                     
             # store
             this_rt *= 1/n_rep

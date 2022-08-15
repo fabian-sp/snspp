@@ -78,19 +78,27 @@ def compute_psi_star(setup, f, phi, A, X_train, y_train):
  
     return psi_star, xsol
 
-def compute_x0(setup, f, phi, A):
+def compute_x0(setup, f, phi, A, X_train, y_train):
     assert setup["start"] >= 0
     
     if setup["start"] == 0:
         x0 = None
     # compute setup['start'] many epochs for starting point
-    else:        
-        Q = problem(f, phi, A, tol = 1e-20, params = {'n_epochs': setup["start"]}, verbose = False, measure = False)
-        Q.solve(solver = 'saga')
-        x0 = Q.x.copy()
+    else:
+        if setup['instance']['loss'] == "logistic":
+            sk0 = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-8, \
+                                     solver = 'saga', max_iter = 1, verbose = 0).fit(X_train, y_train)
+            x0 = sk0.coef_.squeeze()
+        
+        # default step size should be identical to scikit (1/3L)
+        else:
+            Q = problem(f, phi, A, tol = 1e-20, params = {'n_epochs': setup["start"]}, verbose = False, measure = False)
+            Q.solve(solver = 'saga')
+            x0 = Q.x.copy()
         
         psi0 = f.eval(A@x0) + phi.eval(x0)
         print("psi(x0) = ", psi0)
+        print("x0 max", x0.max())
             
     return x0
 
@@ -216,8 +224,11 @@ def get_ymax(results, methods):
     ymax = 0.
     for m in methods:
         r = results[m].copy()
-        this_max = r['runtime'][r['converged']].max()
-        ymax = max(ymax, this_max)
+        if not np.any(r['converged']):
+            pass
+        else:
+            this_max = r['runtime'][r['converged']].max()
+            ymax = max(ymax, this_max)
     
     return 1.2*ymax
 
