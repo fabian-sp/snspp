@@ -5,4 +5,5 @@ scipy
 pandas
 matplotlib
 seaborn
-csr
+csr==0.4.1
+tick
