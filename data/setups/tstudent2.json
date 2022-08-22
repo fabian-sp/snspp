@@ -18,7 +18,7 @@
         "max_iter": 1000,
         "sample_style": "constant",
         "reduce_variance": true,
-        "measure_freq": 10
+        "measure_freq": 1
       }
     },
     "svrg": {
@@ -28,7 +28,8 @@
       "n_alpha": 20,
       "batch": [0.005,0.01,0.05],
       "params": {
-        "n_epochs": 120
+        "n_epochs": 120,
+        "measure_freq": 10
       }
     },
     "saga": {
@@ -44,7 +45,6 @@
     }
   },
   "psi_tol": 0.0001,
-  "y_max": 20,
   "n_rep": 5,
   "start": 0
 }
