@@ -192,12 +192,14 @@ xlim = (0, 0.7)
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
 
-# Q.plot_objective(ax = ax, **kwargs)
+mk_every_dict = {'saga': 10, 'svrg': 10} # mark every epoch/outer iter
+
+# Q.plot_objective(ax = ax, markevery = 10, **kwargs)
 # Q1.plot_objective(ax = ax, **kwargs)
-# Q2.plot_objective(ax = ax, **kwargs)
+# Q2.plot_objective(ax = ax, markevery = 10, **kwargs)
 # P.plot_objective(ax = ax, **kwargs)
 
-Cont.plot_objective(ax = ax, median = False, **kwargs) 
+Cont.plot_objective(ax = ax, median = False, markevery_dict = mk_every_dict, **kwargs) 
 
 ax.set_xlim(xlim)
 ax.set_ylim(1e-7,1e-1)
@@ -213,7 +215,7 @@ if save:
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 kwargs = {"log_scale": False, "lw": 1., "markersize": 1.5, 'ls': '-'}
 
-Cont.plot_error(error_key = 'test_loss', ax = ax, median = True, ylabel = 'Test loss', **kwargs) 
+Cont.plot_error(error_key = 'test_loss', ax = ax, median = True, ylabel = 'Test loss', markevery_dict = mk_every_dict, **kwargs) 
 
 ax.set_xlim(xlim)
 ax.set_ylim(0.58,)
@@ -229,7 +231,7 @@ if save:
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 kwargs = {"log_scale": False, "lw": 1., "markersize": 1.5, 'ls': '-'}
 
-Cont.plot_error(error_key = 'test_accuracy', ax = ax, median = True, ylabel = 'Test accuracy', **kwargs) 
+Cont.plot_error(error_key = 'test_accuracy', ax = ax, median = True, ylabel = 'Test accuracy', markevery_dict = mk_every_dict, **kwargs) 
 
 ax.set_xlim(xlim)
 ax.set_ylim(0.58, )

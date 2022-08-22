@@ -97,7 +97,7 @@ class Experiment:
 #########################################################################
 
     
-    def plot_objective(self, ax = None, runtime = True, median = False, markersize = 3, ls = '-', lw = 0.4, psi_star = 0, log_scale = False, sigma = 0):
+    def plot_objective(self, ax = None, runtime = True, median = False, markersize = 3, markevery_dict = dict(), ls = '-', lw = 0.4, psi_star = 0, log_scale = False, sigma = 0):
  
       
         if ax is None:
@@ -129,8 +129,10 @@ class Experiment:
             except:
                 c = color_dict["default"]
                 marker = marker_dict["default"]
-        
-            ax.plot(all_xax, y, marker = marker, ls = ls, lw = lw, markersize = markersize, color = c, label = s)
+                
+            mk_evy = markevery_dict.get(s, 1)
+            
+            ax.plot(all_xax, y, marker = marker, ls = ls, lw = lw, markersize = markersize, markevery = mk_evy, color = c, label = s)
             
             # plot band of standard deviation
             if sigma > 0:
@@ -157,7 +159,7 @@ class Experiment:
 #########################################################################
 #########################################################################
 
-    def plot_error(self, error_key = '', ax = None, runtime = True, median = True, markersize = 3, ls = '-', lw = 0.4, log_scale = False, sigma = 0, ylabel = None):
+    def plot_error(self, error_key = '', ax = None, runtime = True, median = True, markersize = 3, markevery_dict = dict(), ls = '-', lw = 0.4, log_scale = False, sigma = 0, ylabel = None):
         
         if ax is None:
             fig, ax = plt.subplots()
@@ -190,7 +192,8 @@ class Experiment:
                 c = color_dict["default"]
                 marker = marker_dict["default"]
             
-            ax.plot(all_xax, y, marker = marker, ls = ls, lw = lw, markersize = markersize, color = c, label = s)
+            mk_evy = markevery_dict.get(s, 1)
+            ax.plot(all_xax, y, marker = marker, ls = ls, lw = lw, markersize = markersize, markevery = mk_evy, color = c, label = s)
             
             # plot band of standard deviation
             if sigma > 0:

@@ -165,7 +165,7 @@ class problem:
         
         return
     
-    def plot_objective(self, ax = None, runtime = True, label = None, markersize = 3, lw = 0.4, ls = '-', psi_star = 0, log_scale = False):
+    def plot_objective(self, ax = None, runtime = True, label = None, markersize = 3, markevery = 1, lw = 0.4, ls = '-', psi_star = 0, log_scale = False):
         """
         
         Parameters
@@ -224,7 +224,7 @@ class problem:
             c = color_dict["default"]
             marker = marker_dict["default"]
             
-        ax.plot(x,y, marker = marker, ls = ls, label = label, markersize = markersize, c = c)
+        ax.plot(x,y, marker = marker, ls = ls, label = label, markersize = markersize, markevery = markevery, c = c)
         
         ax.legend()
         if runtime:
