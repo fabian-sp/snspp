@@ -22,8 +22,6 @@ k = 5 # oracle nonzero elements
 l1 = .01 # l1 penalty
 
 f, phi, A, X_train, y_train, _, _, beta = logreg_test(N, n, k, l1, noise = 0.1, kappa = 10., dist = 'ortho')
-f, phi, A, X_train, y_train, _, _ = get_libsvm(name = "covtype", lambda1 = 1e-3, train_size = None, scale = False, path_prefix = '')
-f, phi, A, X_train, y_train, _, _ = get_poly(name = "madelon", lambda1 = 0.02, train_size = None, poly = 2, scale = True, path_prefix = '')
 
 # for unregularized case:
 #phi = Zero()
@@ -31,7 +29,7 @@ f, phi, A, X_train, y_train, _, _ = get_poly(name = "madelon", lambda1 = 0.02, t
 #%% solve with SSNSP (run twice to compile numba)
 
 params = {'max_iter' : 10, 'batch_size': 100, 'sample_style': 'constant', \
-          'alpha' : 1e-2, 'reduce_variance': True, 'vr_skip': 0}
+          'alpha' : 1e-2, 'reduce_variance': True}
 
 P = problem(f, phi, A, tol = 1e-5, params = params, verbose = True, measure = True)
 
@@ -56,7 +54,7 @@ info2 = Q.info.copy()
 
 #%% solve with SVRG (run twice to compile numba)
 
-params = {'n_epochs' : 10, 'alpha': 4., 'batch_size': 20, 'measure_freq': 5}
+params = {'n_epochs' : 10, 'alpha': 4., 'batch_size': 20}
 
 Q = problem(f, phi, A, tol = 1e-15, params = params, verbose = True, measure = True)
 Q.solve(solver = 'svrg')
