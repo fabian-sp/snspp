@@ -65,8 +65,6 @@ elif setup == 3:
     params_snspp = {'max_iter' : 250, 'batch_size': 10, 'sample_style': 'constant', 'alpha' : 12.5, 'reduce_variance': True}
 
 
-#params_tuner(f, phi, A, solver = "snspp", alpha_range = np.linspace(1,10,10), batch_range = np.array([20,200]), n_iter = 100)
-
 #%% solve with SAGA
 
 Q = problem(f, phi, A, tol = 1e-6, params = params_saga, verbose = True, measure = True)

@@ -76,7 +76,7 @@ if l1 == 1e-3:
                     "reduce_variance": True}
         
     # params_tuner(f, phi, A, solver = "adagrad", batch_range = np.array([20, 200, 500]), x0 = x0)
-    # params_tuner(f, phi, A, solver = "snspp", alpha_range = np.linspace(1., 4., 8), batch_range = np.array([50, 100]), n_iter = 200, x0 = x0)
+    # params_tuner(f, phi, A, solver = "snspp", alpha_range = np.linspace(1., 4., 8), batch_range = np.array([60, 120]), n_iter = 200, x0 = x0)
 
 elif l1 == 1e-2:
     
@@ -90,7 +90,7 @@ elif l1 == 1e-2:
                     "reduce_variance": True}
 
     # params_tuner(f, phi, A, solver = "adagrad", batch_range = np.array([20, 200, 500]), x0 = x0)
-    # params_tuner(f, phi, A, solver = "snspp", alpha_range = np.linspace(1,10,8), batch_range = np.array([50, 200]), n_iter = 150, x0 = x0)
+    # params_tuner(f, phi, A, solver = "snspp", alpha_range = np.linspace(5, 15, 8), batch_range = np.array([50, 100]), n_iter = 150, x0 = x0)
     
 else:
     raise KeyError("Parameters not tuned for this value of l1.")
