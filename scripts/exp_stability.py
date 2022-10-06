@@ -81,7 +81,7 @@ def run_stability(setup_id, save=False, load=False):
 
 #%%
 
-setups = ['mnist1', 'gisette1', 'sido1']
+setups = ['tstudent1']
 
 for _s in setups:
     print(f"Running stability for {_s} \n \n")

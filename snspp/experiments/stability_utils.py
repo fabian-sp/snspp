@@ -23,7 +23,7 @@ def create_instance(setup):
     
     if setup['instance']['dataset'] == "tstudent":
         f, phi, A, X_train, y_train, _, _, _ = tstudent_test(setup['instance']['N'], setup['instance']['n'], setup['instance']['k'], setup['instance']['l1'], \
-                                              v = 1, noise = 0.1, kappa = 15., dist = 'ortho')
+                                              v = setup['instance']['nu'], noise = 0.1, kappa = 15., dist = 'ortho')
 
     elif setup['instance']['dataset'] == "logreg":
         f, phi, A, X_train, y_train, _, _, _ = logreg_test(setup['instance']['N'], setup['instance']['n'], setup['instance']['k'], lambda1 = setup['instance']['l1'],\
