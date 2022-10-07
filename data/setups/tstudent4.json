@@ -7,17 +7,17 @@
     "k": 20,
     "l1": 0.001,
     "nu": 1,
-    "kappa": 150
+    "kappa": 75
   },
   "methods": {
     "snspp": {
       "solver": "snspp",
-      "alpha_min": -1,
-      "alpha_max": 2,
+      "alpha_min": -3,
+      "alpha_max": 1,
       "n_alpha": 20,
       "batch": [0.005,0.01,0.05],
       "params": {
-        "max_iter": 1000,
+        "max_iter": 1500,
         "sample_style": "constant",
         "reduce_variance": true,
         "measure_freq": 1
