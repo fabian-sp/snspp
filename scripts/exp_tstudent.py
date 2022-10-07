@@ -27,7 +27,14 @@ from snspp.experiments.container import Experiment
 
 #%% load data
 
-if setup == 2:
+if setup == 1:
+    l1 = 0.001
+    v = 2.
+    poly = 0
+    n = 5000; N = 4000; k = 20
+    noise = 0.1
+    
+elif setup == 2:
     l1 = 0.001
     v = 1.
     poly = 0
@@ -52,7 +59,13 @@ initialize_solvers(f, phi, A)
 
 #%% parameter setup
 
-if setup == 2:
+if setup == 1:
+    params_saga = {'n_epochs' : 50, 'alpha' : 0.015}
+    params_svrg = {'n_epochs' : 20, 'batch_size': 20, 'alpha': 0.4}
+    params_adagrad = {'n_epochs' : 150, 'batch_size': 40, 'alpha': 0.032}   
+    params_snspp = {'max_iter' : 150, 'batch_size': 20, 'sample_style': 'constant', 'alpha' : 7., 'reduce_variance': True}
+
+elif setup == 2:
     params_saga = {'n_epochs' : 50, 'alpha' : 0.00498}
     params_svrg = {'n_epochs' : 70, 'batch_size': 20, 'alpha': 0.19950}
     params_adagrad = {'n_epochs' : 150, 'batch_size': 20, 'alpha': 0.03}   
@@ -64,6 +77,7 @@ elif setup == 3:
     params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.06}   
     params_snspp = {'max_iter' : 250, 'batch_size': 10, 'sample_style': 'constant', 'alpha' : 12.5, 'reduce_variance': True}
 
+#params_tuner(f, phi, A, solver = "adagrad", batch_range = np.array([20,40,80]))
 
 #%% solve with SAGA
 
@@ -111,7 +125,7 @@ kwargs2 = {"A": X_test, "b": y_test, "v": f.v}
 loss = [tstudent_loss]
 names = ['test_loss']
 
-Cont = Experiment(name = f'exp_tstudent_N_{N}_n_{n}')
+Cont = Experiment(name = f'exp_tstudent_setup{setup}')
 
 Cont.params = {'saga':params_saga, 'svrg': params_svrg, 'adagrad':params_adagrad, 'snspp':params_snspp}
 Cont.psi_star = psi_star
@@ -150,7 +164,7 @@ for k in range(K):
 allQ2 = list()
 for k in range(K):
     
-    Q2_k = problem(f, phi, A, tol = 1e-19, params = params_svrg, verbose = True, measure = True)
+    Q2_k = problem(f, phi, A, tol = 1e-30, params = params_svrg, verbose = True, measure = True)
     Q2_k.solve(solver = 'svrg')
     
     Cont.store(Q2_k, k)
@@ -164,7 +178,7 @@ for k in range(K):
 allP = list()
 for k in range(K):
     
-    P_k = problem(f, phi, A, tol = 1e-19, params = params_snspp, verbose = False, measure = True)
+    P_k = problem(f, phi, A, tol = 1e-30, params = params_snspp, verbose = False, measure = True)
     P_k.solve(solver = 'snspp')
     
     Cont.store(P_k, k)
@@ -186,10 +200,12 @@ Cont.save_to_disk(path = '../data/output/')
 # plotting
 ############################################################################
 
-if setup == 3:
+if setup == 1:
+    xlim = (0, 0.7)
+elif setup == 3:
     xlim = (0, 0.5)
-else:
-    xlim = (0, 1.5)
+elif setup == 2:
+   xlim = (0, 1.5)
 
 #%% plot objective
 
@@ -209,7 +225,7 @@ ax.legend(fontsize = 10, loc = 'upper right')
 
 fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
 if save:
-    fig.savefig(f'../data/plots/exp_tstudent/obj_N_{N}_n_{n}.pdf', dpi = 300)
+    fig.savefig(f'../data/plots/exp_tstudent/setup{setup}/obj.pdf', dpi = 300)
 
 #%% plot error
     
@@ -222,15 +238,18 @@ ax.set_xlim(xlim)
 ax.legend(fontsize = 10)
 ax.set_yscale('log')
 
-if setup == 3:    
-    ax.set_ylim(0.224, 0.26)
-else:
+#if setup == 1:
+#    ax.set_ylim(0.224, 0.26)
+if setup ==2:
     ax.set_ylim(0.2, 0.4)
+elif setup == 3:    
+    ax.set_ylim(0.224, 0.26)
  
-fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
+#fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
+fig.tight_layout()
 
 if save:
-    fig.savefig(f'../data/plots/exp_tstudent/error_N_{N}_n_{n}.pdf', dpi = 300)
+    fig.savefig(f'../data/plots/exp_tstudent/setup{setup}/error.pdf', dpi = 300)
 
 #%% coeffcient plot
 
@@ -247,5 +266,5 @@ for a in ax.ravel():
 plt.subplots_adjust(hspace = 0.33)
 
 if save:
-    fig.savefig(f'../data/plots/exp_tstudent/coeff_N_{N}_n_{n}.pdf', dpi = 300)
+    fig.savefig(f'../data/plots/exp_tstudent/setup{setup}/coeff.pdf', dpi = 300)
     
