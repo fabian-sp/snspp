@@ -22,8 +22,11 @@ def load_setup(setup_id = ''):
 def create_instance(setup):
     
     if setup['instance']['dataset'] == "tstudent":
+        _kappa = setup['instance'].get('kappa', 15.)
+        _nu = setup['instance'].get('nu', 1)
+        
         f, phi, A, X_train, y_train, _, _, _ = tstudent_test(setup['instance']['N'], setup['instance']['n'], setup['instance']['k'], setup['instance']['l1'], \
-                                              v = setup['instance']['nu'], noise = 0.1, kappa = 15., dist = 'ortho')
+                                              v = _nu, noise = 0.1, kappa = _kappa, dist = 'ortho')
 
     elif setup['instance']['dataset'] == "logreg":
         f, phi, A, X_train, y_train, _, _, _ = logreg_test(setup['instance']['N'], setup['instance']['n'], setup['instance']['k'], lambda1 = setup['instance']['l1'],\
