@@ -48,6 +48,13 @@ elif setup == 3:
     n = 10000; N = 1000; k = 20
     noise = 0.1
 
+elif setup == 4:
+    l1 = 0.001
+    v = 0.5
+    poly = 0
+    n = 5000; N = 4000; k = 20
+    noise = 0.1
+
 
 #%%
 
@@ -76,12 +83,18 @@ elif setup == 3:
     params_svrg = {'n_epochs' : 10, 'batch_size': 10, 'alpha': 2.31905}
     params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.06}   
     params_snspp = {'max_iter' : 250, 'batch_size': 10, 'sample_style': 'constant', 'alpha' : 12.5, 'reduce_variance': True}
+    
+elif setup == 4:
+    params_saga = {'n_epochs' : 100, 'alpha' : 0.0025}
+    params_svrg = {'n_epochs' : 100, 'batch_size': 40, 'alpha': 0.14}
+    params_adagrad = {'n_epochs' : 300, 'batch_size': 40, 'alpha': 0.0316}   
+    params_snspp = {'max_iter' : 800, 'batch_size': 20, 'sample_style': 'constant', 'alpha' : 1.05, 'reduce_variance': True}
 
 #params_tuner(f, phi, A, solver = "adagrad", batch_range = np.array([20,40,80]))
 
 #%% solve with SAGA
 
-Q = problem(f, phi, A, tol = 1e-6, params = params_saga, verbose = True, measure = True)
+Q = problem(f, phi, A, tol = 1e-16, params = params_saga, verbose = True, measure = True)
 Q.solve(solver = 'saga')
 
 print("psi(x_t) = ", f.eval(A@Q.x) + phi.eval(Q.x))
@@ -92,21 +105,21 @@ psi_star = f.eval(A@Q.x)+phi.eval(Q.x)
 
 #%% solve with SVRG
 
-Q2 = problem(f, phi, A, tol = 1e-6, params = params_svrg, verbose = True, measure = True)
+Q2 = problem(f, phi, A, tol = 1e-16, params = params_svrg, verbose = True, measure = True)
 Q2.solve(solver = 'svrg')
 
 print("psi(x_t) = ", f.eval(A@Q2.x) + phi.eval(Q2.x))
 
 #%% solve with ADAGRAD
 
-Q1 = problem(f, phi, A, tol = 1e-6, params = params_adagrad, verbose = True, measure = True)
+Q1 = problem(f, phi, A, tol = 1e-16, params = params_adagrad, verbose = True, measure = True)
 Q1.solve(solver = 'adagrad')
 
 print("psi(x_t) = ", f.eval(A@Q1.x) + phi.eval(Q1.x))
 
 #%% solve with SNSPP
 
-P = problem(f, phi, A, tol = 1e-6, params = params_snspp, verbose = True, measure = True)
+P = problem(f, phi, A, tol = 1e-16, params = params_snspp, verbose = True, measure = True)
 P.solve(solver = 'snspp')
 
 print("psi(x_t) = ", f.eval(A@P.x) + phi.eval(P.x))
@@ -202,20 +215,22 @@ Cont.save_to_disk(path = '../data/output/')
 
 if setup == 1:
     xlim = (0, 0.7)
-elif setup == 3:
-    xlim = (0, 0.5)
 elif setup == 2:
    xlim = (0, 1.5)
-
+elif setup == 3:
+    xlim = (0, 0.5)
+elif setup == 4:
+    xlim = (0, 3.5)
+    
 #%% plot objective
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
 kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
 
-#Q.plot_objective(ax = ax, **kwargs)
-#Q1.plot_objective(ax = ax, **kwargs)
-#Q2.plot_objective(ax = ax, **kwargs)
-#P.plot_objective(ax = ax, **kwargs)
+Q.plot_objective(ax = ax, **kwargs)
+Q1.plot_objective(ax = ax, **kwargs)
+Q2.plot_objective(ax = ax, **kwargs)
+P.plot_objective(ax = ax, **kwargs)
 
 Cont.plot_objective(ax = ax, median = False, **kwargs) 
 
