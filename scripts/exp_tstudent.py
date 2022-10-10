@@ -40,13 +40,6 @@ elif setup == 2:
     poly = 0
     n = 5000; N = 4000; k = 20
     noise = 0.1
-    
-elif setup == 3:
-    l1 = 0.01
-    v = 1.
-    poly = 0
-    n = 10000; N = 1000; k = 20
-    noise = 0.1
 
 elif setup == 4:
     l1 = 0.001
@@ -78,11 +71,6 @@ elif setup == 2:
     params_adagrad = {'n_epochs' : 150, 'batch_size': 20, 'alpha': 0.03}   
     params_snspp = {'max_iter' : 320, 'batch_size': 20, 'sample_style': 'constant', 'alpha' : 3., 'reduce_variance': True}
 
-elif setup == 3:
-    params_saga = {'n_epochs' : 25, 'alpha' : 0.07730}
-    params_svrg = {'n_epochs' : 10, 'batch_size': 10, 'alpha': 2.31905}
-    params_adagrad = {'n_epochs' : 300, 'batch_size': 100, 'alpha': 0.06}   
-    params_snspp = {'max_iter' : 250, 'batch_size': 10, 'sample_style': 'constant', 'alpha' : 12.5, 'reduce_variance': True}
     
 elif setup == 4:
     params_saga = {'n_epochs' : 100, 'alpha' : 0.0025}
@@ -219,8 +207,6 @@ if setup == 1:
     xlim = (0, 0.7)
 elif setup == 2:
    xlim = (0, 1.5)
-elif setup == 3:
-    xlim = (0, 0.5)
 elif setup == 4:
     xlim = (0, 3.5)
     
@@ -255,12 +241,8 @@ ax.set_xlim(xlim)
 ax.legend(fontsize = 10)
 ax.set_yscale('log')
 
-#if setup == 1:
-#    ax.set_ylim(0.224, 0.26)
 if setup ==2:
     ax.set_ylim(0.2, 0.4)
-elif setup == 3:    
-    ax.set_ylim(0.224, 0.26)
 
 fig.tight_layout()
 fig.subplots_adjust(top=0.96,bottom=0.14,right=0.965,hspace=0.2,wspace=0.2)
