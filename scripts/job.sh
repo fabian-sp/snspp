@@ -10,4 +10,5 @@ python exp_covtype.py 'True'
 python exp_sido.py 'True' 1e-3
 python exp_sido.py 'True' 1e-2
 python exp_tstudent.py 'True' 2
-python exp_tstudent.py 'True' 3
+python exp_tstudent.py 'True' 4
+python exp_tstudent.py 'True' 1
