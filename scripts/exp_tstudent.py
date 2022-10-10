@@ -239,7 +239,7 @@ Cont.plot_error(error_key = 'test_loss', ax = ax, median = True, ylabel = 'Test 
 
 ax.set_xlim(xlim)
 ax.legend(fontsize = 10)
-ax.set_yscale('log')
+#ax.set_yscale('log')
 
 if setup ==2:
     ax.set_ylim(0.2, 0.4)
