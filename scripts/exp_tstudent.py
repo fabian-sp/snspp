@@ -149,7 +149,7 @@ Cont.psi_star = psi_star
 allQ = list()
 for k in range(K):
     
-    Q_k = problem(f, phi, A, tol = 1e-19, params = params_saga, verbose = True, measure = True)
+    Q_k = problem(f, phi, A, tol = 1e-30, params = params_saga, verbose = True, measure = True)
     Q_k.solve(solver = 'saga')
     
     Cont.store(Q_k, k)
@@ -163,7 +163,7 @@ for k in range(K):
 allQ1 = list()
 for k in range(K):
     
-    Q1_k = problem(f, phi, A, tol = 1e-19, params = params_adagrad, verbose = True, measure = True)
+    Q1_k = problem(f, phi, A, tol = 1e-30, params = params_adagrad, verbose = True, measure = True)
     Q1_k.solve(solver = 'adagrad')
     
     Cont.store(Q1_k, k)
@@ -207,6 +207,8 @@ all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x, Q2.x)).T, columns = ['sol'
 
 Cont.save_to_disk(path = '../data/output/')
 
+#Cont.load_from_disk(path='../data/output/')
+
 #%%
 
 ###########################################################################
@@ -225,12 +227,12 @@ elif setup == 4:
 #%% plot objective
 
 fig,ax = plt.subplots(figsize = (4.5, 3.5))
-kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
+kwargs = {"psi_star": Cont.psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
 
-Q.plot_objective(ax = ax, **kwargs)
-Q1.plot_objective(ax = ax, **kwargs)
-Q2.plot_objective(ax = ax, **kwargs)
-P.plot_objective(ax = ax, **kwargs)
+# Q.plot_objective(ax = ax, **kwargs)
+# Q1.plot_objective(ax = ax, **kwargs)
+# Q2.plot_objective(ax = ax, **kwargs)
+# P.plot_objective(ax = ax, **kwargs)
 
 Cont.plot_objective(ax = ax, median = False, **kwargs) 
 
@@ -259,9 +261,9 @@ if setup ==2:
     ax.set_ylim(0.2, 0.4)
 elif setup == 3:    
     ax.set_ylim(0.224, 0.26)
- 
-#fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
+
 fig.tight_layout()
+fig.subplots_adjust(top=0.96,bottom=0.14,right=0.965,hspace=0.2,wspace=0.2)
 
 if save:
     fig.savefig(f'../data/plots/exp_tstudent/setup{setup}/error.pdf', dpi = 300)
