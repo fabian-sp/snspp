@@ -13,7 +13,7 @@ from snspp.experiments.stability_utils import load_setup, create_instance, compu
 
 #%%
 
-def run_stability(setup_id, save=False, load=False):
+def run_stability(setup_id, save=False, load=False, plot=True):
 
     results = dict()
     
@@ -57,35 +57,36 @@ def run_stability(setup_id, save=False, load=False):
     #################################################
     # plot
     #################################################    
-    SIGMA = 1. # plot 2SIGMA band around the mean
-    
-    fig, ax = plt.subplots(figsize = (7,5))
-    
-    ymax = get_ymax(results, methods)
-    
-    for mt in methods:
-        plot_result(results[mt], ax = ax, replace_inf = ymax, sigma = SIGMA, psi_tol = setup["psi_tol"])
+    if plot:
+        SIGMA = 1. # plot 2SIGMA band around the mean
         
-    
-    annot_y = ymax * 1/1.1 # y value for annotation
-    ax.hlines(annot_y , ax.get_xlim()[0], ax.get_xlim()[1], 'grey', ls = '-')
-    ax.annotate("no convergence", (ax.get_xlim()[0]*1.5, annot_y*1.02), color = "k", fontsize = 13)
-    
-    ax.set_ylim(0,)
-    
-    if save:
-        fig.savefig('../data/plots/exp_other/stability_'+setup_id+'.pdf', dpi = 300)
+        fig, ax = plt.subplots(figsize = (7,5))
         
+        ymax = get_ymax(results, methods)
+        
+        for mt in methods:
+            plot_result(results[mt], ax = ax, replace_inf = ymax, sigma = SIGMA, psi_tol = setup["psi_tol"])
+            
+        
+        annot_y = ymax * 1/1.1 # y value for annotation
+        ax.hlines(annot_y , ax.get_xlim()[0], ax.get_xlim()[1], 'grey', ls = '-')
+        ax.annotate("no convergence", (ax.get_xlim()[0]*1.5, annot_y*1.02), color = "k", fontsize = 13)
+        
+        ax.set_ylim(0,)
+        
+        if save:
+            fig.savefig('../data/plots/exp_other/stability_'+setup_id+'.pdf', dpi = 300)
+            
     return 
 
 
 #%%
 
-setups = ['gisette1']
+setups = ['mnist1', 'sido1', 'covtype1']
 
 for _s in setups:
     print(f"Running stability for {_s} \n \n")
-    run_stability(setup_id=_s, save=True, load=False)
+    run_stability(setup_id=_s, save=True, load=False, plot=False)
     
     
     
