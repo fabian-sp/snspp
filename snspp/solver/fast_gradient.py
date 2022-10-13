@@ -5,7 +5,7 @@ from ..helper.utils import compute_batch_gradient_table, compute_xi_inner,\
                             stop_scikit_saga, derive_L
 
 from .sgd import sgd_loop
-from .sparse.sparse_utils import solve_with_tick, create_csr                         
+from .sparse.sparse_utils import create_csr                         
 from .sparse.prox_gd import sparse_svrg_epoch, sparse_saga_epoch, sparse_adagrad_epoch
 
 import numpy as np                           
@@ -143,9 +143,9 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
         x_t, x_hist, runtime, step_sizes, eta  = adagrad_loop(f, phi, x_t, A, N, tol, alpha, params['delta'] , params['n_epochs'], params['batch_size'], sparse_format)
     elif solver == 'sgd':
         x_t, x_hist, runtime, step_sizes, eta = sgd_loop(f, phi, x_t, A, N, tol, alpha, params['beta'], params['n_epochs'], params['batch_size'])
-    elif solver == 'tick-svrg':
-        assert sparse_format
-        x_t, x_hist, runtime, step_sizes, eta  = solve_with_tick(f, phi, A, alpha, params['n_epochs'], tol, verbose)
+    #elif solver == 'tick-svrg':
+    #    assert sparse_format
+    #    x_t, x_hist, runtime, step_sizes, eta  = solve_with_tick(f, phi, A, alpha, params['n_epochs'], tol, verbose)
     else:
         raise NotImplementedError("Not a known solver option!")
     
