@@ -9,13 +9,17 @@ For running this, complete the following steps:
     
 """
 import sys
-
-if len(sys.argv) > 2:
-    save = sys.argv[1]
-    l1 = float(sys.argv[2])
+    
+if len(sys.argv) > 1:
+    _save = sys.argv[1]
+    _run = sys.argv[2]
+    _plot = sys.argv[3]
+    l1 = float(sys.argv[4])
 else:
-    save = False
-    l1 = 1e-3
+    _save = False
+    _run = True
+    _plot = True
+    l1 = 1e-2
     
 #%%
 import time
@@ -98,7 +102,6 @@ else:
 #%% solve with SAGA
 
 Q = problem(f, phi, A, x0 = x0, tol = 1e-9, params = params_saga, verbose = True, measure = True)
-
 Q.solve(solver = 'saga')
 
 print(f.eval(A@Q.x) +phi.eval(Q.x))
@@ -106,7 +109,6 @@ print(f.eval(A@Q.x) +phi.eval(Q.x))
 #%% solve with ADAGRAD
 
 Q1 = problem(f, phi, A, x0 = x0, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
-
 Q1.solve(solver = 'adagrad')
 
 print(f.eval(A@Q1.x)+phi.eval(Q1.x))
@@ -114,7 +116,6 @@ print(f.eval(A@Q1.x)+phi.eval(Q1.x))
 #%% solve with SVRG
 
 Q2 = problem(f, phi, A, x0 = x0, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
-
 Q2.solve(solver = 'svrg')
 
 print(f.eval(A@Q2.x)+phi.eval(Q2.x))
@@ -122,90 +123,91 @@ print(f.eval(A@Q2.x)+phi.eval(Q2.x))
 #%% solve with SNSPP
 
 P = problem(f, phi, A, x0 = x0, tol = 1e-9, params = params_snspp, verbose = True, measure = True)
-
 P.solve(solver = 'snspp')
 
-#fig = P.plot_subproblem(M=20)
 
 #%%
+
+all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q1.x, Q2.x)).T, columns = ['scikit', 'spp', 'saga', 'adagrad', 'svrg'])
 
 ###########################################################################
 # multiple execution
 ############################################################################
 
-K = 20
-
-kwargs2 = {"A": X_test, "b": y_test}
-loss = [logreg_loss, logreg_accuracy]
-names = ['test_loss', 'test_accuracy']
-
 Cont = Experiment(name = 'exp_sido')
 
-Cont.params = {'saga':params_saga, 'svrg': params_svrg, 'adagrad':params_adagrad, 'snspp':params_snspp}
-Cont.psi_star = psi_star
+if not _run:
+    Cont.load_from_disk(path='../data/output/', path_suffix = f'_l1_{l1}')
+else:   
+    K = 20
+    
+    kwargs2 = {"A": X_test, "b": y_test}
+    loss = [logreg_loss, logreg_accuracy]
+    names = ['test_loss', 'test_accuracy']
+    
+    Cont.params = {'saga':params_saga, 'svrg': params_svrg, 'adagrad':params_adagrad, 'snspp':params_snspp}
+    Cont.psi_star = psi_star
+    
+    #%% solve with SAGA (multiple times)
+    
+    allQ = list()
+    for k in range(K):
+        
+        Q_k = problem(f, phi, A, x0 = x0, tol = 1e-9, params = params_saga, verbose = True, measure = True)
+        Q_k.solve(solver = 'saga')
+        
+        Cont.store(Q_k, k)
+        err_k = eval_test_set(X = Q_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
+        Cont.store_by_key(res = err_k, label = Q_k.solver, k = k)
+        
+        allQ.append(Q_k)
+    
+    #%% solve with ADAGRAD (multiple times)
+    
+    allQ1 = list()
+    for k in range(K):
+        
+        Q1_k = problem(f, phi, A, x0 = x0, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
+        Q1_k.solve(solver = 'adagrad')
+        
+        Cont.store(Q1_k, k)
+        err_k = eval_test_set(X = Q1_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
+        Cont.store_by_key(res = err_k, label = Q1_k.solver, k = k)
+        
+        allQ1.append(Q1_k)
+    
+    #%% solve with SVRG (multiple times)
+    
+    allQ2 = list()
+    for k in range(K):
+        
+        Q2_k = problem(f, phi, A, x0 = x0, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
+        Q2_k.solve(solver = 'svrg')
+        
+        Cont.store(Q2_k, k)
+        err_k = eval_test_set(X = Q2_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
+        Cont.store_by_key(res = err_k, label = Q2_k.solver, k = k)
+        
+        allQ2.append(Q2_k)
+        
+    #%% solve with SSNSP (multiple times, VR)
+    
+    allP = list()
+    for k in range(K):
+        
+        P_k = problem(f, phi, A, x0 = x0, tol = 1e-9, params = params_snspp, verbose = False, measure = True)
+        P_k.solve(solver = 'snspp')
+        
+        Cont.store(P_k, k)
+        err_k = eval_test_set(X = P_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
+        Cont.store_by_key(res = err_k, label = P_k.solver, k = k)
+        
+        allP.append(P_k)
+    
+#%% 
 
-
-#%% solve with SAGA (multiple times)
-
-allQ = list()
-for k in range(K):
-    
-    Q_k = problem(f, phi, A, x0 = x0, tol = 1e-9, params = params_saga, verbose = True, measure = True)
-    Q_k.solve(solver = 'saga')
-    
-    Cont.store(Q_k, k)
-    err_k = eval_test_set(X = Q_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
-    Cont.store_by_key(res = err_k, label = Q_k.solver, k = k)
-    
-    allQ.append(Q_k)
-
-#%% solve with ADAGRAD (multiple times)
-
-allQ1 = list()
-for k in range(K):
-    
-    Q1_k = problem(f, phi, A, x0 = x0, tol = 1e-9, params = params_adagrad, verbose = True, measure = True)
-    Q1_k.solve(solver = 'adagrad')
-    
-    Cont.store(Q1_k, k)
-    err_k = eval_test_set(X = Q1_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
-    Cont.store_by_key(res = err_k, label = Q1_k.solver, k = k)
-    
-    allQ1.append(Q1_k)
-
-#%% solve with SVRG (multiple times)
-
-allQ2 = list()
-for k in range(K):
-    
-    Q2_k = problem(f, phi, A, x0 = x0, tol = 1e-9, params = params_svrg, verbose = True, measure = True)
-    Q2_k.solve(solver = 'svrg')
-    
-    Cont.store(Q2_k, k)
-    err_k = eval_test_set(X = Q2_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
-    Cont.store_by_key(res = err_k, label = Q2_k.solver, k = k)
-    
-    allQ2.append(Q2_k)
-    
-#%% solve with SSNSP (multiple times, VR)
-
-allP = list()
-for k in range(K):
-    
-    P_k = problem(f, phi, A, x0 = x0, tol = 1e-9, params = params_snspp, verbose = False, measure = True)
-    P_k.solve(solver = 'snspp')
-    
-    Cont.store(P_k, k)
-    err_k = eval_test_set(X = P_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
-    Cont.store_by_key(res = err_k, label = P_k.solver, k = k)
-    
-    allP.append(P_k)
-    
-#%% coeffcient frame
-
-all_x = pd.DataFrame(np.vstack((x_sk, P.x, Q.x, Q1.x, Q2.x)).T, columns = ['scikit', 'spp', 'saga', 'adagrad', 'svrg'])
-
-Cont.save_to_disk(path = '../data/output/', path_suffix = f'_l1_{l1}')
+if _run:
+    Cont.save_to_disk(path = '../data/output/', path_suffix = f'_l1_{l1}')
 
 #%%
 
@@ -217,83 +219,81 @@ if l1 == 0.01:
     xlim = (0,3)
 else:
     xlim = (0,3)
+
+
+if _plot:    
+    #%% objective plot    
+    fig,ax = plt.subplots(figsize = (4.5, 3.5))
+    kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
     
-#%% objective plot
-
-fig,ax = plt.subplots(figsize = (4.5, 3.5))
-kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
-
-#Q.plot_objective(ax = ax, **kwargs)
-#Q1.plot_objective(ax = ax, **kwargs)
-#Q2.plot_objective(ax = ax, **kwargs)
-#P.plot_objective(ax = ax, **kwargs)
-
-Cont.plot_objective(ax = ax, median = False, **kwargs) 
-
-ax.set_xlim(xlim)
-ax.set_ylim(1e-7,1e-1)
-
-if l1 == 0.01:
-    ax.legend(fontsize = 10, loc = 'upper right')
-else:
-    ax.legend(fontsize = 10, loc = 'lower left')
+    #Q.plot_objective(ax = ax, **kwargs)
+    #Q1.plot_objective(ax = ax, **kwargs)
+    #Q2.plot_objective(ax = ax, **kwargs)
+    #P.plot_objective(ax = ax, **kwargs)
     
-fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
-
-if save:
-    fig.savefig(f'../data/plots/exp_sido/l1_{l1}/obj.pdf', dpi = 300)
-
-
-#%% test loss
-
-fig,ax = plt.subplots(figsize = (4.5, 3.5))
-kwargs = {"log_scale": False, "lw": 1., "markersize": 1.5, 'ls': '-'}
-
-Cont.plot_error(error_key = 'test_loss', ax = ax, median = True, ylabel = 'Test loss', **kwargs) 
-
-ax.set_xlim(xlim)
-
-if l1 == 0.01:
-    ax.set_ylim(0.104, 0.11)
-else:
-    ax.set_ylim(0.085, 0.095)
+    Cont.plot_objective(ax = ax, median = False, **kwargs) 
     
-ax.legend(fontsize = 10)
-
-fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
-
-if save:
-    fig.savefig(f'../data/plots/exp_sido/l1_{l1}/error.pdf', dpi = 300)
-
-#%% test accuracy
-
-fig,ax = plt.subplots(figsize = (4.5, 3.5))
-kwargs = {"log_scale": False, "lw": 1., "markersize": 1.5, 'ls': '-'}
-
-Cont.plot_error(error_key = 'test_accuracy', ax = ax, median = True, ylabel = 'Test accuracy', **kwargs) 
-
-ax.set_xlim(xlim)
-ax.set_ylim(0.6, 1.)
-ax.legend(fontsize = 10)
-
-fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
-
-if save:
-    fig.savefig(f'../data/plots/exp_sido/l1_{l1}/accuracy.pdf', dpi = 300)
+    ax.set_xlim(xlim)
+    ax.set_ylim(1e-7,1e-1)
     
-#%% coeffcient plot
-
-fig,ax = plt.subplots(2, 2, figsize = (7,5))
-
-Q_k.plot_path(ax = ax[0,0], xlabel = False)
-Q1_k.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
-Q2_k.plot_path(ax = ax[1,0])
-P_k.plot_path(ax = ax[1,1], ylabel = False)
-
-for a in ax.ravel():
-    a.set_ylim(-1.5, 1.5)
+    if l1 == 0.01:
+        ax.legend(fontsize = 10, loc = 'upper right')
+    else:
+        ax.legend(fontsize = 10, loc = 'lower left')
+        
+    fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
     
-plt.subplots_adjust(hspace = 0.33)
-
-if save:
-    fig.savefig(f'../data/plots/exp_sido/l1_{l1}/coeff.pdf', dpi = 300)
+    if _save:
+        fig.savefig(f'../data/plots/exp_sido/l1_{l1}/obj.pdf', dpi = 300)
+       
+    #%% test loss
+    
+    fig,ax = plt.subplots(figsize = (4.5, 3.5))
+    kwargs = {"log_scale": False, "lw": 1., "markersize": 1.5, 'ls': '-'}
+    
+    Cont.plot_error(error_key = 'test_loss', ax = ax, median = True, ylabel = 'Test loss', **kwargs) 
+    
+    ax.set_xlim(xlim)
+    
+    if l1 == 0.01:
+        ax.set_ylim(0.104, 0.11)
+    else:
+        ax.set_ylim(0.085, 0.095)
+        
+    ax.legend(fontsize = 10)
+    fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
+    
+    if _save:
+        fig.savefig(f'../data/plots/exp_sido/l1_{l1}/error.pdf', dpi = 300)
+    
+    #%% test accuracy
+    
+    fig,ax = plt.subplots(figsize = (4.5, 3.5))
+    kwargs = {"log_scale": False, "lw": 1., "markersize": 1.5, 'ls': '-'}
+    
+    Cont.plot_error(error_key = 'test_accuracy', ax = ax, median = True, ylabel = 'Test accuracy', **kwargs) 
+    
+    ax.set_xlim(xlim)
+    ax.set_ylim(0.6, 1.)
+    ax.legend(fontsize = 10)
+    
+    fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
+    
+    if _save:
+        fig.savefig(f'../data/plots/exp_sido/l1_{l1}/accuracy.pdf', dpi = 300)
+        
+    #%% coeffcient plot
+    fig,ax = plt.subplots(2, 2, figsize = (7,5))
+    
+    Q_k.plot_path(ax = ax[0,0], xlabel = False)
+    Q1_k.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
+    Q2_k.plot_path(ax = ax[1,0])
+    P_k.plot_path(ax = ax[1,1], ylabel = False)
+    
+    for a in ax.ravel():
+        a.set_ylim(-1.5, 1.5)
+        
+    plt.subplots_adjust(hspace = 0.33)
+    
+    if _save:
+        fig.savefig(f'../data/plots/exp_sido/l1_{l1}/coeff.pdf', dpi = 300)

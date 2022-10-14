@@ -82,7 +82,7 @@ def run_stability(setup_id, save=False, load=False, plot=True):
 
 #%%
 
-setups = ['mnist1', 'sido1', 'covtype1']
+setups = ['sido1', 'covtype1', 'mnist1']
 
 for _s in setups:
     print(f"Running stability for {_s} \n \n")

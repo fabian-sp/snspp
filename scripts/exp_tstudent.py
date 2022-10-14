@@ -3,12 +3,16 @@
 """
 
 import sys
-
-if len(sys.argv) > 2:
-    save = sys.argv[1]
-    setup = float(sys.argv[2])
+    
+if len(sys.argv) > 1:
+    _save = sys.argv[1]
+    _run = sys.argv[2]
+    _plot = sys.argv[3]
+    setup = float(sys.argv[4])
 else:
-    save = False
+    _save = False
+    _run = True
+    _plot = True
     setup = 2
 
 #%%
@@ -48,7 +52,6 @@ elif setup == 4:
     n = 5000; N = 4000; k = 20
     noise = 0.1
 
-
 #%%
 
 f, phi, A, X_train, y_train, X_test, y_test, xsol = tstudent_test(N = N, n = n, k = k, lambda1 = l1, v = v,\
@@ -71,7 +74,6 @@ elif setup == 2:
     params_adagrad = {'n_epochs' : 150, 'batch_size': 20, 'alpha': 0.03}   
     params_snspp = {'max_iter' : 320, 'batch_size': 20, 'sample_style': 'constant', 'alpha' : 3., 'reduce_variance': True}
 
-    
 elif setup == 4:
     params_saga = {'n_epochs' : 100, 'alpha' : 0.0025}
     params_svrg = {'n_epochs' : 100, 'batch_size': 40, 'alpha': 0.14}
@@ -89,7 +91,6 @@ print("psi(x_t) = ", f.eval(A@Q.x) + phi.eval(Q.x))
 
 # use the last objective of SAGA as surrogate optimal value / plot only psi(x^k)
 psi_star = f.eval(A@Q.x)+phi.eval(Q.x)
-#psi_star = 0
 
 #%% solve with SVRG
 
@@ -116,86 +117,86 @@ print("psi(x_t) = ", f.eval(A@P.x) + phi.eval(P.x))
 
 #%%
 
+all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x, Q2.x)).T, columns = ['sol', 'spp', 'saga', 'adagrad', 'svrg'])
+
 ###########################################################################
 # multiple execution
 ############################################################################
 
-K = 20
-
-kwargs2 = {"A": X_test, "b": y_test, "v": f.v}
-loss = [tstudent_loss]
-names = ['test_loss']
-
 Cont = Experiment(name = f'exp_tstudent_setup{setup}')
 
-Cont.params = {'saga':params_saga, 'svrg': params_svrg, 'adagrad':params_adagrad, 'snspp':params_snspp}
-Cont.psi_star = psi_star
-
-
-#%% solve with SAGA (multiple times)
-
-allQ = list()
-for k in range(K):
+if not _run:
+    Cont.load_from_disk(path='../data/output/')
+else:
+    K = 20
     
-    Q_k = problem(f, phi, A, tol = 1e-30, params = params_saga, verbose = True, measure = True)
-    Q_k.solve(solver = 'saga')
+    kwargs2 = {"A": X_test, "b": y_test, "v": f.v}
+    loss = [tstudent_loss]
+    names = ['test_loss']
+       
+    Cont.params = {'saga':params_saga, 'svrg': params_svrg, 'adagrad':params_adagrad, 'snspp':params_snspp}
+    Cont.psi_star = psi_star
+       
+    #%% solve with SAGA (multiple times)
     
-    Cont.store(Q_k, k)
-    err_k = eval_test_set(X = Q_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
-    Cont.store_by_key(res = err_k, label = Q_k.solver, k = k)
+    allQ = list()
+    for k in range(K):
+        
+        Q_k = problem(f, phi, A, tol = 1e-30, params = params_saga, verbose = True, measure = True)
+        Q_k.solve(solver = 'saga')
+        
+        Cont.store(Q_k, k)
+        err_k = eval_test_set(X = Q_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
+        Cont.store_by_key(res = err_k, label = Q_k.solver, k = k)
+        
+        allQ.append(Q_k)
     
-    allQ.append(Q_k)
-
-#%% solve with ADAGRAD (multiple times)
-
-allQ1 = list()
-for k in range(K):
+    #%% solve with ADAGRAD (multiple times)
     
-    Q1_k = problem(f, phi, A, tol = 1e-30, params = params_adagrad, verbose = True, measure = True)
-    Q1_k.solve(solver = 'adagrad')
+    allQ1 = list()
+    for k in range(K):
+        
+        Q1_k = problem(f, phi, A, tol = 1e-30, params = params_adagrad, verbose = True, measure = True)
+        Q1_k.solve(solver = 'adagrad')
+        
+        Cont.store(Q1_k, k)
+        err_k = eval_test_set(X = Q1_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
+        Cont.store_by_key(res = err_k, label = Q1_k.solver, k = k)
+        
+        allQ1.append(Q1_k)
     
-    Cont.store(Q1_k, k)
-    err_k = eval_test_set(X = Q1_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
-    Cont.store_by_key(res = err_k, label = Q1_k.solver, k = k)
+    #%% solve with SVRG (multiple times)
     
-    allQ1.append(Q1_k)
-
-#%% solve with SVRG (multiple times)
-
-allQ2 = list()
-for k in range(K):
+    allQ2 = list()
+    for k in range(K):
+        
+        Q2_k = problem(f, phi, A, tol = 1e-30, params = params_svrg, verbose = True, measure = True)
+        Q2_k.solve(solver = 'svrg')
+        
+        Cont.store(Q2_k, k)
+        err_k = eval_test_set(X = Q2_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
+        Cont.store_by_key(res = err_k, label = Q2_k.solver, k = k)
+        
+        allQ2.append(Q2_k)
+        
+    #%% solve with SSNSP (multiple times, VR)
     
-    Q2_k = problem(f, phi, A, tol = 1e-30, params = params_svrg, verbose = True, measure = True)
-    Q2_k.solve(solver = 'svrg')
-    
-    Cont.store(Q2_k, k)
-    err_k = eval_test_set(X = Q2_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
-    Cont.store_by_key(res = err_k, label = Q2_k.solver, k = k)
-    
-    allQ2.append(Q2_k)
-    
-#%% solve with SSNSP (multiple times, VR)
-
-allP = list()
-for k in range(K):
-    
-    P_k = problem(f, phi, A, tol = 1e-30, params = params_snspp, verbose = False, measure = True)
-    P_k.solve(solver = 'snspp')
-    
-    Cont.store(P_k, k)
-    err_k = eval_test_set(X = P_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
-    Cont.store_by_key(res = err_k, label = P_k.solver, k = k)
-    
-    allP.append(P_k)
-
+    allP = list()
+    for k in range(K):
+        
+        P_k = problem(f, phi, A, tol = 1e-30, params = params_snspp, verbose = False, measure = True)
+        P_k.solve(solver = 'snspp')
+        
+        Cont.store(P_k, k)
+        err_k = eval_test_set(X = P_k.info["iterates"], loss = loss, names = names, kwargs = kwargs2)
+        Cont.store_by_key(res = err_k, label = P_k.solver, k = k)
+        
+        allP.append(P_k)
 
 #%% store
 
-all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x, Q2.x)).T, columns = ['sol', 'spp', 'saga', 'adagrad', 'svrg'])
-
-Cont.save_to_disk(path = '../data/output/')
-
-#Cont.load_from_disk(path='../data/output/')
+if _run:
+    Cont.save_to_disk(path = '../data/output/')
 
 #%%
 
@@ -209,61 +210,62 @@ elif setup == 2:
    xlim = (0, 1.5)
 elif setup == 4:
     xlim = (0, 3.5)
+   
+if _plot:
+    #%% plot objective
     
-#%% plot objective
-
-fig,ax = plt.subplots(figsize = (4.5, 3.5))
-kwargs = {"psi_star": Cont.psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
-
-# Q.plot_objective(ax = ax, **kwargs)
-# Q1.plot_objective(ax = ax, **kwargs)
-# Q2.plot_objective(ax = ax, **kwargs)
-# P.plot_objective(ax = ax, **kwargs)
-
-Cont.plot_objective(ax = ax, median = False, **kwargs) 
-
-ax.set_xlim(xlim)
-ax.set_ylim(1e-7,1e-1)
-ax.legend(fontsize = 10, loc = 'upper right')
-
-fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
-if save:
-    fig.savefig(f'../data/plots/exp_tstudent/setup{setup}/obj.pdf', dpi = 300)
-
-#%% plot error
+    fig,ax = plt.subplots(figsize = (4.5, 3.5))
+    kwargs = {"psi_star": Cont.psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
     
-fig,ax = plt.subplots(figsize = (4.5, 3.5))
-kwargs = {"log_scale": False, "lw": 1., "markersize": 1.5, 'ls': '-'}
-
-Cont.plot_error(error_key = 'test_loss', ax = ax, median = True, ylabel = 'Test loss', **kwargs) 
-
-ax.set_xlim(xlim)
-ax.legend(fontsize = 10)
-#ax.set_yscale('log')
-
-if setup ==2:
-    ax.set_ylim(0.2, 0.4)
-
-fig.tight_layout()
-fig.subplots_adjust(top=0.96,bottom=0.14,right=0.965,hspace=0.2,wspace=0.2)
-
-if save:
-    fig.savefig(f'../data/plots/exp_tstudent/setup{setup}/error.pdf', dpi = 300)
-
-#%% coeffcient plot
-
-fig,ax = plt.subplots(2, 2, figsize = (7,5))
-
-Q_k.plot_path(ax = ax[0,0], xlabel = False)
-Q1_k.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
-Q2_k.plot_path(ax = ax[1,0])
-P_k.plot_path(ax = ax[1,1], ylabel = False)
-
-for a in ax.ravel():
-    a.set_ylim(-2., 2.)
+    # Q.plot_objective(ax = ax, **kwargs)
+    # Q1.plot_objective(ax = ax, **kwargs)
+    # Q2.plot_objective(ax = ax, **kwargs)
+    # P.plot_objective(ax = ax, **kwargs)
     
-plt.subplots_adjust(hspace = 0.33)
-
-if save:
-    fig.savefig(f'../data/plots/exp_tstudent/setup{setup}/coeff.pdf', dpi = 300)
+    Cont.plot_objective(ax = ax, median = False, **kwargs) 
+    
+    ax.set_xlim(xlim)
+    ax.set_ylim(1e-7,1e-1)
+    ax.legend(fontsize = 10, loc = 'upper right')
+    
+    fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
+    if _save:
+        fig.savefig(f'../data/plots/exp_tstudent/setup{setup}/obj.pdf', dpi = 300)
+    
+    #%% plot error
+        
+    fig,ax = plt.subplots(figsize = (4.5, 3.5))
+    kwargs = {"log_scale": False, "lw": 1., "markersize": 1.5, 'ls': '-'}
+    
+    Cont.plot_error(error_key = 'test_loss', ax = ax, median = True, ylabel = 'Test loss', **kwargs) 
+    
+    ax.set_xlim(xlim)
+    ax.legend(fontsize = 10)
+    #ax.set_yscale('log')
+    
+    if setup ==2:
+        ax.set_ylim(0.2, 0.4)
+    
+    fig.tight_layout()
+    fig.subplots_adjust(top=0.96,bottom=0.14,right=0.965,hspace=0.2,wspace=0.2)
+    
+    if _save:
+        fig.savefig(f'../data/plots/exp_tstudent/setup{setup}/error.pdf', dpi = 300)
+    
+    #%% coeffcient plot
+    
+    fig,ax = plt.subplots(2, 2, figsize = (7,5))
+    
+    Q_k.plot_path(ax = ax[0,0], xlabel = False)
+    Q1_k.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
+    Q2_k.plot_path(ax = ax[1,0])
+    P_k.plot_path(ax = ax[1,1], ylabel = False)
+    
+    for a in ax.ravel():
+        a.set_ylim(-2., 2.)
+        
+    plt.subplots_adjust(hspace = 0.33)
+    
+    if _save:
+        fig.savefig(f'../data/plots/exp_tstudent/setup{setup}/coeff.pdf', dpi = 300)
     

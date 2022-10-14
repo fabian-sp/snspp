@@ -10,7 +10,7 @@
       "alpha_min": 0,
       "alpha_max": 3,
       "n_alpha": 15,
-      "batch": [0.001,0.005,0.01],
+      "batch": [0.005,0.01],
       "params": {
         "max_iter": 500,
         "sample_style": "constant",
@@ -23,7 +23,7 @@
       "alpha_min": -2,
       "alpha_max": 1,
       "n_alpha": 20,
-      "batch": [0.001,0.005,0.01],
+      "batch": [0.005,0.01],
       "params": {
         "n_epochs": 20,
         "measure_freq": 10
