@@ -11,9 +11,9 @@ For running this, complete the following steps:
 import sys
 
 if len(sys.argv) > 1:
-    _save = sys.argv[1]
-    _run = sys.argv[2]
-    _plot = sys.argv[3]
+    _save = bool(int(sys.argv[1]))
+    _run = bool(int(sys.argv[2]))
+    _plot = bool(int(sys.argv[3]))
 else:
     _save = False
     _run = True
@@ -246,10 +246,10 @@ if _plot:
     
     fig,ax = plt.subplots(2, 2, figsize = (7,5))
     
-    Q_k.plot_path(ax = ax[0,0], xlabel = False)
-    Q1_k.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
-    Q2_k.plot_path(ax = ax[1,0])
-    P_k.plot_path(ax = ax[1,1], ylabel = False)
+    Q.plot_path(ax = ax[0,0], xlabel = False)
+    Q1.plot_path(ax = ax[0,1], xlabel = False, ylabel = False)
+    Q2.plot_path(ax = ax[1,0])
+    P.plot_path(ax = ax[1,1], ylabel = False)
     
     for a in ax.ravel():
         a.set_ylim(-2., 2.5)
