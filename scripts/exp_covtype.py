@@ -67,7 +67,7 @@ params_svrg = {'n_epochs' : 10, 'batch_size': 50, 'alpha': 0.35, 'measure_freq':
 
 params_adagrad = {'n_epochs' : 100, 'batch_size': 250, 'alpha': 0.1}
 
-params_snspp = {'max_iter' : 200, 'batch_size': 50, 'sample_style': 'constant', 'alpha' : 45.,\
+params_snspp = {'max_iter' : 200, 'batch_size': 50, 'sample_style': 'constant', 'alpha' : 50.,\
                 "reduce_variance": True}
 
 #params_tuner(f, phi, A, solver = "adagrad", batch_range = np.array([50, 250, 500]))
