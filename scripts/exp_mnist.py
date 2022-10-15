@@ -53,7 +53,7 @@ initialize_solvers(f, phi, A)
 
 params_saga = {'n_epochs': 20, 'alpha': 0.00045}
 
-params_svrg = {'n_epochs': 15, 'batch_size': 650, 'alpha': 0.45583}
+params_svrg = {'n_epochs': 15, 'batch_size': 280, 'alpha': 0.25}
 
 params_adagrad = {'n_epochs' : 100, 'batch_size': int(f.N*0.05), 'alpha': 0.03}
 
