@@ -8,7 +8,7 @@ if len(sys.argv) > 1:
     _save = bool(int(sys.argv[1]))
     _run = bool(int(sys.argv[2]))
     _plot = bool(int(sys.argv[3]))
-    setup = float(sys.argv[4])
+    setup = int(sys.argv[4])
 else:
     _save = False
     _run = True
