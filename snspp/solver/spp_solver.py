@@ -307,7 +307,7 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
                 xi_tilde = compute_full_xi(f, z_t, is_easy)
                 full_g = (1/f.N) * (A.T @ xi_tilde)
                 
-                _fnat = 1. #np.linalg.norm(x_t - phi.prox(x_t-full_g, 1.))
+                _fnat = np.linalg.norm(x_t - phi.prox(x_t-full_g, 1.))
                 
                 # update xi
                 if f.convex:
@@ -328,7 +328,7 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
         # else:
         #     _tol = max(min(params['tol_sub']*_fnat, 1e-3), 1e-6)
         
-        _tol = params['tol_sub']        
+        _tol = 0.1*_fnat
             
         sub_start = time.time()
         if not is_easy:
