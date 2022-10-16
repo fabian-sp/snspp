@@ -2,9 +2,6 @@
   "instance": {
   	"loss": "logistic",
     "dataset": "higgs",
-    "N": 0,
-    "n": 0,
-    "k": 0,
     "l1": 0.001
   },
   "methods": {
@@ -15,7 +12,7 @@
       "n_alpha": 15,
       "batch": [1e-5, 5e-5],
       "params": {
-        "max_iter": 400,
+        "max_iter": 600,
         "sample_style": "constant",
         "reduce_variance": true,
         "measure_freq": 1
@@ -29,7 +26,7 @@
       "batch": [1e-5, 5e-5],
       "params": {
         "n_epochs": 10,
-        "measure_freq": 200
+        "measure_freq": 400
       }
     },
     "saga": {
@@ -40,12 +37,11 @@
       "batch": [],
       "params": {
         "n_epochs": 5,
-        "measure_freq": 200
+        "measure_freq": 400
       }
     }
   },
   "psi_tol": 0.0001,
-  "y_max": 30,
   "n_rep": 5,
   "start": 0
 }
