@@ -10,7 +10,7 @@ from sklearn.linear_model import Lasso, LogisticRegression
 
 from snspp.helper.data_generation import tstudent_test, logreg_test, get_gisette, get_mnist, get_sido, get_libsvm, get_higgs, get_poly
 from snspp.solver.opt_problem import problem, color_dict, marker_dict
-from snspp.experiments.experiment_utils import initialize_solvers
+from snspp.experiments.experiment_utils import initialize_solvers, logreg_accuracy
 
 def load_setup(setup_id = ''):
     
@@ -66,6 +66,9 @@ def compute_psi_star(setup, f, phi, A, X_train, y_train):
                             solver = 'saga', max_iter = _max_iter, verbose = 1)
         sk.fit(X_train, y_train)
         xsol = sk.coef_.copy().squeeze()
+
+        print("Train accuracy: ", logreg_accuracy(xsol, X_train, y_train))
+
     elif setup['instance']['loss'] == "squared":
         sk = Lasso(alpha = phi.l1/2, fit_intercept = False, tol = 1e-20, selection = 'cyclic', max_iter = _max_iter)
         sk.fit(X_train, y_train)
@@ -78,6 +81,7 @@ def compute_psi_star(setup, f, phi, A, X_train, y_train):
         
     psi_star = f.eval(A@xsol) + phi.eval(xsol)
     print("Optimal value: ", psi_star)
+    print("Nonzeros: ", np.count_nonzero(xsol))
  
     return psi_star, xsol
 
