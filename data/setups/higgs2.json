@@ -26,7 +26,7 @@
       "batch": [1e-5, 5e-5],
       "params": {
         "n_epochs": 10,
-        "measure_freq": 400
+        "measure_freq": 200
       }
     },
     "saga": {
@@ -37,7 +37,7 @@
       "batch": [],
       "params": {
         "n_epochs": 5,
-        "measure_freq": 400
+        "measure_freq": 200
       }
     }
   },
