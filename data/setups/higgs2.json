@@ -1,18 +1,18 @@
 {
   "instance": {
   	"loss": "logistic",
-    "dataset": "covtype",
-    "l1": 0.02
+    "dataset": "higgs",
+    "l1": 0.005
   },
   "methods": {
     "snspp": {
       "solver": "snspp",
-      "alpha_min": 0,
+      "alpha_min": -1,
       "alpha_max": 3,
       "n_alpha": 15,
-      "batch": [0.0001, 0.0005, 0.001],
+      "batch": [1e-5, 5e-5],
       "params": {
-        "max_iter": 500,
+        "max_iter": 400,
         "sample_style": "constant",
         "reduce_variance": true,
         "measure_freq": 1
@@ -20,23 +20,23 @@
     },
     "svrg": {
       "solver": "svrg",
-      "alpha_min": -2,
+      "alpha_min": -4,
       "alpha_max": 1,
       "n_alpha": 15,
-      "batch": [0.0001, 0.0005, 0.001],
+      "batch": [1e-5, 5e-5],
       "params": {
-        "n_epochs": 15,
+        "n_epochs": 10,
         "measure_freq": 200
       }
     },
     "saga": {
       "solver": "saga",
-      "alpha_min": -3,
+      "alpha_min": -5,
       "alpha_max": 0,
       "n_alpha": 15,
       "batch": [],
       "params": {
-        "n_epochs": 15,
+        "n_epochs": 5,
         "measure_freq": 200
       }
     }
