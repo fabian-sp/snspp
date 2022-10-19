@@ -24,7 +24,7 @@ def Ueval(xi_sub, f, phi, x, alpha, S, subA, hat_d):
 
 
     
-def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, tol = 1e-3, newton_params = None, reduce_variance = False, xi_tilde = None, full_g = None, verbose = True):
+def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, tol = 1e-3, newton_params = None, reduce_variance = False, xi_tilde = None, full_g = None, sparse_format = False, verbose = True):
     """
     This function solves the subproblem in each SNSPP iteration. 
     The stopping criterion is reached when the norm of the gradient is below ``tol`` or when the maximum number of iterations is reached.
@@ -57,6 +57,8 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, tol = 1e-3, newton_params 
         If VR is enabled, this is given by :math:`\nabla f_i(A_i \tilde{x}),~~ i=1,\dots,N`.
     full_g : array of shape (n,), optional
         If VR is enabled, this is given by :math:`\nabla f(\tilde{x})`. It is precomputed once for every inner loop in ``stochastic_proximal_point()``.
+    sparse_format: boolean, optional
+        Whether data is in sparse format.
     verbose : boolean, optional
         Verbosity for the subproblem. The default is True.
 
@@ -100,8 +102,13 @@ def solve_subproblem_easy(f, phi, x, xi, alpha, A, S, tol = 1e-3, newton_params 
     #compute term coming from weak convexity
     if not f.convex: 
         gamma_i = f.weak_conv(S)
-        hat_d += (alpha/sample_size) * (gamma_i.reshape(1,-1) * subA.T @ (subA @ x))
-    
+        if not sparse_format:
+            hat_d += (alpha/sample_size) * (gamma_i.reshape(1,-1) * subA.T @ (subA @ x))
+        else:
+            # TO DO: make this work if gamma_i would be different (not used so far)
+            assert len(np.unique(gamma_i)) == 1
+            hat_d += (alpha/sample_size) * gamma_i[0] * (subA.T @ (subA @ x))
+            
     z = x - (alpha/sample_size) * (subA.T @ xi_sub) + hat_d
     
     while sub_iter < newton_params['max_iter']:

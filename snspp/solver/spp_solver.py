@@ -332,6 +332,7 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
             
         sub_start = time.time()
         if not is_easy:
+            assert not sparse_format #TO DO: add option?
             x_t, xi, this_ssn = solve_subproblem(f, phi, x_t, xi, alpha_t, A, f.m, S, \
                                              tol = _tol, newton_params = params['newton_params'],\
                                              reduce_variance = reduce_variance, xi_tilde = xi_tilde,\
@@ -340,6 +341,7 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
             x_t, xi, this_ssn = solve_subproblem_easy(f, phi, x_t, xi, alpha_t, A, S, \
                                              tol = _tol, newton_params = params['newton_params'],\
                                              reduce_variance = reduce_variance, xi_tilde = xi_tilde, full_g = full_g,\
+                                             sparse_format = sparse_format,    
                                              verbose = verbose)
         
         sub_end = time.time()                                     
