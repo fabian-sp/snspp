@@ -384,7 +384,7 @@ def get_sido(lambda1 = 0.02, train_size = .8, scale = False, path_prefix = '../'
     return f, phi, A, X_train, y_train, X_test, y_test
 
 def get_higgs(lambda1 = 0.01, train_size = .8, scale = True, path_prefix = '../'):
-    # download from 
+    # download from https://archive.ics.uci.edu/ml/datasets/HIGGS
     
     warnings.warn("Loading higgs is highly memory intensive.")
     
@@ -425,7 +425,9 @@ def get_higgs(lambda1 = 0.01, train_size = .8, scale = True, path_prefix = '../'
     return f, phi, A, X_train, y_train, X_test, y_test
 
 def get_e2006(lambda1 = 0.01, train_size = None, path_prefix = '../'):
-    
+    # download from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/regression.html#E2006-tfidf
+    # extract to data/libsvm
+
     # X is in sparse format
     X, y = load_svmlight_file(path_prefix + 'data/libsvm/E2006.train' )
     

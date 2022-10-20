@@ -2,7 +2,7 @@
   "instance": {
   	"loss": "tstudent",
     "dataset": "e2006",
-    "l1": 0.01
+    "l1": 0.001
   },
   "methods": {
     "snspp": {
