@@ -8,7 +8,7 @@ import seaborn as sns
 
 from sklearn.linear_model import Lasso, LogisticRegression
 
-from snspp.helper.data_generation import tstudent_test, logreg_test, get_gisette, get_mnist, get_sido, get_libsvm, get_higgs, get_poly
+from snspp.helper.data_generation import tstudent_test, logreg_test, get_gisette, get_mnist, get_sido, get_libsvm, get_higgs, get_poly, get_e2006
 from snspp.solver.opt_problem import problem, color_dict, marker_dict
 from snspp.experiments.experiment_utils import initialize_solvers, logreg_accuracy
 
@@ -51,7 +51,9 @@ def create_instance(setup):
     elif setup['instance']['dataset'] in ["rcv1", "covtype"]:
         f, phi, A, X_train, y_train, _, _ = get_libsvm(name = setup['instance']['dataset'], lambda1 = setup['instance']['l1'], train_size=0.8)
         
-    
+    elif setup['instance']['dataset'] == 'e2006':
+        f, phi, A, X_train, y_train, _, _ = get_e2006(lambda1 = setup['instance']['l1'], train_size = None)
+        
     # IMPORTANT: Initialize numba
     initialize_solvers(f, phi, A)
 
@@ -75,7 +77,7 @@ def compute_psi_star(setup, f, phi, A, X_train, y_train):
         xsol = sk.coef_.copy().squeeze()
         
     elif setup['instance']['loss'] == "tstudent":
-        orP = problem(f, phi, A, tol = 1e-20, params = {'n_epochs': _max_iter}, verbose = False, measure = False)
+        orP = problem(f, phi, A, tol = 1e-20, params = {'n_epochs': _max_iter}, verbose = True, measure = False)
         orP.solve(solver = 'saga')
         xsol = orP.x.copy()
         
