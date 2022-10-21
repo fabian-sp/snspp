@@ -52,7 +52,7 @@ def create_instance(setup):
         f, phi, A, X_train, y_train, _, _ = get_libsvm(name = setup['instance']['dataset'], lambda1 = setup['instance']['l1'], train_size=0.8)
         
     elif setup['instance']['dataset'] == 'e2006':
-        f, phi, A, X_train, y_train, _, _ = get_e2006(lambda1 = setup['instance']['l1'], train_size = None)
+        f, phi, A, X_train, y_train, _, _ = get_e2006(lambda1 = setup['instance']['l1'], train_size = 0.8)
         
     # IMPORTANT: Initialize numba
     initialize_solvers(f, phi, A)
@@ -72,7 +72,7 @@ def compute_psi_star(setup, f, phi, A, X_train, y_train):
         print("Train accuracy: ", logreg_accuracy(xsol, X_train, y_train))
 
     elif setup['instance']['loss'] == "squared":
-        sk = Lasso(alpha = phi.l1/2, fit_intercept = False, tol = 1e-20, selection = 'cyclic', max_iter = _max_iter)
+        sk = Lasso(alpha = phi.lambda1/2, fit_intercept = False, tol = 1e-20, selection = 'cyclic', max_iter = _max_iter)
         sk.fit(X_train, y_train)
         xsol = sk.coef_.copy().squeeze()
         

@@ -2,7 +2,7 @@
   "instance": {
   	"loss": "tstudent",
     "dataset": "e2006",
-    "l1": 0.001
+    "l1": 1e-6
   },
   "methods": {
     "snspp": {
@@ -12,7 +12,7 @@
       "n_alpha": 15,
       "batch": [0.01, 0.05],
       "params": {
-        "max_iter": 500,
+        "max_iter": 400,
         "sample_style": "constant",
         "reduce_variance": true,
         "measure_freq": 1
@@ -25,7 +25,7 @@
       "n_alpha": 15,
       "batch": [0.01, 0.05],
       "params": {
-        "n_epochs": 50,
+        "n_epochs": 30,
         "measure_freq": 10
       }
     },
@@ -36,13 +36,13 @@
       "n_alpha": 15,
       "batch": [],
       "params": {
-        "n_epochs": 50,
+        "n_epochs": 30,
         "measure_freq": 10
       }
     }
   },
   "psi_tol": 0.0001,
-  "max_iter_star": 500,
+  "max_iter_star": 50,
   "n_rep": 1,
   "start": 0
 }
