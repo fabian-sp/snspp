@@ -429,7 +429,7 @@ def get_e2006(lambda1 = 0.01, train_size = None, path_prefix = '../'):
     # extract to data/libsvm
 
     # X is in sparse format
-    X, y = load_svmlight_file(path_prefix + 'data/libsvm/E2006.train' )
+    X, y = load_svmlight_file(path_prefix + 'data/libsvm/E2006.train' )   
     
     if train_size is not None:
         X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
@@ -439,7 +439,11 @@ def get_e2006(lambda1 = 0.01, train_size = None, path_prefix = '../'):
         y_train = y
         X_test = None
         y_test = None
-        
+    
+    # test set has two features less!
+    #X_test, y_test = load_svmlight_file(path_prefix + 'data/libsvm/E2006.test' )
+    
+       
     nu_est = np.round(t.fit(y_train)[0], 2) # estimate degrees of freedom
     print("Estimated degrees of freedom: ", nu_est)
     #tmp = y_train/(nu_est+y_train**2)

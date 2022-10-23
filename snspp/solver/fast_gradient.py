@@ -117,7 +117,7 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
             else:
                 alpha = 1e-3
                 
-        warnings.warn(f"Using a default step size of {alpha}. This may lead to divergence (if too big) or slow convergence (if too small). A script for tuning the step size is contained in snspp/experiments/experiment_utils. Provide a step size via params[\"alpha\"].")
+        warnings.warn(f"Using a default step size of {alpha}. This may lead to divergence (if too big) or slow convergence (if too small). You can provide a step size via params[\"alpha\"].")
 
     else:
         alpha = params['alpha']
