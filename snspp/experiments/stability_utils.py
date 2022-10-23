@@ -52,7 +52,7 @@ def create_instance(setup):
         f, phi, A, X_train, y_train, _, _ = get_libsvm(name = setup['instance']['dataset'], lambda1 = setup['instance']['l1'], train_size=0.8)
         
     elif setup['instance']['dataset'] == 'e2006':
-        f, phi, A, X_train, y_train, _, _ = get_e2006(lambda1 = setup['instance']['l1'], train_size = 0.8)
+        f, phi, A, X_train, y_train, _, _ = get_e2006(lambda1 = setup['instance']['l1'])
         
     # IMPORTANT: Initialize numba
     initialize_solvers(f, phi, A)
@@ -195,12 +195,14 @@ def do_grid_run(f, phi, A, step_size_range, batch_size_range = [], psi_star = 0,
                         this_obj.append(obj_arr[-1])
                         
                         print("NO CONVERGENCE!")
+                        break
                 except:
                     print("SOLVER FAILED!")
                     this_stop_iter.append(np.inf)
                     this_time.append(np.inf)
                     this_obj.append(np.inf)
-                    
+                    break
+                
             # set as CONVERGED if all repetitions converged
             CONVERGED[k,l] = np.all(~np.isinf(this_stop_iter))
             OBJ[k,l] = np.mean(this_obj)

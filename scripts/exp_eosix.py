@@ -28,7 +28,7 @@ from snspp.experiments.container import Experiment
 
 #%% load data
 
-f, phi, A, X_train, y_train, X_test, y_test = get_e2006(lambda1 = 1e-6, train_size = 0.8)
+f, phi, A, X_train, y_train, X_test, y_test = get_e2006(lambda1 = 1e-6)
 
 initialize_solvers(f, phi, A)
 
@@ -38,16 +38,16 @@ xsol = orP.x.copy()
 
 #%% parameter setup
 
-params_saga = {'n_epochs' : 50, 'alpha' : 0.0025}
-params_svrg = {'n_epochs' : 50, 'batch_size': 40, 'alpha': 0.14}
-params_adagrad = {'n_epochs' : 50, 'batch_size': 40, 'alpha': 0.0316}   
-params_snspp = {'max_iter' : 100, 'batch_size': 20, 'sample_style': 'constant', 'alpha' : 1.05, 'reduce_variance': True}
+params_saga = {'n_epochs' : 10, 'alpha' : 0.00025, 'measure_freq': 10}
+params_svrg = {'n_epochs' : 10, 'batch_size': 80, 'alpha': 0.08, 'measure_freq': 10}
+params_adagrad = {'n_epochs' : 15, 'batch_size': 100, 'alpha': 0.25}   
+params_snspp = {'max_iter' : 300, 'batch_size': 80, 'sample_style': 'constant', 'alpha' : 3., 'reduce_variance': True}
 
-params_tuner(f, phi, A, solver = "adagrad", batch_range = np.array([100, 200]), alpha_range=np.logspace(-4, 1, 6), n_iter=40)
+#params_tuner(f, phi, A, solver = "adagrad", batch_range = np.array([100, 500]), alpha_range=np.logspace(-3, 1, 6), n_iter=40)
 
 #%% solve with SAGA
 
-Q = problem(f, phi, A, tol = 1e-16, params = params_saga, verbose = True, measure = True)
+Q = problem(f, phi, A, tol = 1e-30, params = params_saga, verbose = True, measure = True)
 Q.solve(solver = 'saga')
 
 print("psi(x_t) = ", f.eval(A@Q.x) + phi.eval(Q.x))
@@ -57,21 +57,21 @@ psi_star = f.eval(A@Q.x)+phi.eval(Q.x)
 
 #%% solve with SVRG
 
-Q2 = problem(f, phi, A, tol = 1e-16, params = params_svrg, verbose = True, measure = True)
+Q2 = problem(f, phi, A, tol = 1e-30, params = params_svrg, verbose = True, measure = True)
 Q2.solve(solver = 'svrg')
 
 print("psi(x_t) = ", f.eval(A@Q2.x) + phi.eval(Q2.x))
 
 #%% solve with ADAGRAD
 
-Q1 = problem(f, phi, A, tol = 1e-16, params = params_adagrad, verbose = True, measure = True)
+Q1 = problem(f, phi, A, tol = 1e-30, params = params_adagrad, verbose = True, measure = True)
 Q1.solve(solver = 'adagrad')
 
 print("psi(x_t) = ", f.eval(A@Q1.x) + phi.eval(Q1.x))
 
 #%% solve with SNSPP
 
-P = problem(f, phi, A, tol = 1e-16, params = params_snspp, verbose = True, measure = True)
+P = problem(f, phi, A, tol = 1e-30, params = params_snspp, verbose = True, measure = True)
 P.solve(solver = 'snspp')
 
 print("psi(x_t) = ", f.eval(A@P.x) + phi.eval(P.x))
@@ -167,7 +167,7 @@ if _run:
 # plotting
 ############################################################################
 
-xlim = (0, 3.5)
+xlim = (0, 60.)
    
 if _plot:
     #%% plot objective
@@ -180,7 +180,8 @@ if _plot:
     # Q2.plot_objective(ax = ax, **kwargs)
     # P.plot_objective(ax = ax, **kwargs)
     
-    Cont.plot_objective(ax = ax, median = False, **kwargs) 
+    mk_every_dict = {'saga': 10, 'svrg': 10} # mark every epoch/outer iter
+    Cont.plot_objective(ax = ax, median = False, markevery_dict = mk_every_dict, **kwargs) 
     
     ax.set_xlim(xlim)
     ax.set_ylim(1e-7, 1e-1)
@@ -195,7 +196,7 @@ if _plot:
     fig,ax = plt.subplots(figsize = (4.5, 3.5))
     kwargs = {"log_scale": False, "lw": 1., "markersize": 1.5, 'ls': '-'}
     
-    Cont.plot_error(error_key = 'test_loss', ax = ax, median = True, ylabel = 'Test loss', **kwargs) 
+    Cont.plot_error(error_key = 'test_loss', ax = ax, median = True, ylabel = 'Test loss', markevery_dict = mk_every_dict, **kwargs) 
     
     ax.set_xlim(xlim)
     ax.legend(fontsize = 10)

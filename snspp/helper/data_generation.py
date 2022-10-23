@@ -424,22 +424,15 @@ def get_higgs(lambda1 = 0.01, train_size = .8, scale = True, path_prefix = '../'
         
     return f, phi, A, X_train, y_train, X_test, y_test
 
-def get_e2006(lambda1 = 0.01, train_size = None, path_prefix = '../'):
+def get_e2006(lambda1 = 0.01, path_prefix = '../'):
     # download from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/regression.html#E2006-tfidf
     # extract to data/libsvm
 
     # X is in sparse format
-    X, y = load_svmlight_file(path_prefix + 'data/libsvm/E2006.train' )
+    X_train, y_train = load_svmlight_file(path_prefix + 'data/libsvm/E2006.train' )   
+    X_test, y_test = load_svmlight_file(path_prefix + 'data/libsvm/E2006.test' )
     
-    if train_size is not None:
-        X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
-                                                            random_state = 1234)
-    else:
-        X_train = X
-        y_train = y
-        X_test = None
-        y_test = None
-        
+       
     nu_est = np.round(t.fit(y_train)[0], 2) # estimate degrees of freedom
     print("Estimated degrees of freedom: ", nu_est)
     #tmp = y_train/(nu_est+y_train**2)
