@@ -28,7 +28,7 @@ from snspp.experiments.container import Experiment
 
 #%% load data
 
-f, phi, A, X_train, y_train, X_test, y_test = get_e2006(lambda1 = 1e-6)
+f, phi, A, X_train, y_train, X_test, y_test = get_e2006(lambda1 = 1e-6, train_size = 0.8)
 
 initialize_solvers(f, phi, A)
 

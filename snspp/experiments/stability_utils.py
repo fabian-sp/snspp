@@ -52,7 +52,7 @@ def create_instance(setup):
         f, phi, A, X_train, y_train, _, _ = get_libsvm(name = setup['instance']['dataset'], lambda1 = setup['instance']['l1'], train_size=0.8)
         
     elif setup['instance']['dataset'] == 'e2006':
-        f, phi, A, X_train, y_train, _, _ = get_e2006(lambda1 = setup['instance']['l1'])
+        f, phi, A, X_train, y_train, _, _ = get_e2006(lambda1 = setup['instance']['l1'], train_size = 0.8)
         
     # IMPORTANT: Initialize numba
     initialize_solvers(f, phi, A)
