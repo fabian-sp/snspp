@@ -167,7 +167,7 @@ if _run:
 # plotting
 ############################################################################
 
-xlim = (0, 60.)
+xlim = (0, 15.)
    
 if _plot:
     #%% plot objective
@@ -200,8 +200,8 @@ if _plot:
     
     ax.set_xlim(xlim)
     ax.legend(fontsize = 10)
-    #ax.set_yscale('log')
-    
+    ax.set_yscale('log')
+    ax.set_ylim(1e-2,1)
     
     fig.tight_layout()
     fig.subplots_adjust(top=0.96,bottom=0.14,right=0.965,hspace=0.2,wspace=0.2)
