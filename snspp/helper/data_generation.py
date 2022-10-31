@@ -15,7 +15,7 @@ from sklearn.datasets import make_low_rank_matrix
 from sklearn.preprocessing import PolynomialFeatures
 
 import scipy.special as sp
-from scipy.stats import ortho_group
+from scipy.stats import ortho_group, t
 from scipy.sparse.csr import csr_matrix
 
 from .loss1 import lsq, logistic_loss, block_lsq
@@ -384,7 +384,7 @@ def get_sido(lambda1 = 0.02, train_size = .8, scale = False, path_prefix = '../'
     return f, phi, A, X_train, y_train, X_test, y_test
 
 def get_higgs(lambda1 = 0.01, train_size = .8, scale = True, path_prefix = '../'):
-    # download from 
+    # download from https://archive.ics.uci.edu/ml/datasets/HIGGS
     
     warnings.warn("Loading higgs is highly memory intensive.")
     
@@ -423,6 +423,38 @@ def get_higgs(lambda1 = 0.01, train_size = .8, scale = True, path_prefix = '../'
     
         
     return f, phi, A, X_train, y_train, X_test, y_test
+
+def get_e2006(lambda1 = 0.01, train_size = None, path_prefix = '../'):
+    # download from https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/regression.html#E2006-tfidf
+    # extract to data/libsvm
+
+    # X is in sparse format
+    X, y = load_svmlight_file(path_prefix + 'data/libsvm/E2006.train' )   
+    
+    if train_size is not None:
+        X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+                                                            random_state = 1234)
+    else:
+        X_train = X
+        y_train = y
+        X_test = None
+        y_test = None
+    
+    # test set has two features less!
+    #X_test, y_test = load_svmlight_file(path_prefix + 'data/libsvm/E2006.test' )
+    
+       
+    nu_est = np.round(t.fit(y_train)[0], 2) # estimate degrees of freedom
+    print("Estimated degrees of freedom: ", nu_est)
+    #tmp = y_train/(nu_est+y_train**2)
+    #X_train.multiply(tmp.reshape(-1,1)).tocsr().sum(axis=0)
+        
+    phi = L1Norm(lambda1) 
+    f = tstudent_loss(y_train, v=nu_est)
+    A = X_train
+    
+    return f, phi, A, X_train, y_train, X_test, y_test
+        
 
 def get_poly(name = 'madelon', lambda1 = 0.01, train_size = None, scale = True, poly = 0, path_prefix = '../'):
     # using libsvm dataset but with polynomial feature expansion

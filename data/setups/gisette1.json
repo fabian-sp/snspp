@@ -2,9 +2,6 @@
   "instance": {
   	"loss": "logistic",
     "dataset": "gisette",
-    "N": 0,
-    "n": 0,
-    "k": 0,
     "l1": 0.05
   },
   "methods": {
@@ -28,8 +25,7 @@
       "n_alpha": 25,
       "batch": [0.005,0.01,0.05],
       "params": {
-        "n_epochs": 55,
-        "measure_freq": 10
+        "n_epochs": 55
       }
     },
     "saga": {
@@ -40,12 +36,12 @@
       "batch": [],
       "params": {
         "n_epochs": 55,
-        "measure_freq": 20
+        "measure_freq": 10
       }
     }
   },
   "psi_tol": 0.0001,
-  "y_max": 15,
+  "max_iter_star": 200,
   "n_rep": 5,
   "start": 0
 }

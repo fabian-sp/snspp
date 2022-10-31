@@ -3,7 +3,6 @@ from numba import njit
 import warnings
 
 from csr import CSR
-from tick.linear_model import LogisticRegression as tickLogReg
 
 # creates a csr.CSR object from scipy.CSR which is usable inside of numba functions
 def create_csr(A):
@@ -76,6 +75,7 @@ def compute_AS(A, S):
     return A_S
 
 #%% tick wrapper
+#from tick.linear_model import LogisticRegression as tickLogReg
 
 def solve_with_tick(f, phi, A, alpha, n_epochs, tol, verbose):
     

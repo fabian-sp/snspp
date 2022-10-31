@@ -8,9 +8,9 @@ import seaborn as sns
 
 from sklearn.linear_model import Lasso, LogisticRegression
 
-from snspp.helper.data_generation import tstudent_test, logreg_test, get_gisette, get_mnist, get_sido, get_libsvm, get_higgs, get_poly
+from snspp.helper.data_generation import tstudent_test, logreg_test, get_gisette, get_mnist, get_sido, get_libsvm, get_higgs, get_poly, get_e2006
 from snspp.solver.opt_problem import problem, color_dict, marker_dict
-from snspp.experiments.experiment_utils import initialize_solvers
+from snspp.experiments.experiment_utils import initialize_solvers, logreg_accuracy
 
 def load_setup(setup_id = ''):
     
@@ -22,8 +22,11 @@ def load_setup(setup_id = ''):
 def create_instance(setup):
     
     if setup['instance']['dataset'] == "tstudent":
+        _kappa = setup['instance'].get('kappa', 15.)
+        _nu = setup['instance'].get('nu', 1)
+        
         f, phi, A, X_train, y_train, _, _, _ = tstudent_test(setup['instance']['N'], setup['instance']['n'], setup['instance']['k'], setup['instance']['l1'], \
-                                              v = 1, noise = 0.1, kappa = 15., dist = 'ortho')
+                                              v = _nu, noise = 0.1, kappa = _kappa, dist = 'ortho')
 
     elif setup['instance']['dataset'] == "logreg":
         f, phi, A, X_train, y_train, _, _, _ = logreg_test(setup['instance']['N'], setup['instance']['n'], setup['instance']['k'], lambda1 = setup['instance']['l1'],\
@@ -48,7 +51,9 @@ def create_instance(setup):
     elif setup['instance']['dataset'] in ["rcv1", "covtype"]:
         f, phi, A, X_train, y_train, _, _ = get_libsvm(name = setup['instance']['dataset'], lambda1 = setup['instance']['l1'], train_size=0.8)
         
-    
+    elif setup['instance']['dataset'] == 'e2006':
+        f, phi, A, X_train, y_train, _, _ = get_e2006(lambda1 = setup['instance']['l1'], train_size = 0.8)
+        
     # IMPORTANT: Initialize numba
     initialize_solvers(f, phi, A)
 
@@ -63,18 +68,22 @@ def compute_psi_star(setup, f, phi, A, X_train, y_train):
                             solver = 'saga', max_iter = _max_iter, verbose = 1)
         sk.fit(X_train, y_train)
         xsol = sk.coef_.copy().squeeze()
+
+        print("Train accuracy: ", logreg_accuracy(xsol, X_train, y_train))
+
     elif setup['instance']['loss'] == "squared":
-        sk = Lasso(alpha = phi.l1/2, fit_intercept = False, tol = 1e-20, selection = 'cyclic', max_iter = _max_iter)
+        sk = Lasso(alpha = phi.lambda1/2, fit_intercept = False, tol = 1e-20, selection = 'cyclic', max_iter = _max_iter)
         sk.fit(X_train, y_train)
         xsol = sk.coef_.copy().squeeze()
         
     elif setup['instance']['loss'] == "tstudent":
-        orP = problem(f, phi, A, tol = 1e-20, params = {'n_epochs': _max_iter}, verbose = False, measure = False)
+        orP = problem(f, phi, A, tol = 1e-20, params = {'n_epochs': _max_iter}, verbose = True, measure = False)
         orP.solve(solver = 'saga')
         xsol = orP.x.copy()
         
     psi_star = f.eval(A@xsol) + phi.eval(xsol)
     print("Optimal value: ", psi_star)
+    print("Nonzeros: ", np.count_nonzero(xsol))
  
     return psi_star, xsol
 
@@ -186,12 +195,14 @@ def do_grid_run(f, phi, A, step_size_range, batch_size_range = [], psi_star = 0,
                         this_obj.append(obj_arr[-1])
                         
                         print("NO CONVERGENCE!")
+                        break
                 except:
                     print("SOLVER FAILED!")
                     this_stop_iter.append(np.inf)
                     this_time.append(np.inf)
                     this_obj.append(np.inf)
-                    
+                    break
+                
             # set as CONVERGED if all repetitions converged
             CONVERGED[k,l] = np.all(~np.isinf(this_stop_iter))
             OBJ[k,l] = np.mean(this_obj)
