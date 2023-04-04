@@ -454,7 +454,34 @@ def get_e2006(lambda1 = 0.01, train_size = None, path_prefix = '../'):
     A = X_train
     
     return f, phi, A, X_train, y_train, X_test, y_test
+
+def get_sido_reg(lambda1 = 0.02, train_size = .8, scale = False, v = 1., k = 200, noise = 0.1, path_prefix = '../'):
+    # download from http://www.causality.inf.ethz.ch/challenge.php?page=datasets
+    
+    X = np.loadtxt(path_prefix + 'data/sido0/sido0_train.data')
+    X = X.astype('float64')
+    np.nan_to_num(X, copy = False)
+    
+    # create oracle solution
+    beta = np.random.randn(k) 
+    beta = np.concatenate((beta, np.zeros(X.shape[1]-k)))
+    np.random.shuffle(beta)
+
+    y = X @ beta +  noise*np.random.standard_t(v, size = X.shape[0])
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = train_size,\
+                                                        random_state = 1234)
+    
+    if scale:
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.transform(X_test)
         
+    phi = L1Norm(lambda1) 
+    f = tstudent_loss(y_train, v=v)
+    A = np.ascontiguousarray(X_train)
+        
+    return f, phi, A, X_train, y_train, X_test, y_test      
 
 def get_poly(name = 'madelon', lambda1 = 0.01, train_size = None, scale = True, poly = 0, path_prefix = '../'):
     # using libsvm dataset but with polynomial feature expansion
