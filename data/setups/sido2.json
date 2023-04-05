@@ -9,10 +9,10 @@
   "methods": {
     "snspp": {
       "solver": "snspp",
-      "alpha_min": -2,
+      "alpha_min": -1,
       "alpha_max": 1,
       "n_alpha": 20,
-      "batch": [0.005,0.01],
+      "batch": [0.01,0.02],
       "params": {
         "max_iter": 800,
         "sample_style": "constant",
@@ -22,12 +22,12 @@
     },
     "svrg": {
       "solver": "svrg",
-      "alpha_min": -2,
+      "alpha_min": -3,
       "alpha_max": 1,
       "n_alpha": 20,
-      "batch": [0.005,0.01],
+      "batch": [0.001,0.002],
       "params": {
-        "n_epochs": 60,
+        "n_epochs": 100,
         "measure_freq": 5
       }
     },

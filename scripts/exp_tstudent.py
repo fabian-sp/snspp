@@ -120,9 +120,9 @@ print("psi(x_t) = ", f.eval(A@P.x) + phi.eval(P.x))
 all_x = pd.DataFrame(np.vstack((xsol, P.x, Q.x, Q1.x, Q2.x)).T, columns = ['sol', 'spp', 'saga', 'adagrad', 'svrg'])
 
 
-print("SAGA-SNSPP: ", np.linalg.norm(Q.x-P.x))
-print("SVRG-SNSPP: ", np.linalg.norm(Q2.x-P.x))
-print("Adagrad-SNSPP: ", np.linalg.norm(Q1.x-P.x))
+print("SAGA-SNSPP: ", np.linalg.norm(Q.x-P.x)/np.linalg.norm(P.x))
+print("SVRG-SNSPP: ", np.linalg.norm(Q2.x-P.x)/np.linalg.norm(P.x))
+print("Adagrad-SNSPP: ", np.linalg.norm(Q1.x-P.x)/np.linalg.norm(P.x))
 
 ###########################################################################
 # multiple execution
