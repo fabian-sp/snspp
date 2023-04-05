@@ -1,0 +1,49 @@
+{
+  "instance": {
+  	"loss": "tstudent",
+    "dataset": "sido_reg",
+    "l1": 0.01,
+    "k": 50,
+    "nu": 2
+  },
+  "methods": {
+    "snspp": {
+      "solver": "snspp",
+      "alpha_min": -2,
+      "alpha_max": 1,
+      "n_alpha": 20,
+      "batch": [0.005,0.01],
+      "params": {
+        "max_iter": 800,
+        "sample_style": "constant",
+        "reduce_variance": true,
+        "measure_freq": 1
+      }
+    },
+    "svrg": {
+      "solver": "svrg",
+      "alpha_min": -2,
+      "alpha_max": 1,
+      "n_alpha": 20,
+      "batch": [0.005,0.01],
+      "params": {
+        "n_epochs": 60,
+        "measure_freq": 5
+      }
+    },
+    "saga": {
+      "solver": "saga",
+      "alpha_min": -3,
+      "alpha_max": -1,
+      "n_alpha": 20,
+      "batch": [],
+      "params": {
+        "n_epochs": 30,
+        "measure_freq": 10
+      }
+    }
+  },
+  "psi_tol": 0.0001,
+  "n_rep": 2,
+  "start": 1
+}

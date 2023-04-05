@@ -455,7 +455,7 @@ def get_e2006(lambda1 = 0.01, train_size = None, path_prefix = '../'):
     
     return f, phi, A, X_train, y_train, X_test, y_test
 
-def get_sido_reg(lambda1 = 0.02, train_size = .8, scale = False, v = 1., k = 200, noise = 0.1, path_prefix = '../'):
+def get_sido_reg(lambda1 = 0.01, train_size = .8, scale = False, v = 2., k = 50, noise = 0.1, path_prefix = '../'):
     # download from http://www.causality.inf.ethz.ch/challenge.php?page=datasets
     
     X = np.loadtxt(path_prefix + 'data/sido0/sido0_train.data')
