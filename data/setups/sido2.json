@@ -10,8 +10,8 @@
     "snspp": {
       "solver": "snspp",
       "alpha_min": -1,
-      "alpha_max": 1,
-      "n_alpha": 20,
+      "alpha_max": 2,
+      "n_alpha": 25,
       "batch": [0.01,0.02],
       "params": {
         "max_iter": 800,
