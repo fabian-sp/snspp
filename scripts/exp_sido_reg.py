@@ -38,7 +38,13 @@ f, phi, A, X_train, y_train, X_test, y_test = get_sido_reg(lambda1 = l1, v = 2, 
 #%% solve with SAGA
 initialize_solvers(f, phi, A)
 
-refP = problem(f, phi, A, tol = 1e-20, params = {'n_epochs': 400}, verbose = True, measure = False)
+# compute starting point
+refQ = problem(f, phi, A, tol = 1e-20, params = {'n_epochs': 1}, verbose = False, measure = False)
+refQ.solve(solver = 'saga')
+x0 = refQ.x.copy()
+
+
+refP = problem(f, phi, A, x0 = x0, tol = 1e-20, params = {'n_epochs': 500}, verbose = True, measure = False)
 refP.solve(solver = 'saga')
 xsol = refP.x.copy()
 
@@ -46,18 +52,13 @@ psi_star = f.eval(A@xsol) + phi.eval(xsol)
 print("Optimal value: ", psi_star)
 print("Nonzeros: ", np.count_nonzero(xsol))
 
-# compute starting point
-refQ = problem(f, phi, A, tol = 1e-20, params = {'n_epochs': 1}, verbose = False, measure = False)
-refQ.solve(solver = 'saga')
-x0 = refQ.x.copy()
-
 #%% params 
 
 params_saga = {'n_epochs' : 40, 'alpha': 0.004}
     
 params_svrg = {'n_epochs' : 100, 'batch_size': 10, 'alpha': 0.0145}
 
-params_adagrad = {'n_epochs' : 200, 'batch_size': 100, 'alpha': 0.02}
+params_adagrad = {'n_epochs' : 200, 'batch_size': 100, 'alpha': 0.015}
 
 params_snspp = {'max_iter' : 500, 'batch_size': 200, 'sample_style': 'constant', 'alpha' : 6. ,\
                 "reduce_variance": True}
@@ -182,13 +183,13 @@ if _run:
 # plotting
 ############################################################################
 
-xlim = (0,6)
+xlim = (0,8)
 
 
 if _plot:    
     #%% objective plot    
     fig,ax = plt.subplots(figsize = (4.5, 3.5))
-    kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
+    kwargs = {"psi_star": Cont.psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
     
     #Q.plot_objective(ax = ax, **kwargs)
     #Q1.plot_objective(ax = ax, **kwargs)
@@ -200,10 +201,7 @@ if _plot:
     ax.set_xlim(xlim)
     ax.set_ylim(1e-7,1e-1)
     
-    if l1 == 0.01:
-        ax.legend(fontsize = 10, loc = 'upper right')
-    else:
-        ax.legend(fontsize = 10, loc = 'lower left')
+    ax.legend(fontsize = 10, loc = 'lower left')
         
     fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
     
@@ -219,7 +217,7 @@ if _plot:
     
     ax.set_xlim(xlim)
     
-    ax.set_ylim(0.085, 0.095)
+    ax.set_ylim(0.074, 0.2)
         
     ax.legend(fontsize = 10)
     fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
