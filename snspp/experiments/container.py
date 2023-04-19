@@ -121,7 +121,14 @@ class Experiment:
             if runtime:
                 all_xax = np.vstack([this_res[k]["runtime"] for k in range(K)]).mean(axis=0).cumsum()
             else: 
-                all_xax = np.vstack([this_res[k]["evaluations"] for k in range(K)]).mean(axis=0).cumsum() 
+                if s == 'snspp':
+                    # floor to only count grad evluations
+                    all_xax = np.floor(np.vstack([this_res[k]["evaluations"] for k in range(20)]).mean(axis=0))
+                    all_xax = np.insert(all_xax[1::10], 0, all_xax[0]).cumsum()
+                    y = np.insert(y[1::10], 0, y[0])
+                else:
+                    all_xax = np.vstack([this_res[k]["evaluations"] for k in range(K)]).mean(axis=0).cumsum()
+
                 
             try:
                 c = color_dict[s]

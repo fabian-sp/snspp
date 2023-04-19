@@ -104,6 +104,15 @@ Cont = Experiment(name = 'exp_covtype')
 
 if not _run:
     Cont.load_from_disk(path='../data/output/')
+
+    # adjust for measuring multiple times per epoch
+    for k in range(len(Cont.results['saga'])):
+        Cont.results['saga'][k]['evaluations'] *= 1/params_saga['measure_freq']
+
+    for k in range(len(Cont.results['svrg'])):
+        Cont.results['svrg'][k]['evaluations'] *= 1/params_svrg['measure_freq'] 
+
+
 else:
     K = 20
 
@@ -199,16 +208,16 @@ if _plot:
     # Q2.plot_objective(ax = ax, markevery = 10, **kwargs)
     # P.plot_objective(ax = ax, **kwargs)
     
-    Cont.plot_objective(ax = ax, median = False, markevery_dict = mk_every_dict, **kwargs) 
+    Cont.plot_objective(ax = ax, runtime = False, median = False, markevery_dict = mk_every_dict, **kwargs) 
     
-    ax.set_xlim(xlim)
+    ax.set_xlim(0, 20)
     ax.set_ylim(1e-7,1e-1)
     ax.legend(fontsize = 10, loc = 'upper right')
     
     fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
     
     if _save:
-        fig.savefig('../data/plots/exp_covtype/obj.pdf', dpi = 300)
+        fig.savefig('../data/plots/exp_covtype/obj2.pdf', dpi = 300)
     
     #%% test loss
     

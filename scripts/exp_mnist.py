@@ -194,9 +194,9 @@ if _plot:
     # Q2.plot_objective(ax = ax, **kwargs)
     # P.plot_objective(ax = ax, **kwargs)
     
-    Cont.plot_objective(ax = ax, median = False, **kwargs) 
+    Cont.plot_objective(ax = ax, runtime = False, median = False, **kwargs) 
     
-    ax.set_xlim(xlim)
+    ax.set_xlim(0,10)
     ax.set_ylim(1e-7,1e-1)
     
     ax.legend(fontsize = 10, loc = 'upper right')
@@ -204,7 +204,7 @@ if _plot:
     fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
     
     if _save:
-        fig.savefig('../data/plots/exp_mnist/obj.pdf', dpi = 300)
+        fig.savefig('../data/plots/exp_mnist/obj2.pdf', dpi = 300)
     
     
     #%% test loss

@@ -224,16 +224,16 @@ else:
 if _plot:    
     #%% objective plot    
     fig,ax = plt.subplots(figsize = (4.5, 3.5))
-    kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
+    kwargs = {"psi_star": Cont.psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
     
     #Q.plot_objective(ax = ax, **kwargs)
     #Q1.plot_objective(ax = ax, **kwargs)
     #Q2.plot_objective(ax = ax, **kwargs)
     #P.plot_objective(ax = ax, **kwargs)
     
-    Cont.plot_objective(ax = ax, median = False, **kwargs) 
+    Cont.plot_objective(ax = ax, runtime = False, median = False, **kwargs) 
     
-    ax.set_xlim(xlim)
+    ax.set_xlim(0,50)
     ax.set_ylim(1e-7,1e-1)
     
     if l1 == 0.01:
@@ -244,7 +244,7 @@ if _plot:
     fig.subplots_adjust(top=0.96,bottom=0.14,left=0.165,right=0.965,hspace=0.2,wspace=0.2)
     
     if _save:
-        fig.savefig(f'../data/plots/exp_sido/l1_{l1}/obj.pdf', dpi = 300)
+        fig.savefig(f'../data/plots/exp_sido/l1_{l1}/obj2.pdf', dpi = 300)
        
     #%% test loss
     
