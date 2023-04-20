@@ -210,7 +210,7 @@ if _plot:
     
     Cont.plot_objective(ax = ax, runtime = False, median = False, markevery_dict = mk_every_dict, **kwargs) 
     
-    ax.set_xlim(0, 20)
+    ax.set_xlim(0, 6)
     ax.set_ylim(1e-7,1e-1)
     ax.legend(fontsize = 10, loc = 'upper right')
     
