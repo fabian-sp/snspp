@@ -10,6 +10,7 @@ from matplotlib.lines import Line2D
 
 from .spp_solver import stochastic_prox_point
 from .fast_gradient import stochastic_gradient
+from ..helper.utils import compute_fnat
 
 #sns.set()
 #sns.set_context("paper")
@@ -109,6 +110,8 @@ class problem:
             
             psi0 = self.f.eval(self.A@self.x0) + self.phi.eval(self.x0)
             self.info['objective'] = np.insert(self.info['objective'], 0, psi0)
+            fnat_0 = compute_fnat(self.f, self.phi, self.x0, self.A)
+            self.info['fnat'] = np.insert(self.info['fnat'], 0, fnat_0)
             if store_hist:
                 self.info['iterates'] = np.vstack((self.x0, self.info['iterates']))
         
