@@ -361,9 +361,10 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
             if iter_t % params['measure_freq'] == 0:  
                 f_t = f.eval(A@x_t) 
                 phi_t = phi.eval(x_t)
+                fnat_t = compute_fnat(f, phi, x_t, A)
             
             obj.append(f_t+phi_t)
-            fnat.append(compute_fnat(f, phi, x_t, A))
+            fnat.append(fnat_t)
         
         step_sizes.append(alpha_t)
         
