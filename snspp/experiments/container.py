@@ -51,6 +51,7 @@ class Experiment:
         self.results[label][k]['runtime'] = P.info['runtime'].copy()
         self.results[label][k]['objective'] = P.info['objective'].copy()
         self.results[label][k]['evaluations'] = P.info['evaluations'].copy()
+        self.results[label][k]['fnat'] = P.info['fnat'].copy()
         
         return
     
