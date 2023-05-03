@@ -9,6 +9,7 @@ import seaborn as sns
 from sklearn.linear_model import Lasso, LogisticRegression
 
 from snspp.helper.data_generation import tstudent_test, logreg_test, get_gisette, get_mnist, get_sido, get_libsvm, get_higgs, get_poly, get_e2006
+from snspp.helper.data_generation import get_sido_reg, get_mnist_reg
 from snspp.solver.opt_problem import problem, color_dict, marker_dict
 from snspp.experiments.experiment_utils import initialize_solvers, logreg_accuracy
 
@@ -53,7 +54,16 @@ def create_instance(setup):
         
     elif setup['instance']['dataset'] == 'e2006':
         f, phi, A, X_train, y_train, _, _ = get_e2006(lambda1 = setup['instance']['l1'], train_size = 0.8)
-        
+    
+    elif setup['instance']['dataset'] == 'sido_reg':
+        f, phi, A, X_train, y_train, _, _ = get_sido_reg(lambda1 = setup['instance']['l1'], train_size = 0.8,
+                                                         v = setup['instance']['nu'], k = setup['instance']['k'])
+    
+    elif setup['instance']['dataset'] == 'mnist_reg':
+        f, phi, A, X_train, y_train, _, _ = get_mnist_reg(lambda1 = setup['instance']['l1'], train_size = 0.8,
+                                                         v = setup['instance']['nu'], k = setup['instance']['k'])
+    
+
     # IMPORTANT: Initialize numba
     initialize_solvers(f, phi, A)
 

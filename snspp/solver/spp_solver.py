@@ -4,7 +4,7 @@ author: Fabian Schaipp
 
 import numpy as np
 from ..helper.utils import block_diag, stop_scikit_saga
-from ..helper.utils import compute_full_xi, derive_L
+from ..helper.utils import compute_full_xi, derive_L, compute_fnat
 from .spp_easy import solve_subproblem_easy
 
 from scipy.sparse.linalg import cg
@@ -259,7 +259,7 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
     x_hist = list(); xi_hist = list()
     step_sizes = list()
     obj = list()
-    fnat = list(); _fnat = 1.
+    fnat = list()
     ssn_info = list();
     runtime = list(); num_eval = list()
     sub_runtime = list()
@@ -361,9 +361,10 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
             if iter_t % params['measure_freq'] == 0:  
                 f_t = f.eval(A@x_t) 
                 phi_t = phi.eval(x_t)
+                fnat_t = compute_fnat(f, phi, x_t, A)
             
             obj.append(f_t+phi_t)
-            fnat.append(_fnat)
+            fnat.append(fnat_t)
         
         step_sizes.append(alpha_t)
         
@@ -395,12 +396,12 @@ def stochastic_prox_point(f, phi, A, x0, xi = None, tol = 1e-3, params = dict(),
     
         
     info = {'objective': np.array(obj),
-            'fnat': np.array(fnat),
             'step_sizes': np.array(step_sizes),
             'ssn_info': ssn_info, 
             'runtime': np.array(runtime),
             'sub_runtime': np.array(sub_runtime),
-            'evaluations': np.array(num_eval)/f.N
+            'evaluations': np.array(num_eval)/f.N,
+            'fnat': np.array(fnat)
             }
     
     if store_hist:

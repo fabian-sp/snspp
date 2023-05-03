@@ -51,6 +51,12 @@ def derive_L(f):
     
     return L
 
+def compute_fnat(f, phi, x, A):
+    grad = (1/f.N)*(A.T@compute_xi_inner(f, A@x))
+    y = x - phi.prox(x-grad, 1.)
+    return np.linalg.norm(y)
+
+
 def compute_full_xi(f, z, is_easy = False):
     """
     needed for variance reduction
