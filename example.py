@@ -64,6 +64,17 @@ Q.plot_objective()
 
 info2 = Q.info.copy()
 
+#%%
+params = {'n_epochs' : 100, 'alpha': 1e-2, 'batch_size': 20}
+
+Q = problem(f, phi, A, tol = 1e-5, params = params, verbose = True, measure = True)
+Q.solve(solver = 'batch-saga')
+
+Q.plot_path()
+Q.plot_objective()
+
+info2 = Q.info.copy()
+
 #%% compare to scikit
 
 sk = LogisticRegression(penalty = 'l1', C = 1/(f.N * phi.lambda1), fit_intercept= False, tol = 1e-20, solver = 'saga', max_iter = 100, verbose = 1)
