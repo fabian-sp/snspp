@@ -257,6 +257,22 @@ if _plot:
     if _save:
         fig.savefig(f'../data/plots/exp_tstudent/setup{setup}/error.pdf', dpi = 300)
     
+    #%% plot fnat
+    fig,ax = plt.subplots(figsize = (4.5, 3.5))
+    kwargs = {"log_scale": True, "lw": 1., "markersize": 2.5}
+    
+    Cont.plot_fnat(ax = ax, median = False, **kwargs) 
+    
+    ax.set_xlim(xlim)
+    ax.set_ylim(1e-7,1e-1)
+    ax.legend(fontsize = 10)
+    
+    fig.tight_layout()
+    fig.subplots_adjust(top=0.96,bottom=0.14,right=0.965,hspace=0.2,wspace=0.2)
+    
+    if _save:
+        fig.savefig(f'../data/plots/exp_tstudent/setup{setup}/fnat.pdf', dpi = 300)
+
     #%% coeffcient plot
     
     fig,ax = plt.subplots(2, 2, figsize = (7,5))

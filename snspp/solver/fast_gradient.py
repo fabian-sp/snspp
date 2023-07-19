@@ -2,7 +2,7 @@
 author: Fabian Schaipp
 """
 from ..helper.utils import compute_batch_gradient_table, compute_xi_inner,\
-                            stop_scikit_saga, derive_L
+                            stop_scikit_saga, derive_L, compute_fnat
 
 from .sgd import sgd_loop
 from .sparse.sparse_utils import create_csr                         
@@ -160,9 +160,11 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
         
     # evaluate objective at x_t after every epoch
     obj = list()
+    fnat = list()
     if measure:
         for j in np.arange(n_iter):
             obj.append(f.eval(A @ x_hist[j,:]) + phi.eval(x_hist[j,:]))
+            fnat.append(compute_fnat(f, phi, x_hist[j,:], A))
         
     
     # compute number of gradient evaluations retrospectively
@@ -182,7 +184,8 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     
     info = {'objective': np.array(obj), 'iterates': x_hist, \
             'step_sizes': np.array(step_sizes), \
-            'runtime': np.array(runtime), 'evaluations': num_eval}
+            'runtime': np.array(runtime), 'evaluations': num_eval,
+            'fnat': np.array(fnat)}
     
         
     return x_t, info
