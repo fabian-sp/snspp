@@ -123,11 +123,27 @@ class Experiment:
                 all_xax = np.vstack([this_res[k]["runtime"] for k in range(K)]).mean(axis=0).cumsum()
             else: 
                 if s == 'snspp':
-                    # floor to only count grad evluations
+                    # floor to only count grad evaluations
                     all_xax = np.floor(np.vstack([this_res[k]["evaluations"] for k in range(20)]).mean(axis=0))
-                    all_xax = np.insert(all_xax[1::10], 0, all_xax[0]).cumsum()
-                    y = np.insert(y[1::10], 0, y[0])
+                    # only use every m-th entry
+                    m = self.params[s].get('m', 10) # m defaults to ten
+                    all_xax = np.insert(all_xax[1::m], 0, all_xax[0]).cumsum()
+                    y = np.insert(y[1::m], 0, y[0])
+                elif s in ['saga', 'batch-saga']:
+                    all_xax = np.vstack([this_res[k]["evaluations"] for k in range(K)]).mean(axis=0).cumsum()
+                    # include the missing first full gradient evaluation
+                    all_xax[1:] += 1
                 else:
+                    # mf = self.params[s].get('measure_freq', 1)
+                    # if mf > 1: # attribute full gradient computation to first measurement
+                    #     tmp = np.stack(([1/mf]))
+                    #     tmp[0] += 1
+                    #     x = np.repeat(tmp, self.params[s]['n_epochs'])
+                    #     x = np.insert(x,0,0)
+
+                    #     assert len(y) == len(x)
+                    # else:
+                        
                     all_xax = np.vstack([this_res[k]["evaluations"] for k in range(K)]).mean(axis=0).cumsum()
 
                 
