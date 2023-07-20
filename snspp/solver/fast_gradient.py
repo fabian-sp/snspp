@@ -214,10 +214,10 @@ def saga_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, reg, measure_freq, sparse
     # measure_freq = how many measurements per epoch
     if batch_size is None:
         loop_length = int(N/measure_freq)
+        max_iter = int((N*n_epochs)/loop_length)
     else:
         loop_length = int(N/(batch_size*measure_freq))
-    
-    max_iter = int(N*n_epochs/loop_length)
+        max_iter = int((N*n_epochs)/(loop_length*batch_size))
 
     for iter_t in np.arange(max_iter):
         

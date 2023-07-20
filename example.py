@@ -42,7 +42,7 @@ info = P.info.copy()
 
 #%% solve with SAGA (run twice to compile numba)
 
-params = {'n_epochs' : 10, 'alpha': 1e-3}
+params = {'n_epochs' : 100, 'alpha': 1e-3}
 
 Q = problem(f, phi, A, tol = 1e-5, params = params, verbose = True, measure = True)
 Q.solve(solver = 'saga')
@@ -65,7 +65,7 @@ Q.plot_objective()
 info2 = Q.info.copy()
 
 #%%
-params = {'n_epochs' : 100, 'alpha': 1e-2, 'batch_size': 20}
+params = {'n_epochs' : 100, 'alpha': 1e-2, 'batch_size': 200}
 
 Q = problem(f, phi, A, tol = 1e-5, params = params, verbose = True, measure = True)
 Q.solve(solver = 'batch-saga')
