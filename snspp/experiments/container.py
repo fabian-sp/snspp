@@ -134,17 +134,16 @@ class Experiment:
                     # include the missing first full gradient evaluation
                     all_xax[1:] += 1
                 else:
-                    # mf = self.params[s].get('measure_freq', 1)
-                    # if mf > 1: # attribute full gradient computation to first measurement
-                    #     tmp = np.stack(([1/mf]))
-                    #     tmp[0] += 1
-                    #     x = np.repeat(tmp, self.params[s]['n_epochs'])
-                    #     x = np.insert(x,0,0)
-
-                    #     assert len(y) == len(x)
-                    # else:
-                        
-                    all_xax = np.vstack([this_res[k]["evaluations"] for k in range(K)]).mean(axis=0).cumsum()
+                    mf = self.params[s].get('measure_freq', 1)
+                    if mf > 1: # attribute full gradient computation to first measurement
+                        tmp = np.ones(mf) * (1/mf)
+                        tmp[0] += 1
+                        x = np.tile(tmp, self.params[s]['n_epochs'])
+                        x = np.insert(x,0,0)
+                        all_xax = x.cumsum()
+                        assert len(y) == len(all_xax)
+                    else:
+                        all_xax = np.vstack([this_res[k]["evaluations"] for k in range(K)]).mean(axis=0).cumsum()
 
                 
             try:
