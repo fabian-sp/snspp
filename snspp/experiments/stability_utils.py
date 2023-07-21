@@ -138,7 +138,11 @@ def do_grid_run(f, phi, A, step_size_range, batch_size_range = [], psi_star = 0,
     ALPHA = step_size_range.copy()
     
     if len(batch_size_range) == 0:
+        _batch_size_one = True
         batch_size_range = [1/f.N]
+    else:
+        _batch_size_one = False
+
     BATCH = batch_size_range.copy()
     
     GRID_A, GRID_B = np.meshgrid(ALPHA, BATCH)
@@ -159,16 +163,15 @@ def do_grid_run(f, phi, A, step_size_range, batch_size_range = [], psi_star = 0,
             
             print("######################################")
             
-            # target M epochs 
-            #if solver == "snspp":
-            #    this_params["max_iter"] = 200 #int(EPOCHS *  1/GRID_B[k,l])
-            
-            this_params['batch_size'] = max(1, int(GRID_B[k,l] * f.N))
+            if not _batch_size_one:
+                this_params['batch_size'] = max(1, int(GRID_B[k,l] * f.N))
+                print(f"BATCH = {this_params['batch_size']}")
+            else:
+                assert this_params.get('batch_size') is None
+
             this_params['alpha'] = GRID_A[k,l]
-            
             print(f"ALPHA = {this_params['alpha']}")
-            print(f"BATCH = {this_params['batch_size']}")
-            
+                       
             # repeat n_rep times
             this_obj = list(); this_time = list(); this_stop_iter = list()
             for j_rep in np.arange(n_rep):

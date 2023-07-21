@@ -20,7 +20,7 @@ from sklearn.linear_model import LogisticRegression
 
 #%%
 
-dataset = 'mnist'
+dataset = 'news20'
 
 if dataset == "mnist":
     f, phi, A, X_train, y_train, _, _ = get_mnist()
@@ -72,8 +72,13 @@ for b in batch_sizes:
     
         #P.info.pop('iterates', None) 
         res[_key] = P.info
-        
-    
+
+#%%
+
+#np.save(f'../data/output/exp_batch_{dataset}.npy', res)
+res = np.load(f'../data/output/exp_batch_{dataset}.npy', allow_pickle=True)[()]
+
+
 #%%
 from matplotlib.lines import Line2D
 
@@ -84,12 +89,20 @@ if dataset == 'mnist':
 elif dataset == 'news20':
     xlim = (0,5)
 
-fig, axs = plt.subplots(1,2,figsize = (8, 3.5), gridspec_kw=dict(width_ratios=[4,2]))
+gs_kw = dict(width_ratios=[4,2], height_ratios=[1, 1.2])
+fig, axs = plt.subplot_mosaic([['left', 'upper right'],
+                               ['left', 'lower right']],
+                              gridspec_kw=gs_kw, figsize=(8, 4))
+
+# fig, axs = plt.subplots(1,2,
+#                         figsize = (8, 3.5),
+#                         gridspec_kw=dict(width_ratios=[4,2]))
 
 ##############################
 ## first ax
 
-ax = axs[0]
+ax = axs['left']
+#ax = axs[0]
 
 #colors = sns.light_palette(color_dict['snspp'], K+1, reverse=False)
 colors = ["#abc9c8", "#72aeb6", "#4692b0",  "#134b73"]
@@ -124,7 +137,10 @@ for _k,_v in res.items():
     y2 = res[_k]['objective'] - psi_star
     
     obj = res[_k]['objective']
-    res2.append(dict(a=a, b=b, mean_rt=np.mean(y), obj_diff_std= (obj[1:]/obj[:-1]).std()))
+    res2.append(dict(a=a, b=b,
+                     mean_rt=np.mean(y), 
+                     obj_diff_std= (obj[1:]/obj[:-1]).std())
+                )
     
     j = batch_sizes.index(b)
     l = step_sizes.index(a)
@@ -154,8 +170,8 @@ ax.legend(batch_handles+step_handles, labels, fontsize=8, ncol=2)
 ## second ax
 df=pd.DataFrame(res2)
 
-ax = axs[1]
-
+ax = axs['lower right']
+#ax = axs[1]
 
 ax.yaxis.tick_right()
 ax.yaxis.set_label_position("right")
@@ -176,3 +192,33 @@ fig.tight_layout()
 if False:
     fig.savefig(f'../data/plots/exp_batch/{dataset}.pdf')
 
+#%%
+
+tmp = res[(1000.0, 0.005)]
+
+
+ax = axs['upper right']
+
+#fig, ax = plt.subplots(figsize=(4,3))
+
+ax.yaxis.tick_right()
+ax.yaxis.set_label_position("right")
+
+sub_rt = tmp['sub_runtime'].mean()
+grad_rt = (tmp['runtime'][1:] - tmp['sub_runtime'])[::10].mean()
+
+ax.bar([0,1], [sub_rt, grad_rt], width=0.6, color='darkgray')
+ax.xaxis.set_ticks([0,1])
+ax.xaxis.set_ticklabels(['Subproblem', r'Compute $\nabla f(\tilde x)$'])
+ax.set_ylabel('Runtime [sec]')
+
+#ax.plot(tmp['runtime'][1:], lw=0, marker='o', markersize=3, c='#193441', label="Total")
+#ax.plot(tmp['sub_runtime'], lw=2, c='#91AA9D', label="Subproblem")
+
+#ax.set_xlim(0,129)
+#ax.set_ylim(0,)
+#ax.set_xlabel('Iteration')
+#ax.set_ylabel('Runtime [sec]')
+#ax.legend()
+
+fig.tight_layout()

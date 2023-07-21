@@ -76,3 +76,29 @@ def sparse_adagrad_epoch(f, phi, x_t, A, N, alpha, delta, epoch_iter, batch_size
         x_t = phi.adagrad_prox(w_t, L_t)
 
     return x_t, G
+
+@njit()
+def sparse_batch_saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_length, batch_size):
+    
+    for iter_t in np.arange(loop_length):
+                     
+        # sample, result is int!
+        S = np.random.randint(low = 0, high = N, size = batch_size)
+        
+        # compute the gradient, 
+        A_S = compute_AS(A, S)
+        new_v_t = f.g(A_S@x_t, S)
+
+        v_t = gradients[S]
+        g_t = A_S.T @ (new_v_t - v_t) 
+        
+        w_t = (1 - alpha*reg)*x_t - alpha*((1/batch_size)*g_t + g_sum)
+        
+        # store new gradient
+        gradients[S] = new_v_t
+        g_sum += (1/N)*g_t
+        
+        # compute prox step
+        x_t = phi.prox(w_t, alpha)
+        
+    return x_t, g_sum

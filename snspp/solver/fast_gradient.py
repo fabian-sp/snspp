@@ -6,7 +6,7 @@ from ..helper.utils import compute_batch_gradient_table, compute_xi_inner,\
 
 from .sgd import sgd_loop
 from .sparse.sparse_utils import create_csr                         
-from .sparse.prox_gd import sparse_svrg_epoch, sparse_saga_epoch, sparse_adagrad_epoch
+from .sparse.prox_gd import sparse_svrg_epoch, sparse_saga_epoch, sparse_adagrad_epoch, sparse_batch_saga_epoch
 
 import numpy as np                           
 import time
@@ -98,7 +98,7 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     #########################################################
     ## Batch size
     #########################################################
-    if solver in ['adagrad', 'svrg', 'sgd', 'batch-saga']:
+    if solver in ['adagrad', 'svrg', 'sgd']:
         if 'batch_size' not in params.keys():    
             params['batch_size'] = max(int(f.N * 0.005), 1)
         
@@ -134,10 +134,10 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     
     if solver == 'saga':
         # run SAGA with batch size 1
-        x_t, x_hist, runtime, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['reg'], params['measure_freq'], sparse_format)     
-    elif solver == 'batch-saga':
-        # run SAGA with batch size > 1
-        x_t, x_hist, runtime, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['reg'], params['measure_freq'], sparse_format, params['batch_size'])
+        x_t, x_hist, runtime, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['reg'], params['measure_freq'], sparse_format, params.get('batch_size'))     
+    #elif solver == 'batch-saga':
+    #    # run SAGA with batch size > 1
+    #    x_t, x_hist, runtime, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['reg'], params['measure_freq'], sparse_format, params['batch_size'])
     elif solver == 'svrg':
         x_t, x_hist, runtime, step_sizes, eta  = svrg_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter, params['measure_freq'], sparse_format)
     elif solver == 'adagrad':
@@ -225,7 +225,6 @@ def saga_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, reg, measure_freq, sparse
             break
         
         if batch_size is None:
-
             if sparse_format:
                 start = time.time()
                 x_t, g_sum = sparse_saga_epoch(f, phi, x_t, A_csr, N, alpha, gradients, reg, g_sum, loop_length)
@@ -235,10 +234,14 @@ def saga_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, reg, measure_freq, sparse
                 x_t, g_sum = saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_length)
                 end = time.time()
         else:
-            start = time.time()
-            x_t, g_sum = batch_saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_length, batch_size)
-            end = time.time()
-
+            if sparse_format:
+                start = time.time()
+                x_t, g_sum = sparse_batch_saga_epoch(f, phi, x_t, A_csr, N, alpha, gradients, reg, g_sum, loop_length, batch_size)
+                end = time.time()
+            else:    
+                start = time.time()
+                x_t, g_sum = batch_saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_length, batch_size)
+                end = time.time()
 
 
         if iter_t == 0:
