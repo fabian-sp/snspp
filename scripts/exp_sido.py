@@ -84,13 +84,14 @@ if l1 == 1e-3:
 
 elif l1 == 1e-2:
     
-    params_saga = {'n_epochs' : 30, 'alpha': 0.0140}
+    #params_saga = {'n_epochs' : 30, 'alpha': 0.0140} # best setting with b=1
+    params_saga = {'n_epochs' : 30, 'alpha': 0.2, 'batch_size': 10}
     
     params_svrg = {'n_epochs' : 30, 'batch_size': 50, 'alpha': 0.733}
     
     params_adagrad = {'n_epochs' : 60, 'batch_size': 200, 'alpha': 0.015}
     
-    params_snspp = {'max_iter' : 400, 'batch_size': 50, 'sample_style': 'constant', 'alpha' : 12.,\
+    params_snspp = {'max_iter' : 400, 'batch_size': 50, 'sample_style': 'constant', 'alpha' : 30.,\
                     "reduce_variance": True}
 
     # params_tuner(f, phi, A, solver = "adagrad", batch_range = np.array([20, 200, 500]), x0 = x0)
@@ -224,7 +225,7 @@ else:
 if _plot:    
     #%% objective plot    
     fig,ax = plt.subplots(figsize = (4.5, 3.5))
-    kwargs = {"psi_star": psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
+    kwargs = {"psi_star": Cont.psi_star, "log_scale": True, "lw": 1., "markersize": 2.5}
     
     #Q.plot_objective(ax = ax, **kwargs)
     #Q1.plot_objective(ax = ax, **kwargs)

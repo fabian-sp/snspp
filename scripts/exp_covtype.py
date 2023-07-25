@@ -61,7 +61,8 @@ initialize_solvers(f, phi, A)
 
 #%% params
 
-params_saga = {'n_epochs' : 20, 'alpha': 0.01, 'measure_freq': 10}
+#params_saga = {'n_epochs' : 20, 'alpha': 0.01, 'measure_freq': 10} # best setting with b=1
+params_saga = {'n_epochs' : 20, 'alpha': 0.3, 'batch_size': 58, 'measure_freq': 10}
 
 params_svrg = {'n_epochs' : 10, 'batch_size': 50, 'alpha': 0.35, 'measure_freq': 10}
 
