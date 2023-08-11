@@ -51,7 +51,8 @@ initialize_solvers(f, phi, A)
 
 #%% params
 
-params_saga = {'n_epochs': 20, 'alpha': 0.00045}
+#params_saga = {'n_epochs': 20, 'alpha': 0.00045} # best setting with b=1
+params_saga = {'n_epochs': 50, 'alpha': 0.04, 'batch_size': 56}
 
 params_svrg = {'n_epochs': 15, 'batch_size': 280, 'alpha': 0.25}
 
@@ -108,6 +109,7 @@ Cont = Experiment(name = 'exp_mnist')
 
 if not _run:
     Cont.load_from_disk(path='../data/output/')
+    print(Cont.params)
 else:
     Cont.params = {'saga':params_saga, 'svrg': params_svrg, 'adagrad':params_adagrad, 'snspp':params_snspp}
     Cont.psi_star = psi_star

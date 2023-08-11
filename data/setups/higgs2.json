@@ -1,47 +1,68 @@
 {
-  "instance": {
-  	"loss": "logistic",
-    "dataset": "higgs",
-    "l1": 0.005
-  },
-  "methods": {
-    "snspp": {
-      "solver": "snspp",
-      "alpha_min": -1,
-      "alpha_max": 3,
-      "n_alpha": 15,
-      "batch": [1e-5, 5e-5],
-      "params": {
-        "max_iter": 400,
-        "sample_style": "constant",
-        "reduce_variance": true,
-        "measure_freq": 1
-      }
+    "instance": {
+        "loss": "logistic",
+        "dataset": "higgs",
+        "l1": 0.005
     },
-    "svrg": {
-      "solver": "svrg",
-      "alpha_min": -4,
-      "alpha_max": 1,
-      "n_alpha": 15,
-      "batch": [1e-5, 5e-5],
-      "params": {
-        "n_epochs": 10,
-        "measure_freq": 200
-      }
+    "methods": {
+        "snspp": {
+            "solver": "snspp",
+            "alpha_min": -1,
+            "alpha_max": 3,
+            "n_alpha": 15,
+            "batch": [
+                1e-05,
+                5e-05
+            ],
+            "params": {
+                "max_iter": 400,
+                "sample_style": "constant",
+                "reduce_variance": true,
+                "measure_freq": 1
+            }
+        },
+        "svrg": {
+            "solver": "svrg",
+            "alpha_min": -4,
+            "alpha_max": 1,
+            "n_alpha": 15,
+            "batch": [
+                1e-05,
+                5e-05
+            ],
+            "params": {
+                "n_epochs": 10,
+                "measure_freq": 200
+            }
+        },
+        "saga": {
+            "solver": "saga",
+            "alpha_min": -5,
+            "alpha_max": 0,
+            "n_alpha": 15,
+            "batch": [],
+            "params": {
+                "n_epochs": 5,
+                "measure_freq": 200
+            }
+        },
+        "batch-saga": {
+            "solver": "saga",
+            "alpha_min": -4,
+            "alpha_max": 1,
+            "n_alpha": 15,
+            "batch": [
+                5e-06,
+                1e-05,
+                5e-05
+            ],
+            "params": {
+                "n_epochs": 10,
+                "measure_freq": 200
+            }
+        }
     },
-    "saga": {
-      "solver": "saga",
-      "alpha_min": -5,
-      "alpha_max": 0,
-      "n_alpha": 15,
-      "batch": [],
-      "params": {
-        "n_epochs": 5,
-        "measure_freq": 200
-      }
-    }
-  },
-  "psi_tol": 0.0001,
-  "n_rep": 5,
-  "start": 0
+    "psi_tol": 0.0001,
+    "n_rep": 5,
+    "start": 0
 }
