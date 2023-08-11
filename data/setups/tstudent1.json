@@ -1,51 +1,74 @@
 {
-  "instance": {
-  	"loss": "tstudent",
-    "dataset": "tstudent",
-    "N": 4000,
-    "n": 5000,
-    "k": 20,
-    "l1": 0.001,
-    "nu": 2
-  },
-  "methods": {
-    "snspp": {
-      "solver": "snspp",
-      "alpha_min": -1,
-      "alpha_max": 2,
-      "n_alpha": 20,
-      "batch": [0.005,0.01,0.05],
-      "params": {
-        "max_iter": 1000,
-        "sample_style": "constant",
-        "reduce_variance": true,
-        "measure_freq": 1
-      }
+    "instance": {
+        "loss": "tstudent",
+        "dataset": "tstudent",
+        "N": 4000,
+        "n": 5000,
+        "k": 20,
+        "l1": 0.001,
+        "nu": 2
     },
-    "svrg": {
-      "solver": "svrg",
-      "alpha_min": -3,
-      "alpha_max": 1,
-      "n_alpha": 20,
-      "batch": [0.005,0.01,0.05],
-      "params": {
-        "n_epochs": 120,
-        "measure_freq": 5
-      }
+    "methods": {
+        "snspp": {
+            "solver": "snspp",
+            "alpha_min": -1,
+            "alpha_max": 2,
+            "n_alpha": 20,
+            "batch": [
+                0.005,
+                0.01,
+                0.05
+            ],
+            "params": {
+                "max_iter": 1000,
+                "sample_style": "constant",
+                "reduce_variance": true,
+                "measure_freq": 1
+            }
+        },
+        "svrg": {
+            "solver": "svrg",
+            "alpha_min": -3,
+            "alpha_max": 1,
+            "n_alpha": 20,
+            "batch": [
+                0.005,
+                0.01,
+                0.05
+            ],
+            "params": {
+                "n_epochs": 120,
+                "measure_freq": 5
+            }
+        },
+        "saga": {
+            "solver": "saga",
+            "alpha_min": -4,
+            "alpha_max": -1,
+            "n_alpha": 20,
+            "batch": [],
+            "params": {
+                "n_epochs": 120,
+                "measure_freq": 5
+            }
+        },
+        "batch-saga": {
+            "solver": "saga",
+            "alpha_min": -3,
+            "alpha_max": 1,
+            "n_alpha": 20,
+            "batch": [
+                0.001,
+                0.005,
+                0.01
+            ],
+            "params": {
+                "n_epochs": 120,
+                "measure_freq": 5
+            }
+        }
     },
-    "saga": {
-      "solver": "saga",
-      "alpha_min": -4,
-      "alpha_max": -1,
-      "n_alpha": 20,
-      "batch": [],
-      "params": {
-        "n_epochs": 120,
-        "measure_freq": 5
-      }
-    }
-  },
-  "psi_tol": 0.0001,
-  "n_rep": 5,
-  "start": 0
+    "psi_tol": 0.0001,
+    "n_rep": 5,
+    "start": 0
 }

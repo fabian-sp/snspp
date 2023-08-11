@@ -244,6 +244,14 @@ plt.rcParams['axes.linewidth'] = 1
 plt.rc('text', usetex=True)
 
 
+saga_best_batch_size = {'mnist1': [0.001],
+                        'gisette1': [0.005, 0.01],
+                        'sido1': [0.001],
+                        'covtype1': [0.0001, 0.0005],
+                        'higgs2': [1e-5],
+                        'madelon1': [0.005]
+                        }
+
 def get_ymax(results, methods):
     ymax = 0.
     for m in methods:
@@ -256,7 +264,7 @@ def get_ymax(results, methods):
     
     return 1.2*ymax
 
-def plot_result(res, ax = None, replace_inf = 10., sigma = 0., psi_tol = 1e-3, label = None):
+def plot_result(setup_id, method, res, ax = None, replace_inf = 10., sigma = 0., psi_tol = 1e-3, label = None):
     
     K,L = res['runtime'].shape
     rt = res['runtime'].copy()
@@ -275,19 +283,45 @@ def plot_result(res, ax = None, replace_inf = 10., sigma = 0., psi_tol = 1e-3, l
         color = color_dict["default"]
         marker = marker_dict["default"]
 
+    if method == 'snspp-skip':
+        color = '#234334' #'#1C3528'
+        label = 'snspp-skip'
+
     colors = sns.light_palette(color, K+2, reverse = True)
     
+    # filter to best batch size (for SAGA only; if best not recorded plot all)
+    _filter_saga = True
+
+    if method == 'batch-saga':
+        if _filter_saga and (saga_best_batch_size.get(setup_id) is not None):
+            idx = [res['batch_size'].index(_b) for _b in saga_best_batch_size.get(setup_id)]
+        else:
+            _filter_saga = False
+        
+        if _filter_saga: # color shades depend on filter or not    
+            colors = sns.light_palette(color, 5, reverse = True)[1:]
+            #col = sns.light_palette(color, 5, reverse = True)[1]
+            #colors = K*[col] # full color is used for b=1, here use first shade always
+        else:
+            colors = sns.light_palette(color, K+2, reverse = True)[1:] 
+
+    color_ix = 0
     for k in np.arange(K):    
+        
+        if _filter_saga and method == 'batch-saga':
+            if k not in idx:
+                continue
+            #print(colors[color_ix])
+
         rt[k,:][~res['converged'][k,:]] = replace_inf
         rt_std[k,:][~res['converged'][k,:]] = 0 
-        
-        
+                
         if K > 1:
             legend_label = label + ", " + rf"$b =  N \cdot${res['batch_size'][k]} "
         else:
-            legend_label = label
+            legend_label = label + ", " + r"$b = 1$"
             
-        ax.plot(res['step_size'], rt[k,:], c = colors[k], linestyle = '-', marker = marker, markersize = 4,\
+        ax.plot(res['step_size'], rt[k,:], c = colors[color_ix], linestyle = '-', marker = marker, markersize = 4,\
                 label = legend_label)
         
         # add standard dev of runtime
@@ -295,7 +329,8 @@ def plot_result(res, ax = None, replace_inf = 10., sigma = 0., psi_tol = 1e-3, l
             ax.fill_between(res['step_size'], rt[k,:] - sigma*rt_std[k,:], rt[k,:] + sigma*rt_std[k,:],\
                             color = colors[k], alpha = 0.5)
             
-    
+        color_ix += 1
+
     ax.set_xlabel(r"Step size $\alpha$")    
     ax.set_ylabel(r"Runtime until convergence [sec]")    
     

@@ -1,47 +1,70 @@
 {
-  "instance": {
-  	"loss": "logistic",
-    "dataset": "gisette",
-    "l1": 0.05
-  },
-  "methods": {
-    "snspp": {
-      "solver": "snspp",
-      "alpha_min": -2,
-      "alpha_max": 2,
-      "n_alpha": 20,
-      "batch": [0.005,0.01,0.05],
-      "params": {
-        "max_iter": 450,
-        "sample_style": "constant",
-        "reduce_variance": true,
-        "measure_freq": 1
-      }
+    "instance": {
+        "loss": "logistic",
+        "dataset": "gisette",
+        "l1": 0.05
     },
-    "svrg": {
-      "solver": "svrg",
-      "alpha_min": -3,
-      "alpha_max": 2,
-      "n_alpha": 25,
-      "batch": [0.005,0.01,0.05],
-      "params": {
-        "n_epochs": 55
-      }
+    "methods": {
+        "snspp": {
+            "solver": "snspp",
+            "alpha_min": -2,
+            "alpha_max": 2,
+            "n_alpha": 20,
+            "batch": [
+                0.005,
+                0.01,
+                0.05
+            ],
+            "params": {
+                "max_iter": 450,
+                "sample_style": "constant",
+                "reduce_variance": true,
+                "measure_freq": 1
+            }
+        },
+        "svrg": {
+            "solver": "svrg",
+            "alpha_min": -3,
+            "alpha_max": 2,
+            "n_alpha": 25,
+            "batch": [
+                0.005,
+                0.01,
+                0.05
+            ],
+            "params": {
+                "n_epochs": 55
+            }
+        },
+        "saga": {
+            "solver": "saga",
+            "alpha_min": -4,
+            "alpha_max": 0,
+            "n_alpha": 20,
+            "batch": [],
+            "params": {
+                "n_epochs": 55,
+                "measure_freq": 10
+            }
+        },
+        "batch-saga": {
+            "solver": "saga",
+            "alpha_min": -4,
+            "alpha_max": -1,
+            "n_alpha": 15,
+            "batch": [
+                0.001,
+                0.005,
+                0.01
+            ],
+            "params": {
+                "n_epochs": 300,
+                "measure_freq": 10
+            }
+        }
     },
-    "saga": {
-      "solver": "saga",
-      "alpha_min": -4,
-      "alpha_max": 0,
-      "n_alpha": 20,
-      "batch": [],
-      "params": {
-        "n_epochs": 55,
-        "measure_freq": 10
-      }
-    }
-  },
-  "psi_tol": 0.0001,
-  "max_iter_star": 200,
-  "n_rep": 5,
-  "start": 0
+    "psi_tol": 0.0001,
+    "max_iter_star": 200,
+    "n_rep": 5,
+    "start": 0
 }
