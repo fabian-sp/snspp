@@ -16,6 +16,7 @@ from snspp.experiments.stability_utils import load_setup, create_instance, compu
 def run_stability(setup_id, save=False, load=False, plot=True):
 
     results = dict()
+
     
     setup = load_setup(setup_id)
     if not load:
@@ -58,6 +59,10 @@ def run_stability(setup_id, save=False, load=False, plot=True):
     # plot
     #################################################    
     if plot:
+        # sort 
+        # methods.sort()
+        # methods = [methods[i] for i in [1,0,2,3]]
+        
         SIGMA = 1. # plot 2SIGMA band around the mean
         
         fig, ax = plt.subplots(figsize = (7,5))
@@ -65,7 +70,7 @@ def run_stability(setup_id, save=False, load=False, plot=True):
         ymax = get_ymax(results, methods)
         
         for mt in methods:
-            plot_result(results[mt], ax = ax, replace_inf = ymax, sigma = SIGMA, psi_tol = setup["psi_tol"])
+            plot_result(setup_id, mt, results[mt], ax = ax, replace_inf = ymax, sigma = SIGMA, psi_tol = setup["psi_tol"])
             
         
         annot_y = ymax * 1/1.1 # y value for annotation
@@ -82,14 +87,13 @@ def run_stability(setup_id, save=False, load=False, plot=True):
 
 #%%
 
-setups = ['sido2']
+setups = ['sido1', 'covtype1', 'mnist1', 'gisette1', 'madelon1', 'higgs2']
 
 for _s in setups:
     print(f"Running stability for {_s} \n \n")
-    run_stability(setup_id=_s, save=True, load=False, plot=False)
+    run_stability(setup_id=_s, save=False, load=True, plot=True)
     
-    
-    
+       
     
     
     

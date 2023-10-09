@@ -63,13 +63,15 @@ initialize_solvers(f, phi, A)
 #%% parameter setup
 
 if setup == 1:
-    params_saga = {'n_epochs' : 50, 'alpha' : 0.015}
+    #params_saga = {'n_epochs' : 50, 'alpha' : 0.015} # best setting with b=1
+    params_saga = {'n_epochs' : 50, 'batch_size': 20, 'alpha' : 0.2}
     params_svrg = {'n_epochs' : 20, 'batch_size': 20, 'alpha': 0.4}
     params_adagrad = {'n_epochs' : 150, 'batch_size': 40, 'alpha': 0.032}   
     params_snspp = {'max_iter' : 150, 'batch_size': 20, 'sample_style': 'constant', 'alpha' : 7., 'reduce_variance': True}
 
 elif setup == 2:
-    params_saga = {'n_epochs' : 50, 'alpha' : 0.0049}
+    #params_saga = {'n_epochs' : 50, 'alpha' : 0.0049} # best setting with b=1
+    params_saga = {'n_epochs' : 50, 'batch_size': 4, 'alpha' : 0.015}
     params_svrg = {'n_epochs' : 70, 'batch_size': 20, 'alpha': 0.199}
     params_adagrad = {'n_epochs' : 150, 'batch_size': 20, 'alpha': 0.03}   
     params_snspp = {'max_iter' : 320, 'batch_size': 20, 'sample_style': 'constant', 'alpha' : 3., 'reduce_variance': True}

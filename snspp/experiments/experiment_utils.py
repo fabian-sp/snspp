@@ -92,7 +92,11 @@ def initialize_solvers(f, phi, A):
         tmpP = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)   
         tmpP.solve(solver = 'snspp')
         
-    params = {'n_epochs' : 2, 'alpha': 1e-5,}
+    params = {'n_epochs' : 2, 'alpha': 1e-5}
+    tmpP = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)
+    tmpP.solve(solver = 'saga')
+
+    params = {'n_epochs' : 2, 'alpha': 1e-5, 'batch_size': 4}
     tmpP = problem(f, phi, A, tol = 1e-5, params = params, verbose = False, measure = True)
     tmpP.solve(solver = 'saga')
     

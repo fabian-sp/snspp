@@ -6,7 +6,7 @@ from ..helper.utils import compute_batch_gradient_table, compute_xi_inner,\
 
 from .sgd import sgd_loop
 from .sparse.sparse_utils import create_csr                         
-from .sparse.prox_gd import sparse_svrg_epoch, sparse_saga_epoch, sparse_adagrad_epoch
+from .sparse.prox_gd import sparse_svrg_epoch, sparse_saga_epoch, sparse_adagrad_epoch, sparse_batch_saga_epoch
 
 import numpy as np                           
 import time
@@ -75,11 +75,11 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     ## Solver dependent parameters
     #########################################################
     
-    if solver == 'saga':
+    if solver in ['saga', 'batch-saga']:
         if 'reg' not in params.keys():    
             params['reg'] = 0.
         
-    if solver in ['saga', 'svrg']:
+    if solver in ['saga', 'svrg', 'batch-saga']:
         if 'measure_freq' not in params.keys():
             # one means measure once per epoch
             # higher means higher frequency 
@@ -98,7 +98,7 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     #########################################################
     ## Batch size
     #########################################################
-    if solver in ['adagrad', 'svrg', 'sgd', 'batch-saga']:
+    if solver in ['adagrad', 'svrg', 'sgd']:
         if 'batch_size' not in params.keys():    
             params['batch_size'] = max(int(f.N * 0.005), 1)
         
@@ -134,9 +134,10 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     
     if solver == 'saga':
         # run SAGA with batch size 1
-        x_t, x_hist, runtime, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['reg'], params['measure_freq'], sparse_format)     
+        x_t, x_hist, runtime, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['reg'], params['measure_freq'], sparse_format, params.get('batch_size'))     
     #elif solver == 'batch-saga':
-    #    x_t, x_hist, runtime, step_sizes, eta  = batch_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, params['n_epochs'], params['batch_size'])
+    #    # run SAGA with batch size > 1
+    #    x_t, x_hist, runtime, step_sizes, eta  = saga_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['reg'], params['measure_freq'], sparse_format, params['batch_size'])
     elif solver == 'svrg':
         x_t, x_hist, runtime, step_sizes, eta  = svrg_loop(f, phi, x_t, A, N, tol, alpha, params['n_epochs'], params['batch_size'], m_iter, params['measure_freq'], sparse_format)
     elif solver == 'adagrad':
@@ -191,7 +192,7 @@ def stochastic_gradient(f, phi, A, x0, solver = 'saga', tol = 1e-3, params = dic
     return x_t, info
 
 #%%
-def saga_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, reg, measure_freq, sparse_format):
+def saga_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, reg, measure_freq, sparse_format, batch_size=None):
     
     # initialize for diagnostics
     runtime = List()
@@ -211,23 +212,38 @@ def saga_loop(f, phi, x_t, A, N, tol, alpha, n_epochs, reg, measure_freq, sparse
     e0 = time.time()
     
     # measure_freq = how many measurements per epoch
-    loop_length = int(N/measure_freq)
-    max_iter = int(N*n_epochs/loop_length)
-    
+    if batch_size is None:
+        loop_length = int(N/measure_freq)
+        max_iter = int((N*n_epochs)/loop_length)
+    else:
+        loop_length = int(N/(batch_size*measure_freq))
+        max_iter = int((N*n_epochs)/(loop_length*batch_size))
+
     for iter_t in np.arange(max_iter):
         
         if eta <= tol:
             break
         
-        if sparse_format:
-            start = time.time()
-            x_t, g_sum = sparse_saga_epoch(f, phi, x_t, A_csr, N, alpha, gradients, reg, g_sum, loop_length)
-            end = time.time()
-        else:    
-            start = time.time()
-            x_t, g_sum = saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_length)
-            end = time.time()
-    
+        if batch_size is None:
+            if sparse_format:
+                start = time.time()
+                x_t, g_sum = sparse_saga_epoch(f, phi, x_t, A_csr, N, alpha, gradients, reg, g_sum, loop_length)
+                end = time.time()
+            else:    
+                start = time.time()
+                x_t, g_sum = saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_length)
+                end = time.time()
+        else:
+            if sparse_format:
+                start = time.time()
+                x_t, g_sum = sparse_batch_saga_epoch(f, phi, x_t, A_csr, N, alpha, gradients, reg, g_sum, loop_length, batch_size)
+                end = time.time()
+            else:    
+                start = time.time()
+                x_t, g_sum = batch_saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_length, batch_size)
+                end = time.time()
+
+
         if iter_t == 0:
             runtime.append(end-start+e0-s0)
         else:
@@ -410,61 +426,32 @@ def svrg_epoch(f, phi, x_t, A, N, alpha, batch_size, loop_length, xis, full_g):
     return x_t
         
 #%%
-# @njit()
-# def batch_saga_loop(f, phi, x_t, A, N, tol, alpha, gradients, n_epochs, batch_size):
+
+@njit()
+def batch_saga_epoch(f, phi, x_t, A, N, alpha, gradients, reg, g_sum, loop_length, batch_size):
     
-#     # initialize for diagnostics
-#     x_hist = List()
-#     step_sizes = List()
-    
-#     eta = 1e10
-#     x_old = x_t
-#     g_sum = (1/N)*gradients.sum(axis = 0)
-    
-#     max_iter = int(N * n_epochs/batch_size)
-#     counter = np.arange(max_iter)*batch_size/N % 1
-#     counter = np.append(counter,0)
-    
-#     store = (counter[1:] <= counter[:-1])
-#     assert store[-1]
-    
-#     for iter_t in np.arange(max_iter):
+    for iter_t in np.arange(loop_length):
+                     
+        # sample, result is int!
+        S = np.random.randint(low = 0, high = N, size = batch_size)
         
-#         if eta <= tol:
-#             break
-             
-#         # sample
-#         #S = np.random.choice(a = np.arange(N), size = batch_size, replace = True)
-#         S = np.random.randint(low = 0, high = N, size = batch_size)
-#         S = np.sort(S)
+        # compute the gradient, 
+        A_S = A[S,:]
+        new_v_t = f.g(A_S@x_t, S)
+
+        v_t = gradients[S]
+        g_t = A_S.T @ (new_v_t - v_t) 
         
-#         # compute the gradient
-#         batch_g = compute_batch_gradient_table(f, A, x_t, S)
-#         batch_g_sum = batch_g.sum(axis=0)
+        w_t = (1 - alpha*reg)*x_t - alpha*((1/batch_size)*g_t + g_sum)
         
-#         g_j = gradients[S,:].sum(axis=0)
-#         old_g = (-1/batch_size) * g_j + g_sum
+        # store new gradient
+        gradients[S] = new_v_t
+        g_sum += (1/N)*g_t
         
-#         w_t = x_t - alpha * ((1/batch_size)*batch_g_sum + old_g)
+        # compute prox step
+        x_t = phi.prox(w_t, alpha)
         
-#         # store new gradient
-#         gradients[S,:] = batch_g
-#         g_sum = g_sum - (1/N)*g_j + (1/N)*batch_g_sum
-        
-#         # compute prox step
-#         x_t = phi.prox(w_t, alpha)
-        
-#         # stop criterion
-#         if store[iter_t]:
-#             eta = stop_scikit_saga(x_t, x_old)
-#             x_old = x_t
-            
-#         # store everything (at end of each epoch)
-#         if store[iter_t]:
-#             x_hist.append(x_t)
-#             step_sizes.append(alpha)
-        
-#     return x_t, x_hist, step_sizes, eta
+    return x_t, g_sum
 
 
 

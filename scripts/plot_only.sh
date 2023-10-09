@@ -7,7 +7,6 @@
 python exp_mnist.py 1 0 1 
 python exp_gisette.py 1 0 1
 python exp_covtype.py 1 0 1
-python exp_sido.py 1 0 1 1e-3
 python exp_sido.py 1 0 1 1e-2
 python exp_tstudent.py 1 0 1 1
 python exp_tstudent.py 1 0 1 2
