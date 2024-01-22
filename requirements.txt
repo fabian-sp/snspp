@@ -6,4 +6,3 @@ pandas
 matplotlib
 seaborn
 csr==0.4.1
-tick
