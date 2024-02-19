@@ -27,3 +27,20 @@ or in order to install in developer mode via
 
     python setup.py clean --all develop clean --all
 
+
+## Requirements
+
+The required packages are listed in `requirements.txt`. Here we list the versions of the most important packages that were used.
+
+
+```
+numpy==1.21.5
+numba==0.55.1
+sklearn==1.1.2
+scipy==1.9.1
+pandas==1.4.4
+matplotlib==3.5.2
+seaborn==0.11.2
+csr==0.4.1
+```
+
